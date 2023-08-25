@@ -363,14 +363,14 @@ public class HomePageServiceImpl implements HomePageService {
         // 保存部门&成员搜索条件 (用于快捷搜索)
         if (!"SYSTEM".equals(userInfo.getId())) {
             if (fastSearchConditionMapper.isExist(userInfo.getId())) {
-                if (CollectionUtils.isNotEmpty(req.getDeptIds()) || CollectionUtils.isNotEmpty( req.getTeamMembers())) {
+                if (CollectionUtils.isNotEmpty(req.getTeamMembers())) {
                     fastSearchConditionMapper.updateSearchConditionContent(
-                            userInfo.getId(), getSearchConditionContent(userInfo.getId(), req.getDeptIds(), req.getTeamMembers()));
+                            userInfo.getId(), getSearchConditionContent(userInfo.getId(), req.getTeamMembers()));
                 }
             } else {
                 FastSearchConditionDO fastSearchCondition = new FastSearchConditionDO();
                 fastSearchCondition.setSearchConditionContent(getSearchConditionContent(
-                        userInfo.getId(), req.getDeptIds(), req.getTeamMembers()));
+                        userInfo.getId(), req.getTeamMembers()));
                 fastSearchCondition.setSearchUserId(userInfo.getId());
                 fastSearchConditionMapper.insert(fastSearchCondition);
             }
@@ -593,14 +593,14 @@ public class HomePageServiceImpl implements HomePageService {
         // 保存部门&成员搜索条件 (用于快捷搜索)
         if (!"SYSTEM".equals(userInfo.getId())) {
             if (fastSearchConditionMapper.isExist(userInfo.getId())) {
-                if (CollectionUtils.isNotEmpty(req.getDeptIds()) || CollectionUtils.isNotEmpty( req.getTeamMembers())) {
+                if (CollectionUtils.isNotEmpty(req.getTeamMembers())) {
                     fastSearchConditionMapper.updateSearchConditionContent(
-                            userInfo.getId(), getSearchConditionContent(userInfo.getId(), req.getDeptIds(), req.getTeamMembers()));
+                            userInfo.getId(), getSearchConditionContent(userInfo.getId(), req.getTeamMembers()));
                 }
             } else {
                 FastSearchConditionDO fastSearchCondition = new FastSearchConditionDO();
                 fastSearchCondition.setSearchConditionContent(getSearchConditionContent(
-                        userInfo.getId(), req.getDeptIds(), req.getTeamMembers()));
+                        userInfo.getId(), req.getTeamMembers()));
                 fastSearchCondition.setSearchUserId(userInfo.getId());
                 fastSearchConditionMapper.insert(fastSearchCondition);
             }
@@ -687,50 +687,26 @@ public class HomePageServiceImpl implements HomePageService {
      * @return
      */
     private String getSearchConditionContent(
-            String searchUserId, Collection<String> deptIds, Collection<String> teamMemberIds) {
-        if (CollectionUtils.isEmpty(deptIds) && CollectionUtils.isEmpty(teamMemberIds)) {
+            String searchUserId, Collection<String> teamMemberIds) {
+        if (CollectionUtils.isEmpty(teamMemberIds)) {
             return "[]";
         }
 
         List<FastSearchConditionVO> oldList = new ArrayList<>();
 
-        List<String> oldGroupIdList = new ArrayList<>();
         List<String> oldUserIdList = new ArrayList<>();
 
         String searchConditionContent = fastSearchConditionMapper.selectSearchConditionContent(searchUserId);
         if (StringUtils.isNotBlank(searchConditionContent) && !"[]".equals(searchConditionContent)) {
             oldList = JacksonUtil.parseList(searchConditionContent, FastSearchConditionVO.class);
 
-            oldGroupIdList = oldList.stream().filter(e -> Integer.valueOf(1).equals(e.getType()))
-                    .map(FastSearchConditionVO::getId).collect(Collectors.toList());
             oldUserIdList = oldList.stream().filter(e -> Integer.valueOf(2).equals(e.getType()))
                     .map(FastSearchConditionVO::getId).collect(Collectors.toList());
         }
 
         List<FastSearchConditionVO> newList = new ArrayList<>();
 
-        List<String> newGroupIdList = new ArrayList<>();
         List<String> newUserIdList = new ArrayList<>();
-
-        if (CollectionUtils.isNotEmpty(deptIds)) {
-            List<SimpleGroupResponse> groups = innerGroupClient.batchGetSimpleGroupList(new ArrayList<>(deptIds));
-            if (CollectionUtils.isNotEmpty(groups)) {
-                for (SimpleGroupResponse group : groups) {
-                    if (oldGroupIdList.contains(group.getGroupId())) {
-                        newGroupIdList.add(group.getGroupId());
-                    }
-
-                    FastSearchConditionVO vo = new FastSearchConditionVO();
-
-                    vo.setType(1);
-                    vo.setId(group.getGroupId());
-                    vo.setShowName(group.getGroupName());
-
-                    newList.add(vo);
-                }
-            }
-        }
-
         if (CollectionUtils.isNotEmpty(teamMemberIds)) {
             List<BaseInfoResponse> users = innerUserPersonClient.batchGetStaffInfos(teamMemberIds, false);
             if (CollectionUtils.isNotEmpty(users)) {
@@ -752,11 +728,7 @@ public class HomePageServiceImpl implements HomePageService {
 
         oldList.forEach(e -> {
             Integer type = e.getType();
-            if (Integer.valueOf(1).equals(type)) {
-                if (!newGroupIdList.contains(e.getId())) {
-                    newList.add(e);
-                }
-            } else if (Integer.valueOf(2).equals(type)) {
+            if (Integer.valueOf(2).equals(type)) {
                 if (!newUserIdList.contains(e.getId())) {
                     newList.add(e);
                 }
