@@ -14,10 +14,7 @@ import com.timevale.forward.dal.dto.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.HomePageService;
 import com.timevale.forward.facade.api.query.HomePageProjectOnlineLatelyQueryList;
-import com.timevale.forward.facade.api.request.HomePageBaseReq;
-import com.timevale.forward.facade.api.request.HomePageHolidayReq;
-import com.timevale.forward.facade.api.request.HomePageProjectBoardReq;
-import com.timevale.forward.facade.api.request.HomePageTaskBoardReq;
+import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.*;
@@ -31,6 +28,7 @@ import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.base.util.StringUtils;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -843,6 +841,31 @@ public class HomePageServiceImpl implements HomePageService {
         }
 
         return BaseResult.success(newList);
+    }
+
+    @Override
+    public BaseResult<Boolean> deleteFastSearchCondition(DeleteFastSearchConditionReq req) {
+        Integer type = req.getType();
+        String id = req.getId();
+        AssertUtil.notNull(type, "类型不能为空");
+        AssertUtil.notBlank(id, "ID不能为空");
+        AssertUtil.checkState(Integer.valueOf(2).equals(type), "类型有误");
+
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        String searchUserId = userInfo.getId();
+        String searchConditionContent = fastSearchConditionMapper.selectSearchConditionContent(searchUserId);
+        if (StringUtils.isBlank(searchConditionContent) || "[]".equals(searchConditionContent)) {
+            return BaseResult.success(false);
+        }
+
+        List<FastSearchConditionVO> list = JacksonUtil.parseList(searchConditionContent, FastSearchConditionVO.class);
+
+        if (list.removeIf(e -> type.equals(e.getType()) && id.equals(e.getId()))) {
+            fastSearchConditionMapper.updateSearchConditionContent(searchUserId, JacksonUtil.toJsonString(list));
+            return BaseResult.success(true);
+        }
+
+        return BaseResult.success(false);
     }
 
 }

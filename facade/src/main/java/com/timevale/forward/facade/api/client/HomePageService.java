@@ -3,10 +3,7 @@ package com.timevale.forward.facade.api.client;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.HomePageProjectOnlineLatelyQueryList;
-import com.timevale.forward.facade.api.request.HomePageBaseReq;
-import com.timevale.forward.facade.api.request.HomePageHolidayReq;
-import com.timevale.forward.facade.api.request.HomePageProjectBoardReq;
-import com.timevale.forward.facade.api.request.HomePageTaskBoardReq;
+import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -95,5 +92,10 @@ public interface HomePageService {
      * @return 快捷搜索条件列表
      */
     BaseResult<List<FastSearchConditionVO>> getFastSearchConditions();
+
+    /**
+     * 删除快捷搜索条件
+     */
+    BaseResult<Boolean> deleteFastSearchCondition(DeleteFastSearchConditionReq req);
 
 }
