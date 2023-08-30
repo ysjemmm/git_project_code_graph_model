@@ -416,7 +416,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             emergent.setCount(0);
         }
 
-
         priorityStatisticsVOList.add(emergent);
         priorityStatisticsVOList.add(high);
         priorityStatisticsVOList.add(middle);
@@ -1025,6 +1024,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         Long oldBugOfflineId = bugOnlineDO.getBugOfflineId();
         String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
 
+        String oldOperator = bugOnlineDO.getOperator();
+
         //线上bug表更新
         bugOnlineDO.setReason(onlineReq.getReason());
         bugOnlineDO.setReasonStage(onlineReq.getReasonStage());
@@ -1035,6 +1036,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setOperator(bugOnlineDO.getProposer());
         bugOnlineMapper.update(bugOnlineDO);
 
+        //往bug日志表中插入一条线上bug状态变更数据
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(ButtonActionEnum.ONLINE.getText());
         bugLogDO.setOldValue(oldStatus);
@@ -1042,8 +1044,10 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogDO.setMainId(onlineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
         bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
-        //往bug日志表中插入一条线上bug状态变更数据
         bugLogMapper.insert(bugLogDO);
+
+        //新增经办人变更日志
+        bugLogComponent.operator(onlineReq.getId(), oldOperator, bugOnlineDO.getOperator());
 
         // 线下bug, bug原因 log
         bugLogComponent.bugOffline(onlineReq.getId(), oldBugOfflineId, onlineReq.getBugOfflineId());
