@@ -1047,7 +1047,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogMapper.insert(bugLogDO);
 
         //新增经办人变更日志
-        bugLogComponent.operator(onlineReq.getId(), oldOperator, bugOnlineDO.getOperator());
+        bugLogComponent.operator(onlineReq.getId(), oldOperator, bugOnlineDO.getOperator(), false);
 
         // 线下bug, bug原因 log
         bugLogComponent.bugOffline(onlineReq.getId(), oldBugOfflineId, onlineReq.getBugOfflineId());
@@ -1790,7 +1790,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         AssertUtil.notNull(bugOnlineDO, "线上bug不存在");
 
         // 经办人日志
-        bugLogComponent.operator(id, bugOnlineDO.getOperator(), userInfo.getFullAlias());
+        bugLogComponent.operator(id, bugOnlineDO.getOperator(), userInfo.getFullAlias(), true);
 
         bugOnlineMapper.updateStatusByIds(CollUtil.newArrayList(id), BugOnlineStatusEnum.START_RESPONSE.getCode());
         bugOnlineDO.setStatus(BugOnlineStatusEnum.START_RESPONSE.getCode());

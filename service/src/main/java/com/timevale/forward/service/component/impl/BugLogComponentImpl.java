@@ -9,6 +9,7 @@ import com.timevale.forward.dal.entity.BugStatusOperatorDO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BugLogComponent;
 import com.timevale.forward.service.component.BugOnlineComponent;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.integration.dock.CrmProjectClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -129,7 +130,7 @@ public class BugLogComponentImpl implements BugLogComponent {
     }
 
     @Override
-    public void operator(Long bugOnlineId, String oldValue, String newValue) {
+    public void operator(Long bugOnlineId, String oldValue, String newValue, Boolean isUser) {
         if (bugOnlineId == null || Objects.equals(oldValue, newValue)) {
             return;
         }
@@ -139,6 +140,10 @@ public class BugLogComponentImpl implements BugLogComponent {
         bugLogDO.setOldValue(oldValue);
         bugLogDO.setNewValue(newValue);
         bugLogDO.setField(BugLogFieldEnum.OPERATOR.getText());
+        if (!isUser) {
+            bugLogDO.setCreateManId(CommonConstant.SYSTEM);
+            bugLogDO.setCreateMan(CommonConstant.SYSTEM);
+        }
         bugLogMapper.insert(bugLogDO);
     }
 }

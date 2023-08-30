@@ -51,5 +51,6 @@ public interface BugLogComponent {
      * @param oldValue    旧值
      * @param newValue    新值
      */
-    void operator(Long bugOnlineId, String oldValue, String newValue);
+    void operator(Long bugOnlineId, String oldValue, String newValue, Boolean isUser);
+
 }
