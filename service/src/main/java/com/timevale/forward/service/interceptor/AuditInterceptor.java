@@ -49,6 +49,7 @@ public class AuditInterceptor implements Interceptor {
         FILTER_METHOD.add("com.timevale.forward.dal.dao.TrackPropMapper.updateNotIC");
         FILTER_METHOD.add("com.timevale.forward.dal.dao.TrackPropMapper.batchInsertNotIC");
         FILTER_METHOD.add("com.timevale.forward.dal.dao.TrackEvenPropMapper.batchInsertNotIC");
+        FILTER_METHOD.add("com.timevale.forward.dal.dao.BizTimeMapper.deleteAll");
     }
 
     @Override

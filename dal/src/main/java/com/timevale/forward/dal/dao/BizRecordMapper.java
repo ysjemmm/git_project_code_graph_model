@@ -21,6 +21,9 @@ public interface BizRecordMapper {
     @Select("SELECT * FROM biz_record WHERE main_id=#{mainId} AND main_type=#{mainType} AND is_deleted=false")
     List<BizRecordDO> get(@Param("mainId")Long mainId, @Param("mainType")Integer mainType);
 
+    @Select("SELECT * FROM biz_record")
+    List<BizRecordDO> getByMainType(@Param("mainType")Integer mainType);
+
     @Select("SELECT * FROM biz_record WHERE main_id=#{mainId} AND main_type=#{mainType} AND is_deleted=false ORDER BY create_date DESC LIMIT 1")
     BizRecordDO getLast(@Param("mainId")Long mainId, @Param("mainType")Integer mainType);
 
