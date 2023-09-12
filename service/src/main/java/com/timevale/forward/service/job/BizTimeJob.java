@@ -1,6 +1,8 @@
 package com.timevale.forward.service.job;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import com.timevale.forward.dal.dao.BizDemandMapper;
@@ -41,7 +43,7 @@ public class BizTimeJob extends IJobHandler {
 
         Set<Long> bizIds = recordDOList.stream().map(BizRecordDO::getMainId).collect(Collectors.toSet());
         List<BizDemandDO> bizDemands = bizDemandMapper.getByIds(bizIds);
-        Map<Long, BizDemandDO> bizCreateDateMap = bizDemands.stream()
+        Map<Long, BizDemandDO> bizMap = bizDemands.stream()
                 .collect(Collectors.toMap(BaseDO::getId, Function.identity()));
 
 
@@ -49,6 +51,10 @@ public class BizTimeJob extends IJobHandler {
         List<BizTimeDO> bizTimes = new ArrayList<>();
 
         recordGroupId.forEach((mainId, recordEntities) -> {
+            if (bizMap.containsKey(mainId)) {
+                return;
+            }
+
             List<BizRecordVO> recordVOList = recordEntities.stream()
                     .map(e -> JSON.parseObject(e.getRecord(), BizRecordVO.class))
                     .sorted(Comparator.comparing(BizRecordVO::getCreateDate))
@@ -59,7 +65,7 @@ public class BizTimeJob extends IJobHandler {
             Date date = null;
             String status = "";
             String operatorName = "";
-            BizDemandDO bizDemand = bizCreateDateMap.get(mainId);
+            BizDemandDO bizDemand = bizMap.get(mainId);
             for (BizRecordVO record : recordVOList) {
                 List<BizStatusOperatorVO> operators = record.getStatusOperatorVOList();
                 operators.sort(Comparator.comparing(BizStatusOperatorVO::getOperatorDate));
@@ -78,7 +84,11 @@ public class BizTimeJob extends IJobHandler {
                         theTimeConsumption = 0L;
                     }
                     theTimeConsumption = theTimeConsumption + interval;
-                    table.put(operatorName, status, theTimeConsumption);
+                    if (ObjectUtil.hasEmpty(operator, status, theTimeConsumption)) {
+                        log.error("[BizTimeJob]存在空记录 record:{}", JSONObject.toJSONString(record));
+                    } else {
+                        table.put(operatorName, status, theTimeConsumption);
+                    }
 
                     status = record.getStatus();
                     date = operator.getOperatorDate();
