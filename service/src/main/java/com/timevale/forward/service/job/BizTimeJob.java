@@ -51,7 +51,7 @@ public class BizTimeJob extends IJobHandler {
         List<BizTimeDO> bizTimes = new ArrayList<>();
 
         recordGroupId.forEach((mainId, recordEntities) -> {
-            if (bizMap.containsKey(mainId)) {
+            if (!bizMap.containsKey(mainId)) {
                 return;
             }
 
@@ -84,7 +84,7 @@ public class BizTimeJob extends IJobHandler {
                         theTimeConsumption = 0L;
                     }
                     theTimeConsumption = theTimeConsumption + interval;
-                    if (ObjectUtil.hasEmpty(operator, status, theTimeConsumption)) {
+                    if (ObjectUtil.hasEmpty(operatorName, status, theTimeConsumption)) {
                         log.error("[BizTimeJob]存在空记录 record:{}", JSONObject.toJSONString(record));
                     } else {
                         table.put(operatorName, status, theTimeConsumption);
