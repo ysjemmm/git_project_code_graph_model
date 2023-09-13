@@ -77,7 +77,10 @@ public class BizTimeJob extends IJobHandler {
                         operatorName = operator.getOperatorName();
                         continue;
                     }
-                    Long interval = operator.getOperatorDate().getTime() - date.getTime();
+                    long interval = operator.getOperatorDate().getTime() - date.getTime();
+                    if (interval < 0L) {
+                        continue;
+                    }
 
                     Long theTimeConsumption = table.get(operatorName, status);
                     if (theTimeConsumption == null) {
