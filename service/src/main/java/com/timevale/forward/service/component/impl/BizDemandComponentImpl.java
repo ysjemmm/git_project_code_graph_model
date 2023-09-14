@@ -175,7 +175,13 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         // 获取该业务需求所关联的产品需求
         List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.getByBdId(bizDemandId);
         if (productBizDemandDOList.isEmpty()) {
-            return null;
+            List<ProjectBizDemandDO> pbs = projectBizDemandMapper.selectByBizDemandIds(Collections.singleton(bizDemandId));
+            if (pbs.isEmpty()) {
+                return null;
+            }
+            Long projectId = pbs.get(0).getProjectId();
+            ProjectDO project = projectMapper.get(projectId);
+            return project.getActualEndDate() == null ? project.getPlanEndDate() : project.getActualEndDate();
         }
 
         // 获取关联的产品需求相关的项目
