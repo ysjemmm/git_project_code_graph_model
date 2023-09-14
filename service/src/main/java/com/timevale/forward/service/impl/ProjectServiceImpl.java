@@ -123,8 +123,6 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private MessageEventPublisher messageEventPublisher;
     @Resource
-    private CustomDemandComponent customDemandComponent;
-    @Resource
     private BizDemandMapper bizDemandMapper;
     @Resource
     private LabelComponent labelComponent;
@@ -1629,13 +1627,17 @@ public class ProjectServiceImpl implements ProjectService {
         }
         if (!Objects.equals(oldProject.getPlanEndDate(), newProject.getPlanEndDate())
                 || !Objects.equals(oldProject.getActualEndDate(), newProject.getActualEndDate())) {
-            List<Long> productDemandIds = projectComponent.getLinkProductDemandIds(oldProject.getId());
-
-            List<Long> bizDemandIds = productDemandComponent.getLinkBizDemandIds(productDemandIds);
-            bizDemandIds.forEach(a -> bizDemandComponent.updateProjectEndDate(a));
-
-            List<Long> customDemandIds = productDemandComponent.getLinkCustomDemandIds(productDemandIds);
-            customDemandIds.forEach(a -> customDemandComponent.updateProjectEndDate(a));
+            if (StringUtils.isEmpty(oldProject.getSourceId())) {
+                // 非客开需求
+                List<Long> productDemandIds = projectComponent.getLinkProductDemandIds(oldProject.getId());
+                List<Long> bizDemandIds = productDemandComponent.getLinkBizDemandIds(productDemandIds);
+                bizDemandIds.forEach(a -> bizDemandComponent.updateProjectEndDate(a));
+            } else {
+                // 客开需求
+                List<ProjectBizDemandDO> pds = projectBizDemandMapper.selectByProjectId(oldProject.getId());
+                pds.stream().map(ProjectBizDemandDO::getBizDemandId)
+                        .distinct().forEach(a -> bizDemandComponent.updateProjectEndDate(a));
+            }
         }
         log.info("更新项目信息完成");
     }
