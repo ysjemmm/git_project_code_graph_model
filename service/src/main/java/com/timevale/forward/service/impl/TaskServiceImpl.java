@@ -1,7 +1,6 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import com.alibaba.fastjson.JSONArray;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Lists;
@@ -44,7 +43,6 @@ import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -101,16 +99,11 @@ public class TaskServiceImpl implements TaskService {
     @Resource
     private ProjectNodeMapper projectNodeMapper;
     @Resource
-    private BizDomainMapper bizDomainMapper;
-    @Resource
     private UserComponent userComponent;
     @Resource
     private ProjectEvaluateComponent evaluateComponent;
     @Resource
     private InnerProjectStatusUpdateComponent innerProjectStatusUpdateComponent;
-
-    @Value("${excludeBizDomain:[1,13,32]}")
-    private String excludeBizDomain;
 
     @Resource
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
@@ -162,8 +155,6 @@ public class TaskServiceImpl implements TaskService {
         checkTaskStage(taskDO);
         //关联本项目产品需求
         checkProductDemandIdsByProjectLinked(taskDO);
-        //检查开始日期
-        checkPlanDate(taskDO);
         //填充状态
         fillStatus(taskDO);
 
@@ -224,8 +215,6 @@ public class TaskServiceImpl implements TaskService {
         TaskDO taskDO = TaskCopier.INSTANCE.convert(taskModifyReq);
 
         checkNameExisted(taskDO);
-
-        checkPlanDate(taskDO);
 
         processTaskTime(taskDO);
 
@@ -551,7 +540,6 @@ public class TaskServiceImpl implements TaskService {
         //阶段限制
         checkTaskStage(taskDos.get(0));
 
-        checkPlanDate(taskDos.get(0));
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         taskSimples.forEach(a -> threadPoolTaskExecutor.execute(() -> {
             TaskDO taskDO = TaskCopier.INSTANCE.convert(a);
@@ -607,14 +595,6 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public BaseResult<List<Long>> getProductLineIdsUnLimited() {
-        List<Long> excludeBizDomainIds = JSONArray.parseArray(excludeBizDomain, Long.class);
-        List<ProjectProductLineBizDomain> plineAndBizDomainList = productLineMapper.getPlineAndBizDomain(excludeBizDomainIds);
-        List<Long> productLineIds = plineAndBizDomainList.stream().map(ProjectProductLineBizDomain::getProductLineId).collect(Collectors.toList());
-        return BaseResult.success(productLineIds);
-    }
-
-    @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> transferTask(TaskTransferReq transferReq) {
         log.info("任务转移:{}", transferReq);
@@ -633,16 +613,6 @@ public class TaskServiceImpl implements TaskService {
                 throw new BaseBizRuntimeException("任务名称: " + nameMap.get(a) + ",已存在该项目中,同一项目任务名称不能重复");
             }
         });
-        boolean exceed = taskDOList.stream().anyMatch(a -> a.getPlanUseTime().compareTo(BigDecimal.valueOf(16)) > 0);
-        if (exceed) {
-            Long bizDomainId = productLineMapper.selectById(transferReq.getProductLineId()).getBizDomainId();
-            List<Long> excludeBizDomainIds = JSONArray.parseArray(excludeBizDomain, Long.class);
-            if (!excludeBizDomainIds.contains(bizDomainId)) {
-                //除xx业务域外,计划时间不能超过16h
-                List<String> names = bizDomainMapper.getByIds(excludeBizDomainIds).stream().map(BizDomainDO::getName).collect(Collectors.toList());
-                throw new BaseBizRuntimeException("存在计划耗时超过16小时的任务,且业务域不属于" + names + ",请修改后重试");
-            }
-        }
 
         boolean matchStage = taskDOList.stream().anyMatch(a -> ProjectStageEnum.DEMAND.getCode().equals(a.getStage()));
         if (!matchTaskStage(transferReq.getProjectId()) && matchStage) {
@@ -712,22 +682,6 @@ public class TaskServiceImpl implements TaskService {
         productDemandIds.removeAll(existProductDemandIds);
         if (!CollectionUtils.isEmpty(productDemandIds)) {
             throw new BaseBizRuntimeException("产品需求id:" + productDemandIds + "没有被该项目关联,请刷新后重试");
-        }
-    }
-
-    private void checkPlanDate(TaskDO taskDO) {
-        if (taskDO.getPlanUseTime().compareTo(BigDecimal.valueOf(16)) <= 0) {
-            return;
-        }
-        List<Long> excludeBizDomainIds = JSONArray.parseArray(excludeBizDomain, Long.class);
-        ProductLineDO productLine = productLineMapper.selectById(taskDO.getProductLineId());
-        if (productLine != null) {
-            if (!excludeBizDomainIds.contains(productLine.getBizDomainId())) {
-                // 除xx业务域外,计划时间不能超过16h
-                List<String> names = bizDomainMapper.getByIds(excludeBizDomainIds)
-                        .stream().map(BizDomainDO::getName).collect(Collectors.toList());
-                throw new BaseBizRuntimeException("除" + names + "外,计划耗时不能超过16小时");
-            }
         }
     }
 
