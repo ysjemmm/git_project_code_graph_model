@@ -6,7 +6,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
@@ -99,4 +98,7 @@ public class BugOfflineQueryList extends QueryBase {
 
     @ApiModelProperty("提出人花名Like")
     private String proposerLike;
+
+    @ApiModelProperty("不用修复原因")
+    private List<Integer> unhandleReasons;
 }

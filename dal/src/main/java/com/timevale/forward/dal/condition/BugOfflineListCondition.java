@@ -135,4 +135,9 @@ public class BugOfflineListCondition {
      * 提出人like
      */
     private String proposerLike;
+
+    /**
+     * 不用修复原因
+     */
+    private List<Integer> unhandleReasons;
 }

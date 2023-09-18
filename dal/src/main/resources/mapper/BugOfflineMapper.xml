@@ -198,6 +198,12 @@
                     #{item}
                 </foreach>
             </if>
+            <if test="unhandleReasons != null and unhandleReasons.size() > 0">
+                and bo.unhandle_reason in
+                <foreach collection="unhandleReasons" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="createDateLeft != null and createDateRight != null">
                 and bo.create_date &gt;= #{createDateLeft} and bo.create_date &lt;= #{createDateRight}
             </if>
