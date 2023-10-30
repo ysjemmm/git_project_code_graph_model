@@ -1,16 +1,12 @@
 package com.timevale.forward.service.component.impl;
 
 import com.timevale.forward.dal.dto.HomePageProjectBoardDTO;
-import com.timevale.forward.facade.api.result.HomePageProjectBoardVO;
-import com.timevale.forward.model.enums.UserTypeEnum;
 import com.timevale.forward.service.component.HomePageProjectBoardComponent;
 import com.timevale.forward.service.integration.superset.client.impl.BaseDistributeClientImpl;
 import com.timevale.forward.service.integration.superset.config.DistributeConfig;
-import com.timevale.forward.service.integration.superset.config.DistributeConfigVO;
 import com.timevale.forward.service.integration.superset.model.base.DistributePageQueryVO;
 import com.timevale.forward.service.integration.superset.util.ParamHelper;
 import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;

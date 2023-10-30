@@ -33,6 +33,7 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.request.AccountRequest;
+import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -336,7 +337,8 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         //判断当前操作人是否有权限,如果当前操作人不是经办人或经办人的上级或提出人或提出人的上级，则没有权限
         Boolean operatorResult = isPermission(bugOfflineDO.getOperatorId());
         Boolean proposerResult = isPermission(bugOfflineDO.getProposerId());
-        if (!operatorResult && !proposerResult) {
+        Boolean isQA = jobFunctionMatch(LocalSessionUtils.getUserInfo().getId(), JobFunctionEnum.QA);
+        if (!operatorResult && !proposerResult && !isQA) {
             throw new BaseBizRuntimeException("您没有操作权限");
         }
 
@@ -813,7 +815,8 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         }
 
         //判断当前操作人是否有权限
-        Boolean result = isPermission(bugOfflineDO.getProposerId());
+        Boolean result = isPermission(bugOfflineDO.getProposerId())
+                || jobFunctionMatch(LocalSessionUtils.getUserInfo().getId(), JobFunctionEnum.QA);
         if (!result) {
             throw new BaseBizRuntimeException("您没有操作权限");
         }
@@ -856,7 +859,8 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         }
 
         //判断当前操作人是否有权限
-        Boolean result = isPermission(bugOfflineDO.getProposerId());
+        Boolean result = isPermission(bugOfflineDO.getProposerId())
+                || jobFunctionMatch(LocalSessionUtils.getUserInfo().getId(), JobFunctionEnum.QA);
         if (!result) {
             throw new BaseBizRuntimeException("您没有操作权限");
         }
@@ -1253,7 +1257,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         return BaseResult.success(pageQueryResult);
     }
 
-    Boolean isPermission(String personId) {
+    private Boolean isPermission(String personId) {
         //得到当前操作人账户
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         String account = userInfo.getId();
@@ -1270,6 +1274,15 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
         //判断当前操作人账户是否有权限
         return higherLevels.contains(account);
+    }
+
+    private Boolean jobFunctionMatch(String account, JobFunctionEnum jobFunctionEnum) {
+        List<BaseInfoResponse> baseInfo = innerUserPersonClient.getPersonByAccountNew(CollUtil.newArrayList(account));
+        return Optional.ofNullable(baseInfo)
+                .flatMap(e -> e.stream().findFirst())
+                .map(BaseInfoResponse::getJobFunction)
+                .map(e -> Objects.equals(e, jobFunctionEnum.getName()))
+                .orElse(false);
     }
 
     private List<BugLogDO> compareExtraIfNecessary(BugOfflineDO oldBugOfflineDO, BugOfflineDO newBugOfflineDO) {

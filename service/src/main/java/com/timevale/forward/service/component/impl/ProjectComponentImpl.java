@@ -334,10 +334,11 @@ public class ProjectComponentImpl implements ProjectComponent {
         List<ProjectNodeDO> nodeDOList = projectNodeMapper.selectByProjectIdList(projectIdList);
         Map<Long, List<ProjectNodeDO>> nodeMap = nodeDOList.stream().collect(Collectors.groupingBy(ProjectNodeDO::getProjectId));
 
-        // 包含风险集合
+        // 包含风险集合(过滤任务逾期未录入)
         List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByProjectIdList(projectIds);
         Set<Long> riskSet = riskDOList.stream()
                 .filter(e -> ProjectRiskStatusEnum.PENDING.getCode().equals(e.getStatus()))
+                .filter(e -> !ProjectRiskTypeEnum.TASK_OVERDUE.getCode().equals(e.getType()))
                 .map(ProjectRiskDO::getProjectId)
                 .collect(Collectors.toSet());
 
@@ -814,6 +815,11 @@ public class ProjectComponentImpl implements ProjectComponent {
                     "发布正式节点流程处于审核中，不能修改立项预期上线时。"));
         }
 
+        if (ProjectKindEnum.PBG_OTN.getCode().equals(oldProject.getKind())
+                && YesOrNoEnum.NO.getCode().equals(newProject.getIsAcceptance())) {
+            dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY, true,
+                    "1-N客开项目不允许修改是否有项目验收的字段为“否”"));
+        }
 
         if (YesOrNoEnum.NO.getCode().equals(newProject.getIsAcceptance()) &&
                 CollectionUtils.isNotEmpty(projectAcceptanceMapper.list(ProjectAcceptanceListCondition.builder()

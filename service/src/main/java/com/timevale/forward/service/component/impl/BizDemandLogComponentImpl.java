@@ -1,9 +1,17 @@
 package com.timevale.forward.service.component.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
-import com.timevale.forward.dal.dao.*;
+import com.google.common.collect.Maps;
+import com.timevale.forward.dal.dao.BizChangeLogMapper;
+import com.timevale.forward.dal.dao.BizDemandMapper;
+import com.timevale.forward.dal.dao.ProductDemandMapper;
+import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.entity.*;
-import com.timevale.forward.model.enums.*;
+import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
+import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
+import com.timevale.forward.model.enums.BizDemandStatusEnum;
+import com.timevale.forward.model.enums.ButtonActionEnum;
 import com.timevale.forward.model.middle.BizDemandMD;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.BizDemandLogComponent;
@@ -17,10 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -351,5 +356,23 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
             return;
         }
         addLogWhenModifyData(oldReceiveMan, newReceiveMan, bizDemandId, BizChangeLogFieldEnum.RECEIVE_MAN.getText(), true);
+    }
+
+    @Override
+    public void updateProductLine(Long bizDemandId, Long oldProductLineId, Long newProductLineId) {
+        if (Objects.equals(oldProductLineId, newProductLineId)) {
+            return;
+        }
+        List<ProductLineDO> productLines = productLineMapper.getByIds(CollUtil.newArrayList(oldProductLineId, newProductLineId));
+        Map<Long, ProductLineDO> productLineMap = Maps.uniqueIndex(productLines, BaseDO::getId);
+        String oldProductLineName = Optional.ofNullable(productLineMap.get(oldProductLineId)).map(ProductLineDO::getName).orElse("");
+        String newProductLineName = Optional.ofNullable(productLineMap.get(newProductLineId)).map(ProductLineDO::getName).orElse("");
+
+        addLogWhenModifyData(
+                oldProductLineName,
+                newProductLineName,
+                bizDemandId,
+                BizChangeLogFieldEnum.PRODUCT_LINE.getText(),
+                true);
     }
 }

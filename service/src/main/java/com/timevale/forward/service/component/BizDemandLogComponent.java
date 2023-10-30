@@ -75,4 +75,6 @@ public interface BizDemandLogComponent{
 
     void updateReceiveMan(Long bizDemandId, String oldReceiveMan, String newReceiveMan);
 
+    void updateProductLine(Long bizDemandId, Long oldProductLineId, Long newProductLineId);
+
 }

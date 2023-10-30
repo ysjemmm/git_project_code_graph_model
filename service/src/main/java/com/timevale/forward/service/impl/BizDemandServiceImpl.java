@@ -748,6 +748,9 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Override
     public BaseResult<Boolean> transfer(BizDemandTransferReq transferReq) {
+        BizDemandDO bizDemandDO = bizDemandMapper.get(transferReq.getId());
+        AssertUtil.notNull(bizDemandDO, "该业务需求不存在");
+
         bizDemandComponent.transfer(transferReq.getId(), transferReq.getReceiveMan(), transferReq.getReceiveManId());
 
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -756,6 +759,12 @@ public class BizDemandServiceImpl implements BizDemandService {
         if (BooleanUtil.isTrue(transferReq.getIsRejectApplication())) {
             PersonAddReq addReq = new PersonAddReq(userInfo.getFullAlias(), userInfo.getId());
             personComponent.addIfNotExisted(CollUtil.newArrayList(addReq), transferReq.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
+        }
+
+        if (transferReq.getProductLineId() != null
+                && !Objects.equal(transferReq.getProductLineId(), bizDemandDO.getProductLineId())) {
+            bizDemandMapper.updateProductLineById(transferReq.getId(), transferReq.getProductLineId());
+            bizDemandLogComponent.updateProductLine(transferReq.getId(), bizDemandDO.getProductLineId(), transferReq.getProductLineId());
         }
 
         return BaseResult.success(true);

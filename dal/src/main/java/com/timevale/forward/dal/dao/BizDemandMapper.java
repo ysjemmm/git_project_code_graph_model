@@ -7,6 +7,7 @@ import com.timevale.forward.dal.entity.BizDemandListDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.Collection;
 import java.util.Date;
@@ -194,5 +195,8 @@ public interface BizDemandMapper {
      */
     @Select("select * from biz_demand where product_line_id=#{productLineId} AND is_deleted=false")
     List<BizDemandDO> getByProductLineId(@Param("productLineId") Long productLineId);
+
+    @Update("UPDATE biz_demand SET product_line_id = #{productLineId} WHERE id= #{id}")
+    void updateProductLineById(@Param("id")Long id, @Param("productLineId")Long productLineId);
 
 }

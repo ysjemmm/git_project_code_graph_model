@@ -32,4 +32,7 @@ public class BizDemandTransferReq extends BaseReq{
 
     @ApiModelProperty("是否为驳回申请")
     private Boolean isRejectApplication = false;
+
+    @ApiModelProperty("产品线id")
+    private Long productLineId;
 }
