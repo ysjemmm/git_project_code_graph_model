@@ -82,8 +82,8 @@ public class DrcProjectHandler implements DrcHandler {
             receivers.add(afterPj.getSrId());
             receivers.add(afterPj.getPrincipalId());
             receivers.add(afterPj.getOtnPrincipalId());
-            CollUtil.removeEmpty(receivers);
-            CollUtil.distinct(receivers);
+            receivers = CollUtil.distinct(receivers);
+            receivers = CollUtil.removeEmpty(receivers);
             new ProjectInvalidMsgEvent(this, afterPj.getId(), afterPj.getName(), receivers).send();
         }
 
