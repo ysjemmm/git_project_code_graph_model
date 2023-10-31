@@ -86,6 +86,8 @@ public enum MessageTitleEnum {
     PROJECT_PUBLISH_EVAL("项目已发布项目评价提醒"),
 
     PROJECT_SR_EVAL_END("SR项目评价完成提醒"),
+
+    PROJECT_INVALID("产研项目状态中止通知"),
     ;
 
     private final String text;

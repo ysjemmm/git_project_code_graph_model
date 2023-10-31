@@ -30,7 +30,6 @@ import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.security.facade.response.BaseInfoResponse;
-import com.timevale.security.facade.response.GroupModelResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
@@ -134,8 +133,7 @@ public class PersonServiceImpl implements PersonService {
 
         // 查询上级信息
         BaseInfoResponse managerInfo =  Optional.of(selfInfo)
-                .map(BaseInfoResponse::getDefaultGroup)
-                .map(GroupModelResponse::getDefaultManager)
+                .map(BaseInfoResponse::getManagerAccount)
                 .map(manager -> innerUserPersonClient.getSelfInfo(manager, false))
                 .orElse(null);
         if (managerInfo == null) {

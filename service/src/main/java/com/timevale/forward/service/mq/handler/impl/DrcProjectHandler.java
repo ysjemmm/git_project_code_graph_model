@@ -1,20 +1,21 @@
 package com.timevale.forward.service.mq.handler.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.timevale.forward.dal.dao.ProjectMilestoneActionMapper;
 import com.timevale.forward.dal.entity.BaseDO;
+import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectMilestoneActionDO;
-import com.timevale.forward.model.enums.MilestoneTypeEnum;
-import com.timevale.forward.model.enums.ProjectCategoryEnum;
-import com.timevale.forward.model.enums.ProjectKindEnum;
-import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.model.enums.*;
+import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.component.ProjectRiskComponent;
 import com.timevale.forward.service.mq.dto.DrcMsgBody;
 import com.timevale.forward.service.mq.handler.DrcHandler;
 import com.timevale.forward.service.observer.event.OtherProjectPublishMsgEvent;
 import com.timevale.forward.service.observer.event.OtnProjectPublishMsgEvent;
+import com.timevale.forward.service.observer.event.ProjectInvalidMsgEvent;
 import com.timevale.forward.service.observer.event.SrEvalEndMsgEvent;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import lombok.RequiredArgsConstructor;
@@ -22,8 +23,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author by YangXu
@@ -34,6 +37,7 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 public class DrcProjectHandler implements DrcHandler {
+    private final PersonComponent personComponent;
     private final ProjectRiskComponent projectRiskComponent;
     private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
     private final ProjectMilestoneActionMapper milestoneActionMapper;
@@ -67,6 +71,20 @@ public class DrcProjectHandler implements DrcHandler {
             if (StrUtil.isNotEmpty(afterPj.getPmId())) {
                 new OtherProjectPublishMsgEvent(this, afterPj.getId(), afterPj.getPmId(), afterPj.getName()).send();
             }
+        }
+
+        // 如果项目变更为已中止
+        if (!Objects.equals(beforePj.getStatus(), afterPj.getStatus()) &&
+                ProjectStatusEnum.INVALID.getCode().equals(afterPj.getStatus())) {
+            List<PersonDO> pds = personComponent.select(afterPj.getId(), PersonTypeEnum.PROJECT_PD.getCode());
+            List<String> receivers = pds.stream().map(PersonDO::getUserId).collect(Collectors.toList());
+            receivers.add(afterPj.getPmId());
+            receivers.add(afterPj.getSrId());
+            receivers.add(afterPj.getPrincipalId());
+            receivers.add(afterPj.getOtnPrincipalId());
+            CollUtil.removeEmpty(receivers);
+            CollUtil.distinct(receivers);
+            new ProjectInvalidMsgEvent(this, afterPj.getId(), afterPj.getName(), receivers).send();
         }
 
         // 如果SR评价从无到有
