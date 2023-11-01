@@ -86,14 +86,14 @@ public enum JobFunctionEnum {
 
     public static UserTypeEnum getType(String name){
         if(StringUtils.isEmpty(name)){
-            return UserTypeEnum.OTHER;
+            return UserTypeEnum.PD;
         }
         for (JobFunctionEnum e : JobFunctionEnum.values()){
             if(e.name.equals(name)){
                 return e.type;
             }
         }
-        return UserTypeEnum.OTHER;
+        return UserTypeEnum.PD;
     }
 
 }
