@@ -40,7 +40,6 @@ public class BugOnlineAddReq extends ToString {
     private String operatorId;
 
     @ApiModelProperty("客户名称")
-    @NotBlank(message = "客户名称必填")
     private String customerName;
 
     @ApiModelProperty(value = "产品线id")
