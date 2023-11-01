@@ -53,7 +53,8 @@ public class HomePageRiskWarningComponentImpl extends BaseDistributeClientImpl<H
 
         // 区分身份
         List<BaseInfoResponse> PDList = allMyStaffInfoWithSelf.stream()
-                .filter(e -> UserTypeEnum.PD.equals(JobFunctionEnum.getType(e.getJobFunction())))
+                .filter(e -> !UserTypeEnum.QA.equals(JobFunctionEnum.getType(e.getJobFunction()))
+                        && !UserTypeEnum.RD.equals(JobFunctionEnum.getType(e.getJobFunction())))
                 .collect(Collectors.toList());
         List<BaseInfoResponse> QAList = allMyStaffInfoWithSelf.stream()
                 .filter(e -> UserTypeEnum.QA.equals(JobFunctionEnum.getType(e.getJobFunction())))
