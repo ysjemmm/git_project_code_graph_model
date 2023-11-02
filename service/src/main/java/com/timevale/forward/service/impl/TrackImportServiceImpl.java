@@ -6,6 +6,9 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.crm.sdk.common.entity.integration.dto.FileDownloadDTO;
 import com.timevale.crm.sdk.common.utils.file.FileUtil;
+import com.timevale.filesystem.common.service.result.GetDownloadUrlResult;
+import com.timevale.filesystem.common.service.result.GetFileInfoResult;
+import com.timevale.filesystem.common.service.result.GetSignUrlResult;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
@@ -21,6 +24,7 @@ import com.timevale.forward.service.component.TrackImportComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.TrackImportLogCopier;
 import com.timevale.forward.service.excel.track.map.ClassifyData;
+import com.timevale.forward.service.integration.OssClient;
 import com.timevale.forward.service.utils.EnvUtils;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
@@ -72,6 +76,8 @@ public class TrackImportServiceImpl implements TrackImportService {
     private TrackImportLogMapper trackImportLogMapper;
     @Resource
     private TrackImportComponent trackImportComponent;
+    @Resource
+    private OssClient ossClient;
 
     @Override
     public BaseResult<Boolean> importEvent(TrackImportReq trackImportReq) {
@@ -155,8 +161,18 @@ public class TrackImportServiceImpl implements TrackImportService {
 
             // 失败文件信息
             if (TrackImportLogResultEnum.FAILURE.getCode().equals(trackImportLogDO.getResult())) {
-                FileDownloadDTO fileDownloadInfo = FileUtil.getFileDownloadInfo(trackImportLogDO.getFileId(), envUtils.getEnv());
-                TrackImportLogFileVO fileVO = TrackImportLogCopier.INSTANCE.convert(fileDownloadInfo);
+                TrackImportLogFileVO fileVO = new TrackImportLogFileVO();
+
+                String fileId = trackImportLogDO.getFileId();
+                if (fileId.contains("-")) {
+                    GetDownloadUrlResult downloadUrl = ossClient.getDownloadUrl(fileId);
+                    fileVO.setFileId(fileId);
+                    fileVO.setFileName("埋点事件检验错误文件.xlsx");
+                    fileVO.setDownloadUrl(downloadUrl.getUrl());
+                } else {
+                    FileDownloadDTO fileDownloadInfo = FileUtil.getFileDownloadInfo(trackImportLogDO.getFileId(), envUtils.getEnv());
+                    fileVO = TrackImportLogCopier.INSTANCE.convert(fileDownloadInfo);
+                }
                 trackImportProgressVO.setImportLogFileVO(fileVO);
             }
             return BaseResult.success(trackImportProgressVO);
@@ -250,7 +266,7 @@ public class TrackImportServiceImpl implements TrackImportService {
 
         // 埋点地图写入
         ClassPathResource resource = new ClassPathResource("TRACK-TEMPLATE.xlsx");
-        try(InputStream ins = resource.getInputStream();) {
+        try(InputStream ins = resource.getInputStream()) {
             // 写出埋点地图
             OutputStream ous = Files.newOutputStream(template.toPath());
             Workbook workbook = WorkbookFactory.create(ins);
@@ -273,15 +289,18 @@ public class TrackImportServiceImpl implements TrackImportService {
         TrackImportLogFileVO result = new TrackImportLogFileVO();
 
         // 上传文件
-        try {
-            InputStream ins = Files.newInputStream(template.toPath());
-            FileDownloadDTO info = FileUtil.uploadFileToOSS(ins, "产研系统_新增埋点事件导入模板.xlsx", envUtils.getEnv());
-            if (info == null || StrUtil.isEmpty(info.getDownloadUrl())) {
-                throw new BaseBizRuntimeException("模板文件创建失败");
-            }
+        try (InputStream ins = Files.newInputStream(template.toPath())){
+            byte[] bytes = new byte[(int) template.length()];
+            ins.read(bytes);
+
+            GetSignUrlResult signUrlResult = ossClient.getSignUrl("产研系统_新增埋点事件导入模板.xlsx");
+            ossClient.uploadFile(signUrlResult.getUrl(), bytes);
+            GetDownloadUrlResult downloadUrlResult = ossClient.getDownloadUrl(signUrlResult.getFileKey());
 
             // 结果转化
-            result = TrackImportLogCopier.INSTANCE.convert(info);
+            result.setFileId(signUrlResult.getFileKey());
+            result.setDownloadUrl(downloadUrlResult.getUrl());
+            result.setFileName("产研系统_新增埋点事件导入模板.xlsx");
         } catch (IOException e) {
             log.error("[template]:文件上传失败");
             throw new BaseBizRuntimeException("模板文件创建失败");
@@ -364,8 +383,18 @@ public class TrackImportServiceImpl implements TrackImportService {
         // 文件信息
         for (int i = 0; i < result.size(); i++) {
             String fileId = trackImportLogDOList.get(i).getFileId();
-            FileDownloadDTO fileDownloadInfo = FileUtil.getFileDownloadInfo(fileId, envUtils.getEnv());
-            TrackImportLogFileVO fileInfo = TrackImportLogCopier.INSTANCE.convert(fileDownloadInfo);
+            TrackImportLogFileVO fileInfo = new TrackImportLogFileVO();
+
+            if (fileId.contains("-")) {
+                GetFileInfoResult fileInfoResult = ossClient.getFileInfo(fileId);
+                GetDownloadUrlResult downloadUrlResult = ossClient.getDownloadUrl(fileId);
+                fileInfo.setFileId(fileId);
+                fileInfo.setFileName(fileInfoResult.getFileName());
+                fileInfo.setDownloadUrl(downloadUrlResult.getUrl());
+            } else {
+                FileDownloadDTO fileDownloadInfo = FileUtil.getFileDownloadInfo(fileId, envUtils.getEnv());
+                fileInfo = TrackImportLogCopier.INSTANCE.convert(fileDownloadInfo);
+            }
             result.get(i).setFileInfo(fileInfo);
         }
 

@@ -13,6 +13,8 @@ import com.alibaba.excel.enums.CellExtraTypeEnum;
 import com.alibaba.fastjson.JSONObject;
 import com.timevale.crm.sdk.common.entity.integration.dto.FileDownloadDTO;
 import com.timevale.crm.sdk.common.utils.file.FileUtil;
+import com.timevale.filesystem.common.service.result.GetDownloadUrlResult;
+import com.timevale.filesystem.common.service.result.GetSignUrlResult;
 import com.timevale.forward.dal.condition.TrackPropCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
@@ -24,16 +26,17 @@ import com.timevale.forward.service.component.TrackImportLogComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.TrackEventCopier;
 import com.timevale.forward.service.excel.track.event.*;
+import com.timevale.forward.service.integration.OssClient;
 import com.timevale.forward.service.utils.EnvUtils;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.framework.tedis.util.TedisUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.service.retry.RetryCallback;
 import com.timevale.mandarin.common.service.retry.RetryTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.scheduling.annotation.Async;
@@ -64,7 +67,8 @@ public class TrackImportComponentImpl implements TrackImportComponent {
 
     @Resource
     private EnvUtils envUtils;
-
+    @Resource
+    private OssClient ossClient;
     @Resource
     private TrackEventMapper trackEventMapper;
     @Resource
@@ -323,23 +327,27 @@ public class TrackImportComponentImpl implements TrackImportComponent {
      */
     private File getFile(String fileId) {
         // 获取下载文件流
-        FileDownloadDTO info;
-        // 重试下载
         RetryTemplate retryTemplate = new RetryTemplate();
-        info = (FileDownloadDTO) retryTemplate.execute(new RetryCallback() {
+        String downloadUrl = (String) retryTemplate.execute(new RetryCallback() {
             @Override
             public Object doWithRetry() {
-                return FileUtil.getFileDownloadInfo(fileId, envUtils.getEnv());
+                if (fileId.contains("-")) {
+                    return Optional.ofNullable(ossClient.getDownloadUrl(fileId))
+                            .map(GetDownloadUrlResult::getUrl)
+                            .orElse("");
+                } else {
+                    return Optional.ofNullable(FileUtil.getFileDownloadInfo(fileId, envUtils.getEnv()))
+                            .map(FileDownloadDTO::getDownloadUrl)
+                            .orElse("");
+                }
             }
-
             @Override
             public boolean isComplete(Object result) {
-                FileDownloadDTO infoResult = (FileDownloadDTO) result;
-                log.info("获取文件信息请求，fileId: {}，result: {}", fileId, result);
-                return StringUtils.isNotEmpty(infoResult.getDownloadUrl());
+                return StrUtil.isNotEmpty((String) result);
             }
         });
-        if (info == null) {
+
+        if (StrUtil.isEmpty(downloadUrl)) {
             log.error("文件下载异常，fileId:{}", fileId);
             throw new BaseBizRuntimeException("获取文件异常，导入失败");
         }
@@ -357,7 +365,6 @@ public class TrackImportComponentImpl implements TrackImportComponent {
         }
 
         // 数据复制
-        String downloadUrl = info.getDownloadUrl();
         try (InputStream ins = URLUtil.getStream(new URL(downloadUrl));
              OutputStream ous = Files.newOutputStream(importFile.toPath())) {
             IoUtil.copy(ins, ous);
@@ -908,8 +915,14 @@ public class TrackImportComponentImpl implements TrackImportComponent {
 
             String fileId;
             try (InputStream ins = Files.newInputStream(outputFile.toPath())) {
-                FileDownloadDTO fileDownloadDTO = FileUtil.uploadFileToOSS(ins, "埋点事件检验错误文件.xlsx", envUtils.getEnv());
-                fileId = fileDownloadDTO.getFileId();
+                byte[] bytes = new byte[(int)outputFile.length()];
+                ins.read(bytes);
+
+                GetSignUrlResult signUrlResult = ossClient.getSignUrl("埋点事件检验错误文件.xlsx");
+                AssertUtil.checkState(signUrlResult.isSuccess(), "埋点事件检验错误文件上传失败");
+                ossClient.uploadFile(signUrlResult.getUrl(), bytes);
+
+                fileId = signUrlResult.getFileKey();
             }
 
             // 记录导入记录

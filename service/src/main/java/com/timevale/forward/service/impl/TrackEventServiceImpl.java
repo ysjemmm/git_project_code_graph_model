@@ -2,12 +2,11 @@ package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.IoUtil;
-import cn.hutool.core.util.StrUtil;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageHelper;
-import com.timevale.crm.sdk.common.entity.integration.dto.FileDownloadDTO;
-import com.timevale.crm.sdk.common.utils.file.FileUtil;
+import com.timevale.filesystem.common.service.result.GetDownloadUrlResult;
+import com.timevale.filesystem.common.service.result.GetSignUrlResult;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProductDemandTrackEventCondition;
 import com.timevale.forward.dal.condition.TrackEventCondition;
@@ -30,7 +29,7 @@ import com.timevale.forward.service.copy.TrackEventCopier;
 import com.timevale.forward.service.copy.TrackPropCopier;
 import com.timevale.forward.service.excel.track.sensor.SensorTrackOutputStrategy;
 import com.timevale.forward.service.excel.track.sensor.SensorTrackRow;
-import com.timevale.forward.service.utils.EnvUtils;
+import com.timevale.forward.service.integration.OssClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -101,7 +100,7 @@ public class TrackEventServiceImpl implements TrackEventService {
     private ProductDemandTrackEventComponent productDemandTrackEventComponent;
 
     @Resource
-    private EnvUtils envUtils;
+    private OssClient ossClient;
 
     @Override
     public BaseResult<PageQueryResult<TrackEventVO>> list(TrackEventQueryList trackEventQueryList) {
@@ -345,14 +344,17 @@ public class TrackEventServiceImpl implements TrackEventService {
 
             // 上传文件
             tempFileIns = Files.newInputStream(tempFile.toPath());
-            FileDownloadDTO info = FileUtil.uploadFileToOSS(tempFileIns, "埋点事件表.xlsx", envUtils.getEnv());
-            if (info == null || StrUtil.isEmpty(info.getDownloadUrl())) {
-                throw new BaseBizRuntimeException("埋点事件导出失败");
-            }
+            byte[] bytes = new byte[(int) tempFile.length()];
+
+            GetSignUrlResult signUrlResult = ossClient.getSignUrl("埋点事件表.xlsx");
+            ossClient.uploadFile(signUrlResult.getUrl(), bytes);
+            GetDownloadUrlResult downloadUrlResult = ossClient.getDownloadUrl(signUrlResult.getFileKey());
+
             log.info("[TrackEventServiceImpl.uploadFile]文件上传成功");
 
-            // 结果转化
-            result = TrackEventCopier.INSTANCE.convert(info);
+            result.setFileName("埋点事件表.xlsx");
+            result.setFileId(signUrlResult.getFileKey());
+            result.setDownloadUrl(downloadUrlResult.getUrl());
         } catch (IOException e) {
             throw new BaseBizRuntimeException("埋点事件导出失败");
         } finally {
