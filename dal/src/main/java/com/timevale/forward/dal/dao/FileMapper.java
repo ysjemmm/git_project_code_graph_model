@@ -2,6 +2,8 @@ package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.entity.FileDO;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.Collection;
 import java.util.List;
@@ -63,4 +65,9 @@ public interface FileMapper {
      */
     int updateFileId(FileDO fileDO);
 
+    @Select("SELECT * FROM file")
+    List<FileDO> selectAll();
+
+    @Update("UPDATE file SET file_id = #{fileId}, modify_date=modify_date WHERE id = #{id}")
+    void updateFileId(@Param("id")Long id, @Param("fileId")String fileId);
 }
