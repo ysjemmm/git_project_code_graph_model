@@ -46,7 +46,7 @@ public class ProjectInvalidMsgEvent extends MessageEvent {
         String markdown = String.format(ACCEPTANCE_START, MessageTitleEnum.PROJECT_INVALID.getText(), projectName, singleUrl, new Date());
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
-                .title(MessageTitleEnum.PROJECT_ACCEPTANCE_START.getText())
+                .title(MessageTitleEnum.PROJECT_INVALID.getText())
                 .content(markdown)
                 .receivers(receivers)
                 .build();
