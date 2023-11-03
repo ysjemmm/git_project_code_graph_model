@@ -88,7 +88,7 @@ public class BizTimeJob extends IJobHandler {
                     }
                     theTimeConsumption = theTimeConsumption + interval;
                     if (ObjectUtil.hasEmpty(operatorName, status, theTimeConsumption)) {
-                        log.error("[BizTimeJob]存在空记录 record:{}", JSONObject.toJSONString(record));
+                        log.info("[BizTimeJob]存在空记录 record:{}", JSONObject.toJSONString(record));
                     } else {
                         table.put(operatorName, status, theTimeConsumption);
                     }
