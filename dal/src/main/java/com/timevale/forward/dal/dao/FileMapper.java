@@ -69,5 +69,5 @@ public interface FileMapper {
     List<FileDO> selectAll();
 
     @Update("UPDATE file SET file_id = #{fileId}, modify_date=modify_date WHERE id = #{id}")
-    void updateFileId(@Param("id")Long id, @Param("fileId")String fileId);
+    void updateFileIdById(@Param("id")Long id, @Param("fileId")String fileId);
 }

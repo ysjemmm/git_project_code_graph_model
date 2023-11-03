@@ -32,7 +32,7 @@ public class FileIdReplaceJob extends IJobHandler {
                         .map(FileDownloadDTO::getFileKey)
                         .orElse("");
                 if (StrUtil.isNotEmpty(fileKey)) {
-                    fileMapper.updateFileId(file.getId(), fileKey);
+                    fileMapper.updateFileIdById(file.getId(), fileKey);
                 }
             }
         }
