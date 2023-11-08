@@ -285,6 +285,10 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         List<Long> customerDevBizDemandIds = bizDemandListDOList.stream()
                 .filter(BizDemandListDO::getCustomerDevDemand)
                 .map(BizDemandListDO::getId).collect(Collectors.toList());
+        List<Long> baseBizDemandIds = bizDemandListDOList.stream()
+                .filter(e -> !e.getCustomerDevDemand())
+                .map(BizDemandListDO::getId)
+                .collect(Collectors.toList());
         List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandListDOList);
         if (CollUtil.isEmpty(bizDemandVOList)) {
             return ResultUtil.queryResultEmpty();
@@ -334,6 +338,28 @@ public class BizDemandComponentImpl implements BizDemandComponent {
                         vo.setProjectCreateDate(project.getCreateDate());
                     }
                 }
+            }
+        }
+        if (!baseBizDemandIds.isEmpty()) {
+            List<BizDemandProjectDO> bizPjList = projectMapper.getLinkByBizDemandIds(baseBizDemandIds);
+            if (CollUtil.isNotEmpty(bizPjList)) {
+                Map<Long, Long> bizPjMap = bizPjList.stream()
+                        .collect(Collectors.toMap(BizDemandProjectDO::getBizDemandId,
+                                BizDemandProjectDO::getProjectId, (v1, v2) -> v1));
+
+                Collection<Long> pjIds = bizPjMap.values();
+                List<ProjectDO> projectList = projectMapper.getByIds(pjIds);
+                Map<Long, ProjectDO> projectMap = Maps.uniqueIndex(projectList, BaseDO::getId);
+                Map<Long, BizDemandVO> bizDemandMap = Maps.uniqueIndex(bizDemandVOList, BizDemandVO::getId);
+                bizPjMap.forEach((bizId, pjId) -> {
+                    ProjectDO project = projectMap.get(pjId);
+                    BizDemandVO bizDemand = bizDemandMap.get(bizId);
+                    if (project != null && bizDemand != null) {
+                        bizDemand.setProjectId(project.getId());
+                        bizDemand.setProjectName(project.getName());
+                        bizDemand.setProjectCreateDate(project.getCreateDate());
+                    }
+                });
             }
         }
 

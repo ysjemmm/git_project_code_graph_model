@@ -686,4 +686,18 @@
         and is_deleted = false
     </select>
 
+    <select id="getLinkByBizDemandIds" resultType="com.timevale.forward.dal.entity.BizDemandProjectDO">
+        SELECT product_biz_demand.biz_demand_id, project_product_demand.project_id
+        FROM product_biz_demand
+        INNER JOIN project_product_demand ON product_biz_demand.product_demand_id = project_product_demand.product_demand_id
+        <where>
+            AND product_biz_demand.biz_demand_id IN
+            <foreach collection="bizDemandIds" item="bizDemandId" separator="," open="(" close=")">
+                #{bizDemandId}
+            </foreach>
+            AND product_biz_demand.is_deleted = FALSE
+            AND project_product_demand.is_deleted = FALSE
+        </where>
+    </select>
+
 </mapper>

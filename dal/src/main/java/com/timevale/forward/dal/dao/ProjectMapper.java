@@ -3,6 +3,7 @@ package com.timevale.forward.dal.dao;
 import com.github.pagehelper.Page;
 import com.timevale.forward.dal.condition.ProjectListChildCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
+import com.timevale.forward.dal.entity.BizDemandProjectDO;
 import com.timevale.forward.dal.entity.ProjectChildCountDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectListDO;
@@ -195,6 +196,7 @@ public interface ProjectMapper {
 
     List<ProjectDO> getByBizDemandId(@Param("bizDemandIds")List<Long> bizDemandIds);
 
+    List<BizDemandProjectDO> getLinkByBizDemandIds(@Param("bizDemandIds")Collection<Long> bizDemandIds);
 
     @Select("SELECT * FROM project WHERE create_date >= '2023-01-01'")
     List<ProjectDO> getThisYear();
