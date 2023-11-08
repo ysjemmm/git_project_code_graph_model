@@ -209,8 +209,9 @@ public class ProjectComponentImpl implements ProjectComponent {
         if (BooleanUtil.isTrue(condition.getIncludeRisk())) {
             // 查询所有待处理的分享
             List<ProjectRiskDO> projectRiskDOList = projectRiskMapper.selectByProjectIdListStatus(projectIds, ProjectRiskStatusEnum.PENDING.getCode());
-            // 过滤出有分享的项目id
+            // 过滤出有标黄风险的项目id
             projectIds = projectRiskDOList.stream()
+                    .filter(e -> !ProjectRiskTypeEnum.TASK_OVERDUE.getCode().equals(e.getType()))
                     .map(ProjectRiskDO::getProjectId)
                     .distinct()
                     .collect(Collectors.toList());
