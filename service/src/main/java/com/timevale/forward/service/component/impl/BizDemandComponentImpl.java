@@ -9,10 +9,7 @@ import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.condition.BizDemandUpdateCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
-import com.timevale.forward.facade.api.result.BizDemandVO;
-import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
-import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
-import com.timevale.forward.facade.api.result.QueryResultVO;
+import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.BizDemandLogComponent;
@@ -20,6 +17,7 @@ import com.timevale.forward.service.component.BizLabelComponent;
 import com.timevale.forward.service.component.SqlOrderComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
+import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.observer.event.BizDemandPlanReleaseDateMsgEvent;
 import com.timevale.forward.service.observer.event.BizDemandToReceiveMsgEvent;
@@ -343,21 +341,26 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         if (!baseBizDemandIds.isEmpty()) {
             List<BizDemandProjectDO> bizPjList = projectMapper.getLinkByBizDemandIds(baseBizDemandIds);
             if (CollUtil.isNotEmpty(bizPjList)) {
-                Map<Long, Long> bizPjMap = bizPjList.stream()
-                        .collect(Collectors.toMap(BizDemandProjectDO::getBizDemandId,
-                                BizDemandProjectDO::getProjectId, (v1, v2) -> v1));
-
-                Collection<Long> pjIds = bizPjMap.values();
+                Set<Long> pjIds = bizPjList.stream().map(BizDemandProjectDO::getProjectId).collect(Collectors.toSet());
                 List<ProjectDO> projectList = projectMapper.getByIds(pjIds);
                 Map<Long, ProjectDO> projectMap = Maps.uniqueIndex(projectList, BaseDO::getId);
+
+                Map<Long, Set<Long>> bizPjGroup = bizPjList.stream()
+                        .collect(Collectors.groupingBy(BizDemandProjectDO::getBizDemandId,
+                                Collectors.mapping(BizDemandProjectDO::getProjectId, Collectors.toSet())));
+
                 Map<Long, BizDemandVO> bizDemandMap = Maps.uniqueIndex(bizDemandVOList, BizDemandVO::getId);
-                bizPjMap.forEach((bizId, pjId) -> {
-                    ProjectDO project = projectMap.get(pjId);
+                bizPjGroup.forEach((bizId, pjIdList) -> {
                     BizDemandVO bizDemand = bizDemandMap.get(bizId);
-                    if (project != null && bizDemand != null) {
-                        bizDemand.setProjectId(project.getId());
-                        bizDemand.setProjectName(project.getName());
-                        bizDemand.setProjectCreateDate(project.getCreateDate());
+
+                    List<ProjectSimpleVO> projectSimpleList = pjIdList.stream()
+                            .map(projectMap::get)
+                            .filter(Objects::nonNull)
+                            .map(ProjectCopier.INSTANCE::do2svo)
+                            .collect(Collectors.toList());
+
+                    if (bizDemand != null && CollUtil.isNotEmpty(projectSimpleList)) {
+                        bizDemand.setProjectBaseList(projectSimpleList);
                     }
                 });
             }
