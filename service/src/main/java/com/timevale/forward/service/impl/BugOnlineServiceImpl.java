@@ -243,7 +243,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             }
         }
 
-        List<BugOnlineListDO> allBugOnlineDOList = bugOnlineMapper.selectListByCondition(condition);
+        List<BugOnlineListDO> allBugOnlineDOList = bugOnlineMapper.selectListByCondition(BugOnlineCopier.INSTANCE.convert(condition));
         Map<Integer, List<BugOnlineListDO>> bugOnlineListDOMap = allBugOnlineDOList.stream().collect(Collectors.groupingBy(BugOnlineListDO::getPriority));
         log.info("线上BUG优先级统计：{}", bugOnlineListDOMap);
 

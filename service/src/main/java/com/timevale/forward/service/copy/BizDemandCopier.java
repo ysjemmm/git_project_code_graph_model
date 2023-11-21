@@ -213,6 +213,8 @@ public interface BizDemandCopier {
     @Mapping(source = "bizDemandId", target = "id")
     BizDemandDO req2do(BizDemandAgreeReq req);
 
+
+    BizDemandListCondition convert(BizDemandListCondition condition);
     /**
      * 信息id
      *

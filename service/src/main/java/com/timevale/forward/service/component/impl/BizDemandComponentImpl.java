@@ -240,7 +240,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         }
 
         // 产品线分析信息
-        List<BizDemandListDO> allBizDemandListDOList = bizDemandMapper.selectList(condition);
+        List<BizDemandListDO> allBizDemandListDOList = bizDemandMapper.selectList(BizDemandCopier.INSTANCE.convert(condition));
         Map<Long, List<BizDemandListDO>> bizDemandListDOMap = allBizDemandListDOList.stream().collect(Collectors.groupingBy(BizDemandListDO::getProductLineId));
         log.info("业务查询产品线分析：{}", bizDemandListDOMap);
 

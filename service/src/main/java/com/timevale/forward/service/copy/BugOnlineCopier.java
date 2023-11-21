@@ -149,4 +149,6 @@ public interface BugOnlineCopier {
     BugOnlineSimpleVO do2svo(BugOnlineDO bugOnlineDO);
 
     BugOnlinePriorityGetReq do2req(BugOnlineDO bugOnlineDO, Collection<Long> productLineIds);
+
+    BugOnlineListCondition convert(BugOnlineListCondition condition);
 }

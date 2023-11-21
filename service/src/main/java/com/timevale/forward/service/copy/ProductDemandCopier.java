@@ -103,4 +103,6 @@ public interface ProductDemandCopier {
 
 
     List<ProductDemandDocumentVO> convertToDocuments(List<ProductDemandDO> productDemands);
+
+    ProductDemandListCondition convert(ProductDemandListCondition condition);
 }

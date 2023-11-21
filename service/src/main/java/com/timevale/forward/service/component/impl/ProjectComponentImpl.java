@@ -649,7 +649,8 @@ public class ProjectComponentImpl implements ProjectComponent {
     }
 
     private List<ProductLineAnalyseVO> analyse(ProjectListCondition condition) {
-        List<ProjectListDO> projectListDOList = projectMapper.list(condition);
+        ProjectListCondition newCondition = ProjectCopier.INSTANCE.convert(condition);
+        List<ProjectListDO> projectListDOList = projectMapper.list(newCondition);
         List<Long> projectIdList = projectListDOList.stream().map(BaseDO::getId).collect(Collectors.toList());
 
         // 项目关联的产品线

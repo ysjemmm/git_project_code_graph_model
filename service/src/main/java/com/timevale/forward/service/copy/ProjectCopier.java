@@ -222,4 +222,6 @@ public interface ProjectCopier {
     ProjectSimpleVO do2svo(ProjectDO projectDO);
 
     List<ProjectSimpleVO> do2svo(List<ProjectDO> doList);
+
+    ProjectListCondition convert(ProjectListCondition condition);
 }
