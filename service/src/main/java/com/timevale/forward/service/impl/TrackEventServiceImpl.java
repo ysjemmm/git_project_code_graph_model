@@ -345,6 +345,7 @@ public class TrackEventServiceImpl implements TrackEventService {
             // 上传文件
             tempFileIns = Files.newInputStream(tempFile.toPath());
             byte[] bytes = new byte[(int) tempFile.length()];
+            tempFileIns.read(bytes);
 
             GetSignUrlResult signUrlResult = ossClient.getSignUrl("埋点事件表.xlsx");
             ossClient.uploadFile(signUrlResult.getUrl(), bytes);
