@@ -3,8 +3,6 @@ package com.timevale.forward.dal.entity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.util.Date;
-
 /**
  * @author xingyun
  * @date 2021-12-13 13:58
@@ -58,4 +56,8 @@ public class ProductDemandListDO extends BaseDO {
      */
     private String copier;
 
+    /**
+     * 类型
+     */
+    private String type;
 }

@@ -6,7 +6,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
@@ -59,4 +58,7 @@ public class ProductDemandQueryList extends QueryBase {
 
     @ApiModelProperty("选中为标签类别时填写,类别id")
     private List<Long> labelCategoryIds;
+
+    @ApiModelProperty("产品需求类型")
+    private List<Integer> types;
 }

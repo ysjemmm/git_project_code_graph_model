@@ -40,7 +40,10 @@ public class ProductDemandVO extends ToString {
     private String productLineName;
 
     @ApiModelProperty("类型:0新增功能,1功能迭代,2体验优化,3技术需求,4安全需求")
-    private Integer type;
+    private List<Integer> type;
+
+    @ApiModelProperty("类型名称")
+    private String typeName;
 
     @ApiModelProperty("状态:0待排期,5项目已暂停,10已列入项目,20项目进行中,30已完成上线,-10已暂停,-20已作废")
     private Integer status;

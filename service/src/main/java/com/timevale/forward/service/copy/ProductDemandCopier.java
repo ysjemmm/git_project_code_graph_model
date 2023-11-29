@@ -1,5 +1,7 @@
 package com.timevale.forward.service.copy;
 
+import cn.hutool.core.collection.CollUtil;
+import com.alibaba.fastjson.JSON;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.dal.entity.ProductDemandListDO;
@@ -12,14 +14,23 @@ import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.facade.api.result.ProductDemandDocumentVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
+import com.timevale.forward.model.enums.ProductDemandTypeEnum;
 import com.timevale.forward.model.middle.ProductDemandMD;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-@Mapper
+@Mapper(
+        imports = {
+                JSON.class,
+                CollUtil.class,
+                Collectors.class,
+                ProductDemandTypeEnum.class
+        }
+)
 public interface ProductDemandCopier {
 
     ProductDemandCopier INSTANCE = Mappers.getMapper(ProductDemandCopier.class);
@@ -52,6 +63,9 @@ public interface ProductDemandCopier {
      */
     ProductDemandListCondition convert(ProjectLinkProductDemandQueryList projectSubProductDemandQueryList);
 
+    @Mapping(target = "type", expression = "java(JSON.parseArray(productDemandListDO.getType(), Integer.class))")
+    ProductDemandVO convert(ProductDemandListDO productDemandListDO);
+
     /**
      * 转换转换DO
      *
@@ -63,10 +77,11 @@ public interface ProductDemandCopier {
     /**
      * 转换转换DO
      *
-     * @param productDemandQueryList 对象
+     * @param queryList 对象
      * @return ProductDemandListCondition
      */
-    ProductDemandListCondition convert(ProductDemandQueryList productDemandQueryList);
+    @Mapping(target = "types", expression = "java(CollUtil.join(queryList.getTypes(),\"\"))")
+    ProductDemandListCondition convert(ProductDemandQueryList queryList);
 
     /**
      * 转换转换DO
@@ -85,7 +100,6 @@ public interface ProductDemandCopier {
     ProductDemandListCondition convert(TaskLinkProductDemandQueryList taskLinkProductDemandQueryList);
 
     /**
-     *
      * @param productDemandDO productDemandDO
      * @return ProductDemandMD
      */
@@ -93,8 +107,8 @@ public interface ProductDemandCopier {
 
     @Mapping(target = "files", ignore = true)
     ProductDemandDocumentVO convertToDocument(ProductDemandDO productDemand);
+
     /**
-     *
      * @param customLinkProductDemandQueryList customLinkProductDemandQueryList
      * @return ProductDemandListCondition
      */

@@ -248,6 +248,11 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             if (CollectionUtils.isNotEmpty(labelSimpleVOList)) {
                 a.setLabelNames(labelSimpleVOList);
             }
+
+            String typeName = a.getType().stream()
+                    .map(ProductDemandTypeEnum::getTextByCode)
+                    .collect(Collectors.joining(","));
+            a.setTypeName(typeName);
         }
         // 分页数据
         PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
