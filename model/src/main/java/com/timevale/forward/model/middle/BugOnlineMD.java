@@ -150,4 +150,7 @@ public class BugOnlineMD extends BaseMD{
      */
     @FieldCompare(fieldName = "用户临时解决方案")
     private String temporarySolution;
+
+    @FieldCompare(fieldName = "APPID")
+    private String appId;
 }

@@ -227,4 +227,7 @@ public class BugOnlineDetailVO extends ToString {
 
     @ApiModelProperty("问题发生时长-描述")
     private String problemOccurredTimeName;
+
+    @ApiModelProperty("APPID")
+    private String appId;
 }
