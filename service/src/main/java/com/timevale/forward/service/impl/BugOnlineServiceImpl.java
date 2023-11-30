@@ -574,6 +574,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<String> modify(BugOnlineModifyReq modifyReq) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
         //查询线上bug
         BugOnlineDO bugOnlineDO = bugOnlineMapper.get(modifyReq.getId());
         if (bugOnlineDO == null) {
@@ -605,9 +607,16 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         BugOnlineDO bugOnlineConvert = BugOnlineCopier.INSTANCE.change(modifyReq);
 
         // 计算优先级
-        BugOnlinePriorityGetReq priorityGetReq = BugOnlineCopier.INSTANCE.do2req(bugOnlineConvert, modifyReq.getProductLineIdList());
-        Integer priority = bugOnlineComponent.calculatePriority(priorityGetReq);
-        bugOnlineConvert.setPriority(priority);
+        List<ProductLineDO> relatedProductLines = bugOnlineComponent.getRelatedProductLines(bugOnlineDO.getId());
+        Set<String> bugOnlineOwnerIds = relatedProductLines.stream()
+                .map(ProductLineDO::getBugOnlineOwnerId)
+                .filter(StrUtil::isNotEmpty)
+                .collect(Collectors.toSet());
+        if (modifyReq.getPriority() == null || !bugOnlineOwnerIds.contains(userInfo.getId())) {
+            BugOnlinePriorityGetReq priorityGetReq = BugOnlineCopier.INSTANCE.do2req(bugOnlineConvert, modifyReq.getProductLineIdList());
+            Integer priority = bugOnlineComponent.calculatePriority(priorityGetReq);
+            bugOnlineConvert.setPriority(priority);
+        }
 
         bugOnlineMapper.update(bugOnlineConvert);
 

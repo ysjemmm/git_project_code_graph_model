@@ -267,6 +267,16 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
         return BugOnlinePriorityEnum.getByScore(totalScore).getCode();
     }
 
+    @Override
+    public List<ProductLineDO> getRelatedProductLines(Long bugOnlineId) {
+        List<BugOnlineProductLineDO> bugPlDOList = bugOnlineProductLineMapper.getByBugOnlineId(bugOnlineId, 0);
+        Set<Long> pdIds = bugPlDOList.stream().map(BugOnlineProductLineDO::getProductLineId).collect(Collectors.toSet());
+        if (CollUtil.isEmpty(pdIds)) {
+            return Collections.emptyList();
+        }
+        return productLineMapper.getByIds(pdIds);
+    }
+
     private void addBizDemandAttachLogs(BugOnlineDO bugOnlineDO, Collection<Long> bizDemandIds) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         List<BizChangeLogDO> changeLogs = bizDemandIds.stream().map(id -> {

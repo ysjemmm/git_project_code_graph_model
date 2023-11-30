@@ -3,6 +3,7 @@ package com.timevale.forward.service.component;
 import com.timevale.forward.dal.entity.BizDomainDO;
 import com.timevale.forward.dal.entity.BugLogDO;
 import com.timevale.forward.dal.entity.BugOnlineDO;
+import com.timevale.forward.dal.entity.ProductLineDO;
 import com.timevale.forward.facade.api.request.BugOnlinePriorityGetReq;
 import com.timevale.forward.model.enums.ButtonActionEnum;
 
@@ -52,4 +53,12 @@ public interface BugOnlineComponent {
      * @return 按照评分规则给出优先级code，以优先级“低”为兜底返回
      */
     Integer calculatePriority(BugOnlinePriorityGetReq req);
+
+    /**
+     * 获取相关产品线
+     *
+     * @param bugOnlineId 线上bugID
+     * @return {@link List}<{@link ProductLineDO}>
+     */
+    List<ProductLineDO> getRelatedProductLines(Long bugOnlineId);
 }
