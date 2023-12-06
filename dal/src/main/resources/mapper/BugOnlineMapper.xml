@@ -244,7 +244,6 @@
                 <if test="customerCount !=null">#{customerCount},</if>
                 <if test="userCount !=null">#{userCount},</if>
                 <if test="problemOccurredTime !=null">#{problemOccurredTime},</if>
-                <if test="appId != null">#{appId},</if>
                 <if test="createMan != null"> #{createMan},</if>
                 <if test="createManId != null"> #{createManId},</if>
             </trim>
