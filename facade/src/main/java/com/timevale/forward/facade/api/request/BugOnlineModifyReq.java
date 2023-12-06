@@ -169,9 +169,6 @@ public class BugOnlineModifyReq extends ToString {
 
     @ApiModelProperty("问题发生时长: 1-24小时以内、; 2-24~72小时; 3-72小时以上")
     private Integer problemOccurredTime;
-
-    @ApiModelProperty("APPID")
-    private Long appId;
 }
 
 

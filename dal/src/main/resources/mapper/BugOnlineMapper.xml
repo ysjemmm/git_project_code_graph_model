@@ -207,7 +207,6 @@
                 <if test="customerCount !=null">customer_count,</if>
                 <if test="userCount !=null">user_count,</if>
                 <if test="problemOccurredTime !=null">problem_occurred_time,</if>
-                <if test="appId != null and appId != ''">app_id,</if>
                 <if test="createMan != null"> create_man,</if>
                 <if test="createManId != null"> create_man_id,</if>
             </trim>
@@ -348,7 +347,6 @@
             <if test="customerCount !=null">customer_count=#{customerCount},</if>
             <if test="userCount !=null">user_count=#{userCount},</if>
             <if test="problemOccurredTime !=null">problem_occurred_time=#{problemOccurredTime},</if>
-            <if test="appId != null">app_id = #{appId},</if>
             <if test="modifyManId != null">
                 modify_man_id = #{modifyManId},
             </if>
