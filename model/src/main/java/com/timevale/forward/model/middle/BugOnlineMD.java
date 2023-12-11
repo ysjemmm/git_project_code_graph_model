@@ -150,4 +150,15 @@ public class BugOnlineMD extends BaseMD{
      */
     @FieldCompare(fieldName = "用户临时解决方案")
     private String temporarySolution;
+
+
+    /**
+     * 用户临时解决方案
+     */
+    @FieldCompare(fieldName = "用户数", enumClass = UserCountEnum.class)
+    private String userCount;
+
+
+    @FieldCompare(fieldName = "问题发生时长", enumClass = ProblemOccurredTimeEnum.class)
+    private String problemOccurredTime;
 }

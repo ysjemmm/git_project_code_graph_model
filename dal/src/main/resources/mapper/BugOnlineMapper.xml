@@ -260,6 +260,7 @@
                 reason = #{reason},
                 category = #{category},
                 source_id = #{sourceId},
+                user_count=#{userCount},
                 expect_date = #{expectDate},
                 reason_stage = #{reasonStage},
                 dismiss_cause = #{dismissCause},
@@ -267,6 +268,7 @@
                 bug_offline_id = #{bugOfflineId},
                 repair_fail_reason = #{repairFailReason},
                 dismiss_cause_stage = #{dismissCauseStage},
+                problem_occurred_time=#{problemOccurredTime},
             </if>
             <if test="name != null">
                 `name` = #{name},
@@ -346,8 +348,6 @@
             <if test="convertBizApplyManId !=null">convert_biz_apply_man_id=#{convertBizApplyManId},</if>
             <if test="temporarySolution != null">temporary_solution=#{temporarySolution},</if>
             <if test="customerCount !=null">customer_count=#{customerCount},</if>
-            <if test="userCount !=null">user_count=#{userCount},</if>
-            <if test="problemOccurredTime !=null">problem_occurred_time=#{problemOccurredTime},</if>
             <if test="fixedPriority !=null">fixed_priority=#{fixedPriority},</if>
             <if test="modifyManId != null">
                 modify_man_id = #{modifyManId},
