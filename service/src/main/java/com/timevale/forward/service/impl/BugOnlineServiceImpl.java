@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
@@ -444,21 +445,22 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             addReq.setCustomerGrade(postGrade);
         }
 
+        // 如果有客户名称但是没有客户等级则尝试填入
+        if (StrUtil.isNotEmpty(addReq.getCustomerName()) && StrUtil.isEmpty(addReq.getCustomerGrade())) {
+            Optional.ofNullable(crmClient.getPostGrade(addReq.getCustomerName()))
+                    .ifPresent(addReq::setCustomerGrade);
+        }
+
+        // 兜底计算优先级
+        if (addReq.getPriority() == null || BooleanUtil.isFalse(addReq.getFixedPriority())) {
+            BugOnlinePriorityGetReq priorityGetReq = BugOnlineCopier.INSTANCE
+                    .do2req(BugOnlineCopier.INSTANCE.req2do(addReq), addReq.getProductLineIdList());
+            Integer priority = bugOnlineComponent.calculatePriority(priorityGetReq);
+            addReq.setPriority(priority);
+        }
+
         // req 转换为 do
         BugOnlineDO bugOnlineDO = BugOnlineCopier.INSTANCE.req2do(addReq);
-
-        if (StrUtil.isNotEmpty(bugOnlineDO.getCustomerName())) {
-            // 客户等级若为空，获取填入客户等级
-            if (StrUtil.isEmpty(bugOnlineDO.getCustomerGrade())) {
-                Optional.ofNullable(crmClient.getPostGrade(bugOnlineDO.getCustomerName()))
-                        .ifPresent(bugOnlineDO::setCustomerGrade);
-            }
-
-            // 计算优先级
-            BugOnlinePriorityGetReq priorityGetReq = BugOnlineCopier.INSTANCE.do2req(bugOnlineDO, addReq.getProductLineIdList());
-            Integer priority = bugOnlineComponent.calculatePriority(priorityGetReq);
-            bugOnlineDO.setPriority(priority);
-        }
 
         // 线上bug落库
         bugOnlineMapper.insert(bugOnlineDO);
@@ -574,8 +576,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<String> modify(BugOnlineModifyReq modifyReq) {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-
         //查询线上bug
         BugOnlineDO bugOnlineDO = bugOnlineMapper.get(modifyReq.getId());
         if (bugOnlineDO == null) {
@@ -590,12 +590,18 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             }
         }
 
-        if (StrUtil.isNotEmpty(modifyReq.getCustomerName())) {
-            // 客户等级若为空，获取填入客户等级
-            if (StrUtil.isEmpty(modifyReq.getCustomerGrade())) {
-                Optional.ofNullable(crmClient.getPostGrade(modifyReq.getCustomerName()))
-                        .ifPresent(modifyReq::setCustomerGrade);
-            }
+        // 如果有客户名称但是没有客户等级则尝试填入
+        if (StrUtil.isNotEmpty(modifyReq.getCustomerName()) && StrUtil.isEmpty(modifyReq.getCustomerGrade())) {
+            Optional.ofNullable(crmClient.getPostGrade(modifyReq.getCustomerName()))
+                    .ifPresent(modifyReq::setCustomerGrade);
+        }
+
+        // 若是没有固定优先级，则做兜底计算
+        if (BooleanUtil.isFalse(modifyReq.getFixedPriority())) {
+            BugOnlinePriorityGetReq priorityGetReq = BugOnlineCopier.INSTANCE
+                    .do2req(BugOnlineCopier.INSTANCE.change(modifyReq), modifyReq.getProductLineIdList());
+            Integer priority = bugOnlineComponent.calculatePriority(priorityGetReq);
+            modifyReq.setPriority(priority);
         }
 
         //老的线上bug比较对象、产品线、模块
@@ -605,18 +611,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         //更新线上bug
         BugOnlineDO bugOnlineConvert = BugOnlineCopier.INSTANCE.change(modifyReq);
-
-        // 计算优先级
-        List<ProductLineDO> relatedProductLines = bugOnlineComponent.getRelatedProductLines(bugOnlineDO.getId());
-        Set<String> bugOnlineOwnerIds = relatedProductLines.stream()
-                .map(ProductLineDO::getBugOnlineOwnerId)
-                .filter(StrUtil::isNotEmpty)
-                .collect(Collectors.toSet());
-        if (modifyReq.getPriority() == null || !bugOnlineOwnerIds.contains(userInfo.getId())) {
-            BugOnlinePriorityGetReq priorityGetReq = BugOnlineCopier.INSTANCE.do2req(bugOnlineConvert, modifyReq.getProductLineIdList());
-            Integer priority = bugOnlineComponent.calculatePriority(priorityGetReq);
-            bugOnlineConvert.setPriority(priority);
-        }
 
         bugOnlineMapper.update(bugOnlineConvert);
 

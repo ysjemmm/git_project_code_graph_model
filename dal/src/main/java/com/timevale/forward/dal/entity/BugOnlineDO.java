@@ -258,4 +258,9 @@ public class BugOnlineDO extends BaseDO {
      * 问题发生时长
      */
     private Integer problemOccurredTime;
+
+    /**
+     * 固定优先级
+     */
+    private Boolean fixedPriority;
 }
