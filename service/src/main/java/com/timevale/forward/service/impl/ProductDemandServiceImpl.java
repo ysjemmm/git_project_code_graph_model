@@ -627,7 +627,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             List<BizChangeLogDO> bizChangeLogDOList = new ArrayList<>();
             List<ProductDemandDO> productDemandDOList = productDemandMapper.selectByIdList(idList);
             for (ProductDemandDO e : productDemandDOList) {
-                if (Objects.equals(e.getOwner(), owner)) {
+                if (Objects.equals(e.getOwnerId(), ownerId)) {
                     continue;
                 }
                 BizChangeLogDO log = productDemandLogComponent.getLog(e.getOwner(), owner, e.getId(), BizChangeLogFieldEnum.OWNER.getText(), true);

@@ -790,9 +790,10 @@ public class BizDemandServiceImpl implements BizDemandService {
         List<BizDemandDO> bizDemandDOList = bizDemandMapper.getByIds(bizDemandIdList);
         for (BizDemandDO e : bizDemandDOList) {
             String oldReceiveMan = e.getReceiveMan();
+            String oldReceiveManId = e.getReceiveManId();
 
             // 新旧接收人相同则不处理
-            if (Objects.equal(oldReceiveMan, newReceiveMan)) {
+            if (Objects.equal(oldReceiveManId, newReceiveManId)) {
                 continue;
             }
             // 日志

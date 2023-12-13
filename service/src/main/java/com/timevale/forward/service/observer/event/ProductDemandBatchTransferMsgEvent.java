@@ -29,7 +29,7 @@ public class ProductDemandBatchTransferMsgEvent extends MessageEvent {
     @Override
     public void run() {
         String title = MessageTitleEnum.PD_BATCH_TRANSFER.getText();
-        String singleUrl = domainName + TabEnum.PRODUCT_MANAGEMENT.listTab(1);
+        String singleUrl = domainName + TabEnum.PRODUCT_MANAGEMENT.listTab(0);
         String markdown = String.format(MSG, title, initiator, count, singleUrl, new Date());
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
