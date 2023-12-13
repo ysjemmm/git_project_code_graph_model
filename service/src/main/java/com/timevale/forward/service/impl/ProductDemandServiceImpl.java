@@ -21,6 +21,7 @@ import com.timevale.forward.service.component.impl.ProductDemandDescFlowComponen
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.observer.event.ProductDemandBatchTransferMsgEvent;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -632,10 +633,19 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                 BizChangeLogDO log = productDemandLogComponent.getLog(e.getOwner(), owner, e.getId(), BizChangeLogFieldEnum.OWNER.getText(), true);
                 bizChangeLogDOList.add(log);
             }
-            productDemandLogComponent.batchAddLog(bizChangeLogDOList);
 
-            // 实体
-            productDemandMapper.updateOwner(idList, owner, ownerId);
+            if (CollUtil.isNotEmpty(bizChangeLogDOList)) {
+                // 实体
+                productDemandMapper.updateOwner(idList, owner, ownerId);
+                // 日志
+                productDemandLogComponent.batchAddLog(bizChangeLogDOList);
+                // 通知
+                int count = bizChangeLogDOList.size();
+                String receiveManId = batchTransferReq.getReceiveManId();
+                String initiator = LocalSessionUtils.getUserInfo().getFullAlias();
+                new ProductDemandBatchTransferMsgEvent(this, initiator, receiveManId, count).send();
+            }
+
         }
 
         return BaseResult.success(true);

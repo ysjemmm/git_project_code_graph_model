@@ -18,8 +18,10 @@ public enum MessageTitleEnum {
     BIZDEMAND_INVALID("业务需求作废通知"),
     BIZDEMAND_MODIFY("您收到一条业务需求修改通知"),
     BIZDEMAND_APPROVED("业务需求动态通知"),
+    BIZDEMAND_BATCH_TRANSFER("业务需求批量转交通知"),
     // 产品需求
     PD_RECEIVE_BATCH("您收到%s条产品需求"),
+    PD_BATCH_TRANSFER("产品需求批量转交通知"),
     // 评论区@通知标题
     COMMENT("评论通知"),
     TEST_BILL("提测单消息通知"),

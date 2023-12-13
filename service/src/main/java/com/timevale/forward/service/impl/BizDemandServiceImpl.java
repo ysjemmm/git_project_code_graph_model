@@ -795,7 +795,6 @@ public class BizDemandServiceImpl implements BizDemandService {
             if (Objects.equal(oldReceiveMan, newReceiveMan)) {
                 continue;
             }
-
             // 日志
             BizChangeLogDO logDO = bizDemandLogComponent.getLogWhenModifyData(
                     oldReceiveMan,
@@ -811,9 +810,14 @@ public class BizDemandServiceImpl implements BizDemandService {
         if (CollectionUtils.isNotEmpty(logDOList)) {
             // 日志
             bizChangeLogMapper.batchInsert(logDOList);
-            // 实体
+            // 实体更新
             bizDemandIdList = logDOList.stream().map(BizChangeLogDO::getMainId).collect(Collectors.toList());
             bizDemandMapper.updateReceiveMan(bizDemandIdList, newReceiveMan, newReceiveManId);
+            // 发送通知
+            int count = logDOList.size();
+            String initiator = LocalSessionUtils.getUserInfo().getFullAlias();
+            String receiveManId = batchTransferReq.getReceiveManId();
+            new BizDemandBatchTransferMsgEvent(this, initiator, receiveManId, count).send();
         }
 
         return BaseResult.success(true);
@@ -1284,4 +1288,8 @@ public class BizDemandServiceImpl implements BizDemandService {
                 BizTypeEnum.BIZ_DEMAND.getCode(), true);
     }
 
+    public static void main(String[] args) {
+        Map<String,Integer> map = new HashMap<>();
+        System.out.println(map);
+    }
 }
