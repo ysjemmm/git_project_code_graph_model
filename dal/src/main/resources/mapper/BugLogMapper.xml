@@ -26,6 +26,18 @@
         </where>
     </select>
 
+    <select id="selectByCondition" resultType="com.timevale.forward.dal.entity.BugLogDO">
+        select * from bug_log
+        <where>
+            <if test="mainId != null">and main_id=#{mainId}</if>
+            <if test="type != null">and `type`=#{type}</if>
+            <if test="true">and is_deleted=0</if>
+            <if test="statusChange = true">and `action` is not null</if>
+            <if test="field != null and field != ''">and field = #{field}</if>
+        </where>
+        order by `create_date` desc,`id` DESC
+    </select>
+
     <update id="deleteByBugId">
         update bug_log
         <set>

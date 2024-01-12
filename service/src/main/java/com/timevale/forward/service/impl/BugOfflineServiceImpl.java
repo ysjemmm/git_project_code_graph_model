@@ -1157,8 +1157,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         List<BugLogDO> bugLogDOList;
         PageHelper.startPage(logQuery.pageNum, logQuery.pageSize);
         if (logQuery.getStatusChange()) {
-            bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(logQuery.getId(), logQuery.getType(), true);
-            bugLogDOList = bugLogDOList.stream().filter(a->BugLogFieldEnum.STATUS.getText().equals(a.getField())).collect(Collectors.toList());
+            bugLogDOList = bugLogMapper.selectByCondition(logQuery.getId(), logQuery.getType(), true, BugLogFieldEnum.STATUS.getText());
         } else {
             bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(logQuery.getId(), logQuery.getType(), false);
         }

@@ -10,6 +10,11 @@ import java.util.List;
  * @Author 望轩
  */
 public interface BugLogMapper {
+    List<BugLogDO> selectByCondition(@Param("mainId") Long mainId,
+                                     @Param("type") Integer type,
+                                     @Param("statusChange") Boolean statusChange,
+                                     @Param("field") String field);
+
     /**
      * 通过线下bug的id和type类型查询对应的操作日志
      *
