@@ -47,6 +47,9 @@
                     #{item}
                 </foreach>
             </if>
+            <if test="createDateEnd != null">
+                and a.create_date &lt;= #{createDateEnd}
+            </if>
             and a.is_deleted=false
         </where>
     </select>
