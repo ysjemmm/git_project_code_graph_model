@@ -263,4 +263,9 @@ public class BugOnlineDO extends BaseDO {
      * 固定优先级
      */
     private Boolean fixedPriority;
+
+    /**
+     * 生成阶段
+     */
+    private Integer generationStage;
 }

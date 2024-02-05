@@ -172,6 +172,9 @@ public class BugOnlineModifyReq extends ToString {
 
     @ApiModelProperty("是否固定优先级")
     private Boolean fixedPriority;
+
+    @ApiModelProperty("问题产生阶段：10-首次部署（测试阶段），20-对接联调（测试环境），30-首次部署（上线阶段），40-日常使用（试运行），50-日常使用，60-对接联调（正式环境），70-测试环境变更，80-正式环境变更，90-咨询类问题")
+    private Integer generationStage;
 }
 
 
