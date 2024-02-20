@@ -215,41 +215,54 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
 
     @Override
     public Integer calculatePriority(BugOnlinePriorityGetReq req) {
+        if (req == null) {
+            return 0;
+        }
+
+        Long bizDomainId = Optional.of(req)
+                .map(BugOnlinePriorityGetReq::getProductLineIds)
+                .map(CollUtil::getFirst)
+                .map(productLineMapper::selectById)
+                .map(ProductLineDO::getBizDomainId)
+                .orElse(null);
+
         int totalScore = 0;
 
-        totalScore += Optional.ofNullable(req.getCustomerGrade())
+        totalScore += Optional.of(req)
+                .map(BugOnlinePriorityGetReq::getCustomerGrade)
                 .map(CustomerGradeEnum::getByText)
-                .map(CustomerGradeEnum::getScore)
+                .map(CustomerGradeEnum::getCode)
+                .map(code -> CustomerGradeEnum.getScore(bizDomainId, code))
                 .orElse(5);
 
-        totalScore += Optional.ofNullable(req.getCustomerCount())
-                .map(CustomerCountEnum::getByCode)
-                .map(CustomerCountEnum::getScore)
+        totalScore += Optional.of(req)
+                .map(BugOnlinePriorityGetReq::getCustomerCount)
+                .map(code -> CustomerCountEnum.getScore(bizDomainId, code))
                 .orElse(0);
 
-        totalScore += Optional.ofNullable(req.getCategory())
-                .map(BugOnlineCategoryEnum::getByCode)
-                .map(BugOnlineCategoryEnum::getScore)
+        totalScore += Optional.of(req)
+                .map(BugOnlinePriorityGetReq::getCategory)
+                .map(code -> BugOnlineCategoryEnum.getScore(bizDomainId, code))
                 .orElse(0);
 
-        totalScore += Optional.ofNullable(req.getEnv())
-                .map(BugOnlineEnvEnum::getByCode)
-                .map(BugOnlineEnvEnum::getScore)
+        totalScore += Optional.of(req)
+                .map(BugOnlinePriorityGetReq::getEnv)
+                .map(code -> BugOnlineEnvEnum.getScore(bizDomainId, code))
                 .orElse(0);
 
-        totalScore += Optional.ofNullable(req.getRecurrent())
-                .map(BugOnlineRecurrentEnum::getByCode)
-                .map(BugOnlineRecurrentEnum::getScore)
+        totalScore += Optional.of(req)
+                .map(BugOnlinePriorityGetReq::getRecurrent)
+                .map(code -> BugOnlineRecurrentEnum.getScore(bizDomainId, code))
                 .orElse(0);
 
-        totalScore += Optional.ofNullable(req.getUserCount())
-                .map(UserCountEnum::getByCode)
-                .map(UserCountEnum::getScore)
+        totalScore += Optional.of(req)
+                .map(BugOnlinePriorityGetReq::getUserCount)
+                .map(code -> UserCountEnum.getScore(bizDomainId, code))
                 .orElse(0);
 
-        totalScore += Optional.ofNullable(req.getProblemOccurredTime())
-                .map(ProblemOccurredTimeEnum::getByCode)
-                .map(ProblemOccurredTimeEnum::getScore)
+        totalScore += Optional.of(req)
+                .map(BugOnlinePriorityGetReq::getProblemOccurredTime)
+                .map(code -> ProblemOccurredTimeEnum.getScore(bizDomainId, code))
                 .orElse(0);
 
         Collection<Long> productLineIds = req.getProductLineIds();
@@ -257,8 +270,7 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
             List<ProductLineDO> productLineDOs = productLineMapper.getByIds(productLineIds);
             totalScore += productLineDOs.stream()
                     .map(e -> Optional.ofNullable(e.getProductLineLevel())
-                            .map(ProduceLineLevelEnum::getByCode)
-                            .map(ProduceLineLevelEnum::getScore)
+                            .map(code -> ProduceLineLevelEnum.getScore(bizDomainId, code))
                             .orElse(0))
                     .max(Integer::compareTo)
                     .orElse(0);

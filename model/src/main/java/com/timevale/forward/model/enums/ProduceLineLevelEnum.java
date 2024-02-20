@@ -1,5 +1,6 @@
 package com.timevale.forward.model.enums;
 
+import com.google.common.collect.HashBasedTable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -34,5 +35,18 @@ public enum ProduceLineLevelEnum {
             }
         }
         return null;
+    }
+
+    private static HashBasedTable<Long, Integer, Integer> scoreTable = HashBasedTable.create();
+    public static void setScoreTable(HashBasedTable<Long, Integer, Integer> scoreTable) {
+        ProduceLineLevelEnum.scoreTable = scoreTable;
+    }
+    public static Integer getScore(Long bizDomainId, Integer code) {
+        Integer score = scoreTable.get(bizDomainId, code);
+        return Optional.ofNullable(score)
+                .orElse(Optional.ofNullable(code)
+                        .map(ProduceLineLevelEnum::getByCode)
+                        .map(ProduceLineLevelEnum::getScore)
+                        .orElse(null));
     }
 }
