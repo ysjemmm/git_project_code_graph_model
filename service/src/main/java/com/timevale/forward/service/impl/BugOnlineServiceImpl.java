@@ -5,6 +5,7 @@ import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
@@ -104,6 +105,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
      */
     @Value("${default.operator:shifeng;释沣-余文杰}")
     private String defaultOperator;
+
+    @Value("#{'${crmDockProductLines:1,2,3}'.split(',')}")
+    private Set<Long> crmDockProductLines;
 
     @Override
     public BusinessResult<ProductLineToFieldVO> getAllDisplayField(BugOnlineGetFieldReq bugOnlineGetFieldReq) {
@@ -430,6 +434,20 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     public BaseResult<Boolean> add(BugOnlineAddReq addReq) {
         AssertUtil.checkState(!addReq.getName().contains(CommonConstant.BLANK), "线上bug名称中请勿包含空格");
 
+        // 校验天印的产品线，需要AppId 和 详细版本号
+        if (BugOnlineEnvEnum.PRODUCE_ENV.getCode().equals(addReq.getEnv())) {
+            Collection<Long> intersection = CollUtil.intersection(crmDockProductLines, addReq.getProductLineIdList());
+            if (CollUtil.isNotEmpty(intersection)) {
+                Optional<String> appIdOptional = Optional.ofNullable(addReq.getBusiness())
+                        .map(JSONObject::parseObject)
+                        .map(e -> e.getString("appId"))
+                        .filter(StrUtil::isNotEmpty);
+                if (!appIdOptional.isPresent() || StrUtil.isEmpty(addReq.getDetailVersionId())) {
+                    throw new BaseBizRuntimeException("请先在项目的【项目概览-客户运维信息】中维护好APPID和产品版本后再提交此产品线的BUG");
+                }
+            }
+        }
+
         if (Objects.equals(addReq.getSource(), "support")) {
             log.info("默认经办人:{}", defaultOperator);
             String[] defaultOperators = defaultOperator.split(";");
@@ -580,6 +598,20 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         BugOnlineDO bugOnlineDO = bugOnlineMapper.get(modifyReq.getId());
         if (bugOnlineDO == null) {
             throw new BaseBizRuntimeException("线上bug不存在");
+        }
+
+        // 校验天印的产品线，需要AppId 和 详细版本号
+        if (BugOnlineEnvEnum.PRODUCE_ENV.getCode().equals(modifyReq.getEnv())) {
+            Collection<Long> intersection = CollUtil.intersection(crmDockProductLines, modifyReq.getProductLineIdList());
+            if (CollUtil.isNotEmpty(intersection)) {
+                Optional<String> appIdOptional = Optional.ofNullable(modifyReq.getBusiness())
+                        .map(JSONObject::parseObject)
+                        .map(e -> e.getString("appId"))
+                        .filter(StrUtil::isNotEmpty);
+                if (!appIdOptional.isPresent() || StrUtil.isEmpty(modifyReq.getDetailVersionId())) {
+                    throw new BaseBizRuntimeException("请维护好APPID和产品版本后再提交此产品线的BUG");
+                }
+            }
         }
 
         List<BugLogDO> checkBugLogList = bugLogMapper.selectByBugOfflineIdAndType(bugOnlineDO.getId(), BugLogTypeEnum.ONLINE.getCode(), false);
