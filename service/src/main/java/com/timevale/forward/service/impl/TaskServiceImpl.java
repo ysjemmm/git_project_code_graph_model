@@ -214,6 +214,9 @@ public class TaskServiceImpl implements TaskService {
 
         TaskDO taskDO = TaskCopier.INSTANCE.convert(taskModifyReq);
 
+        // 若是1-N的项目，只有项目经理、1-N产研团队负责人允许修改任务的计划时间
+        checkPlanTimeModify(taskDO);
+
         checkNameExisted(taskDO);
 
         processTaskTime(taskDO);
@@ -654,6 +657,22 @@ public class TaskServiceImpl implements TaskService {
     private void checkTaskStage(TaskDO taskDO) {
         if (!matchTaskStage(taskDO.getProjectId()) && ProjectStageEnum.DEMAND.getCode().equals(taskDO.getStage())) {
             throw new BaseBizRuntimeException("项目无需求规划阶段,不能创建该阶段的任务,请修改后重试");
+        }
+    }
+
+    private void checkPlanTimeModify(TaskDO newTaskDO) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+        TaskDO taskDO = taskMapper.getById(newTaskDO.getId());
+        if (!Objects.equals(taskDO.getPlanStartDate(), newTaskDO.getPlanStartDate())
+                || !Objects.equals(taskDO.getPlanEndDate(), newTaskDO.getPlanEndDate())) {
+            ProjectDO projectDO = projectMapper.get(taskDO.getProjectId());
+
+            if (ProjectKindEnum.PBG_OTN.getCode().equals(projectDO.getKind())) {
+                boolean authority = Objects.equals(projectDO.getPmId(), userInfo.getId())
+                        || Objects.equals(projectDO.getOtnPrincipalId(), userInfo.getId());
+                AssertUtil.checkState(authority, "仅项目经理、1-N产研团队负责人允许修改任务的计划时间");
+            }
         }
     }
 
