@@ -208,7 +208,7 @@
                 <if test="userCount !=null">user_count,</if>
                 <if test="problemOccurredTime !=null">problem_occurred_time,</if>
                 <if test="fixedPriority !=null">fixed_priority,</if>
-                <if test="generationStage != null">generation_stage</if>
+                <if test="generationStage != null">generation_stage,</if>
                 <if test="createMan != null"> create_man,</if>
                 <if test="createManId != null"> create_man_id,</if>
             </trim>
