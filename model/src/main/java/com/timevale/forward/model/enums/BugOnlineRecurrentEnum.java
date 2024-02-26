@@ -1,7 +1,10 @@
 package com.timevale.forward.model.enums;
 
+import com.google.common.collect.HashBasedTable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+
+import java.util.Optional;
 
 /**
  * @Date 2022/3/18 15:43
@@ -40,5 +43,18 @@ public enum BugOnlineRecurrentEnum {
             }
         }
         return null;
+    }
+
+    private static HashBasedTable<Long, Integer, Integer> scoreTable = HashBasedTable.create();
+    public static void setScoreTable(HashBasedTable<Long, Integer, Integer> scoreTable) {
+        BugOnlineRecurrentEnum.scoreTable = scoreTable;
+    }
+    public static Integer getScore(Long bizDomainId, Integer code) {
+        Integer score = scoreTable.get(bizDomainId, code);
+        return Optional.ofNullable(score)
+                .orElse(Optional.ofNullable(code)
+                        .map(BugOnlineRecurrentEnum::getByCode)
+                        .map(BugOnlineRecurrentEnum::getScore)
+                        .orElse(null));
     }
 }

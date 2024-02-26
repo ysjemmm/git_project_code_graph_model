@@ -1269,6 +1269,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         //如果当前操作人不是直接权限人，看看是不是直接权限人的上级
         AccountRequest accountRequest = new AccountRequest();
         accountRequest.setAccount(personId);
+        accountRequest.setIsLeave(true);
         Set<String> higherLevels = innerUserPersonClient.getAllSuperiorByAccount(accountRequest).getData();
 
         //判断当前操作人账户是否有权限

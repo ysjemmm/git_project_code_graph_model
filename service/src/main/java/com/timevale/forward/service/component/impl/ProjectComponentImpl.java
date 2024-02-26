@@ -2,6 +2,7 @@ package com.timevale.forward.service.component.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.BooleanUtil;
+import cn.hutool.core.util.StrUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Maps;
@@ -966,8 +967,8 @@ public class ProjectComponentImpl implements ProjectComponent {
                 if (memberEvaluateDOList.stream().filter(ProjectMemberEvaluateDO::getIncludeStat)
                         .anyMatch(m -> m.getPlanWorkload() == null)) {
                     // 未填写工作量
-                    dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.PROJECT_POINT, true,
-                            "存在纳入积分考核的成员计划工作量未录入的情况，请将计划工作量数据维护完整后，才可以保存开发开始实际时间。"));
+//                    dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.PROJECT_POINT, true,
+//                            "存在纳入积分考核的成员计划工作量未录入的情况，请将计划工作量数据维护完整后，才可以保存开发开始实际时间。"));
                 } else {
                     // 已经填写工作量
                     dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.PROJECT_POINT,

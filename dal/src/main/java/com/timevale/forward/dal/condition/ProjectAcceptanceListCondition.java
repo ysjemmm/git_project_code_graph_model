@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -25,5 +26,10 @@ public class ProjectAcceptanceListCondition extends QueryBase {
      * status
      */
     private List<Integer> status;
+
+    /**
+     * 创建日期右边界
+     */
+    private Date createDateEnd;
 
 }

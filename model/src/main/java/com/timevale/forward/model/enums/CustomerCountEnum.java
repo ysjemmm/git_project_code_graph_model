@@ -1,5 +1,6 @@
 package com.timevale.forward.model.enums;
 
+import com.google.common.collect.HashBasedTable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -33,5 +34,18 @@ public enum CustomerCountEnum {
         return Optional.ofNullable(getByCode(code))
                 .map(CustomerCountEnum::getText)
                 .orElse("");
+    }
+
+    private static HashBasedTable<Long, Integer, Integer> scoreTable = HashBasedTable.create();
+    public static void setScoreTable(HashBasedTable<Long, Integer, Integer> scoreTable) {
+        CustomerCountEnum.scoreTable = scoreTable;
+    }
+    public static Integer getScore(Long bizDomainId, Integer code) {
+        Integer score = scoreTable.get(bizDomainId, code);
+        return Optional.ofNullable(score)
+                .orElse(Optional.ofNullable(code)
+                        .map(CustomerCountEnum::getByCode)
+                        .map(CustomerCountEnum::getScore)
+                        .orElse(null));
     }
 }

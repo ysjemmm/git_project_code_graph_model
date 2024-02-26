@@ -157,4 +157,7 @@ public class BugOnlineMD extends BaseMD{
 
     @FieldCompare(fieldName = "问题发生时长", enumClass = ProblemOccurredTimeEnum.class)
     private Integer problemOccurredTime;
+
+    @FieldCompare(fieldName = "问题产生阶段", enumClass = BugOnlineGenerationStageEnum.class)
+    private Integer generationStage;
 }

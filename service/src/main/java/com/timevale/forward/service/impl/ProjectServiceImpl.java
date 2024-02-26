@@ -1744,7 +1744,7 @@ public class ProjectServiceImpl implements ProjectService {
         if (Objects.equals(queryUserId, localUserId)) {
             return true;
         }
-        Set<String> allSuperiorByAccount = innerUserPersonClient.getAllSuperiorByAccount(queryUserId, false);
+        Set<String> allSuperiorByAccount = innerUserPersonClient.getAllSuperiorByAccount(queryUserId, true);
         return allSuperiorByAccount.contains(localUserId);
     }
 
