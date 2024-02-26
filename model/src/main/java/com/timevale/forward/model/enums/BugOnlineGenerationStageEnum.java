@@ -22,13 +22,13 @@ public enum BugOnlineGenerationStageEnum {
     private final Integer code;
     private final String text;
 
-    public String getTextByCode(Integer code) {
+    public static String getTextByCode(Integer code) {
         return Optional.ofNullable(getByCode(code))
                 .map(BugOnlineGenerationStageEnum::getText)
                 .orElse("");
     }
 
-    public BugOnlineGenerationStageEnum getByCode(Integer code) {
+    public static BugOnlineGenerationStageEnum getByCode(Integer code) {
         for (BugOnlineGenerationStageEnum value : BugOnlineGenerationStageEnum.values()) {
             if (value.getCode().equals(code)) {
                 return value;
