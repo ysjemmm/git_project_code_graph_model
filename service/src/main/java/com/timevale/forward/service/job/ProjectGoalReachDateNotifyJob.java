@@ -1,5 +1,6 @@
 package com.timevale.forward.service.job;
 
+import cn.hutool.core.collection.CollUtil;
 import com.google.common.collect.Maps;
 import com.timevale.forward.dal.dao.ProjectGoalMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
@@ -47,6 +48,11 @@ public class ProjectGoalReachDateNotifyJob extends IJobHandler {
         List<ProjectGoalDO> projectGoals = projectGoalMapper.getByDate(new Date());
         Set<Long> projectIds = projectGoals.stream().map(ProjectGoalDO::getProjectId)
                 .collect(Collectors.toSet());
+        // 判空处理
+        if (CollUtil.isEmpty(projectIds)) {
+            log.info("完成项目目标达成日期通知任务");
+            return ReturnT.SUCCESS;
+        }
         List<ProjectDO> projects = projectMapper.getByIds(projectIds);
         Map<Long, ProjectDO> projectById = Maps.uniqueIndex(projects, ProjectDO::getId);
         for (ProjectGoalDO projectGoal : projectGoals) {
