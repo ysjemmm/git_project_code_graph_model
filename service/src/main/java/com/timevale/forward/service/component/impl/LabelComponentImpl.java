@@ -35,17 +35,20 @@ public class LabelComponentImpl implements LabelComponent {
             labelIdSet.addAll(labelIds);
         }
 
-        List<LabelDO> ofCategoryLabels = labelMapper.getByCategoryIds(labelCategoryIds, false);
+        Set<Long> ofCategoryLabelIds = Collections.emptySet();
+        if (CollUtil.isNotEmpty(labelCategoryIds)) {
+            List<LabelDO> ofCategoryLabels = labelMapper.getByCategoryIds(labelCategoryIds, false);
 
-        Set<Long> invalidCategoryIdSet = ofCategoryLabels.stream()
-                .filter(e -> labelIdSet.contains(e.getId()))
-                .map(LabelDO::getLabelCategoryId)
-                .collect(Collectors.toSet());
+            Set<Long> invalidCategoryIdSet = ofCategoryLabels.stream()
+                    .filter(e -> labelIdSet.contains(e.getId()))
+                    .map(LabelDO::getLabelCategoryId)
+                    .collect(Collectors.toSet());
 
-        Set<Long> ofCategoryLabelIds = ofCategoryLabels.stream()
-                .filter(e -> !invalidCategoryIdSet.contains(e.getLabelCategoryId()))
-                .map(BaseDO::getId)
-                .collect(Collectors.toSet());
+            ofCategoryLabelIds = ofCategoryLabels.stream()
+                    .filter(e -> !invalidCategoryIdSet.contains(e.getLabelCategoryId()))
+                    .map(BaseDO::getId)
+                    .collect(Collectors.toSet());
+        }
 
         List<Long> result = new ArrayList<>();
         result.addAll(labelIdSet);
