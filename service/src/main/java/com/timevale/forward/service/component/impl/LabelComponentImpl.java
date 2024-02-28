@@ -1,15 +1,15 @@
 package com.timevale.forward.service.component.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.timevale.forward.dal.dao.LabelMapper;
+import com.timevale.forward.dal.entity.BaseDO;
 import com.timevale.forward.dal.entity.LabelDO;
 import com.timevale.forward.service.component.LabelComponent;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -26,16 +26,30 @@ public class LabelComponentImpl implements LabelComponent {
 
     @Override
     public List<Long> getLabelIds(List<Long> labelIds, List<Long> labelCategoryIds) {
-        if(CollectionUtils.isEmpty(labelIds)){
-            labelIds=new ArrayList<>();
-
+        if (CollUtil.isEmpty(labelIds) && CollUtil.isEmpty(labelCategoryIds)) {
+            return Collections.emptyList();
         }
-        if(!CollectionUtils.isEmpty(labelCategoryIds)){
-            List<LabelDO> labelDOList = labelMapper.getByCategoryIds(labelCategoryIds,false);
-            List<Long> oldLabelIds = labelDOList.stream().map(LabelDO::getId).collect(Collectors.toList());
-            labelIds.addAll(oldLabelIds);
 
+        HashSet<Long> labelIdSet = new HashSet<>();
+        if (CollUtil.isNotEmpty(labelIds)) {
+            labelIdSet.addAll(labelIds);
         }
-        return labelIds;
+
+        List<LabelDO> ofCategoryLabels = labelMapper.getByCategoryIds(labelCategoryIds, false);
+
+        Set<Long> invalidCategoryIdSet = ofCategoryLabels.stream()
+                .filter(e -> labelIdSet.contains(e.getId()))
+                .map(LabelDO::getLabelCategoryId)
+                .collect(Collectors.toSet());
+
+        Set<Long> ofCategoryLabelIds = ofCategoryLabels.stream()
+                .filter(e -> !invalidCategoryIdSet.contains(e.getLabelCategoryId()))
+                .map(BaseDO::getId)
+                .collect(Collectors.toSet());
+
+        List<Long> result = new ArrayList<>();
+        result.addAll(labelIdSet);
+        result.addAll(ofCategoryLabelIds);
+        return result;
     }
 }
