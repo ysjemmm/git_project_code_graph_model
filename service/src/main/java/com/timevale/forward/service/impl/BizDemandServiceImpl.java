@@ -1288,9 +1288,4 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizLabelComponent.addLog(bizDemand.getId(), labelIds,
                 BizTypeEnum.BIZ_DEMAND.getCode(), true);
     }
-
-    public static void main(String[] args) {
-        Map<String,Integer> map = new HashMap<>();
-        System.out.println(map);
-    }
 }
