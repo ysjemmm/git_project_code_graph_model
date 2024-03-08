@@ -601,18 +601,18 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         // 校验天印的产品线，需要AppId 和 详细版本号
-        if (BugOnlineEnvEnum.PRODUCE_ENV.getCode().equals(modifyReq.getEnv())) {
-            Collection<Long> intersection = CollUtil.intersection(crmDockProductLines, modifyReq.getProductLineIdList());
-            if (CollUtil.isNotEmpty(intersection)) {
-                Optional<String> appIdOptional = Optional.ofNullable(modifyReq.getBusiness())
-                        .map(JSONObject::parseObject)
-                        .map(e -> e.getString("appId"))
-                        .filter(StrUtil::isNotEmpty);
-                if (!appIdOptional.isPresent() || StrUtil.isEmpty(modifyReq.getDetailVersionId())) {
-                    throw new BaseBizRuntimeException("请维护好APPID和产品版本后再提交此产品线的BUG");
-                }
-            }
-        }
+//        if (BugOnlineEnvEnum.PRODUCE_ENV.getCode().equals(modifyReq.getEnv())) {
+//            Collection<Long> intersection = CollUtil.intersection(crmDockProductLines, modifyReq.getProductLineIdList());
+//            if (CollUtil.isNotEmpty(intersection)) {
+//                Optional<String> appIdOptional = Optional.ofNullable(modifyReq.getBusiness())
+//                        .map(JSONObject::parseObject)
+//                        .map(e -> e.getString("appId"))
+//                        .filter(StrUtil::isNotEmpty);
+//                if (!appIdOptional.isPresent() || StrUtil.isEmpty(modifyReq.getDetailVersionId())) {
+//                    throw new BaseBizRuntimeException("请先在项目的【项目概览-客户运维信息】中维护好APPID和产品版本后再提交此产品线的BUG");
+//                }
+//            }
+//        }
 
         List<BugLogDO> checkBugLogList = bugLogMapper.selectByBugOfflineIdAndType(bugOnlineDO.getId(), BugLogTypeEnum.ONLINE.getCode(), false);
         if (CollectionUtils.isNotEmpty(checkBugLogList)) {
