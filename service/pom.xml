@@ -110,9 +110,5 @@
             <artifactId>crm-dock-facade</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.timevale.encourage</groupId>
-            <artifactId>encourage-facade</artifactId>
-        </dependency>
     </dependencies>
 </project>

@@ -53,7 +53,6 @@
         <erp.message-facade.version>1.2.8-SNAPSHOT</erp.message-facade.version>
         <custom-provider-facade.version>2.4.1-SNAPSHOT</custom-provider-facade.version>
         <inuser.security.facade.version>1.1.18-SNAPSHOT</inuser.security.facade.version>
-        <encourage-facade.version>1.0.0-SNAPSHOT</encourage-facade.version>
     </properties>
 
     <dependencyManagement>
@@ -213,12 +212,6 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-collections4</artifactId>
                 <version>${collections4.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.timevale.encourage</groupId>
-                <artifactId>encourage-facade</artifactId>
-                <version>${encourage-facade.version}</version>
             </dependency>
 
         </dependencies>

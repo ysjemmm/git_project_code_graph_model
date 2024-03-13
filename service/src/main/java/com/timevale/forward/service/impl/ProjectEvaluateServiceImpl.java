@@ -6,8 +6,6 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import com.timevale.encourage.facade.api.response.GetProjectPointResponse;
-import com.timevale.encourage.facade.api.response.meta.UserPoint;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
@@ -22,7 +20,6 @@ import com.timevale.forward.service.config.CommonConfig;
 import com.timevale.forward.service.copy.ProjectEvaluateCopier;
 import com.timevale.forward.service.copy.ProjectMemberEvaluateCopier;
 import com.timevale.forward.service.flow.ForwardFlow;
-import com.timevale.forward.service.integration.encourage.EncourageClient;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPermissionClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
@@ -51,7 +48,6 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
     final private UserComponent userComponent;
     private final ProjectMapper projectMapper;
     private final PersonComponent personComponent;
-    private final EncourageClient encourageClient;
     private final HistoryRecordMapper recordMapper;
     private final ProjectFlowMapper projectFlowMapper;
     private final ProjectEvaluateMapper evaluateMapper;
@@ -127,18 +123,6 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
             memberEvaluateVOList.removeIf(e-> !Objects.equals(userId, e.getUserId()));
         }
 
-        // 查询激励系统积分
-        Optional<GetProjectPointResponse> projectPointOpt = encourageClient.getProjectPoint(projectId);
-        projectPointOpt.map(GetProjectPointResponse::getUserPoints)
-                       .map(userPoints -> Maps.uniqueIndex(userPoints, UserPoint::getAccount))
-                       .ifPresent(userPointMap -> memberEvaluateVOList.forEach(memberEvaluateVO -> {
-                           UserPoint userPoint = userPointMap.get(memberEvaluateVO.getUserId());
-                           if (userPoint != null) {
-                               // 填充成员实得积分
-                               memberEvaluateVO.setPersonalPoints(userPoint.getPersonalPoint());
-                           }
-                       }));
-
         // 组装数据
         ProjectMemberEvaluateVO result = new ProjectMemberEvaluateVO();
         result.setWorkloadFlowId(workloadFlowId);
@@ -147,7 +131,7 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         result.setPointsWorkloadSum(workloadPointsSum);
         result.setConclusionAuditing(conclusionAuditing);
         result.setMemberEvaluateVOList(memberEvaluateVOList);
-        projectPointOpt.map(GetProjectPointResponse::getProjectOriginalPoint).ifPresent(result::setProjectOriginalPoint);
+        result.setProjectOriginalPoint(BigDecimal.ZERO);
 
         return BaseResult.success(result);
     }
@@ -275,9 +259,6 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
                 .reduce(BigDecimal::add)
                 .orElse(null);
 
-        // 查询激励系统积分
-        Optional<GetProjectPointResponse> projectPointOpt = encourageClient.getProjectPoint(projectId);
-
         // 组装结果
         ProjectEvaluateVO result = new ProjectEvaluateVO();
         result.setScoresSum(scoresSum);
@@ -286,7 +267,7 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         result.setProjectEvaluateGrade(projectEvaluateGrade);
         result.setProjectEvaluateGradeName(projectEvaluateGradeName);
         result.setEvaluateItemVOList(evaluateItemVOList);
-        projectPointOpt.map(GetProjectPointResponse::getProjectPoint).ifPresent(result::setProjectPoint);
+        result.setProjectPoint(BigDecimal.ZERO);
 
         return BaseResult.success(result);
     }
