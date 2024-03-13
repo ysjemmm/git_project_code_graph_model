@@ -131,7 +131,6 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         result.setPointsWorkloadSum(workloadPointsSum);
         result.setConclusionAuditing(conclusionAuditing);
         result.setMemberEvaluateVOList(memberEvaluateVOList);
-        result.setProjectOriginalPoint(BigDecimal.ZERO);
 
         return BaseResult.success(result);
     }
@@ -267,7 +266,6 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         result.setProjectEvaluateGrade(projectEvaluateGrade);
         result.setProjectEvaluateGradeName(projectEvaluateGradeName);
         result.setEvaluateItemVOList(evaluateItemVOList);
-        result.setProjectPoint(BigDecimal.ZERO);
 
         return BaseResult.success(result);
     }
