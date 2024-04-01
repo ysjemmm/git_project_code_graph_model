@@ -27,6 +27,11 @@ public class BizDemandUpdateCondition {
     private Integer status;
 
     /**
+     * 是否客开需求
+     */
+    private Boolean customerDevDemand;
+
+    /**
      * 项目结束时间
      */
     private Date projectEndDate;

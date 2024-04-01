@@ -78,4 +78,7 @@ public class BizDemandSimpleVO extends ToString {
     @ApiModelProperty("总资源评估（人天）")
     private BigDecimal totalTime;
 
+    @ApiModelProperty("是否客开需求")
+    private Boolean customerDevDemand;
+
 }

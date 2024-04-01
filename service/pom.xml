@@ -29,6 +29,10 @@
             <artifactId>mapstruct-processor</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok-mapstruct-binding</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.timevale.filesystem</groupId>
             <artifactId>filesystem-common-service-facade</artifactId>
         </dependency>

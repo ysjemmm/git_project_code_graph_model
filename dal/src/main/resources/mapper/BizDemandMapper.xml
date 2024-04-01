@@ -433,6 +433,9 @@
             <if test="projectEndDate != null">
                 project_end_date = #{projectEndDate},
             </if>
+            <if test="customerDevDemand != null">
+                customer_dev_demand = #{customerDevDemand},
+            </if>
             <if test="projectEndDateNull">
                 project_end_date = null,
             </if>

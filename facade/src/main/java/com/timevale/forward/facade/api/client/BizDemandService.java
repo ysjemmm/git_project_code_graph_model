@@ -158,4 +158,10 @@ public interface BizDemandService {
      */
     ProjectVO findLinkProject(Long bizDemandId);
 
+
+    /**
+     * 简易修改业务需求
+     */
+    BaseResult<Void> simpleModifyBizDemands(BizDemandSimpleModifyReq req);
+
 }

@@ -7,6 +7,7 @@ import cn.hutool.core.util.StrUtil;
 import com.google.common.base.Objects;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
+import com.timevale.forward.dal.condition.BizDemandUpdateCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.BizDemandService;
@@ -1210,6 +1211,18 @@ public class BizDemandServiceImpl implements BizDemandService {
         log.info("业务需求-项目清单接收参数:{}", bizDemandId);
         ProjectDO projectDO = projectComponent.getByBizDemandId(bizDemandId);
         return ProjectCopier.INSTANCE.transform(projectDO);
+    }
+
+    @Override
+    public BaseResult<Void> simpleModifyBizDemands(BizDemandSimpleModifyReq req) {
+        if (CollectionUtils.isEmpty(req.getBizDemandIds()) ||
+            req.getCustomerDevDemand() == null) {
+            return BaseResult.success();
+        }
+        bizDemandMapper.updateConditional(new BizDemandUpdateCondition()
+                .setIds(req.getBizDemandIds())
+                .setCustomerDevDemand(req.getCustomerDevDemand()));
+        return BaseResult.success();
     }
 
     /**
