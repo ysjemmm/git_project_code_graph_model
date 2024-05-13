@@ -6,7 +6,6 @@ import com.timevale.forward.dal.dto.BugOfflineCountDTO;
 import com.timevale.forward.dal.dto.BugOfflineReasonDistributionDTO;
 import com.timevale.forward.dal.entity.BugOfflineDO;
 import com.timevale.forward.dal.entity.BugOfflineListDO;
-import com.timevale.forward.dal.entity.BugOnlineProductLineDO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
@@ -40,7 +39,7 @@ public interface BugOfflineMapper {
      * @param bugOfflineDOList 线下bug列表
      * @return 影响行数
      */
-    int unlinkBugOffline(@Param("bugOfflineDOList")List<BugOfflineDO> bugOfflineDOList);
+    int unlinkBugOffline(@Param("bugOfflineDOList") List<BugOfflineDO> bugOfflineDOList);
 
     /**
      * 选择id获取DO
@@ -66,7 +65,7 @@ public interface BugOfflineMapper {
      */
     BugOfflineDO get(@Param("id") Long id);
 
-    List<BugOfflineDO> getByIds(@Param("ids") Collection<Long> ids, @Param("containDeleted")Boolean containDeleted);
+    List<BugOfflineDO> getByIds(@Param("ids") Collection<Long> ids, @Param("containDeleted") Boolean containDeleted);
 
     /**
      * 根据查询条件获取DO列表
@@ -86,6 +85,7 @@ public interface BugOfflineMapper {
 
     /**
      * 查询用户待修复线下BUG数量
+     *
      * @param projectId 项目id
      * @return 项目下每个用户待修复线下bug数量
      */
@@ -93,6 +93,7 @@ public interface BugOfflineMapper {
 
     /**
      * 查询项目线下bug原因分布
+     *
      * @param projectId 项目id
      * @return 线下bug分布列表
      */
@@ -100,6 +101,7 @@ public interface BugOfflineMapper {
 
     /**
      * 查询项目线下bug所属端分布
+     *
      * @param projectId 项目id
      * @return 线下bug分布列表
      */
@@ -122,4 +124,13 @@ public interface BugOfflineMapper {
     @Select("select * from bug_offline where product_line_id=#{productLineId} AND is_deleted=false")
     List<BugOfflineDO> getByProductLineId(@Param("productLineId") Long productLineId);
 
+    @Select("SELECT * FROM bug_offline WHERE operator_id=#{operatorId} AND is_deleted = false")
+    List<BugOfflineDO> getByOperatorId(@Param("operatorId") String operatorId);
+
+    @Select("SELECT * FROM bug_offline WHERE proposer_id=#{proposerId} AND is_deleted = false")
+    List<BugOfflineDO> getByProposerId(@Param("proposerId") String proposerId);
+
+    void updateOperator(@Param("ids") Collection<Long> ids, @Param("operatorId") String operatorId, @Param("operator") String operator);
+
+    void updateProposer(@Param("ids") Collection<Long> ids, @Param("proposerId") String proposerId, @Param("proposer") String proposer);
 }

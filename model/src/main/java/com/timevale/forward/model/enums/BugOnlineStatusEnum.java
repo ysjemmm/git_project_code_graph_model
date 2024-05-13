@@ -63,13 +63,12 @@ public enum BugOnlineStatusEnum {
     /**
      * 开始响应
      */
-    START_RESPONSE(10,"开始响应"),
+    START_RESPONSE(10, "开始响应"),
 
     /**
      * 待验收
      */
-    ACCEPTANCE(11,"待验收")
-    ;
+    ACCEPTANCE(11, "待验收");
 
     private final Integer code;
     private final String text;
@@ -91,11 +90,15 @@ public enum BugOnlineStatusEnum {
      */
     public static boolean canConvertBizDemand(Integer code) {
         return HANG_UP.getCode().equals(code)
-            || START_RESPONSE.getCode().equals(code)
-            || PROBLEM_REPORT.getCode().equals(code)
-            || QUESTION_CONFIRM.getCode().equals(code)
-            || BE_CONFIRM.getCode().equals(code)
-            || CLOSE.getCode().equals(code);
+                || START_RESPONSE.getCode().equals(code)
+                || PROBLEM_REPORT.getCode().equals(code)
+                || QUESTION_CONFIRM.getCode().equals(code)
+                || BE_CONFIRM.getCode().equals(code)
+                || CLOSE.getCode().equals(code);
+    }
+
+    public static boolean unfinished(Integer code) {
+        return !(CLOSE.code.equals(code) || COMPLETE.code.equals(code) || REQUIRED.code.equals(code));
     }
 
 }

@@ -534,6 +534,27 @@
         set open_count = open_count + 1
         where id = #{id}
     </update>
+
+    <update id="updateOperator">
+        UPDATE bug_online
+        SET operator = #{operator},
+            operator_id = #{operatorId}
+        WHERE id IN
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <update id="updateProposer">
+        UPDATE bug_online
+        SET proposer = #{proposer},
+            proposer_id = #{proposerId}
+        WHERE id IN
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </update>
+
 </mapper>
 
 

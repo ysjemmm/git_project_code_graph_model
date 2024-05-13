@@ -326,6 +326,26 @@
         </if>
     </update>
 
+    <update id="updateOperator">
+        UPDATE bug_offline
+        SET operator = #{operator},
+            operator_id = #{operatorId}
+        WHERE id IN
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <update id="updateProposer">
+        UPDATE bug_offline
+        SET proposer = #{proposer},
+            proposer_id = #{proposerId}
+        WHERE id IN
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </update>
+
     <select id="selectByBizDemandId" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
         SELECT id, name
         FROM bug_offline

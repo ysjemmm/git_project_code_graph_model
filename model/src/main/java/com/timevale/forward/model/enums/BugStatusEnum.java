@@ -75,4 +75,8 @@ public enum BugStatusEnum {
     public static boolean completed(String text) {
         return COMPLETE.getText().equals(text) || CLOSE.getText().equals(text) || REQUIRED.getText().equals(text);
     }
+
+    public static boolean unfinished(Integer code) {
+        return !(CLOSE.code.equals(code) || COMPLETE.code.equals(code) || REQUIRED.code.equals(code));
+    }
 }

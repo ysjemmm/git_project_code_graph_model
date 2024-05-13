@@ -3,13 +3,8 @@ package com.timevale.forward.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.dao.BizDemandMapper;
-import com.timevale.forward.dal.dao.PersonMapper;
-import com.timevale.forward.dal.dao.ProductDemandMapper;
-import com.timevale.forward.dal.entity.BaseDO;
-import com.timevale.forward.dal.entity.BizDemandDO;
-import com.timevale.forward.dal.entity.PersonDO;
-import com.timevale.forward.dal.entity.ProductDemandDO;
+import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.BizDemandService;
 import com.timevale.forward.facade.api.client.PersonService;
 import com.timevale.forward.facade.api.client.ProductDemandService;
@@ -17,15 +12,14 @@ import com.timevale.forward.facade.api.request.BatchTransferReq;
 import com.timevale.forward.facade.api.request.RecipientAddReq;
 import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.forward.facade.api.result.TeamMemberVO;
-import com.timevale.forward.model.enums.BizDemandStatusEnum;
-import com.timevale.forward.model.enums.PersonTypeEnum;
-import com.timevale.forward.model.enums.ProductDemandStatusEnum;
+import com.timevale.forward.model.enums.*;
+import com.timevale.forward.service.component.BugOfflineComponent;
+import com.timevale.forward.service.component.BugOnlineComponent;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
-import com.timevale.forward.service.observer.event.BizResignTransferEvent;
-import com.timevale.forward.service.observer.event.PdResignTransferEvent;
+import com.timevale.forward.service.observer.event.*;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -62,6 +56,14 @@ public class PersonServiceImpl implements PersonService {
     private BizDemandService bizDemandService;
     @Resource
     private ProductDemandService productDemandService;
+    @Resource
+    private BugOnlineMapper bugOnlineMapper;
+    @Resource
+    private BugOfflineMapper bugOfflineMapper;
+    @Resource
+    private BugOnlineComponent bugOnlineComponent;
+    @Resource
+    private BugOfflineComponent bugOfflineComponent;
 
     @Override
     public BaseResult<Boolean> addRecipients(RecipientAddReq recipientAddReq) {
@@ -120,6 +122,7 @@ public class PersonServiceImpl implements PersonService {
 
     @Override
     public BaseResult<Void> resignNotice(String account) {
+        log.info("[PersonServiceImpl.resignNotice]account={}", account);
         if (StrUtil.isEmpty(account)) {
             return BaseResult.success();
         }
@@ -132,7 +135,7 @@ public class PersonServiceImpl implements PersonService {
         }
 
         // 查询上级信息
-        BaseInfoResponse managerInfo =  Optional.of(selfInfo)
+        BaseInfoResponse managerInfo = Optional.of(selfInfo)
                 .map(BaseInfoResponse::getManagerAccount)
                 .map(manager -> innerUserPersonClient.getSelfInfo(manager, false))
                 .orElse(null);
@@ -140,35 +143,120 @@ public class PersonServiceImpl implements PersonService {
             log.error("[PersonServiceImpl.resignNotice] 无法查询到离职人员上级的信息，无法转交需求，account: {}", account);
             return BaseResult.success();
         }
+        log.info("[PersonServiceImpl.resignNotice]manager={}", managerInfo.getAccount());
 
-        List<BizDemandDO> bds = bizDemandMapper.getByReceiveManId(account);
-        List<ProductDemandDO> pds = productDemandMapper.getByOwnerId(account);
-        List<Long> bdIds = bds.stream().filter(e -> BizDemandStatusEnum.unfinished(e.getStatus())).map(BaseDO::getId).collect(Collectors.toList());
-        List<Long> pdIds = pds.stream().filter(e -> ProductDemandStatusEnum.unfinished(e.getStatus())).map(BaseDO::getId).collect(Collectors.toList());
+        // 业务需求转交
+        {
+            List<BizDemandDO> bds = bizDemandMapper.getByReceiveManId(account);
+            List<Long> bdIds = bds.stream()
+                    .filter(e -> BizDemandStatusEnum.unfinished(e.getStatus()))
+                    .map(BaseDO::getId)
+                    .collect(Collectors.toList());
 
-
-        String operator = selfInfo.getAlias() +"-" + selfInfo.getName();
-
-        if (CollUtil.isNotEmpty(bdIds)) {
-            BatchTransferReq req = new BatchTransferReq()
-                    .setType(0)
-                    .setReceiveMan(managerInfo.getAlias() + "-" + managerInfo.getName())
-                    .setReceiveManId(managerInfo.getAccount())
-                    .setIdList(bdIds);
-            bizDemandService.bizDemandBatchTransferReceiveMan(req);
-
-            new BizResignTransferEvent(this, bdIds.size(), operator, managerInfo.getAccount()).send();
+            if (CollUtil.isNotEmpty(bdIds)) {
+                BatchTransferReq req = new BatchTransferReq()
+                        .setType(0)
+                        .setReceiveMan(managerInfo.getAlias() + "-" + managerInfo.getName())
+                        .setReceiveManId(managerInfo.getAccount())
+                        .setIdList(bdIds);
+                bizDemandService.bizDemandBatchTransferReceiveMan(req);
+                new BizResignTransferEvent(this,
+                        bdIds.size(),
+                        selfInfo.getAlias() + "-" + selfInfo.getName(),
+                        managerInfo.getAccount())
+                        .send();
+            }
         }
 
-        if (CollUtil.isNotEmpty(pdIds)) {
-            BatchTransferReq req = new BatchTransferReq()
-                    .setType(0)
-                    .setReceiveMan(managerInfo.getAlias() + "-" + managerInfo.getName())
-                    .setReceiveManId(managerInfo.getAccount())
-                    .setIdList(pdIds);
-            productDemandService.productDemandBatchTransferReceiveMan(req);
+        // 产品需求转交
+        {
+            List<ProductDemandDO> pds = productDemandMapper.getByOwnerId(account);
+            List<Long> pdIds = pds.stream()
+                    .filter(e -> ProductDemandStatusEnum.unfinished(e.getStatus()))
+                    .map(BaseDO::getId)
+                    .collect(Collectors.toList());
 
-            new PdResignTransferEvent(this, pdIds.size(), operator, managerInfo.getAccount()).send();
+            if (CollUtil.isNotEmpty(pdIds)) {
+                BatchTransferReq req = new BatchTransferReq()
+                        .setType(0)
+                        .setReceiveMan(managerInfo.getAlias() + "-" + managerInfo.getName())
+                        .setReceiveManId(managerInfo.getAccount())
+                        .setIdList(pdIds);
+                productDemandService.productDemandBatchTransferReceiveMan(req);
+                new PdResignTransferEvent(this,
+                        pdIds.size(),
+                        selfInfo.getAlias() + "-" + selfInfo.getName(),
+                        managerInfo.getAccount())
+                        .send();
+            }
+        }
+
+        // 线上bug经办人转交
+        {
+            List<BugOnlineDO> bugs = bugOnlineMapper.getByOperatorId(account);
+            List<Long> bugIds = bugs.stream()
+                    .filter(e -> BugOnlineStatusEnum.unfinished(e.getStatus()))
+                    .map(BaseDO::getId)
+                    .collect(Collectors.toList());
+            if (CollUtil.isNotEmpty(bugIds)) {
+                bugOnlineComponent.transferOperatorId(bugIds, managerInfo.getAlias() + "-" + managerInfo.getName(), managerInfo.getAccount());
+                new BugOnlineOperatorResignTransferEvent(
+                        this,
+                        selfInfo.getAlias() + "-" + selfInfo.getName(),
+                        managerInfo.getAccount()
+                ).send();
+            }
+        }
+
+        // 线上bug提出人转交
+        {
+            List<BugOnlineDO> bugs = bugOnlineMapper.getByProposerId(account);
+            List<Long> bugIds = bugs.stream()
+                    .filter(e -> BugOnlineStatusEnum.unfinished(e.getStatus()))
+                    .map(BaseDO::getId)
+                    .collect(Collectors.toList());
+            if (CollUtil.isNotEmpty(bugIds)) {
+                bugOnlineComponent.transferProposerId(bugIds, managerInfo.getAlias() + "-" + managerInfo.getName(), managerInfo.getAccount());
+                new BugOnlineProposerResignTransferEvent(
+                        this,
+                        selfInfo.getAlias() + "-" + selfInfo.getName(),
+                        managerInfo.getAccount()
+                ).send();
+            }
+        }
+
+        // 线下bug经办人转交
+        {
+            List<BugOfflineDO> bugs = bugOfflineMapper.getByOperatorId(account);
+            List<Long> bugIds = bugs.stream()
+                    .filter(e -> BugStatusEnum.unfinished(e.getStatus()))
+                    .map(BaseDO::getId)
+                    .collect(Collectors.toList());
+            if (CollUtil.isNotEmpty(bugIds)) {
+                bugOfflineComponent.transferOperatorId(bugIds, managerInfo.getAlias() + "-" + managerInfo.getName(), managerInfo.getAccount());
+                new BugOfflineOperatorResignTransferEvent(
+                        this,
+                        selfInfo.getAlias() + "-" + selfInfo.getName(),
+                        managerInfo.getAccount()
+                ).send();
+            }
+        }
+
+        // 线下bug提出人转交
+        {
+            List<BugOfflineDO> bugs = bugOfflineMapper.getByProposerId(account);
+            List<Long> bugIds = bugs.stream()
+                    .filter(e -> BugStatusEnum.unfinished(e.getStatus()))
+                    .map(BaseDO::getId)
+                    .collect(Collectors.toList());
+            if (CollUtil.isNotEmpty(bugIds)) {
+                bugOfflineComponent.transferProposerId(bugIds, managerInfo.getAlias() + "-" + managerInfo.getName(), managerInfo.getAccount());
+                new BugOfflineProposerResignTransferEvent(
+                        this,
+                        selfInfo.getAlias() + "-" + selfInfo.getName(),
+                        managerInfo.getAccount()
+                ).send();
+            }
         }
 
         return BaseResult.success();

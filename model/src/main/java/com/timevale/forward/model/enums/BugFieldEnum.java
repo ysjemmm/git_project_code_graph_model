@@ -21,6 +21,8 @@ public enum BugFieldEnum {
 
     OPERATOR("经办人"),
 
+    PROPOSER("提出人"),
+
     REPAIR_FAIL_REASON("修复失败原因"),
 
     DISMISS_CAUSE("不用修复原因"),

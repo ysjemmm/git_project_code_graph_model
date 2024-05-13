@@ -134,4 +134,14 @@ public interface BugOnlineMapper {
      * 打开次数加一
      */
     void updateIncOpenCount(@Param("id") Long id);
+
+    @Select("SELECT * FROM bug_online WHERE operator_id=#{operatorId} AND is_deleted = false")
+    List<BugOnlineDO> getByOperatorId(@Param("operatorId") String operatorId);
+
+    @Select("SELECT * FROM bug_online WHERE proposer_id=#{proposerId} AND is_deleted = false")
+    List<BugOnlineDO> getByProposerId(@Param("proposerId") String proposerId);
+
+    void updateOperator(@Param("ids") Collection<Long> ids, @Param("operatorId") String operatorId, @Param("operator") String operator);
+
+    void updateProposer(@Param("ids") Collection<Long> ids, @Param("proposerId") String proposerId, @Param("proposer") String proposer);
 }

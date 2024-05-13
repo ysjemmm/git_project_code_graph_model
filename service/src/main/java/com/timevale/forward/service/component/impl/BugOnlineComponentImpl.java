@@ -289,6 +289,51 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
         return productLineMapper.getByIds(pdIds);
     }
 
+    @Override
+    public void transferOperatorId(Collection<Long> ids, String operator, String operatorId) {
+        if (CollUtil.isEmpty(ids)) {
+            return;
+        }
+
+        List<BugOnlineDO> bugOnlineDOList = bugOnlineMapper.getByIds(ids, false);
+        List<BugLogDO> bugLogList = bugOnlineDOList.stream()
+                .map(e -> {
+                    BugLogDO bugLogDO = new BugLogDO();
+                    bugLogDO.setMainId(e.getId());
+                    bugLogDO.setNewValue(operator);
+                    bugLogDO.setOldValue(e.getOperator());
+                    bugLogDO.setField(BugFieldEnum.OPERATOR.getText());
+                    bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+                    return bugLogDO;
+                })
+                .collect(Collectors.toList());
+
+        bugLogMapper.batchInsert(bugLogList);
+        bugOnlineMapper.updateOperator(ids, operator, operatorId);
+    }
+
+    @Override
+    public void transferProposerId(Collection<Long> ids, String proposer, String proposerId) {
+        if (CollUtil.isEmpty(ids)) {
+            return;
+        }
+
+        List<BugOnlineDO> bugOnlineDOList = bugOnlineMapper.getByIds(ids, false);
+        List<BugLogDO> bugLogList = bugOnlineDOList.stream()
+                .map(e -> {
+                    BugLogDO bugLogDO = new BugLogDO();
+                    bugLogDO.setMainId(e.getId());
+                    bugLogDO.setNewValue(proposer);
+                    bugLogDO.setOldValue(e.getProposer());
+                    bugLogDO.setField(BugFieldEnum.PROPOSER.getText());
+                    bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+                    return bugLogDO;
+                })
+                .collect(Collectors.toList());
+        bugLogMapper.batchInsert(bugLogList);
+        bugOnlineMapper.updateProposer(ids, proposer, proposerId);
+    }
+
     private void addBizDemandAttachLogs(BugOnlineDO bugOnlineDO, Collection<Long> bizDemandIds) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         List<BizChangeLogDO> changeLogs = bizDemandIds.stream().map(id -> {
