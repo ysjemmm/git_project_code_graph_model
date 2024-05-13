@@ -19,7 +19,10 @@ import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
-import com.timevale.forward.service.observer.event.*;
+import com.timevale.forward.service.observer.event.BizResignTransferEvent;
+import com.timevale.forward.service.observer.event.BugOfflineResignTransferEvent;
+import com.timevale.forward.service.observer.event.BugOnlineResignTransferEvent;
+import com.timevale.forward.service.observer.event.PdResignTransferEvent;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -191,6 +194,7 @@ public class PersonServiceImpl implements PersonService {
             }
         }
 
+        boolean bugOnlineTransfer = false;
         // 线上bug经办人转交
         {
             List<BugOnlineDO> bugs = bugOnlineMapper.getByOperatorId(account);
@@ -199,15 +203,10 @@ public class PersonServiceImpl implements PersonService {
                     .map(BaseDO::getId)
                     .collect(Collectors.toList());
             if (CollUtil.isNotEmpty(bugIds)) {
-                bugOnlineComponent.transferOperatorId(bugIds, managerInfo.getAlias() + "-" + managerInfo.getName(), managerInfo.getAccount());
-                new BugOnlineOperatorResignTransferEvent(
-                        this,
-                        selfInfo.getAlias() + "-" + selfInfo.getName(),
-                        managerInfo.getAccount()
-                ).send();
+                bugOnlineTransfer = true;
+                bugOnlineComponent.transferOperator(bugIds, managerInfo.getAlias() + "-" + managerInfo.getName(), managerInfo.getAccount());
             }
         }
-
         // 线上bug提出人转交
         {
             List<BugOnlineDO> bugs = bugOnlineMapper.getByProposerId(account);
@@ -216,15 +215,19 @@ public class PersonServiceImpl implements PersonService {
                     .map(BaseDO::getId)
                     .collect(Collectors.toList());
             if (CollUtil.isNotEmpty(bugIds)) {
-                bugOnlineComponent.transferProposerId(bugIds, managerInfo.getAlias() + "-" + managerInfo.getName(), managerInfo.getAccount());
-                new BugOnlineProposerResignTransferEvent(
-                        this,
-                        selfInfo.getAlias() + "-" + selfInfo.getName(),
-                        managerInfo.getAccount()
-                ).send();
+                bugOnlineComponent.transferProposer(bugIds, managerInfo.getAlias() + "-" + managerInfo.getName(), managerInfo.getAccount());
+                bugOnlineTransfer = true;
             }
         }
+        if (bugOnlineTransfer) {
+            new BugOnlineResignTransferEvent(
+                    this,
+                    selfInfo.getAlias() + "-" + selfInfo.getName(),
+                    managerInfo.getAccount()
+            ).send();
+        }
 
+        boolean bugOfflineTransfer = false;
         // 线下bug经办人转交
         {
             List<BugOfflineDO> bugs = bugOfflineMapper.getByOperatorId(account);
@@ -233,15 +236,10 @@ public class PersonServiceImpl implements PersonService {
                     .map(BaseDO::getId)
                     .collect(Collectors.toList());
             if (CollUtil.isNotEmpty(bugIds)) {
-                bugOfflineComponent.transferOperatorId(bugIds, managerInfo.getAlias() + "-" + managerInfo.getName(), managerInfo.getAccount());
-                new BugOfflineOperatorResignTransferEvent(
-                        this,
-                        selfInfo.getAlias() + "-" + selfInfo.getName(),
-                        managerInfo.getAccount()
-                ).send();
+                bugOfflineTransfer = true;
+                bugOfflineComponent.transferOperator(bugIds, managerInfo.getAlias() + "-" + managerInfo.getName(), managerInfo.getAccount());
             }
         }
-
         // 线下bug提出人转交
         {
             List<BugOfflineDO> bugs = bugOfflineMapper.getByProposerId(account);
@@ -250,13 +248,17 @@ public class PersonServiceImpl implements PersonService {
                     .map(BaseDO::getId)
                     .collect(Collectors.toList());
             if (CollUtil.isNotEmpty(bugIds)) {
-                bugOfflineComponent.transferProposerId(bugIds, managerInfo.getAlias() + "-" + managerInfo.getName(), managerInfo.getAccount());
-                new BugOfflineProposerResignTransferEvent(
-                        this,
-                        selfInfo.getAlias() + "-" + selfInfo.getName(),
-                        managerInfo.getAccount()
-                ).send();
+                bugOfflineTransfer = true;
+                bugOfflineComponent.transferProposer(bugIds, managerInfo.getAlias() + "-" + managerInfo.getName(), managerInfo.getAccount());
             }
+        }
+        // 线下bug转交通知
+        if (bugOfflineTransfer) {
+            new BugOfflineResignTransferEvent(
+                    this,
+                    selfInfo.getAlias() + "-" + selfInfo.getName(),
+                    managerInfo.getAccount()
+            ).send();
         }
 
         return BaseResult.success();

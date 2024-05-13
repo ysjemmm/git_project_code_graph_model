@@ -10,7 +10,7 @@ public interface BugOfflineComponent {
      * @param ids        线下bugIDd列表
      * @param operatorId 经办人id
      */
-    void transferOperatorId(Collection<Long> ids, String operator, String operatorId);
+    void transferOperator(Collection<Long> ids, String operator, String operatorId);
 
     /**
      * 批量变更提出人
@@ -18,7 +18,7 @@ public interface BugOfflineComponent {
      * @param ids        线下bugIDd列表
      * @param proposerId 提出人id
      */
-    void transferProposerId(Collection<Long> ids, String proposer, String proposerId);
+    void transferProposer(Collection<Long> ids, String proposer, String proposerId);
 
 
 

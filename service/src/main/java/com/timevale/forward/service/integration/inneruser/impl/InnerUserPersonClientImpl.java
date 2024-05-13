@@ -252,6 +252,9 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
 
     @Override
     public BaseInfoResponse getSelfInfo(String account, Boolean isLeave) {
+        if (StrUtil.isEmpty(account)) {
+            return null;
+        }
         try {
             final AccountRequest request = new AccountRequest();
             request.setAccount(account);

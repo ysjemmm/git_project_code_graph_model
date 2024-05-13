@@ -141,7 +141,7 @@ public interface BugOnlineMapper {
     @Select("SELECT * FROM bug_online WHERE proposer_id=#{proposerId} AND is_deleted = false")
     List<BugOnlineDO> getByProposerId(@Param("proposerId") String proposerId);
 
-    void updateOperator(@Param("ids") Collection<Long> ids, @Param("operatorId") String operatorId, @Param("operator") String operator);
+    void updateOperator(@Param("ids") Collection<Long> ids, @Param("operator") String operator, @Param("operatorId") String operatorId);
 
-    void updateProposer(@Param("ids") Collection<Long> ids, @Param("proposerId") String proposerId, @Param("proposer") String proposer);
+    void updateProposer(@Param("ids") Collection<Long> ids, @Param("proposer") String proposer, @Param("proposerId") String proposerId);
 }

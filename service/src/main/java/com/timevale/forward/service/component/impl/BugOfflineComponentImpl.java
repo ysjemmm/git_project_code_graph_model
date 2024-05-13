@@ -29,7 +29,7 @@ public class BugOfflineComponentImpl implements BugOfflineComponent {
     private BugOfflineMapper bugOfflineMapper;
 
     @Override
-    public void transferOperatorId(Collection<Long> ids, String operator, String operatorId) {
+    public void transferOperator(Collection<Long> ids, String operator, String operatorId) {
         if (CollUtil.isEmpty(ids)) {
             return;
         }
@@ -52,7 +52,7 @@ public class BugOfflineComponentImpl implements BugOfflineComponent {
     }
 
     @Override
-    public void transferProposerId(Collection<Long> ids, String proposer, String proposerId) {
+    public void transferProposer(Collection<Long> ids, String proposer, String proposerId) {
         if (CollUtil.isEmpty(ids)) {
             return;
         }

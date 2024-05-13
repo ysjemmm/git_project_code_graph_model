@@ -11,13 +11,13 @@ import java.util.List;
  * @author by YangXu
  * @date 2023/05/09 17:12
  */
-public class BugOnlineOperatorResignTransferEvent extends MessageEvent {
+public class BugOnlineResignTransferEvent extends MessageEvent {
     private final String operator;
     private final String receiver;
 
-    private static final String MSG = "### %s  \n  您的下属**%s**已离职，线上bug经办人已变更由您处理 \n\n  ***  \n  [查看详情](%s)";
+    private static final String MSG = "### %s  \n  您的下属**%s**已离职，线上bug已变更由您处理 \n\n  ***  \n  [查看详情](%s)";
 
-    public BugOnlineOperatorResignTransferEvent(Object source, String operator, String receiver) {
+    public BugOnlineResignTransferEvent(Object source, String operator, String receiver) {
         super(source);
         this.operator = operator;
         this.receiver = receiver;
@@ -26,8 +26,8 @@ public class BugOnlineOperatorResignTransferEvent extends MessageEvent {
     @Override
     public void run() {
         List<String> receivers = Lists.newArrayList(receiver);
-        String title = String.format(MessageTitleEnum.BUG_ONLINE_MODIFY_OPERATOR.getText());
-        String singleUrl = domainName + TabEnum.BUSINESS_MANAGEMENT.listTab(1);
+        String title = String.format(MessageTitleEnum.BUG_ONLINE_TRANSFER.getText());
+        String singleUrl = domainName + TabEnum.BUG_ONLINE_MANAGEMENT.listTab(0);
         String markdown = String.format(MSG, title, operator, singleUrl);
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
