@@ -108,4 +108,10 @@ public class BizDemandQueryList extends QueryBase {
 
     @ApiModelProperty("SR专家id集合")
     private Collection<String> srExpertIds;
+
+    @ApiModelProperty("是否影响客户订单")
+    private Boolean affectCustomerOrder;
+
+    @ApiModelProperty("卡单说明")
+    private String stuckOrderInstructions;
 }

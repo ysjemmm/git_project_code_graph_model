@@ -175,12 +175,25 @@ public class BizDemandListCondition{
     /**
      * 产品方案
      */
+    @WildcardEscape
     private String productSolution;
 
     /**
      * SR专家id集合
      */
     private Collection<String> srExpertIds;
+
+    /**
+     * 是否影响客户订单
+     */
+    private Boolean affectCustomerOrder;
+
+    /**
+     * 卡单说明
+     */
+    @WildcardEscape
+    private String stuckOrderInstructions;
+
 
     public int pageNum = 1;
     public int pageSize = 20;

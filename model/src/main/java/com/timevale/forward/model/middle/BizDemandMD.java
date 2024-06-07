@@ -71,4 +71,10 @@ public class BizDemandMD extends BaseMD {
     @FieldCompare(fieldName = "SR专家")
     private String srExpert;
 
+    @FieldCompare(fieldName = "是否影响客户订单", enumClass = YesOrNoEnum.class)
+    private Boolean affectCustomerOrder;
+
+    @FieldCompare(fieldName = "卡单说明")
+    private String stuckOrderInstructions;
+
 }

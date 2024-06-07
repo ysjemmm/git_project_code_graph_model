@@ -140,6 +140,12 @@ public class BizDemandVO extends ToString {
     @ApiModelProperty("sr专家id")
     private String srExpertId;
 
+    @ApiModelProperty("是否影响客户订单")
+    private String affectCustomerOrder;
+
+    @ApiModelProperty("卡单说明")
+    private String stuckOrderInstructions;
+
     @ApiModelProperty("项目基础信息")
     private List<ProjectSimpleVO> projectBaseList;
 }

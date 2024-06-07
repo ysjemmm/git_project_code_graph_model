@@ -36,6 +36,8 @@
             <if test="totalTime != null">total_time,</if>
             <if test="srExpert != null">sr_expert,</if>
             <if test="srExpertId != null">sr_expert_id,</if>
+            <if test="affectCustomerOrder != null">affect_customer_order,</if>
+            <if test="stuckOrderInstructions  != null">stuck_order_instructions,</if>
         </trim>
         VALUES
         <trim prefix="(" suffix=")" suffixOverrides=",">
@@ -70,6 +72,8 @@
             <if test="totalTime != null">#{totalTime},</if>
             <if test="srExpert != null">#{srExpert},</if>
             <if test="srExpertId != null">#{srExpertId},</if>
+            <if test="affectCustomerOrder != null">#{affectCustomerOrder},</if>
+            <if test="stuckOrderInstructions != null">#{stuckOrderInstructions},</if>
         </trim>
     </insert>
 
@@ -157,6 +161,12 @@
             <if test="srExpertId != null and srExpertId != ''">
                 sr_expert_id = #{srExpertId},
             </if>
+            <if test="affectCustomerOrder != null">
+                affect_customer_order = #{affectCustomerOrder},
+            </if>
+            <if test="stuckOrderInstructions != null">
+               stuck_order_instructions = #{stuckOrderInstructions},
+            </if>
             <if test="true">
                 modify_man_id = #{modifyManId},
                 modify_man = #{modifyMan},
@@ -203,6 +213,8 @@
             hope_release_day = #{hopeReleaseDay},
             sr_expert = #{srExpert},
             sr_expert_id = #{srExpertId},
+            affect_customer_order = #{affectCustomerOrder},
+            stuck_order_instructions = #{stuckOrderInstructions},
         </set>
         where id = #{id}
     </update>
@@ -345,6 +357,12 @@
                 <foreach collection="srExpertIds" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
+            </if>
+            <if test="affectCustomerOrder != null">
+                and bd.affect_customer_order = #{affectCustomerOrder}
+            </if>
+            <if test="stuckOrderInstructions != null and stuckOrderInstructions != ''">
+                and bd.stuck_order_instructions like concat('%', #{stuckOrderInstructions}, '%')
             </if>
             and bd.is_deleted = false
         </where>

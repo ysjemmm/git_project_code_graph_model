@@ -180,4 +180,10 @@ public class BizDemandDetailVO extends ToString {
 
     @ApiModelProperty("SR专家id")
     private String srExpertId;
+
+    @ApiModelProperty("是否影响客户订单")
+    private Boolean affectCustomerOrder;
+
+    @ApiModelProperty("卡单说明")
+    private String stuckOrderInstructions;
 }

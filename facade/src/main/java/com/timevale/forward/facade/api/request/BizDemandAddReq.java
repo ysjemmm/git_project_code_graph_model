@@ -127,4 +127,11 @@ public class BizDemandAddReq extends BaseReq {
 
     @ApiModelProperty("SR专家id")
     private String srExpertId = "";
+
+    @ApiModelProperty("是否影响客户订单")
+    private Boolean affectCustomerOrder;
+
+    @ApiModelProperty("卡单说明")
+    @Length(max = 500, message = "卡单说明不能超过500字")
+    private String stuckOrderInstructions;
 }

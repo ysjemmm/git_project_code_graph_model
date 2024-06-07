@@ -128,6 +128,7 @@ public interface BizDemandCopier {
     @Mapping(target = "statusText", expression = "java(BizDemandStatusEnum.getTextByCode(listDO.getStatus()))")
     @Mapping(target = "priorityText", expression = "java(PriorityEnum.getTextChineseByCode(listDO.getPriority()))")
     @Mapping(target = "customerDevDemand", expression = "java(YesOrNoEnum.getTextByCode(listDO.getCustomerDevDemand()))")
+    @Mapping(target = "affectCustomerOrder", expression = "java(YesOrNoEnum.getTextByCode(listDO.getAffectCustomerOrder()))")
     @Mapping(target = "planReleaseDateText", expression = "java(PlanReleaseDateEnum.getTextByCode(listDO.getPlanReleaseDate()))")
     BizDemandVO convert(BizDemandListDO listDO);
 
