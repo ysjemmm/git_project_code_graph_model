@@ -61,4 +61,10 @@ public class ProductDemandQueryList extends QueryBase {
 
     @ApiModelProperty("产品需求类型")
     private List<Integer> types;
+
+    @ApiModelProperty("预期排期时间-起始时间")
+    private Date expectScheduleTimeStart;
+
+    @ApiModelProperty("预期排期时间-结束时间")
+    private Date expectScheduleTimeEnd;
 }

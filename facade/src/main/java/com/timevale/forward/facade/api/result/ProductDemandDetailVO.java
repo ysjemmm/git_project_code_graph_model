@@ -68,5 +68,7 @@ public class ProductDemandDetailVO extends ToString {
 
     @ApiModelProperty("创建时间")
     private Date createDate;
-    
+
+    @ApiModelProperty("预期排期时间")
+    private Date expectScheduleTime;
 }

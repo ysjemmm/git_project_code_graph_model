@@ -103,4 +103,13 @@ public class ProductDemandListCondition extends QueryBase {
      * 产品需求类型
      */
     private String types;
+
+    /**
+     * 预期排期时间-起始时间
+     */
+    private Date expectScheduleTimeStart;
+    /**
+     * 预期排期时间-结束时间
+     */
+    private Date expectScheduleTimeEnd;
 }

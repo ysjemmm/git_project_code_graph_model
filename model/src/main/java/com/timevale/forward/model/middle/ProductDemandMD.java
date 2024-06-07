@@ -5,6 +5,8 @@ import com.timevale.forward.model.enums.PriorityEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Date;
+
 /**
  * @author xingyun
  * @date 2021-12-13 13:58
@@ -38,4 +40,10 @@ public class ProductDemandMD extends BaseMD{
      */
     @FieldCompare(fieldName = "需求描述")
     private String desc;
+
+    /**
+     * 预期排期时间
+     */
+    @FieldCompare(fieldName = "预期排期时间", dateFormat = "YYYY-MM")
+    private Date expectScheduleTime;
 }

@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotNull;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -63,4 +64,6 @@ public class ProductDemandAddReq extends BaseReq {
     @ApiModelProperty("标签id")
     private List<Long> labelIds;
 
+    @ApiModelProperty("预期排期时间")
+    private Date expectScheduleTime;
 }

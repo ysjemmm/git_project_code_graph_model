@@ -1,5 +1,6 @@
 package com.timevale.forward.service.utils.compare;
 
+import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Maps;
 import com.timevale.forward.dal.annotation.FieldCompare;
 import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
@@ -141,7 +142,8 @@ public class FieldCompareUtil {
             int scale = annotation.scale();
             resultObj = ((BigDecimal) field.get(object)).setScale(scale, RoundingMode.DOWN);
         } else if (type == Date.class) {
-            resultObj = DateUtil.parseToString((Date)value, DateFormatConst.DATE_FORMAT);
+            String dateFormat = StrUtil.emptyToDefault(annotation.dateFormat(), DateFormatConst.DATE_FORMAT);
+            resultObj = DateUtil.parseToString((Date)value, dateFormat);
         } else if (type == Integer.class || type == Boolean.class) {
             resultObj = method == null ? value : method.invoke(null, value);
         }

@@ -3,9 +3,9 @@
 <mapper namespace="com.timevale.forward.dal.dao.ProductDemandMapper">
 
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProductDemandDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
-        insert into product_demand (name, product_line_id, type , `desc`,status,priority,owner,owner_id, create_man_id, create_man)
+        insert into product_demand (name, product_line_id, type , `desc`,status,priority,owner,owner_id, expect_schedule_time, create_man_id, create_man)
         values
-        (#{name}, #{productLineId}, #{type}, #{desc},#{status},#{priority},#{owner},#{ownerId}, #{createManId}, #{createMan})
+        (#{name}, #{productLineId}, #{type}, #{desc},#{status},#{priority},#{owner},#{ownerId}, #{expectScheduleTime}, #{createManId}, #{createMan})
     </insert>
 
     <select id="list" resultType="com.timevale.forward.dal.entity.ProductDemandListDO">
@@ -30,6 +30,9 @@
             </if>
             <if test="modifyDateStart != null and modifyDateEnd != null">
                 and a.modify_date &gt;= #{modifyDateStart} and a.modify_date &lt;= #{modifyDateEnd}
+            </if>
+            <if test="expectScheduleTimeStart != null and expectScheduleTimeEnd != null">
+                and a.expect_schedule_time &gt;= #{expectScheduleTimeStart} and a.expect_schedule_time &lt;= #{expectScheduleTimeEnd}
             </if>
             <if test="priorities!=null and priorities.size()>0">
                 and a.priority in
@@ -207,6 +210,7 @@
             <if test="type != null">type = #{type},</if>
             <if test="status != null">status = #{status},</if>
             <if test="desc != null">`desc` = #{desc},</if>
+            <if test="expectScheduleTime != null">expect_schedule_time = #{expectScheduleTime},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
         </set>
@@ -216,8 +220,7 @@
     </update>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.ProductDemandDO">
-         select  a.id,a.name,a.priority,a.type,a.owner,a.owner_id,a.status,a.create_man,a.create_man_id
-         ,a.create_date,a.modify_date, a.product_line_id,`desc`, a.modify_man_id, a.modify_man
+        select  *
         from product_demand a
         where a.id = #{id} and a.is_deleted=false
     </select>
@@ -247,8 +250,7 @@
     </update>
 
     <select id="getByName" resultType="com.timevale.forward.dal.entity.ProductDemandDO">
-         select  a.id,a.name,a.priority,a.type,a.owner,a.owner_id,a.status,a.create_man,a.create_man_id
-         ,a.create_date,a.modify_date, a.product_line_id,`desc`
+         select *
         from product_demand a
         where a.name = #{name} and a.is_deleted=false
     </select>

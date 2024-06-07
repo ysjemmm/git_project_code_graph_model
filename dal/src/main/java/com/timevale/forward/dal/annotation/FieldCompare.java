@@ -17,4 +17,6 @@ public @interface FieldCompare{
     Class<?> enumClass() default Enum.class;
 
     int scale() default 0;
+
+    String dateFormat() default "yyyy-MM-dd";
 }
