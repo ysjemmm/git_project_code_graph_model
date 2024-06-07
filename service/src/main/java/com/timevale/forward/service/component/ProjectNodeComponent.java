@@ -41,6 +41,10 @@ public class ProjectNodeComponent {
     public void add(List<ProjectNodeDO> list, Long projectId) {
         log.info("节点新增接收参数:list={},projectId={}", list, projectId);
         list.forEach(t -> t.setProjectId(projectId));
+        // 补充节点编码
+        Map<String, Integer> nameToCode = Arrays.stream(ProjectNodeEnum.values())
+                .collect(Collectors.toMap(ProjectNodeEnum::getText, ProjectNodeEnum::getCode));
+        list.forEach(e -> e.setCode(nameToCode.get(e.getName())));
         projectNodeMapper.delete(projectId);
         projectNodeMapper.batchInsert(list);
     }

@@ -33,8 +33,8 @@ public class ProjectNodeDO extends BaseDO {
     private Date actualDate;
 
     /**
-     * 节点顺序
+     * 编码
      */
-    private Integer nodeOrder;
+    private Integer code;
 
 }

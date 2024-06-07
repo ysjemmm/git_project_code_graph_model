@@ -261,7 +261,7 @@
         from project
         left join (
             select project_id, plan_date as node_plan_date
-            from (select project_id, plan_date from project_node where actual_date is null order by node_order) t
+            from (select project_id, plan_date from project_node where actual_date is null order by code) t
             GROUP BY project_id
         ) node ON id = node.project_id
         <where>
