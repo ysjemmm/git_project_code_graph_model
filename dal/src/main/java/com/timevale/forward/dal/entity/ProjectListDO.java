@@ -137,4 +137,8 @@ public class ProjectListDO extends BaseDO {
      */
     private String otnPrincipalId;
 
+    /**
+     * 节点计划日期
+     */
+    private Date nodePlanDate;
 }

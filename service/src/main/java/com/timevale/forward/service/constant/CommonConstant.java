@@ -16,9 +16,9 @@ public class CommonConstant {
 
     public static final String BLANK = " ";
 
-    public static final String DEFAULT_ORDER_BY = " modify_date desc, id";
+    public static final String DEFAULT_ORDER_BY = " modify_date desc, id desc";
 
-    public static final String CREATE_DESC_ORDER_BY = " create_date desc, id";
+    public static final String CREATE_DESC_ORDER_BY = " create_date desc, id desc";
 
     public static final String CREATE_ORDER_BY = " create_date, id";
 

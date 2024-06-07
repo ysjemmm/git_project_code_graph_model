@@ -17,7 +17,7 @@ public class SqlOrderComponentImpl implements SqlOrderComponent {
 
     private static final String BLANK = " ";
 
-    private static final String SUFFIX = ",id";
+    private static final String SUFFIX = ",id desc";
 
     @Override
     public String build(String field, Integer order) {

@@ -280,8 +280,12 @@ public class ProjectComponentImpl implements ProjectComponent {
         List<ProductLineAnalyseVO> analyseVOList = analyse(condition);
         List<Long> conditionSubProductLineIdList = condition.getSubProductLineIds();
         if (CollUtil.isNotEmpty(conditionSubProductLineIdList)) {
-            Set<Long> resultProductLineIdSet = analyseVOList.stream().map(ProductLineAnalyseVO::getProductLineId).collect(Collectors.toSet());
-            List<Long> queryProductLineIdList = conditionSubProductLineIdList.stream().filter(resultProductLineIdSet::contains).collect(Collectors.toList());
+            Set<Long> resultProductLineIdSet = analyseVOList.stream()
+                    .map(ProductLineAnalyseVO::getProductLineId)
+                    .collect(Collectors.toSet());
+            List<Long> queryProductLineIdList = conditionSubProductLineIdList.stream()
+                    .filter(resultProductLineIdSet::contains)
+                    .collect(Collectors.toList());
             boolean pageEmpty = CollUtil.isEmpty(queryProductLineIdList);
             if (!pageEmpty) {
                 projectIds = projectMapper.getProjectIds(projectIds, queryProductLineIdList, condition.getBizDomainIds());
@@ -331,10 +335,6 @@ public class ProjectComponentImpl implements ProjectComponent {
 
         // 结果项目id
         List<Long> projectIdList = projectVOList.stream().map(ProjectVO::getId).collect(Collectors.toList());
-
-        // 项目节点
-        List<ProjectNodeDO> nodeDOList = projectNodeMapper.selectByProjectIdList(projectIdList);
-        Map<Long, List<ProjectNodeDO>> nodeMap = nodeDOList.stream().collect(Collectors.groupingBy(ProjectNodeDO::getProjectId));
 
         // 包含风险集合(过滤任务逾期未录入)
         List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByProjectIdList(projectIds);
@@ -402,7 +402,6 @@ public class ProjectComponentImpl implements ProjectComponent {
             // 项目节点状态、节点计划时间
             Integer nodeStatus = projectVO.getNodeStatus();
             projectVO.setNodeStatusName(ProjectNodeStatusEnum.getNameByCode(nodeStatus));
-            projectVO.setNodePlanDate(projectNodeComponent.getRecentPlanDate(nodeMap.get(projectVO.getId())));
 
             // 是否需要预警
             Integer status = projectVO.getStatus();

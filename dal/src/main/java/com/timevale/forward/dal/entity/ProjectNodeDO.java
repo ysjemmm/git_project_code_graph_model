@@ -32,4 +32,9 @@ public class ProjectNodeDO extends BaseDO {
      */
     private Date actualDate;
 
+    /**
+     * 节点顺序
+     */
+    private Integer nodeOrder;
+
 }
