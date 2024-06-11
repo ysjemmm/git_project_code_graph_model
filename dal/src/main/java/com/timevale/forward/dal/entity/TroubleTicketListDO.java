@@ -43,5 +43,15 @@ public class TroubleTicketListDO extends BaseDO {
      * 是否监控发现
      */
     private Integer isMonitorDetect;
+
+    /**
+     * 故障分类-一级分类
+     */
+    private Integer categoryFirst;
+
+    /**
+     * 故障分类-二级分类
+     */
+    private Integer categorySecond;
 }
 

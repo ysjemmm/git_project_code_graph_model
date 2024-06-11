@@ -8,14 +8,27 @@ import com.timevale.forward.facade.api.request.TroubleTicketAddReq;
 import com.timevale.forward.facade.api.request.TroubleTicketModifyReq;
 import com.timevale.forward.facade.api.result.TroubleTicketDetailVO;
 import com.timevale.forward.facade.api.result.TroubleTicketVO;
+import com.timevale.forward.model.enums.*;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 /**
  * @author by YangXu
  * @date 2022/03/17 11:24
  */
-@Mapper
+@Mapper(
+        imports = {
+                TroubleTicketTypeEnum.class,
+                TroubleTicketRankEnum.class,
+                TroubleTicketCauseEnum.class,
+                TroubleTicketReasonEnum.class,
+                TroubleTicketDuringTimeEnum.class,
+                TroubleTicketCategoryFirstEnum.class,
+                TroubleTicketCategorySecondEnum.class,
+                TroubleTicketInfluenceScopeEnum.class,
+        }
+)
 public interface TroubleTicketCopier {
     TroubleTicketCopier INSTANCE = Mappers.getMapper(TroubleTicketCopier.class);
 
@@ -42,6 +55,14 @@ public interface TroubleTicketCopier {
      * @param troubleTicketDO 故障单-DO
      * @return 故障单详细信息
      */
+    @Mapping(target = "typeName", expression = "java(TroubleTicketTypeEnum.getTextByCode(troubleTicketDO.getType()))")
+    @Mapping(target = "causeName", expression = "java(TroubleTicketCauseEnum.getTextByCode(troubleTicketDO.getCause()))")
+    @Mapping(target = "reasonName", expression = "java(TroubleTicketReasonEnum.getTextByCode(troubleTicketDO.getReason()))")
+    @Mapping(target = "troubleRankName", expression = "java(TroubleTicketRankEnum.getTextByCode(troubleTicketDO.getTroubleRank()))")
+    @Mapping(target = "duringTimeName", expression = "java(TroubleTicketDuringTimeEnum.getTextByCode(troubleTicketDO.getDuringTime()))")
+    @Mapping(target = "categoryFirstName", expression = "java(TroubleTicketCategoryFirstEnum.getTextByCode(troubleTicketDO.getCategoryFirst()))")
+    @Mapping(target = "categorySecondName", expression = "java(TroubleTicketCategorySecondEnum.getTextByCode(troubleTicketDO.getCategorySecond()))")
+    @Mapping(target = "influenceScopeName", expression = "java(TroubleTicketInfluenceScopeEnum.getTextByCode(troubleTicketDO.getInfluenceScope()))")
     TroubleTicketDetailVO convert(TroubleTicketDO troubleTicketDO);
 
     /**
@@ -50,6 +71,7 @@ public interface TroubleTicketCopier {
      * @param troubleTicketListDO 故障单-列表DO
      * @return 故障单详细信息
      */
+    @Mapping(target = "categoryName", expression = "java(TroubleTicketCategorySecondEnum.getFullTextByCode(troubleTicketListDO.getCategorySecond()))")
     TroubleTicketVO convert(TroubleTicketListDO troubleTicketListDO);
 
     /**

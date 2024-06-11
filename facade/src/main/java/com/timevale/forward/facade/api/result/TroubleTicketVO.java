@@ -76,4 +76,6 @@ public class TroubleTicketVO extends ToString {
     @ApiModelProperty("业务域")
     private List<String> bizDomainNames;
 
+    @ApiModelProperty("故障分类描述")
+    private String categoryName;
 }

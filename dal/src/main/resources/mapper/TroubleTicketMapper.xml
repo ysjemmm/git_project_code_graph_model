@@ -35,6 +35,8 @@
             <if test="cause != null">cause,</if>
             <if test="deductPoints != null">deduct_points,</if>
             <if test="dataStatistics != null">data_statistics,</if>
+            <if test="categoryFirst != null">category_first,</if>
+            <if test="categorySecond != null">category_second,</if>
             <if test="createManId != null">create_man_id,</if>
             <if test="createMan != null">create_man,</if>
         </trim>
@@ -71,6 +73,8 @@
             <if test="cause != null">#{cause},</if>
             <if test="deductPoints != null">#{deductPoints},</if>
             <if test="dataStatistics != null">#{dataStatistics},</if>
+            <if test="categoryFirst != null">#{categoryFirst},</if>
+            <if test="categorySecond != null">#{categorySecond},</if>
             <if test="createManId != null">#{createManId},</if>
             <if test="createMan != null">#{createMan},</if>
         </trim>
@@ -110,6 +114,8 @@
             <if test="cause != null">cause = #{cause},</if>
             <if test="deductPoints != null">deduct_points = #{deductPoints},</if>
             <if test="dataStatistics != null">data_statistics = #{dataStatistics},</if>
+            <if test="categoryFirst != null">category_first = #{categoryFirst},</if>
+            <if test="categorySecond != null">category_second = #{categorySecond},</if>
             <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
@@ -153,6 +159,8 @@
             cause = #{cause},
             deduct_points = #{deductPoints},
             data_statistics = #{dataStatistics},
+            category_first = #{categoryFirst},
+            category_second = #{categorySecond},
             modify_man = #{modifyMan},
             modify_man_id = #{modifyManId},
         </set>
@@ -190,7 +198,7 @@
 
     <select id="selectList" resultType="com.timevale.forward.dal.entity.TroubleTicketListDO">
         SELECT tt.id, tt.name, tt.trouble_rank, tt.create_man, tt.create_man_id, tt.occurrence_time,
-               tt.prime_principal, tt.duty_team ,tt.is_monitor_detect,
+               tt.prime_principal, tt.duty_team ,tt.is_monitor_detect, tt.category_first, tt.category_second,
                tt.create_date, tt.modify_date
         FROM trouble_ticket tt
         <if test="(productLineIdList != null and productLineIdList.size() > 0 ) or (bizDomainIdList != null and bizDomainIdList.size() > 0)">
@@ -273,6 +281,8 @@
             <if test="disComplete != null and disComplete == true ">
                 AND im.status=0
             </if>
+            <if test="categoryFirst != null">AND tt.category_first = #{categoryFirst}</if>
+            <if test="categorySecond != null">AND tt.category_second = #{categorySecond}</if>
             <if test="true">
                 AND tt.is_deleted = false
             </if>

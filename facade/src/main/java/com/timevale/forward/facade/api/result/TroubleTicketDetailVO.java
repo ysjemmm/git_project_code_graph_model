@@ -169,4 +169,15 @@ public class TroubleTicketDetailVO extends ToString {
     @ApiModelProperty("数据统计说明")
     private String dataStatistics;
 
+    @ApiModelProperty("故障一级分类")
+    private Integer categoryFirst;
+
+    @ApiModelProperty("故障一级分类-描述")
+    private String categoryFirstName;
+
+    @ApiModelProperty("故障二级分类")
+    private Integer categorySecond;
+
+    @ApiModelProperty("故障二级分类-描述")
+    private String categorySecondName;
 }

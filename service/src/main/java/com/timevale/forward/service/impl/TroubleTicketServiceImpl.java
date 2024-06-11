@@ -5,52 +5,14 @@ import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.PersonListCondition;
 import com.timevale.forward.dal.condition.TroubleTicketCondition;
-import com.timevale.forward.dal.dao.BizDomainMapper;
-import com.timevale.forward.dal.dao.BugOnlineProductLineMapper;
-import com.timevale.forward.dal.dao.ImprovementMeasureMapper;
-import com.timevale.forward.dal.dao.PersonMapper;
-import com.timevale.forward.dal.dao.ProductLineMapper;
-import com.timevale.forward.dal.dao.TroubleTicketMapper;
-import com.timevale.forward.dal.entity.BizDomainDO;
-import com.timevale.forward.dal.entity.BugOnlineProductLineDO;
-import com.timevale.forward.dal.entity.FileDO;
-import com.timevale.forward.dal.entity.ImprovementMeasureDO;
-import com.timevale.forward.dal.entity.PersonDO;
-import com.timevale.forward.dal.entity.ProductLineDO;
-import com.timevale.forward.dal.entity.TroubleTicketDO;
-import com.timevale.forward.dal.entity.TroubleTicketListDO;
+import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.TroubleTicketService;
 import com.timevale.forward.facade.api.query.TroubleTicketQueryList;
-import com.timevale.forward.facade.api.request.FileAddReq;
-import com.timevale.forward.facade.api.request.ImprovementMeasureAddReq;
-import com.timevale.forward.facade.api.request.PersonAddReq;
-import com.timevale.forward.facade.api.request.TroubleTicketAddReq;
-import com.timevale.forward.facade.api.request.TroubleTicketDeleteReq;
-import com.timevale.forward.facade.api.request.TroubleTicketModifyReq;
-import com.timevale.forward.facade.api.request.TroubleTicketRemindReq;
-import com.timevale.forward.facade.api.result.FileVO;
-import com.timevale.forward.facade.api.result.PersonVO;
-import com.timevale.forward.facade.api.result.ProductLineVO;
-import com.timevale.forward.facade.api.result.TroubleTicketDetailVO;
-import com.timevale.forward.facade.api.result.TroubleTicketVO;
-import com.timevale.forward.model.enums.AscriptionEnum;
-import com.timevale.forward.model.enums.BizProductLineTypeEnum;
-import com.timevale.forward.model.enums.FileTypeEnum;
-import com.timevale.forward.model.enums.ImprovementMeasureStatusEnum;
-import com.timevale.forward.model.enums.OrderCollationEnum;
-import com.timevale.forward.model.enums.PersonTypeEnum;
-import com.timevale.forward.model.enums.TroubleTicketCauseEnum;
-import com.timevale.forward.model.enums.TroubleTicketDuringTimeEnum;
-import com.timevale.forward.model.enums.TroubleTicketInfluenceScopeEnum;
-import com.timevale.forward.model.enums.TroubleTicketRankEnum;
-import com.timevale.forward.model.enums.TroubleTicketReasonEnum;
-import com.timevale.forward.model.enums.TroubleTicketTypeEnum;
-import com.timevale.forward.model.enums.YesOrNoEnum;
-import com.timevale.forward.service.component.BizDemandComponent;
-import com.timevale.forward.service.component.BugOnlineProductLineComponent;
-import com.timevale.forward.service.component.FileComponent;
-import com.timevale.forward.service.component.ImprovementMeasureComponent;
-import com.timevale.forward.service.component.SqlOrderComponent;
+import com.timevale.forward.facade.api.request.*;
+import com.timevale.forward.facade.api.result.*;
+import com.timevale.forward.model.enums.*;
+import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.component.impl.PersonComponentImpl;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
@@ -70,24 +32,15 @@ import com.timevale.mandarin.base.util.StringUtils;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
-
+import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import javax.annotation.Resource;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import javax.annotation.Resource;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author by YangXu
@@ -205,12 +158,6 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
             List<ProductLineVO> productLineVOList = productLineDOList.stream().map(ProductLineCopier.INSTANCE::convert).collect(Collectors.toList());
             ticketDetailVO.setProductLineList(productLineVOList);
         }
-        ticketDetailVO.setTypeName(TroubleTicketTypeEnum.getTextByCode(ticketDetailVO.getType()));
-        ticketDetailVO.setCauseName(TroubleTicketCauseEnum.getTextByCode(ticketDetailVO.getCause()));
-        ticketDetailVO.setReasonName(TroubleTicketReasonEnum.getTextByCode(troubleTicketDO.getReason()));
-        ticketDetailVO.setTroubleRankName(TroubleTicketRankEnum.getTextByCode(ticketDetailVO.getTroubleRank()));
-        ticketDetailVO.setDuringTimeName(TroubleTicketDuringTimeEnum.getTextByCode(ticketDetailVO.getDuringTime()));
-        ticketDetailVO.setInfluenceScopeName(TroubleTicketInfluenceScopeEnum.getTextByCode(ticketDetailVO.getInfluenceScope()));
 
         // 获取部门链，获得部门完整链名
         String deptChainName = bizDemandComponent.getDeptChainName(ticketDetailVO.getDutyTeam());
@@ -333,7 +280,8 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
         // 结果集转换
         List<TroubleTicketVO> troubleTicketVOList = troubleTicketDOList.stream()
-                .map(TroubleTicketCopier.INSTANCE::convert).collect(Collectors.toList());
+                .map(TroubleTicketCopier.INSTANCE::convert)
+                .collect(Collectors.toList());
 
         List<Long> troubleTicketIds = troubleTicketVOList.stream().map(TroubleTicketVO::getId).collect(Collectors.toList());
         List<BugOnlineProductLineDO> troubleTicketProductLineDOList = bugOnlineProductLineMapper.getByBugOnlineIdList(troubleTicketIds, BizProductLineTypeEnum.TROUBLE_TICKET.getCode());

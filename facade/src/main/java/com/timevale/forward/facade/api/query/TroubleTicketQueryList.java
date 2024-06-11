@@ -67,4 +67,10 @@ public class TroubleTicketQueryList extends QueryBase {
     @ApiModelProperty("改进措施未完成")
     @NotNull(message = "改进措施未完成不能为空")
     private Boolean disComplete;
+
+    @ApiModelProperty("故障分类-一级分类")
+    private Integer categoryFirst;
+
+    @ApiModelProperty("故障分类-二级分类")
+    private Integer categorySecond;
 }

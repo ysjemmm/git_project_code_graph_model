@@ -149,4 +149,10 @@ public class TroubleTicketModifyReq extends BaseReq {
     @ApiModelProperty("数据统计说明")
     @NotNull(message = "数据统计说明不能为空")
     private String dataStatistics;
+
+    @ApiModelProperty("故障类别一级分类")
+    private Integer categoryFirst;
+
+    @ApiModelProperty("故障类别二级分类")
+    private Integer categorySecond;
 }

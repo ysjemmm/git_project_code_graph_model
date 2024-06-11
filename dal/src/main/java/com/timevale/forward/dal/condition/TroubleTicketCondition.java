@@ -85,4 +85,15 @@ public class TroubleTicketCondition {
      * 改进措施未完成
      */
     private Boolean disComplete;
+
+
+    /**
+     * 故障分类-一级分类
+     */
+    private Integer categoryFirst;
+
+    /**
+     * 故障分类-二级分类
+     */
+    private Integer categorySecond;
 }

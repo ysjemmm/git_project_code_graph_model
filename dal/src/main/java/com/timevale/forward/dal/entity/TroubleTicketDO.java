@@ -169,5 +169,15 @@ public class TroubleTicketDO extends BaseDO {
      * 数据统计说明
      */
     private String dataStatistics;
+
+    /**
+     * 故障一级分类
+     */
+    private Integer categoryFirst;
+
+    /**
+     * 故障二级分类
+     */
+    private Integer categorySecond;
 }
 
