@@ -2,7 +2,6 @@ package com.timevale.forward.service.component.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.BooleanUtil;
-import cn.hutool.core.util.StrUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Maps;
@@ -273,6 +272,49 @@ public class ProjectComponentImpl implements ProjectComponent {
             }
         }
 
+        // 项目验收情况筛选
+        if (condition.getProjectAcceptanceStatus() != null) {
+            ProjectAcceptanceRequestEnum statusEnum =
+                    ProjectAcceptanceRequestEnum.getByCode(condition.getProjectAcceptanceStatus());
+            if (ProjectAcceptanceRequestEnum.NO_NEED_ACCEPTANCE == statusEnum) {
+                condition.setIsAcceptance(false);
+            } else {
+                if (CollUtil.isEmpty(projectIds)) {
+                    projectIds = projectMapper.getAllId();
+                }
+                // 查询全部的项目验收情况
+                List<ProjectAcceptanceDO> acceptances = projectAcceptanceMapper.selectByProjectIds(projectIds);
+                Map<Long, List<ProjectAcceptanceDO>> acceptanceGroup = acceptances.stream()
+                        .collect(Collectors.groupingBy(ProjectAcceptanceDO::getProjectId));
+
+                if (ProjectAcceptanceRequestEnum.NO_ACCEPTANCE_INITIATED == statusEnum) {
+                    projectIds.removeAll(acceptanceGroup.keySet());
+                } else {
+                    // 筛选出全部验收通过的项目
+                    Set<Long> allPassed = new HashSet<>();
+                    acceptanceGroup.forEach((k, v) -> {
+                        boolean allMatch = v.stream()
+                                .map(ProjectAcceptanceDO::getStatus)
+                                .map(ProjectAcceptanceStatusEnum::getByCode)
+                                .allMatch(ProjectAcceptanceStatusEnum.ACCEPTANCE_PASSED::equals);
+                        if (allMatch) {
+                            allPassed.add(k);
+                        }
+                    });
+                    if (ProjectAcceptanceRequestEnum.ACCEPTANCE_INITIATED == statusEnum) {
+                        projectIds = new ArrayList<>(acceptanceGroup.keySet());
+                        projectIds.removeAll(allPassed);
+                    } else if (ProjectAcceptanceRequestEnum.ACCEPTANCE_COMPLETED == statusEnum) {
+                        projectIds = new ArrayList<>(allPassed);
+                    }
+                }
+
+                if (CollUtil.isEmpty(projectIds)) {
+                    return ResultUtil.queryResultEmpty();
+                }
+            }
+        }
+
         // 填充筛选项 —— 项目id列表
         condition.setIds(projectIds);
 
@@ -303,41 +345,39 @@ public class ProjectComponentImpl implements ProjectComponent {
         condition.setIds(projectIds);
         String collation = sqlOrderComponent.build(condition.getOrderFiled(), condition.getOrderCollation());
         PageHelper.startPage(condition.getPageNum(), condition.getPageSize(), collation);
-        List<ProjectListDO> projectDos = projectMapper.list(condition);
+        List<ProjectListDO> projectDOList = projectMapper.list(condition);
 
         // 筛选判空
-        projectIds = projectDos.stream().map(ProjectListDO::getId).collect(Collectors.toList());
-        if (CollUtil.isEmpty(projectIds)) {
+        if (CollUtil.isEmpty(projectDOList)) {
             return ResultUtil.queryResultEmpty();
         }
 
+        List<Long> resultProjectIds = projectDOList.stream().map(ProjectListDO::getId).collect(Collectors.toList());
+
         Map<Long, List<BizLabelSimpleVO>> bizLabelMap =
-                bizLabelComponent.getBizLabelMap(projectIds, BizTypeEnum.PROJECT.getCode());
+                bizLabelComponent.getBizLabelMap(resultProjectIds, BizTypeEnum.PROJECT.getCode());
 
         //填充人员信息
-        Map<Long, List<PersonDO>> pdMap = personMapper.get(projectIds, PersonTypeEnum.PROJECT_PD.getCode())
+        Map<Long, List<PersonDO>> pdMap = personMapper.get(resultProjectIds, PersonTypeEnum.PROJECT_PD.getCode())
                 .stream().collect(Collectors.groupingBy(PersonDO::getMainId));
-        Map<Long, List<PersonDO>> teamMemberMap = personMapper.get(projectIds, PersonTypeEnum.PROJECT_MEMBER.getCode())
+        Map<Long, List<PersonDO>> teamMemberMap = personMapper.get(resultProjectIds, PersonTypeEnum.PROJECT_MEMBER.getCode())
                 .stream().collect(Collectors.groupingBy(PersonDO::getMainId));
 
         //填充产品线/业务域信息
-        Map<Long, List<ProjectProductLineBizDomain>> productLineMap = productLineMapper.getByProjectIds(projectIds)
+        Map<Long, List<ProjectProductLineBizDomain>> productLineMap = productLineMapper.getByProjectIds(resultProjectIds)
                 .stream().collect(Collectors.groupingBy(ProjectProductLineBizDomain::getProjectId));
 
         //提测实际时间
         Map<Long, List<ProjectNodeDO>> testNodeMap = projectNodeDOList.stream().collect(Collectors.groupingBy(ProjectNodeDO::getProjectId));
 
         //填充打回次,填充是否逾期
-        Map<Long, List<TestBillDO>> testBillMap = testBillMapper.list(projectIds).stream().collect(Collectors.groupingBy(TestBillDO::getProjectId));
+        Map<Long, List<TestBillDO>> testBillMap = testBillMapper.list(resultProjectIds).stream().collect(Collectors.groupingBy(TestBillDO::getProjectId));
 
         // 转换
-        List<ProjectVO> projectVOList = ProjectCopier.INSTANCE.convert(projectDos);
-
-        // 结果项目id
-        List<Long> projectIdList = projectVOList.stream().map(ProjectVO::getId).collect(Collectors.toList());
+        List<ProjectVO> projectVOList = ProjectCopier.INSTANCE.convert(projectDOList);
 
         // 包含风险集合(过滤任务逾期未录入)
-        List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByProjectIdList(projectIds);
+        List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByProjectIdList(resultProjectIds);
         Set<Long> riskSet = riskDOList.stream()
                 .filter(e -> ProjectRiskStatusEnum.PENDING.getCode().equals(e.getStatus()))
                 .filter(e -> !ProjectRiskTypeEnum.TASK_OVERDUE.getCode().equals(e.getType()))
@@ -345,22 +385,37 @@ public class ProjectComponentImpl implements ProjectComponent {
                 .collect(Collectors.toSet());
 
         // 查询审批工作流
-        List<ProjectFlowDO> conclusionFlows = projectFlowMapper.getByProjectIds(projectIdList,
+        List<ProjectFlowDO> conclusionFlows = projectFlowMapper.getByProjectIds(resultProjectIds,
                 FlowTypeEnum.CONCLUSION.getCode(),
                 ForwardFlowStatusEnum.AUDITING.getCode());
         Set<Long> conclusionFlowSet = conclusionFlows.stream().map(ProjectFlowDO::getProjectId).collect(Collectors.toSet());
 
         // pbu
-        List<ProjectPbuDO> pjPbus = projectPbuMapper.getByProjectIds(projectIdList);
+        List<ProjectPbuDO> pjPbus = projectPbuMapper.getByProjectIds(resultProjectIds);
         Map<Long, List<ProjectPbuDO>> pjPbuGroup = pjPbus.stream().collect(Collectors.groupingBy(ProjectPbuDO::getProjectId));
         Set<Long> pbuIds = pjPbus.stream().map(ProjectPbuDO::getPbuId).collect(Collectors.toSet());
         Map<Long, GroupResponse> pbuMap = bizDemandComponent.getGroupListTreeMap(pbuIds);
 
         // 业务域
-        List<ProjectBizDomainDO> pjBds = projectBizDomainMapper.getByProjectIds(projectIds);
+        List<ProjectBizDomainDO> pjBds = projectBizDomainMapper.getByProjectIds(resultProjectIds);
         Map<Long, List<ProjectBizDomainDO>> pjBdGroup = pjBds.stream().collect(Collectors.groupingBy(ProjectBizDomainDO::getProjectId));
         List<BizDomainDO> bizDomainDOS = bizDomainMapper.selectAllBizDomain();
         Map<Long, BizDomainDO> bizDomainDOMap = Maps.uniqueIndex(bizDomainDOS, BaseDO::getId);
+
+        // 验收情况
+        List<ProjectAcceptanceDO> acceptances = projectAcceptanceMapper.selectByProjectIds(resultProjectIds);
+        Map<Long, List<ProjectAcceptanceDO>> acceptanceGroup = acceptances.stream()
+                .collect(Collectors.groupingBy(ProjectAcceptanceDO::getProjectId));
+        Set<Long> allPassedAcceptanceProjects = new HashSet<>();
+        acceptanceGroup.forEach((k, v) -> {
+            boolean allMatch = v.stream()
+                    .map(ProjectAcceptanceDO::getStatus)
+                    .map(ProjectAcceptanceStatusEnum::getByCode)
+                    .allMatch(ProjectAcceptanceStatusEnum.ACCEPTANCE_PASSED::equals);
+            if (allMatch) {
+                allPassedAcceptanceProjects.add(k);
+            }
+        });
 
         // 遍历填充数据
         for (ProjectVO projectVO : projectVOList) {
@@ -445,11 +500,27 @@ public class ProjectComponentImpl implements ProjectComponent {
 
             // 是否存在审批中的结项流程
             projectVO.setConclusionAuditing(conclusionFlowSet.contains(projectVO.getId()));
+
+            ProjectAcceptanceRequestEnum acceptanceStatusEnum;
+            if (YesOrNoEnum.YES.getCode().equals(projectVO.getIsAcceptance())) {
+                if (acceptanceGroup.containsKey(projectVO.getId())) {
+                    if (allPassedAcceptanceProjects.contains(projectVO.getId())) {
+                        acceptanceStatusEnum = ProjectAcceptanceRequestEnum.ACCEPTANCE_COMPLETED;
+                    } else {
+                        acceptanceStatusEnum = ProjectAcceptanceRequestEnum.ACCEPTANCE_INITIATED;
+                    }
+                } else {
+                    acceptanceStatusEnum = ProjectAcceptanceRequestEnum.NO_ACCEPTANCE_INITIATED;
+                }
+            } else {
+                acceptanceStatusEnum = ProjectAcceptanceRequestEnum.NO_NEED_ACCEPTANCE;
+            }
+            projectVO.setProjectAcceptanceStatus(acceptanceStatusEnum.getText());
         }
 
         // 项目子项目数量
         if (Objects.equals(condition.getCategory(), ProjectCategoryEnum.INNER_PROJECT.getCode())) {
-            List<ProjectChildCountDO> projectChildCounts = projectMapper.countChildren(projectIds);
+            List<ProjectChildCountDO> projectChildCounts = projectMapper.countChildren(resultProjectIds);
             Map<Long, ProjectChildCountDO> countById =
                     Maps.uniqueIndex(projectChildCounts, ProjectChildCountDO::getId);
             for (ProjectVO projectVO : projectVOList) {
@@ -462,7 +533,7 @@ public class ProjectComponentImpl implements ProjectComponent {
 
         // 分页数据
         PageQueryResult<ProjectVO> pageQueryResult = new PageQueryResult<>();
-        PageInfo<ProjectListDO> pageInfo = new PageInfo<>(projectDos);
+        PageInfo<ProjectListDO> pageInfo = new PageInfo<>(projectDOList);
         pageQueryResult.setResultList(projectVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
 

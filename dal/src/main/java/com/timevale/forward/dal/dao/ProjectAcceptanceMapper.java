@@ -4,6 +4,7 @@ import com.timevale.forward.dal.condition.ProjectAcceptanceListCondition;
 import com.timevale.forward.dal.entity.ProjectAcceptanceDO;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -52,5 +53,7 @@ public interface ProjectAcceptanceMapper {
      * @return TrackEventDO
      */
     ProjectAcceptanceDO get(@Param("id") Long id);
+
+    List<ProjectAcceptanceDO> selectByProjectIds(@Param("projectIds") Collection<Long> projectIds);
 
 }

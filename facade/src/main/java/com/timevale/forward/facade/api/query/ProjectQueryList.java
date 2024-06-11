@@ -158,4 +158,7 @@ public class ProjectQueryList extends QueryBase {
 
     @ApiModelProperty("pbu部门id")
     private List<Long> pbuIds;
+
+    @ApiModelProperty("项目验收状态:0-无需验收，1-未发起验收，2-已发起验收，3-验收完毕")
+    private Integer projectAcceptanceStatus;
 }

@@ -141,4 +141,9 @@ public class ProjectListDO extends BaseDO {
      * 节点计划日期
      */
     private Date nodePlanDate;
+
+    /**
+     * 是否需要项目验收
+     */
+    private Integer isAcceptance;
 }

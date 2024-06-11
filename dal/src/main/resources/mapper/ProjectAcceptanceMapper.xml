@@ -64,5 +64,17 @@
         </where>
     </select>
 
+    <select id="selectByProjectIds" resultType="com.timevale.forward.dal.entity.ProjectAcceptanceDO">
+        select *
+        from project_acceptance
+        <where>
+            and project_id in
+            <foreach collection="projectIds" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            and is_deleted=false
+        </where>
+    </select>
+
 </mapper>
 

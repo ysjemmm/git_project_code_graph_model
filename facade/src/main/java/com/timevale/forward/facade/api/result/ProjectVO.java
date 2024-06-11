@@ -164,4 +164,10 @@ public class ProjectVO extends ToString {
 
     @ApiModelProperty("pbu名称")
     private String pbuNames;
+
+    @ApiModelProperty("是否需要验收")
+    private Integer isAcceptance;
+
+    @ApiModelProperty("项目验收状态")
+    private String projectAcceptanceStatus;
 }

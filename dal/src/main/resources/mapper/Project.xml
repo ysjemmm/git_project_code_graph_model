@@ -375,6 +375,7 @@
             <if test="sourceId != null and sourceId != ''">
                 and source_id = #{sourceId}
             </if>
+            <if test="isAcceptance != null">and is_acceptance = #{isAcceptance}</if>
             and is_deleted =false
         </where>
     </select>
@@ -461,6 +462,7 @@
     <select id="getAllId" resultType="java.lang.Long">
         SELECT id
         FROM project
+        WHERE is_deleted = false
     </select>
 
     <update id="updateStatus" parameterType="com.timevale.forward.dal.entity.ProjectDO">

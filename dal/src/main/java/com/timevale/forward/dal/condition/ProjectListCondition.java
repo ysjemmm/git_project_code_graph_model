@@ -248,6 +248,16 @@ public class ProjectListCondition {
      */
     private Collection<Long> pbuIds;
 
+    /**
+     * 是否需要验收
+     */
+    private Boolean isAcceptance;
+
+    /**
+     * 项目验收状态:0-无需验收，1-未发起验收，2-已发起验收，3-验收完毕
+     */
+    private Integer projectAcceptanceStatus;
+
     private Integer pageNum = 1;
 
     private Integer pageSize = 20;
