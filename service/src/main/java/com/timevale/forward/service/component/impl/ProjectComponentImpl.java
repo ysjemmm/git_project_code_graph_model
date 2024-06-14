@@ -279,6 +279,7 @@ public class ProjectComponentImpl implements ProjectComponent {
             if (ProjectAcceptanceRequestEnum.NO_NEED_ACCEPTANCE == statusEnum) {
                 condition.setIsAcceptance(false);
             } else {
+                condition.setIsAcceptance(true);
                 if (CollUtil.isEmpty(projectIds)) {
                     projectIds = projectMapper.getAllId();
                 }
