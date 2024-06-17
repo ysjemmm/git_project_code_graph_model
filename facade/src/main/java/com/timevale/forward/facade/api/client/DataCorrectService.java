@@ -60,4 +60,9 @@ public interface DataCorrectService {
      * @return {@link BaseResult}<{@link Void}>
      */
     BaseResult<Void> bizRecord();
+
+    /**
+     * 更新项目节点
+     */
+    BaseResult<Void> updateProjectNode(ProjectNodeModifyReq req);
 }

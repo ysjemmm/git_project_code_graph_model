@@ -16,6 +16,7 @@ import com.timevale.forward.service.component.ProjectEvaluateComponent;
 import com.timevale.forward.service.component.ProjectNodeComponent;
 import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -274,6 +275,36 @@ public class DataCorrectServiceImpl implements DataCorrectService {
                 }).collect(Collectors.toList());
 
         milestoneActionMapper.batchAdd(actions);
+
+        return BaseResult.success();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Void> updateProjectNode(ProjectNodeModifyReq req) {
+        ProjectDO projectDO = projectMapper.get(req.getProjectId());
+        AssertUtil.notNull(projectDO, "项目不存在");
+
+        ProjectNodeDO node = projectNodeMapper.getById(req.getId());
+        AssertUtil.notNull(projectDO, "项目节点不存在");
+
+        ProjectNodeEnum nodeEnum = ProjectNodeEnum.getByCode(node.getCode());
+        if (ProjectNodeEnum.PUBLISH_OFFICIAL == nodeEnum) {
+            if (req.getPlanDate() != null) {
+                projectDO.setPlanEndDate(req.getPlanDate());
+            }
+            if (req.getActualDate() != null) {
+                projectDO.setActualEndDate(req.getActualDate());
+            }
+            projectMapper.update(projectDO);
+        }
+
+        if (req.getPlanDate() != null) {
+            projectNodeMapper.updatePlanDateById(node.getId(), req.getPlanDate());
+        }
+        if (req.getActualDate() != null) {
+            projectNodeMapper.updateActualDateById(node.getId(), req.getActualDate());
+        }
 
         return BaseResult.success();
     }

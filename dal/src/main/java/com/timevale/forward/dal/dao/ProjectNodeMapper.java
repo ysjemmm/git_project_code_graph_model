@@ -3,6 +3,7 @@ package com.timevale.forward.dal.dao;
 import com.timevale.forward.dal.condition.ProjectNodeCondition;
 import com.timevale.forward.dal.entity.ProjectNodeDO;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.Date;
 import java.util.List;
@@ -67,6 +68,15 @@ public interface ProjectNodeMapper {
      * @param actualDate 实际时间
      */
     void updateActualDateById(@Param("id") Long id, @Param("actualDate") Date actualDate);
+
+    /**
+     * 更新计划时间
+     *
+     * @param id  id
+     * @param planDate 实际时间
+     */
+    @Update("UPDATE project_node SET plan_date = #{planDate} WHERE id = #{id}")
+    void updatePlanDateById(@Param("id") Long id, @Param("planDate") Date planDate);
 
     /**
      *

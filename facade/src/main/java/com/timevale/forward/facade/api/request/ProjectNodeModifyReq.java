@@ -22,6 +22,14 @@ public class ProjectNodeModifyReq extends BaseReq{
     @NotNull(message = "id不能为空")
     private Long id;
 
+    @ApiModelProperty("项目ID")
+    @NotNull(message = "项目id不能为空")
+    private Long projectId;
+
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm:ss")
+    @ApiModelProperty("计划完成时间")
+    private Date planDate;
+
     @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty("实际完成时间")
     private Date actualDate;
