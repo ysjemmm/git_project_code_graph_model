@@ -285,6 +285,9 @@ public class ProjectComponentImpl implements ProjectComponent {
                 }
                 // 查询全部的项目验收情况
                 List<ProjectAcceptanceDO> acceptances = projectAcceptanceMapper.selectByProjectIds(projectIds);
+                // 去除撤回的数据
+                acceptances.removeIf(e-> ProjectAcceptanceStatusEnum.WITHDRAW.getCode().equals(e.getStatus()));
+
                 Map<Long, List<ProjectAcceptanceDO>> acceptanceGroup = acceptances.stream()
                         .collect(Collectors.groupingBy(ProjectAcceptanceDO::getProjectId));
 
@@ -413,6 +416,8 @@ public class ProjectComponentImpl implements ProjectComponent {
 
         // 验收情况
         List<ProjectAcceptanceDO> acceptances = projectAcceptanceMapper.selectByProjectIds(resultProjectIds);
+        // 去除撤回的数据
+        acceptances.removeIf(e-> ProjectAcceptanceStatusEnum.WITHDRAW.getCode().equals(e.getStatus()));
         Map<Long, List<ProjectAcceptanceDO>> acceptanceGroup = acceptances.stream()
                 .collect(Collectors.groupingBy(ProjectAcceptanceDO::getProjectId));
         Set<Long> allPassedAcceptanceProjects = new HashSet<>();
