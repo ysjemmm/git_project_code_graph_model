@@ -291,13 +291,21 @@ public class ProjectComponentImpl implements ProjectComponent {
                 if (ProjectAcceptanceRequestEnum.NO_ACCEPTANCE_INITIATED == statusEnum) {
                     projectIds.removeAll(acceptanceGroup.keySet());
                 } else {
-                    // 筛选出全部验收通过的项目
+                    // 筛选出全部验收通过的项目,同一验收人取最新时间数据
                     Set<Long> allPassed = new HashSet<>();
                     acceptanceGroup.forEach((k, v) -> {
-                        boolean allMatch = v.stream()
-                                .map(ProjectAcceptanceDO::getStatus)
-                                .map(ProjectAcceptanceStatusEnum::getByCode)
-                                .allMatch(ProjectAcceptanceStatusEnum.ACCEPTANCE_PASSED::equals);
+                        Map<String, List<ProjectAcceptanceDO>> acceptorGroup = v.stream()
+                                .collect(Collectors.groupingBy(ProjectAcceptanceDO::getAcceptorId));
+
+                        boolean allMatch = true;
+                        for (List<ProjectAcceptanceDO> value : acceptorGroup.values()) {
+                            allMatch &= value.stream()
+                                    .max(Comparator.comparing(BaseDO::getCreateDate))
+                                    .map(ProjectAcceptanceDO::getStatus)
+                                    .map(ProjectAcceptanceStatusEnum::getByCode)
+                                    .map(ProjectAcceptanceStatusEnum.ACCEPTANCE_PASSED::equals)
+                                    .orElse(false);
+                        }
                         if (allMatch) {
                             allPassed.add(k);
                         }
@@ -409,10 +417,18 @@ public class ProjectComponentImpl implements ProjectComponent {
                 .collect(Collectors.groupingBy(ProjectAcceptanceDO::getProjectId));
         Set<Long> allPassedAcceptanceProjects = new HashSet<>();
         acceptanceGroup.forEach((k, v) -> {
-            boolean allMatch = v.stream()
-                    .map(ProjectAcceptanceDO::getStatus)
-                    .map(ProjectAcceptanceStatusEnum::getByCode)
-                    .allMatch(ProjectAcceptanceStatusEnum.ACCEPTANCE_PASSED::equals);
+            Map<String, List<ProjectAcceptanceDO>> acceptorGroup = v.stream()
+                    .collect(Collectors.groupingBy(ProjectAcceptanceDO::getAcceptorId));
+
+            boolean allMatch = true;
+            for (List<ProjectAcceptanceDO> value : acceptorGroup.values()) {
+                allMatch &= value.stream()
+                        .max(Comparator.comparing(BaseDO::getCreateDate))
+                        .map(ProjectAcceptanceDO::getStatus)
+                        .map(ProjectAcceptanceStatusEnum::getByCode)
+                        .map(ProjectAcceptanceStatusEnum.ACCEPTANCE_PASSED::equals)
+                        .orElse(false);
+            }
             if (allMatch) {
                 allPassedAcceptanceProjects.add(k);
             }
