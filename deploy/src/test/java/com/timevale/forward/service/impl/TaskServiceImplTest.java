@@ -16,13 +16,11 @@ import com.timevale.forward.model.enums.TaskStatusEnum;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
-import com.timevale.forward.service.observer.event.TaskDoneMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.mandarin.base.util.FieldUtils;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedConstruction;
 import org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
@@ -106,6 +104,7 @@ public class TaskServiceImplTest extends AbstractTestNGSpringContextTests {
         when(personMapper.getMainIds(any(),any(),any())).thenReturn(Collections.emptyList());
         BaseResult<PageQueryResult<TaskVO>> baseResult = taskServiceImp.list(taskQueryList);
 
+        assert baseResult.ifSuccess();
         taskQueryList.setAscription("TEAM");
         when(innerUserPersonClient.getAllMyStaffWithSelf(any(),any())).thenReturn(Collections.singletonList("1"));
         baseResult = taskServiceImp.list(taskQueryList);
@@ -147,10 +146,8 @@ public class TaskServiceImplTest extends AbstractTestNGSpringContextTests {
         ProjectDO projectDO=new ProjectDO();
         projectDO.setPmId("");
         when(projectMapper.get(any())).thenReturn(projectDO);
-        MockedConstruction<TaskDoneMsgEvent> construction = mockConstruction(TaskDoneMsgEvent.class);
         doNothing().when(messageEventPublisher).publish(any());
         BaseResult<Long> baseResult = taskServiceImp.add(taskAddReq);
-        construction.close();
         assert baseResult.ifSuccess();
     }
     @Test
@@ -191,15 +188,9 @@ public class TaskServiceImplTest extends AbstractTestNGSpringContextTests {
         ProjectDO projectDO=new ProjectDO();
         projectDO.setPmId("");
         when(projectMapper.get(any())).thenReturn(projectDO);
-        MockedConstruction<TaskDoneMsgEvent> construction = mockConstruction(TaskDoneMsgEvent.class);
         doNothing().when(messageEventPublisher).publish(any());
-        try {
-            BaseResult<Boolean> baseResult = taskServiceImp.modify(taskModifyReq);
-            assert baseResult.ifSuccess();
-        }finally {
-            construction.close();
-        }
-
+        BaseResult<Boolean> baseResult = taskServiceImp.modify(taskModifyReq);
+        assert baseResult.ifSuccess();
 
     }
 
@@ -229,6 +220,7 @@ public class TaskServiceImplTest extends AbstractTestNGSpringContextTests {
         when(taskMapper.update(any())).thenReturn(1);
         BaseResult<Boolean> baseResult = taskServiceImp.updateStatus(1L,-10);
 
+        assert baseResult.ifSuccess();
         doNothing().when(taskProductDemandComponent).update(any(),any());
         when(taskTimeMapper.delete(any(),any())).thenReturn(1);
         baseResult = taskServiceImp.updateStatus(1L,-20);
@@ -272,15 +264,10 @@ public class TaskServiceImplTest extends AbstractTestNGSpringContextTests {
         ProjectDO projectDO=new ProjectDO();
         projectDO.setPmId("");
         when(projectMapper.get(any())).thenReturn(projectDO);
-        MockedConstruction<TaskDoneMsgEvent> construction = mockConstruction(TaskDoneMsgEvent.class);
-        try {
-            doNothing().when(messageEventPublisher).publish(any());
+        doNothing().when(messageEventPublisher).publish(any());
 
-            BaseResult<Boolean> baseResult = taskServiceImp.done(new TaskDoneReq());
-            assert baseResult.ifSuccess();
-        }finally {
-            construction.close();
-        }
+        BaseResult<Boolean> baseResult = taskServiceImp.done(new TaskDoneReq());
+        assert baseResult.ifSuccess();
     }
 
     @Test

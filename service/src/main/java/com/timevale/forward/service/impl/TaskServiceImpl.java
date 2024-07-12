@@ -28,8 +28,6 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
-import com.timevale.forward.service.observer.event.TaskDoneMsgEvent;
-import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateFormatConst;
@@ -94,8 +92,6 @@ public class TaskServiceImpl implements TaskService {
     private ElapsedTimeClient elapsedTimeClient;
     @Resource
     private TaskTimeComponent taskTimeComponent;
-    @Resource
-    private MessageEventPublisher messageEventPublisher;
     @Resource
     private ProjectNodeMapper projectNodeMapper;
     @Resource
@@ -197,7 +193,6 @@ public class TaskServiceImpl implements TaskService {
         //关联产品需求
         taskProductDemandComponent.batchInsert(taskDO.getId(), taskAddReq.getProductDemandIds());
 
-        sendDingMsg(taskDO, executorIds);
         return BaseResult.success(taskDO.getId());
     }
 
@@ -245,7 +240,6 @@ public class TaskServiceImpl implements TaskService {
                 PersonTypeEnum.PROJECT_MEMBER.getCode(),
                 personLevel);
 
-        sendDingMsg(taskDO, executorIds);
         innerProjectStatusUpdateComponent.updateProjectDateAndStatus(taskDO.getProjectId());
 
         return BaseResult.success(true);
@@ -400,7 +394,6 @@ public class TaskServiceImpl implements TaskService {
         if (taskDO.getTodo()) {
             taskComponent.updateTodoTask(taskDO, existExecutorIds);
         }
-        sendDingMsg(taskDO, existExecutorIds);
         innerProjectStatusUpdateComponent.updateProjectDateAndStatus(taskDO.getProjectId());
         return BaseResult.success(true);
     }
@@ -846,28 +839,4 @@ public class TaskServiceImpl implements TaskService {
         }
     }
 
-    /**
-     * 钉钉消息处理
-     *
-     * @param taskDO      taskDO
-     * @param executorIds 执行人
-     */
-    private void sendDingMsg(TaskDO taskDO, List<String> executorIds) {
-//        // 通知需求接收人
-        if (TaskStatusEnum.DONE.getCode().equals(taskDO.getStatus())) {
-            ProjectDO project = projectMapper.get(taskDO.getProjectId());
-            String pmId = project.getPmId();
-            executorIds.add(pmId);
-            UserInfo userInfo = LocalSessionUtils.getUserInfo();
-            String operator = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
-            messageEventPublisher.publish(new TaskDoneMsgEvent(
-                    this,
-                    operator,
-                    executorIds,
-                    taskDO.getName(),
-                    taskDO.getId(),
-                    project
-            ));
-        }
-    }
 }
