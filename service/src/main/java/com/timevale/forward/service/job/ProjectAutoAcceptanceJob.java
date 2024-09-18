@@ -17,6 +17,7 @@ import com.timevale.framework.schedulerT.core.biz.model.ReturnT;
 import com.timevale.framework.schedulerT.core.handler.IJobHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Collections;
 import java.util.Date;
@@ -32,9 +33,12 @@ public class ProjectAutoAcceptanceJob extends IJobHandler {
     private final ProjectAcceptanceMapper projectAcceptanceMapper;
     private final ProjectAcceptanceService projectAcceptanceService;
 
+    @Value("${project.autoAcceptanceDay:10}")
+    private int autoAcceptanceDay;
+
     @Override
     public ReturnT<String> execute(String s) throws Exception {
-        Date createDateEnd = DateUtil.addDay(DateUtil.getStartOfDay(new Date()), -10);
+        Date createDateEnd = DateUtil.addDay(DateUtil.getStartOfDay(new Date()), -autoAcceptanceDay);
         List<Integer> status = Collections.singletonList(ForwardFlowStatusEnum.AUDITING.getCode());
         ProjectAcceptanceListCondition condition = ProjectAcceptanceListCondition.builder()
                 .status(status)
