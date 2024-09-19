@@ -31,6 +31,11 @@ public class BugOnlineListCondition {
     private List<String> operatorIdList;
 
     /**
+     * 历史经办人列表，名称为花名-真名
+     */
+    private List<String> historyOperators;
+
+    /**
      * 提出人
      */
     private List<String> proposerIdList;
