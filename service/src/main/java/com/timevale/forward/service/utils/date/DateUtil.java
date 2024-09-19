@@ -14,32 +14,30 @@ import java.util.*;
  */
 public class DateUtil implements DateFormatConst {
 
-    private static final ThreadLocal<SimpleDateFormat> threadLocal = new ThreadLocal<>();
-
     private static final Object object = new Object();
 
-    /**
-     * 平年每个月份的天数
-     */
-    public static final int[] MONTH_DAYS_OF_YEAR = new int[]{31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    private static final Map<String, SimpleDateFormat> dateFormatMap = new HashMap<>();
 
     /**
      * 取得SimpleDateFormat
      *
      * @param pattern 日期格式
-     * @return SimpleDateFormat对象
+     * @return SimpleDateFormat 对象
      * @throws RuntimeException 异常：非法日期格式
      */
     private static SimpleDateFormat getDateFormat(String pattern) throws RuntimeException {
-        SimpleDateFormat dateFormat = threadLocal.get();
+        SimpleDateFormat dateFormat = dateFormatMap.get(pattern);
         if (dateFormat == null) {
             synchronized (object) {
+                SimpleDateFormat retryDateFormat = dateFormatMap.get(pattern);
+                if (retryDateFormat != null) {
+                    return retryDateFormat;
+                }
                 dateFormat = new SimpleDateFormat(pattern);
                 dateFormat.setLenient(false);
-                threadLocal.set(dateFormat);
+                dateFormatMap.put(pattern, dateFormat);
             }
         }
-        dateFormat.applyPattern(pattern);
         return dateFormat;
     }
 
@@ -149,7 +147,7 @@ public class DateUtil implements DateFormatConst {
         Map<Long, long[]> map = new HashMap<>();
         List<Long> absoluteValues = new ArrayList<>();
 
-        if (timestamps != null && timestamps.size() > 0) {
+        if (timestamps != null && !timestamps.isEmpty()) {
             if (timestamps.size() > 1) {
                 for (int i = 0; i < timestamps.size(); i++) {
                     for (int j = i + 1; j < timestamps.size(); j++) {
@@ -2013,8 +2011,7 @@ public class DateUtil implements DateFormatConst {
             return "";
         }
         SimpleDateFormat format = new SimpleDateFormat(f);
-        String str = format.format(date);
-        return str;
+        return format.format(date);
     }
 
     public static String getShotDate(Date date) {

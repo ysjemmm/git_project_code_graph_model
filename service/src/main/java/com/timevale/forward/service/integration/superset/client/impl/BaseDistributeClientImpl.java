@@ -29,6 +29,7 @@ import javax.annotation.Resource;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -52,6 +53,8 @@ public class BaseDistributeClientImpl<T> implements BaseDistributeClient<T> {
 
     public static final String SLASH = "/";
 
+    private final ConcurrentHashMap<Class<?>, Type> typeMap = new ConcurrentHashMap<>();
+
 
     /**
      * 解析列表
@@ -63,9 +66,11 @@ public class BaseDistributeClientImpl<T> implements BaseDistributeClient<T> {
 
         checkResult(result);
 
-        ParameterizedType pt = (ParameterizedType) this.getClass().getGenericSuperclass();
+        Class<?> thisClass = getClass();
+        typeMap.computeIfAbsent(thisClass, k -> ParameterizedTypeImpl.make(DistributeResult.class,
+                ((ParameterizedType) thisClass.getGenericSuperclass()).getActualTypeArguments(), null));
 
-        Type type = ParameterizedTypeImpl.make(DistributeResult.class, pt.getActualTypeArguments(), null);
+        Type type = typeMap.get(thisClass);
 
         DistributeResult<T> o = JSON.parseObject(result, type);
         if (!Integer.valueOf(0).equals(o.getCode())) {
