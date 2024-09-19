@@ -105,7 +105,8 @@
     </select>
 
     <select id="selectByCondition" resultType="com.timevale.forward.dal.entity.BugOfflineListDO">
-        select bo.id, bo.status, bo.operator, bo.operator_id, bo.proposer, bo.proposer_id, bo.priority, bo.env, bo.reason, bo.source, bo.belong,
+        select bo.id, bo.status, bo.operator, bo.operator_id, bo.proposer, bo.proposer_id, bo.priority, bo.env,
+        bo.reason, bo.source, bo.belong,
         bo.return_count, bo.unhandle_reason, bo.open_count, bo.expect_solve_date,
         bo.create_date, bo.modify_date,
         bo.name bugName,
@@ -118,7 +119,7 @@
         join biz_domain bd on pl.biz_domain_id = bd.id
         <where>
             <if test="containIds!=null and containIds.size()>0">
-                and bo.id  in
+                and bo.id in
                 <foreach collection="containIds" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
@@ -238,6 +239,21 @@
             </if>
             <if test="proposerLike != null and proposerLike != ''">
                 and bo.proposer like concat('%',#{proposerLike},'%')
+            </if>
+            <if test="historyOperators != null and historyOperators.size > 0">
+                and bo.id in (
+                select bl.main_id
+                from bug_log bl where bl.is_deleted = 0 and bl.type = 0 and bl.field = '经办人'
+                and (bl.old_value in (
+                <foreach collection="historyOperators" separator="," item="item" open="(" close=")">
+                    #{item}
+                </foreach>
+                )
+                or bl.new_value in (
+                <foreach collection="historyOperators" separator="," item="item" open="(" close=")">
+                    #{item}
+                </foreach>
+                )))
             </if>
         </where>
     </select>

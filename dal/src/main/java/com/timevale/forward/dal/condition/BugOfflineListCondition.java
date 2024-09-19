@@ -76,6 +76,11 @@ public class BugOfflineListCondition {
     private List<Integer> belongs;
 
     /**
+     * 历史经办人列表，名称为花名-真名
+     */
+    private List<String> historyOperators;
+
+    /**
      * 创建时间左区间
      */
     private Date createDateLeft;
