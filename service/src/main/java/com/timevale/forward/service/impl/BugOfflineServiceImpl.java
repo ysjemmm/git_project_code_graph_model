@@ -111,7 +111,12 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         // 根据tabs添加不同的效果
         String ascription = bugOfflineQueryList.getAscription();
         if (AscriptionEnum.CURRENT_USER.toString().equals(ascription)) {
-            condition.setProposerIds(Lists.newArrayList(userInfo.getId()));
+            if (Objects.equals(bugOfflineQueryList.getCurrentOperatorOnly(), false)) {
+                condition.setHistoryOperators(Lists.newArrayList(
+                        userInfo.getAlias() + "-" + userInfo.getName()));
+            } else {
+                condition.setProposerIds(Lists.newArrayList(userInfo.getId()));
+            }
         } else if (AscriptionEnum.RECEIVE.toString().equals(ascription)) {
             condition.setOperatorIds(Lists.newArrayList(userInfo.getId()));
         } else if (AscriptionEnum.COPIER.toString().equals(ascription)) {
@@ -815,7 +820,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         }
 
         //判断当前操作人是否有权限
-        Boolean result = isPermission(bugOfflineDO.getProposerId())
+        boolean result = isPermission(bugOfflineDO.getProposerId())
                 || jobFunctionMatch(LocalSessionUtils.getUserInfo().getId(), JobFunctionEnum.QA);
         if (!result) {
             throw new BaseBizRuntimeException("您没有操作权限");
@@ -859,7 +864,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         }
 
         //判断当前操作人是否有权限
-        Boolean result = isPermission(bugOfflineDO.getProposerId())
+        boolean result = isPermission(bugOfflineDO.getProposerId())
                 || jobFunctionMatch(LocalSessionUtils.getUserInfo().getId(), JobFunctionEnum.QA);
         if (!result) {
             throw new BaseBizRuntimeException("您没有操作权限");
@@ -973,7 +978,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugLogMapper.insert(bugLogDO);
 
         //如果延期修复原因存在老的值则往bug日志表里插入一条记录
-        if (delayHandleReason != null && !"".equals(delayHandleReason)) {
+        if (delayHandleReason != null && !delayHandleReason.isEmpty()) {
             BugLogDO bugLog = new BugLogDO();
             bugLog.setField(BugFieldEnum.DELAY_HANDLE_REASON.getText());
             bugLog.setOldValue(delayHandleReason);
@@ -1171,8 +1176,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         List<BugLogVO> bugLogVOList = bugLogDOList.stream().map(BugLogCopier.INSTANCE::convert).collect(Collectors.toList());
 
         // 如果是线上bug，需要填充关联的对应bug信息
-        if(BugLogTypeEnum.ONLINE.getCode().equals(logQuery.getType())){
-            final BugOnlineDO bugOnlineDO = bugOnlineMapper.get(logQuery.getId());
+        if (BugLogTypeEnum.ONLINE.getCode().equals(logQuery.getType())) {
 
             // 关联的线上线下bug信息
             Set<Long> bugOnlineIds = new HashSet<>();
@@ -1192,8 +1196,8 @@ public class BugOfflineServiceImpl implements BugOfflineService {
                     });
 
             // 查询关联的线上bug，获取信息填充
-            if(CollUtil.isNotEmpty(bugOnlineIds)){
-                List<BugOnlineDO> budDOLIst = bugOnlineMapper.getByIds(bugOnlineIds,true);
+            if (CollUtil.isNotEmpty(bugOnlineIds)) {
+                List<BugOnlineDO> budDOLIst = bugOnlineMapper.getByIds(bugOnlineIds, true);
                 ImmutableMap<Long, BugOnlineDO> bugMap = Maps.uniqueIndex(budDOLIst, BaseDO::getId);
                 bugLogVOList.stream()
                         .filter(e -> BugFieldEnum.LINK_BUG_ONLINE.getText().equals(e.getField()))
@@ -1209,7 +1213,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             }
 
             // 查询关联的线下bug，获取信息填充
-            if(CollUtil.isNotEmpty(bugOfflineIds)){
+            if (CollUtil.isNotEmpty(bugOfflineIds)) {
                 List<BugOfflineDO> budDOList = bugOfflineMapper.getByIds(bugOfflineIds, true);
                 ImmutableMap<Long, BugOfflineDO> bugMap = Maps.uniqueIndex(budDOList, BaseDO::getId);
                 bugLogVOList.stream()

@@ -27,6 +27,9 @@ public class BugOnlineQueryList extends QueryBase {
     @ApiModelProperty("经办人id")
     private List<String> operatorIdList;
 
+    @ApiModelProperty("历史经办人列表，名称为花名-真名")
+    private List<String> historyOperators;
+
     @ApiModelProperty("提出人id")
     private List<String> proposerIdList;
 
@@ -126,4 +129,8 @@ public class BugOnlineQueryList extends QueryBase {
 
     @ApiModelProperty("重复打开次数")
     private Integer openCount;
+
+    @ApiModelProperty("我是当下经办人")
+    private Boolean currentOperatorOnly = true;
+
 }

@@ -56,8 +56,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * @date 2022/3/17 16:59
  * @author 望轩
+ * @date 2022/3/17 16:59
  */
 @Slf4j
 @LogPoint
@@ -160,7 +160,12 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         // 根据tabs添加不同的效果
         String ascription = bugOnlineQueryList.getAscription();
         if (AscriptionEnum.CURRENT_USER.toString().equals(ascription)) {
-            condition.setProposerIdList(Lists.newArrayList(userInfo.getId()));
+            if (Objects.equals(bugOnlineQueryList.getCurrentOperatorOnly(), false)) {
+                condition.setHistoryOperators(Lists.newArrayList(
+                        userInfo.getAlias() + "-" + userInfo.getName()));
+            } else {
+                condition.setProposerIdList(Lists.newArrayList(userInfo.getId()));
+            }
         } else if (AscriptionEnum.RECEIVE.toString().equals(ascription)) {
             condition.setOperatorIdList(Lists.newArrayList(userInfo.getId()));
         } else if (AscriptionEnum.COPIER.toString().equals(ascription)) {
@@ -502,7 +507,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         // 责任人
         List<PersonAddReq> principalList = addReq.getPrincipalList();
         if (CollUtil.isNotEmpty(principalList)) {
-            personComponent.add(principalList, bugOnlineDO.getId(),PersonTypeEnum.BUG_ONLINE_PRINCIPAL.getCode());
+            personComponent.add(principalList, bugOnlineDO.getId(), PersonTypeEnum.BUG_ONLINE_PRINCIPAL.getCode());
         }
 
         // 客户信息
@@ -571,7 +576,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         commentMapper.delete(deleteReq.getId(), CommentTypeEnum.BUG_ONLINE.getCode());
 
         //删除附件数据
-        fileComponent.update(Lists.emptyList(),deleteReq.getId(), FileTypeEnum.BUG_ONLINE.getCode());
+        fileComponent.update(Lists.emptyList(), deleteReq.getId(), FileTypeEnum.BUG_ONLINE.getCode());
 
         //查询所有的状态变更id
         List<BugLogDO> bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(bugOnlineDO.getId(), BugLogTypeEnum.ONLINE.getCode(), true);
@@ -950,7 +955,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogMapper.insert(bugLogDO);
 
         //如果此时修复失败原因有值，则需要插入一条bug内容变更记录，因为需要把修复失败原因清空
-        if (repairFailReason != null && !"".equals(repairFailReason)) {
+        if (repairFailReason != null && !repairFailReason.isEmpty()) {
             BugLogDO bugLog = new BugLogDO();
             bugLog.setField(BugFieldEnum.REPAIR_FAIL_REASON.getText());
             bugLog.setOldValue(repairFailReason);
@@ -1037,7 +1042,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         // 线下bug、bug原因的log
         bugLogComponent.bugOffline(confirmRepairReq.getId(), oldBugOfflineId, confirmRepairReq.getBugOfflineId());
-        bugLogComponent.reason(confirmRepairReq.getId(),oldReason, confirmRepairReq.getReason());
+        bugLogComponent.reason(confirmRepairReq.getId(), oldReason, confirmRepairReq.getReason());
 
         //bug状态处理人员表插入数据
         bugLogComponent.insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
@@ -1796,18 +1801,18 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             // 通知
             if (operateEnum == BugOnlineConvertBizStatusEnum.AGREE) {
                 receivers.forEach(receiver -> new BugOnlineToBizAgreeEvent(
-                                this,
-                                userInfo.getFullAlias(),
-                                bugOnlineDO.getName(),
-                                receiver,
-                                bugOnlineDO.getId()).send());
+                        this,
+                        userInfo.getFullAlias(),
+                        bugOnlineDO.getName(),
+                        receiver,
+                        bugOnlineDO.getId()).send());
             } else if (operateEnum == BugOnlineConvertBizStatusEnum.REJECT) {
                 receivers.forEach(receiver -> new BugOnlineToBizRejectEvent(
-                                this,
-                                userInfo.getFullAlias(),
-                                bugOnlineDO.getName(),
-                                receiver,
-                                bugOnlineDO.getId()).send());
+                        this,
+                        userInfo.getFullAlias(),
+                        bugOnlineDO.getName(),
+                        receiver,
+                        bugOnlineDO.getId()).send());
             }
         }
 
@@ -1860,7 +1865,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
 
             //线上bug表更新
-            bugOnlineMapper.updateStatusByIds(CollUtil.newArrayList(acceptanceReq.getId()),BugOnlineStatusEnum.COMPLETE.getCode());
+            bugOnlineMapper.updateStatusByIds(CollUtil.newArrayList(acceptanceReq.getId()), BugOnlineStatusEnum.COMPLETE.getCode());
 
             BugLogDO bugLogDO = new BugLogDO();
             bugLogDO.setAction(ButtonActionEnum.ACCEPTANCE_PASS.getText());
@@ -1898,7 +1903,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
 
             //线上bug表更新
-            bugOnlineMapper.updateStatusByIds(CollUtil.newArrayList(acceptanceReq.getId()),BugOnlineStatusEnum.QUESTION_CONFIRM.getCode());
+            bugOnlineMapper.updateStatusByIds(CollUtil.newArrayList(acceptanceReq.getId()), BugOnlineStatusEnum.QUESTION_CONFIRM.getCode());
 
             // 打开次数+1
             bugOnlineMapper.updateIncOpenCount(acceptanceReq.getId());
