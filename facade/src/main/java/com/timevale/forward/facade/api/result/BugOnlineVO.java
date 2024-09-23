@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -106,4 +107,8 @@ public class BugOnlineVO extends ToString {
 
     @ApiModelProperty("打开次数")
     private Integer openCount;
+
+    @ApiModelProperty("SLA处理剩余时长")
+    private BigDecimal slaRemainHours;
+
 }

@@ -8,6 +8,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BugOnlineListCondition;
 import com.timevale.forward.dal.condition.PersonListCondition;
@@ -27,12 +29,14 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.crm.CrmClient;
 import com.timevale.forward.service.integration.dock.CrmProjectClient;
+import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.*;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.compare.FieldCompareUtil;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -46,11 +50,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.assertj.core.util.Lists;
-import org.assertj.core.util.Sets;
+import org.apache.commons.lang3.time.FastDateFormat;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -83,6 +88,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     private final SqlOrderComponent sqlOrderComponent;
     private final ProductLineMapper productLineMapper;
     private final BizLabelComponent bizLabelComponent;
+    private final ElapsedTimeClient elapsedTimeClient;
     private final BugOnlineComponent bugOnlineComponent;
     private final OutBizDealComponent outBizDealComponent;
     private final BugOnlineModelMapper bugOnlineModelMapper;
@@ -108,6 +114,52 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Value("#{'${crmDockProductLines:1,2,3}'.split(',')}")
     private Set<Long> crmDockProductLines;
+
+
+    private static final FastDateFormat DATE_FORMAT = FastDateFormat.getInstance("yyyy-MM-dd");
+    /**
+     * 天印产品线id列表
+     */
+    @Value("#{'${sealProductLines:1,2,27,28,30,31,36,70}'.split(',')}")
+    private Set<Long> sealProductLines;
+
+    @Value("${infoDomainId:14}")
+    private long infoDomainId;
+
+    private static final Set<Integer> sealSlaStatuses =
+            Sets.newHashSet(BugOnlineStatusEnum.PROBLEM_REPORT.getCode(),
+                    BugOnlineStatusEnum.START_RESPONSE.getCode(),
+                    BugOnlineStatusEnum.QUESTION_CONFIRM.getCode(),
+                    BugOnlineStatusEnum.QUESTION_REPAIR.getCode(),
+                    BugOnlineStatusEnum.REPAIR_CONFIRM.getCode(),
+                    BugOnlineStatusEnum.HANG_UP.getCode());
+
+    private static final Set<Integer> nonsealSlaStatuses =
+            Sets.newHashSet(BugOnlineStatusEnum.PROBLEM_REPORT.getCode(),
+                    BugOnlineStatusEnum.START_RESPONSE.getCode(),
+                    BugOnlineStatusEnum.QUESTION_CONFIRM.getCode(),
+                    BugOnlineStatusEnum.QUESTION_REPAIR.getCode(),
+                    BugOnlineStatusEnum.REPAIR_CONFIRM.getCode(),
+                    BugOnlineStatusEnum.HANG_UP.getCode(),
+                    BugOnlineStatusEnum.ONLINE.getCode());
+    /**
+     * SLA剩余时间计算规则：
+     * 按照1天24小时计算，0.5天为12小时。
+     * 天印： 紧急：1.0天   高：1.5天  中：2.5天  低：5.0天
+     * 公有云及其他产品线：紧急：0.5天    高：1天    中：2天   低：5.0天
+     */
+    private static final Map<String, BigDecimal> sealRemainHoursMap = new HashMap<>();
+    private static final Map<String, BigDecimal> nonsealRemainHoursMap = new HashMap<>();
+    static {
+        sealRemainHoursMap.put("紧急", new BigDecimal(24));
+        sealRemainHoursMap.put("高", new BigDecimal(36));
+        sealRemainHoursMap.put("中", new BigDecimal(60));
+        sealRemainHoursMap.put("低", new BigDecimal(120));
+        nonsealRemainHoursMap.put("紧急", new BigDecimal(12));
+        nonsealRemainHoursMap.put("高", new BigDecimal(24));
+        nonsealRemainHoursMap.put("中", new BigDecimal(48));
+        nonsealRemainHoursMap.put("低", new BigDecimal(120));
+    }
 
     @Override
     public BusinessResult<ProductLineToFieldVO> getAllDisplayField(BugOnlineGetFieldReq bugOnlineGetFieldReq) {
@@ -322,6 +374,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                 bugOnlineModelDOList.stream().collect(Collectors.groupingBy(BugOnlineModelDO::getBugOnlineId));
         Map<Long, String> modelNameMap = modelDOList.stream().collect(Collectors.toMap(ModelDO::getId, ModelDO::getName, (v1, v2) -> v2));
 
+        Date now = new Date();
         for (BugOnlineVO e : bugOnlineVOList) {
             // 关联的产品线id
             List<Long> eProductLineIdList = bugOnlineProductLineMap.get(e.getId())
@@ -367,6 +420,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             }
             e.setProductLineNameList(eProductLineNameList);
             e.setBizDomainNameList(eBizDomainNameList);
+            e.setSlaRemainHours(getSlaRemainHours(e, eProductLineDOList, now));
 
             List<BizLabelSimpleVO> labelSimpleVOList = bizLabelMap.get(e.getId());
             if (CollectionUtils.isNotEmpty(labelSimpleVOList)) {
@@ -385,6 +439,49 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineQueryResultVO.setPageQueryResult(pageQueryResult);
 
         return BaseResult.success(bugOnlineQueryResultVO);
+    }
+
+    private BigDecimal getSlaRemainHours(BugOnlineVO e, List<ProductLineDO> productLineDOList, Date endDate) {
+        Set<Long> bizDomainIds = productLineDOList.stream().map(ProductLineDO::getBizDomainId).collect(Collectors.toSet());
+        if (bizDomainIds.size() == 1 && productLineDOList.get(0).getBizDomainId().equals(infoDomainId)) {
+            // 仅有数智化中心的情况，不计算
+            return null;
+        }
+        Optional<ProductLineDO> nonSealProductLine = productLineDOList.stream()
+                // 去除数智化中心的数据和天印产品线的数据
+                .filter(pl -> !Objects.equals(pl.getBizDomainId(), infoDomainId) &&
+                        !sealProductLines.contains(pl.getId())).findFirst();
+        boolean onlySeal = !nonSealProductLine.isPresent();
+        BigDecimal totalRemain;
+        if (onlySeal) {
+            // 仅有天印产品线时
+            if (!sealSlaStatuses.contains(e.getStatus())) {
+                return null;
+            }
+            totalRemain = sealRemainHoursMap.get(e.getPriorityName());
+        } else {
+            // 包含非天印产品线时
+            if (!nonsealSlaStatuses.contains(e.getStatus())) {
+                return null;
+            }
+            totalRemain = nonsealRemainHoursMap.get(e.getPriorityName());
+        }
+        if (totalRemain == null) {
+            return null;
+        }
+        Date startDate = e.getCreateDate();
+        List<String> holidays = elapsedTimeClient.getHolidays(e.getCreateDate(), endDate, true);
+        if (holidays.contains(DATE_FORMAT.format(startDate))) {
+            startDate = DateUtil.getStartOfDay(startDate);
+        }
+        if (holidays.contains(DATE_FORMAT.format(endDate))) {
+            endDate = DateUtil.getStartOfNextDay(endDate);
+        }
+        // 计算工作日和节假日的差值
+        long elapsedMillis = endDate.getTime() - startDate.getTime() - ((long)holidays.size()) * 24 * 60 * 60 * 1000;
+        BigDecimal elapsedHours = new BigDecimal(elapsedMillis)
+                .divide(new BigDecimal(1000 * 60 * 60), 1, RoundingMode.HALF_UP);
+        return totalRemain.subtract(elapsedHours);
     }
 
     private List<PriorityStatisticsVO> getPriorityStatisticsVOList(Map<Integer, List<BugOnlineListDO>> bugOnlineListDOMap) {
@@ -569,14 +666,14 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineCustomComponent.delete(deleteReq.getId());
 
         // 删除抄送人、责任人
-        personComponent.update(Lists.emptyList(), deleteReq.getId(), PersonTypeEnum.BUG_ONLINE_CC.getCode());
-        personComponent.update(Lists.emptyList(), deleteReq.getId(), PersonTypeEnum.BUG_ONLINE_PRINCIPAL.getCode());
+        personComponent.update(Collections.emptyList(), deleteReq.getId(), PersonTypeEnum.BUG_ONLINE_CC.getCode());
+        personComponent.update(Collections.emptyList(), deleteReq.getId(), PersonTypeEnum.BUG_ONLINE_PRINCIPAL.getCode());
 
         //删除评论数据
         commentMapper.delete(deleteReq.getId(), CommentTypeEnum.BUG_ONLINE.getCode());
 
         //删除附件数据
-        fileComponent.update(Lists.emptyList(), deleteReq.getId(), FileTypeEnum.BUG_ONLINE.getCode());
+        fileComponent.update(Collections.emptyList(), deleteReq.getId(), FileTypeEnum.BUG_ONLINE.getCode());
 
         //查询所有的状态变更id
         List<BugLogDO> bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(bugOnlineDO.getId(), BugLogTypeEnum.ONLINE.getCode(), true);
@@ -1661,7 +1758,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                 .filter(a -> !Objects.equals(a.getId(), bugOnlineGetReq.getId()) && !Objects.equals(a.getLinkBugId(), bugOnlineGetReq.getId()))
                 .collect(Collectors.toList());
         if (CollectionUtils.isEmpty(filter)) {
-            return BaseResult.success(Lists.emptyList());
+            return BaseResult.success(Collections.emptyList());
         }
         List<BugOnlineVO> result = filter.stream().map(BugOnlineCopier.INSTANCE::convertT).collect(Collectors.toList());
         return BaseResult.success(result);
@@ -1684,13 +1781,13 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     public BaseResult<List<BugOnlineSimpleVO>> getByIds(BugOnlineIdsReq simpleReq) {
         Collection<Long> ids = simpleReq.getIds();
         if (CollUtil.isEmpty(ids)) {
-            return BaseResult.success(Lists.emptyList());
+            return BaseResult.success(Collections.emptyList());
         }
 
         // 查询指定的线上bug
         List<BugOnlineDO> bugOnlineDOs = bugOnlineMapper.getByIds(ids, false);
         if (CollUtil.isEmpty(bugOnlineDOs)) {
-            return BaseResult.success(Lists.emptyList());
+            return BaseResult.success(Collections.emptyList());
         }
 
         // 查询关联的产品线

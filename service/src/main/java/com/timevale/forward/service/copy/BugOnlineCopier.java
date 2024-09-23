@@ -74,6 +74,7 @@ public interface BugOnlineCopier {
      * @param listDO 对象
      * @return BugOnlineVO
      */
+    @Mapping(target = "slaRemainHours", ignore = true)
     @Mapping(target = "envName", expression = "java(BugOnlineEnvEnum.getTextByCode(listDO.getEnv()))")
     @Mapping(target = "statusName", expression = "java(BugOnlineStatusEnum.getTextByCode(listDO.getStatus()))")
     @Mapping(target = "sourceName", expression = "java(BugOnlineSourceEnum.getTextByCode(listDO.getSource()))")
