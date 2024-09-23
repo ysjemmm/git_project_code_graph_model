@@ -33,7 +33,7 @@ public class ProjectAutoAcceptanceJob extends IJobHandler {
     private final ProjectAcceptanceMapper projectAcceptanceMapper;
     private final ProjectAcceptanceService projectAcceptanceService;
 
-    @Value("${project.autoAcceptanceDay:10}")
+    @Value("${project.autoAcceptanceDay:3}")
     private int autoAcceptanceDay;
 
     @Override
