@@ -26,26 +26,27 @@ import org.springframework.cloud.netflix.feign.EnableFeignClients;
  */
 @UniversalService
 @EnableFeignClients(basePackages = {
-        "com.timevale.filesystem.common.service.api",
-        "com.timevale.security.facade.api",
-        "com.timevale.erp.message.service.api",
-        "com.timevale.lowcode.support.api",
         "com.timevale.epeius.service.api",
+        "com.timevale.security.facade.api",
+        "com.timevale.lowcode.support.api",
+        "com.timevale.crm.dock.facade.api",
+        "com.timevale.erp.message.service.api",
+        "com.timevale.filesystem.common.service.api",
         "com.timevale.crm.custom.provider.facade.api",
-        "com.timevale.crm.dock.facade.api"
 })
 @MapperScan("com.timevale.forward.dal")
 @SpringBootApplication(scanBasePackages = {
+        "com.timevale.forward.service",
         "com.timevale.crm.sdk.common.base",
         "com.timevale.crm.sdk.common.utils.file",
-        "com.timevale.forward.service"
 })
 @EnablePuppeteerConfig({"application", "JSBZ.SOA_PUBLIC"})
 @EnableLogMonitor
 public class Application {
 
     public static void main(String[] args) {
+        long start = System.currentTimeMillis();
         SpringApplication.run(Application.class, args);
-        System.out.println("Started");
+        System.out.println("Started in " + (System.currentTimeMillis() - start) + "ms");
     }
 }

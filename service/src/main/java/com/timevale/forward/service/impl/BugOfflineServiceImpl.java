@@ -111,14 +111,14 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         // 根据tabs添加不同的效果
         String ascription = bugOfflineQueryList.getAscription();
         if (AscriptionEnum.CURRENT_USER.toString().equals(ascription)) {
+            condition.setProposerIds(Lists.newArrayList(userInfo.getId()));
+        } else if (AscriptionEnum.RECEIVE.toString().equals(ascription)) {
             if (Objects.equals(bugOfflineQueryList.getCurrentOperatorOnly(), false)) {
                 condition.setHistoryOperators(Lists.newArrayList(
                         userInfo.getAlias() + "-" + userInfo.getName()));
             } else {
-                condition.setProposerIds(Lists.newArrayList(userInfo.getId()));
+                condition.setOperatorIds(Lists.newArrayList(userInfo.getId()));
             }
-        } else if (AscriptionEnum.RECEIVE.toString().equals(ascription)) {
-            condition.setOperatorIds(Lists.newArrayList(userInfo.getId()));
         } else if (AscriptionEnum.COPIER.toString().equals(ascription)) {
             condition.setCopier(userInfo.getId());
         } else {

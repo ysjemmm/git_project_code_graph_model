@@ -169,19 +169,22 @@
                 and bopl.is_deleted = false
             </if>
             <if test="historyOperators != null and historyOperators.size > 0">
-                and bo.id in (
+                and (bo.id in (
                 select bl.main_id
                 from bug_log bl where bl.is_deleted = 0 and bl.type = 1 and bl.field = '经办人'
-                and (bl.old_value in (
+                and (bl.old_value in
                 <foreach collection="historyOperators" separator="," item="item" open="(" close=")">
                     #{item}
                 </foreach>
-                )
-                or bl.new_value in (
+                or bl.new_value in
                 <foreach collection="historyOperators" separator="," item="item" open="(" close=")">
                     #{item}
                 </foreach>
-                )))
+                ))
+                or bo.operator in
+                <foreach collection="historyOperators" separator="," item="item" open="(" close=")">
+                    #{item}
+                </foreach>)
             </if>
         </where>
         group by bo.id

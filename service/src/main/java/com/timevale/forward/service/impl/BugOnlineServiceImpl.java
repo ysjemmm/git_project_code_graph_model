@@ -150,6 +150,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
      */
     private static final Map<String, BigDecimal> sealRemainHoursMap = new HashMap<>();
     private static final Map<String, BigDecimal> nonsealRemainHoursMap = new HashMap<>();
+
     static {
         sealRemainHoursMap.put("紧急", new BigDecimal(24));
         sealRemainHoursMap.put("高", new BigDecimal(36));
@@ -212,14 +213,14 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         // 根据tabs添加不同的效果
         String ascription = bugOnlineQueryList.getAscription();
         if (AscriptionEnum.CURRENT_USER.toString().equals(ascription)) {
+            condition.setProposerIdList(Lists.newArrayList(userInfo.getId()));
+        } else if (AscriptionEnum.RECEIVE.toString().equals(ascription)) {
             if (Objects.equals(bugOnlineQueryList.getCurrentOperatorOnly(), false)) {
                 condition.setHistoryOperators(Lists.newArrayList(
                         userInfo.getAlias() + "-" + userInfo.getName()));
             } else {
-                condition.setProposerIdList(Lists.newArrayList(userInfo.getId()));
+                condition.setOperatorIdList(Lists.newArrayList(userInfo.getId()));
             }
-        } else if (AscriptionEnum.RECEIVE.toString().equals(ascription)) {
-            condition.setOperatorIdList(Lists.newArrayList(userInfo.getId()));
         } else if (AscriptionEnum.COPIER.toString().equals(ascription)) {
             condition.setCopier(userInfo.getId());
         } else {
@@ -478,7 +479,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             endDate = DateUtil.getStartOfNextDay(endDate);
         }
         // 计算工作日和节假日的差值
-        long elapsedMillis = endDate.getTime() - startDate.getTime() - ((long)holidays.size()) * 24 * 60 * 60 * 1000;
+        long elapsedMillis = endDate.getTime() - startDate.getTime() - ((long) holidays.size()) * 24 * 60 * 60 * 1000;
         BigDecimal elapsedHours = new BigDecimal(elapsedMillis)
                 .divide(new BigDecimal(1000 * 60 * 60), 1, RoundingMode.HALF_UP);
         return totalRemain.subtract(elapsedHours);
@@ -701,20 +702,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         if (bugOnlineDO == null) {
             throw new BaseBizRuntimeException("线上bug不存在");
         }
-
-        // 校验天印的产品线，需要AppId 和 详细版本号
-//        if (BugOnlineEnvEnum.PRODUCE_ENV.getCode().equals(modifyReq.getEnv())) {
-//            Collection<Long> intersection = CollUtil.intersection(crmDockProductLines, modifyReq.getProductLineIdList());
-//            if (CollUtil.isNotEmpty(intersection)) {
-//                Optional<String> appIdOptional = Optional.ofNullable(modifyReq.getBusiness())
-//                        .map(JSONObject::parseObject)
-//                        .map(e -> e.getString("appId"))
-//                        .filter(StrUtil::isNotEmpty);
-//                if (!appIdOptional.isPresent() || StrUtil.isEmpty(modifyReq.getDetailVersionId())) {
-//                    throw new BaseBizRuntimeException("请先在项目的【项目概览-客户运维信息】中维护好APPID和产品版本后再提交此产品线的BUG");
-//                }
-//            }
-//        }
 
         List<BugLogDO> checkBugLogList = bugLogMapper.selectByBugOfflineIdAndType(bugOnlineDO.getId(), BugLogTypeEnum.ONLINE.getCode(), false);
         if (CollectionUtils.isNotEmpty(checkBugLogList)) {
