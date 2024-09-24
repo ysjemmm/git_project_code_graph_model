@@ -62,7 +62,8 @@ public class ProjectAutoAcceptanceJob extends IJobHandler {
                     try {
                         ProjectAcceptanceModifyReq req = new ProjectAcceptanceModifyReq();
                         req.setId(e.getId());
-                        req.setDesc("验收人员10天未进行验收处理，系统自动通过验收，若有异议，请联系产研项目经理重新发起验收");
+                        req.setDesc("验收人员" + autoAcceptanceDay +
+                                "天未进行验收处理，系统自动通过验收，若有异议，请联系产研项目经理重新发起验收");
                         projectAcceptanceService.accept(req);
                     } catch (Exception exception) {
                         log.info("[ProjectAutoAcceptanceJob]acceptId:{}, exception:{}", e.getId(), exception.getMessage());
