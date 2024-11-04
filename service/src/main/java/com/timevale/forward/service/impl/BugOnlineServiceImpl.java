@@ -913,7 +913,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         AssertUtil.notNull(bugOnlineDO, "线上bug不存在");
         AssertUtil.checkState(bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.START_RESPONSE.getCode()),
                 "当前BUG状态为：" + BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus()) +
-                        "，不能进行BUG确认操作");
+                        "，请刷新页面后再去操作");
 
         bugOnlineDO.setStatus(BugOnlineStatusEnum.QUESTION_CONFIRM.getCode());
         bugOnlineMapper.update(bugOnlineDO);
