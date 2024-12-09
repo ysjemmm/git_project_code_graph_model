@@ -236,4 +236,8 @@ public class BugOnlineDetailVO extends ToString {
 
     @ApiModelProperty("问题产生阶段-描述")
     private String generationStageName;
+
+    @ApiModelProperty("优先级变更原因")
+    private String priorityChangeReason;
+
 }

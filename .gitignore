@@ -5,6 +5,7 @@
 .classpath
 .project
 .factorypath
+.metals
 *.iml
 *.ipr
 *.iws

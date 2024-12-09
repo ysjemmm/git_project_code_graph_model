@@ -268,4 +268,10 @@ public class BugOnlineDO extends BaseDO {
      * 生成阶段
      */
     private Integer generationStage;
+
+    /**
+     * 优先级变更原因
+     */
+    private String priorityChangeReason;
+
 }
