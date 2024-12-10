@@ -158,8 +158,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         sealRemainHoursMap.put("低", new BigDecimal(120));
         nonsealRemainHoursMap.put("紧急", new BigDecimal(12));
         nonsealRemainHoursMap.put("高", new BigDecimal(24));
-        nonsealRemainHoursMap.put("中", new BigDecimal(48));
-        nonsealRemainHoursMap.put("低", new BigDecimal(120));
+        nonsealRemainHoursMap.put("中", new BigDecimal(84));
+        nonsealRemainHoursMap.put("低", new BigDecimal(144));
     }
 
     @Override
