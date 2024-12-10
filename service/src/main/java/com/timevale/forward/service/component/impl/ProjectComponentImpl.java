@@ -112,8 +112,6 @@ public class ProjectComponentImpl implements ProjectComponent {
     private ManDayMapper manDayMapper;
     @Resource
     private ProjectNodeRecordMapper projectNodeRecordMapper;
-    @Resource
-    private ProjectMemberEvaluateMapper memberEvaluateMapper;
 
     @Override
     public QueryResultVO<ProjectVO> page(ProjectListCondition condition, List<Long> projectIds) {
@@ -1055,20 +1053,8 @@ public class ProjectComponentImpl implements ProjectComponent {
                     dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY, true,
                             "已开始开发的项目需要维护好所有项目节点的计划时间。"));
                 }
-                List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.getByProjectId(projectId);
-                if (memberEvaluateDOList.stream().filter(ProjectMemberEvaluateDO::getIncludeStat)
-                        .anyMatch(m -> m.getPlanWorkload() == null)) {
-                    // 未填写工作量
-//                    dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.PROJECT_POINT, true,
-//                            "存在纳入积分考核的成员计划工作量未录入的情况，请将计划工作量数据维护完整后，才可以保存开发开始实际时间。"));
-                } else {
-                    // 已经填写工作量
-                    dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.PROJECT_POINT,
-                            "开发开始实际时间维护完成后，计划工作量生成基线版本，生成项目原始积分。"));
-                }
             }
         }
-
 
         return new ModifyProjectProcessedBundle(oldProject, newProject, nodes, delayTasks);
     }
