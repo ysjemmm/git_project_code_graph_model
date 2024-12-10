@@ -43,6 +43,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -103,6 +104,9 @@ public class TaskServiceImpl implements TaskService {
 
     @Resource
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
+    @Resource
+    private TransactionTemplate transactionTemplate;
 
     public static final String ON_WORK_HOUR = " 09:00:00";
 
@@ -293,35 +297,34 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> updateStatus(Long taskId, Integer type) {
         log.info("暂停或作废任务接收参数:taskId={},type={}", taskId, type);
         TaskCondition condition = TaskCondition.builder().id(taskId).build();
         TaskDO taskDO = taskMapper.get(condition);
-        if (taskDO == null) {
-            throw new BaseBizRuntimeException("找不到该任务");
+        AssertUtil.notNull(taskDO, "找不到该任务");
+        if (taskDO.getStatus().equals(type)) {
+            // 与原本数据一致,不需要更新
+            return BaseResult.success(true);
         }
-        List<Integer> sureStatus = Lists.newArrayList(TaskStatusEnum.WAITING.getCode(), TaskStatusEnum.PROGRESS.getCode());
-        if (TaskStatusEnum.SUSPEND.getCode().equals(type)) {
-            if (!sureStatus.contains(taskDO.getStatus())) {
-                throw new BaseBizRuntimeException("任务状态不是待执行、进行中不能修改状态");
+        AssertUtil.checkState(!taskDO.getStatus().equals(TaskStatusEnum.INVALID.getCode()),
+                "任务已作废，无法继续操作");
+        transactionTemplate.execute(trans -> {
+            if (TaskStatusEnum.SUSPEND.getCode().equals(type)) {
+                // 暂停，耗时表更新数据
+                taskTimeComponent.updateEndDate(taskDO.getId(), new Date());
+            } else {
+                // 作废，耗时表删除数据
+                taskProductDemandComponent.update(Lists.newArrayList(taskDO.getId()), null);
+                taskTimeMapper.delete(Collections.singletonList(taskDO.getId()), null);
             }
-            // 暂停,耗时表更新数据
-            taskTimeComponent.updateEndDate(taskDO.getId(), new Date());
+            taskDO.setStatus(type);
+            taskMapper.update(taskDO);
+            innerProjectStatusUpdateComponent.updateProjectDateAndStatus(taskDO.getProjectId());
+            return null;
+        });
 
-        } else {
-            sureStatus.add(TaskStatusEnum.SUSPEND.getCode());
-            if (!sureStatus.contains(taskDO.getStatus())) {
-                throw new BaseBizRuntimeException("任务状态不是待执行、进行中、已暂停不能修改状态");
-            }
-            taskProductDemandComponent.update(Lists.newArrayList(taskDO.getId()), null);
-            taskTimeMapper.delete(Lists.newArrayList(taskDO.getId()), null);
-        }
-        // 删除钉钉待办
+        // 暂停作废都需要删除钉钉待办
         taskComponent.deleteTodoTask(taskDO.getTodoId());
-        taskDO.setStatus(type);
-        taskMapper.update(taskDO);
-        innerProjectStatusUpdateComponent.updateProjectDateAndStatus(taskDO.getProjectId());
         return BaseResult.success(true);
     }
 

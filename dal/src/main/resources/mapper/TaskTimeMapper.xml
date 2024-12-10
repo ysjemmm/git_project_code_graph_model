@@ -17,16 +17,14 @@
     </insert>
 
     <delete id="delete" parameterType="long">
-        delete  from task_time
-        <where>
-             task_id in
-            <foreach collection="taskIds" item="item" separator="," open="(" close=")">
-                #{item}
-            </foreach>
-            <if test="id != null">
-              and   id  &gt; #{id}
-            </if>
-        </where>
+        delete  from task_time where
+        task_id in
+        <foreach collection="taskIds" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        <if test="id != null">
+          and id &gt; #{id}
+        </if>
     </delete>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.TaskTimeDO">
