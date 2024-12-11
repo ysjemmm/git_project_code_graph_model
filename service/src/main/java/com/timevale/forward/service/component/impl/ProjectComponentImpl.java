@@ -284,7 +284,7 @@ public class ProjectComponentImpl implements ProjectComponent {
                 // 查询全部的项目验收情况
                 List<ProjectAcceptanceDO> acceptances = projectAcceptanceMapper.selectByProjectIds(projectIds);
                 // 去除撤回的数据
-                acceptances.removeIf(e-> ProjectAcceptanceStatusEnum.WITHDRAW.getCode().equals(e.getStatus()));
+                acceptances.removeIf(e -> ProjectAcceptanceStatusEnum.WITHDRAW.getCode().equals(e.getStatus()));
 
                 Map<Long, List<ProjectAcceptanceDO>> acceptanceGroup = acceptances.stream()
                         .collect(Collectors.groupingBy(ProjectAcceptanceDO::getProjectId));
@@ -415,7 +415,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         // 验收情况
         List<ProjectAcceptanceDO> acceptances = projectAcceptanceMapper.selectByProjectIds(resultProjectIds);
         // 去除撤回的数据
-        acceptances.removeIf(e-> ProjectAcceptanceStatusEnum.WITHDRAW.getCode().equals(e.getStatus()));
+        acceptances.removeIf(e -> ProjectAcceptanceStatusEnum.WITHDRAW.getCode().equals(e.getStatus()));
         Map<Long, List<ProjectAcceptanceDO>> acceptanceGroup = acceptances.stream()
                 .collect(Collectors.groupingBy(ProjectAcceptanceDO::getProjectId));
         Set<Long> allPassedAcceptanceProjects = new HashSet<>();
@@ -1015,12 +1015,15 @@ public class ProjectComponentImpl implements ProjectComponent {
 
         if (released) {
             // 仅发布节点需要校验
-            List<String> result = projectDocumentComponent.docNeedFillIn(projectId,
-                    nodes, newProject.getType());
-            if (!result.isEmpty()) {
-                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.DOCUMENT,
-                        String.join("，", result) +
-                                "未维护，请在项目文档中按要求维护。若无文档，请维护原因说明。"));
+            // 仅1-N客开项目需要校验文档
+            if (ProjectKindEnum.PBG_OTN.getCode().equals(newProject.getKind())) {
+                List<String> result = projectDocumentComponent.docNeedFillIn(projectId,
+                        nodes, newProject.getType());
+                if (!result.isEmpty()) {
+                    dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.DOCUMENT,
+                            String.join("，", result) +
+                                    "未维护，请在项目文档中按要求维护。若无文档，请维护原因说明。"));
+                }
             }
             List<ManDayDO> manDayDOList = manDayMapper.getByProjectId(projectId);
             if (manDayDOList.isEmpty()) {
