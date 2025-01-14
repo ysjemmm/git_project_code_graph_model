@@ -1916,6 +1916,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         BugOnlineDO bugOnlineDO = bugOnlineMapper.get(id);
         AssertUtil.notNull(bugOnlineDO, "线上bug不存在");
 
+        Integer oldStatus = bugOnlineDO.getStatus();
         // 经办人日志
         bugLogComponent.operator(id, bugOnlineDO.getOperator(), userInfo.getFullAlias(), true);
 
@@ -1928,7 +1929,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //往bug日志表中插入一条线上bug状态变更数据
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(ButtonActionEnum.START_RESPONSE.getText());
-        bugLogDO.setOldValue(BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus()));
+        bugLogDO.setOldValue(BugOnlineStatusEnum.getTextByCode(oldStatus));
         bugLogDO.setNewValue(BugOnlineStatusEnum.START_RESPONSE.getText());
         bugLogDO.setMainId(id);
         bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
