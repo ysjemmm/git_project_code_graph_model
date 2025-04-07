@@ -113,6 +113,10 @@
             <groupId>com.timevale.crm.dock</groupId>
             <artifactId>crm-dock-facade</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.timevale.soar</groupId>
+            <artifactId>soar-facade</artifactId>
+        </dependency>
 
     </dependencies>
 </project>

@@ -46,6 +46,7 @@
         <billing-log-monitor.version>1.2.9-SNAPSHOT</billing-log-monitor.version>
         <crm-sdk-common-core-version>1.0.11-SNAPSHOT</crm-sdk-common-core-version>
         <!-- RPC Facade -->
+        <soar.version>1.2.3-SNAPSHOT</soar.version>
         <epeius.version>1.0.0-SNAPSHOT</epeius.version>
         <lowcode.version>0.0.1-SNAPSHOT</lowcode.version>
         <crm-dock.version>2.0.7-SNAPSHOT</crm-dock.version>
@@ -132,6 +133,12 @@
                 <groupId>com.timevale.crm.dock</groupId>
                 <artifactId>crm-dock-facade</artifactId>
                 <version>${crm-dock.version}</version>
+            </dependency>
+            <!-- soar 用于获取节假日 -->
+            <dependency>
+                <groupId>com.timevale.soar</groupId>
+                <artifactId>soar-facade</artifactId>
+                <version>${soar.version}</version>
             </dependency>
             <!-- erp消息 -->
             <dependency>

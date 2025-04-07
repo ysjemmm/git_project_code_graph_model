@@ -27,9 +27,9 @@ import com.timevale.forward.model.to.PdLineDomainTO;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
+import com.timevale.forward.service.integration.SoarClient;
 import com.timevale.forward.service.integration.crm.CrmClient;
 import com.timevale.forward.service.integration.dock.CrmProjectClient;
-import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.*;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
@@ -88,7 +88,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     private final SqlOrderComponent sqlOrderComponent;
     private final ProductLineMapper productLineMapper;
     private final BizLabelComponent bizLabelComponent;
-    private final ElapsedTimeClient elapsedTimeClient;
+    private final SoarClient soarClient;
     private final BugOnlineComponent bugOnlineComponent;
     private final OutBizDealComponent outBizDealComponent;
     private final BugOnlineModelMapper bugOnlineModelMapper;
@@ -471,7 +471,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             return null;
         }
         Date startDate = e.getCreateDate();
-        List<String> holidays = elapsedTimeClient.getHolidays(e.getCreateDate(), endDate, true);
+        List<String> holidays = soarClient.getHolidays(e.getCreateDate(), endDate);
         if (holidays.contains(DATE_FORMAT.format(startDate))) {
             startDate = DateUtil.getStartOfDay(startDate);
         }
