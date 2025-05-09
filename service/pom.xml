@@ -68,10 +68,6 @@
         </dependency>
 
         <!-- 分布式锁-->
-        <dependency>
-            <groupId>com.timevale.spring.boot</groupId>
-            <artifactId>elock-spring-boot-starter</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>cn.hutool</groupId>
