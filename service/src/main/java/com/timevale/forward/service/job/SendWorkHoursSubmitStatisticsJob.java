@@ -1,5 +1,6 @@
 package com.timevale.forward.service.job;
 
+import cn.hutool.core.collection.CollUtil;
 import com.timevale.forward.dal.condition.WorkHoursRecordCondition;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.WorkHoursRecordMapper;
@@ -139,12 +140,12 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
                         .collect(Collectors.toList());
 
                 // 构建消息内容
-                stringBuilder.append("项目：").append(project.getName()).append("\n")
-                        .append("填报人次：").append(count).append("\n")
-                        .append("填报工时：").append(totalHours).append("\n")
-                        .append("应填报人次：").append(teamMemberList.size()).append("\n")
-                        .append("未填报人次：").append(unFillManList.size()).append("\n")
-                        .append("未填报项目成员：").append(String.join(",", unFillManList)).append("\n");
+                stringBuilder.append("项目：").append(project.getName()).append("  \n")
+                        .append("填报人次：").append(count).append("  \n")
+                        .append("填报工时：").append(totalHours).append("  \n")
+                        .append("应填报人次：").append(teamMemberList.size()).append("  \n")
+                        .append("未填报人次：").append(unFillManList.size()).append("  \n")
+                        .append("未填报项目成员：").append(CollUtil.isNotEmpty(unFillManList) ? String.join(",", unFillManList) : "无").append("  \n");
             }
 
             // 构建并发送行动卡片消息

@@ -118,10 +118,10 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
             }
 
             // 构建消息内容，列出待完成任务项
-            StringBuilder stringBuilder = new StringBuilder("待完成任务项: \n");
+            StringBuilder stringBuilder = new StringBuilder("待完成任务项:  \n");
             taskIdList.forEach(taskId -> {
                 TaskVO vo = taskVOMap.get(taskId);
-                stringBuilder.append("[").append(notifyProjectMap.get(vo.getProjectId())).append("]").append("-").append(vo.getName()).append("\n");
+                stringBuilder.append("【").append(notifyProjectMap.get(vo.getProjectId())).append("】").append("-").append(vo.getName()).append("  \n");
             });
 
             // 创建行动卡片消息对象
