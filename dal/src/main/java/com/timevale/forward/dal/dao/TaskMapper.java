@@ -4,7 +4,6 @@ import com.timevale.forward.dal.condition.TaskCondition;
 import com.timevale.forward.dal.condition.TaskListCondition;
 import com.timevale.forward.dal.dto.TaskBoardDTO;
 import com.timevale.forward.dal.dto.TaskOverdueDTO;
-import com.timevale.forward.dal.entity.BugOfflineDO;
 import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.dal.entity.TaskStatusUpdateDO;
 import org.apache.ibatis.annotations.Param;
@@ -151,5 +150,13 @@ public interface TaskMapper {
      */
     @Select("select * from task where product_line_id=#{productLineId} AND is_deleted=false")
     List<TaskDO> getByProductLineId(@Param("productLineId") Long productLineId);
+
+    /**
+     * 获取进行中的任务列表
+     *
+     * @param condition 任务id列表
+     * @return ProjectDO
+     */
+    List<TaskDO> getProgressTaskList(TaskListCondition condition);
 
 }

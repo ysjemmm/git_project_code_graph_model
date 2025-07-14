@@ -170,4 +170,7 @@ public class ProjectVO extends ToString {
 
     @ApiModelProperty("项目验收状态")
     private String projectAcceptanceStatus;
+
+    @ApiModelProperty("工时填报通知开关")
+    private Boolean workHoursNotify;
 }

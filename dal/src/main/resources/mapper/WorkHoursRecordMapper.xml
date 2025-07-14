@@ -1,0 +1,182 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.WorkHoursRecordMapper">
+
+    <sql id="Base_Column_List">
+        id
+        , project_id,`desc`,work_item_type,work_item_id,create_man_id,create_man,
+        create_date,modify_man_id,modify_man,modify_date,progress,work_hours
+    </sql>
+
+    <delete id="deleteById">
+        delete
+        from work_hours_record
+        where id = #{id}
+    </delete>
+
+    <select id="getByProjectIds" resultType="long">
+        select distinct id from work_hours_record
+        <where>
+            <if test="ids!=null and ids.size()>0">
+                and id in
+                <foreach collection="ids" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and project_id in
+            <foreach collection="projectIds" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </where>
+    </select>
+
+    <select id="getProjectIds" resultType="long">
+        select distinct project_id from work_hours_record
+        <where>
+            and id in
+            <foreach collection="ids" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </where>
+    </select>
+
+    <select id="list" resultType="com.timevale.forward.dal.entity.WorkHoursRecordDO">
+        select
+        <include refid="Base_Column_List"/>
+        from work_hours_record
+        <where>
+            <if test="ids!=null and ids.size()>0">
+                and id in
+                <foreach collection="ids" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="id != null">and id = #{id}</if>
+            <if test="projectIds != null and projectIds.size() > 0">
+                and project_id in
+                <foreach collection="projectIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="projectId != null">and project_id = #{projectId}</if>
+            <if test="workItemType != null">and work_item_type = #{workItemType}</if>
+            <if test="workItemId != null">and work_item_id = #{workItemId}</if>
+            <if test="createManId != null">and create_man_id = #{createManId}</if>
+            <if test="stratTime != null and endTime != null">
+                and create_date &gt;= #{stratTime} and create_date &lt;= #{endTime}
+            </if>
+        </where>
+    </select>
+
+    <insert id="insert" parameterType="com.timevale.forward.dal.entity.WorkHoursRecordDO" useGeneratedKeys="true"
+            keyProperty="id" keyColumn="id">
+        insert into work_hours_record (project_id, `desc`, work_item_type, work_item_id, create_man_id, create_man,
+                                      progress,work_hours)
+        values (#{projectId}, #{desc}, #{workItemType}, #{workItemId}, #{createManId}, #{createMan}, #{progress}, #{workHours})
+    </insert>
+
+    <select id="get" resultType="com.timevale.forward.dal.entity.WorkHoursRecordDO">
+        select
+        <include refid="Base_Column_List"/>
+        from work_hours_record
+        <where>
+            <if test="id != null">and id = #{id}</if>
+            <if test="projectId != null">and project_id = #{projectId}</if>
+            <if test="workItemType != null">and work_item_type = #{workItemType}</if>
+            <if test="workItemId != null">and work_item_id = #{workItemId}</if>
+        </where>
+    </select>
+
+    <update id="update" parameterType="com.timevale.forward.dal.entity.WorkHoursRecordDO">
+        update work_hours_record
+        <set>
+            <if test="workHours != null">work_hours = #{workHours},</if>
+            <if test="progress != null">progress = #{progress},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+            <if test="desc != null">`desc` = #{desc}</if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <select id="getById" resultType="com.timevale.forward.dal.entity.WorkHoursRecordDO">
+        select
+            <include refid="Base_Column_List"/>
+        from work_hours_record
+        where id = #{id}
+    </select>
+
+    <select id="getByIdList" resultType="com.timevale.forward.dal.entity.WorkHoursRecordDO">
+        select
+            <include refid="Base_Column_List"/>
+        from work_hours_record
+        <where>
+            id in
+            <foreach collection="idList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </where>
+    </select>
+
+    <select id="getLastProgress" resultType="com.timevale.forward.dal.entity.WorkHoursRecordDO">
+        select
+            work_item_id, MAX(progress) as progress
+        from work_hours_record
+        <where>
+            <if test="projectIds != null and projectIds.size() > 0">
+                and project_id in
+                <foreach collection="projectIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="workItemType != null">and work_item_type = #{workItemType}</if>
+            <if test="workItemIds != null and workItemIds.size() > 0">
+                and work_item_id in
+                <foreach collection="workItemIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+        GROUP BY project_id, work_item_type, work_item_id
+    </select>
+
+    <select id="getRangeWorkHours" resultType="com.timevale.forward.dal.entity.WorkHoursRecordDO">
+        select
+        project_id, work_item_type, work_item_id, date(create_date) as create_date, sum(work_hours) as work_hours
+        from work_hours_record
+        <where>
+            <if test="dates != null and dates.size() > 0">
+                AND date(create_date) IN
+                <foreach collection="dates" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+
+            <if test="projectIds != null or workItemIds != null">
+                AND (
+                <if test="projectIds != null and projectIds.size() > 0">
+                    project_id IN
+                    <foreach collection="projectIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+
+                <if test="projectIds != null and projectIds.size() > 0 and workItemIds != null and workItemIds.size() > 0">
+                    OR
+                </if>
+
+                <if test="workItemIds != null and workItemIds.size() > 0">
+                    work_item_id IN
+                    <foreach collection="workItemIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                )
+            </if>
+        </where>
+        GROUP BY project_id, work_item_type, work_item_id, date(create_date)
+    </select>
+
+</mapper>

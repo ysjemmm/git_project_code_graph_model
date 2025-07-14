@@ -38,7 +38,12 @@ public enum BizTypeEnum {
     /**
      * 线上bug
      */
-    BUG_ONLINE(14,"线上bug");
+    BUG_ONLINE(14,"线上bug"),
+
+    /**
+     * 任务
+     */
+    TASK(15, "任务");
 
     private final Integer code;
     private final String text;

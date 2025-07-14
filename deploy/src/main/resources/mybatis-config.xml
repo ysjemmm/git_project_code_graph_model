@@ -127,5 +127,6 @@
         <mapper resource="mapper/DingRelationMapper.xml" />
         <mapper resource="mapper/FastSearchConditionMapper.xml" />
         <mapper resource="mapper/BizTimeMapper.xml" />
+        <mapper resource="mapper/WorkHoursRecordMapper.xml" />
     </mappers>
 </configuration>

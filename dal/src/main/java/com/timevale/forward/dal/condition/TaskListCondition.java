@@ -111,4 +111,9 @@ public class TaskListCondition extends QueryBase {
      */
     private Boolean isDelay;
 
+    /**
+     * 当前日期
+     */
+    private Date currentDate;
+
 }

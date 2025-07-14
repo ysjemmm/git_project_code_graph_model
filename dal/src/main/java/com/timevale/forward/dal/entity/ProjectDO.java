@@ -229,6 +229,11 @@ public class ProjectDO extends BaseDO {
     private String sourceId;
 
     /**
+     * 工时填报通知开关
+     */
+    private Boolean workHoursNotify;
+
+    /**
      * 返回父节点id列表
      */
     public List<Long> getParentList() {

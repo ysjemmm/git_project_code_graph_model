@@ -262,5 +262,6 @@ public class ProjectListCondition {
 
     private Integer pageSize = 20;
 
+    private Boolean workHoursNotify;
 
 }

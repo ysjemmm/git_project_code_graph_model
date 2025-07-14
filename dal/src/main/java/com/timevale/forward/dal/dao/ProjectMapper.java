@@ -205,4 +205,12 @@ public interface ProjectMapper {
     void deleteSameNameAndNotId(@Param("name")String name, @Param("id")Long id);
 
     List<ProjectDO> getBySourceIds(@Param("sourceIds") Collection<String> sourceIds);
+
+    /**
+     * 查询
+     *
+     * @param status status
+     * @return 项目信息
+     */
+    List<ProjectDO> getByWorkHoursNotify(@Param("status") List<Integer> status, @Param("category")Integer category, @Param("workHoursNotify") Boolean workHoursNotify);
 }
