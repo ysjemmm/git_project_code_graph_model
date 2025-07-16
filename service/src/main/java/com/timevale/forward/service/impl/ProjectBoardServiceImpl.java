@@ -3,17 +3,56 @@ package com.timevale.forward.service.impl;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.condition.ProductDemandListCondition;
+import com.timevale.forward.dal.dao.BugLogMapper;
+import com.timevale.forward.dal.dao.BugOfflineMapper;
+import com.timevale.forward.dal.dao.PersonMapper;
+import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.dao.ProjectNodeMapper;
+import com.timevale.forward.dal.dao.ProjectProductDemandMapper;
+import com.timevale.forward.dal.dao.ProjectRiskMapper;
+import com.timevale.forward.dal.dao.TaskMapper;
+import com.timevale.forward.dal.dao.TaskProductDemandMapper;
+import com.timevale.forward.dal.dao.TestBillMapper;
 import com.timevale.forward.dal.dto.BugOfflineBelongDistributionDTO;
 import com.timevale.forward.dal.dto.BugOfflineCountDTO;
 import com.timevale.forward.dal.dto.BugOfflineReasonDistributionDTO;
 import com.timevale.forward.dal.dto.TaskOverdueDTO;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.entity.BaseDO;
+import com.timevale.forward.dal.entity.BugLogDO;
+import com.timevale.forward.dal.entity.BugOfflineDO;
+import com.timevale.forward.dal.entity.PersonDO;
+import com.timevale.forward.dal.entity.ProductDemandListDO;
+import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.entity.ProjectNodeDO;
+import com.timevale.forward.dal.entity.ProjectProductDemandDO;
+import com.timevale.forward.dal.entity.ProjectRiskDO;
+import com.timevale.forward.dal.entity.TaskDO;
+import com.timevale.forward.dal.entity.TaskProductDemandDO;
+import com.timevale.forward.dal.entity.TestBillDO;
 import com.timevale.forward.facade.api.client.ProjectBoardService;
 import com.timevale.forward.facade.api.query.ProjectBugOfflineCountQueryList;
 import com.timevale.forward.facade.api.query.TaskOverdueRankQueryList;
-import com.timevale.forward.facade.api.result.*;
-import com.timevale.forward.model.enums.*;
+import com.timevale.forward.facade.api.result.BugOfflineAllCountVO;
+import com.timevale.forward.facade.api.result.BugOfflineBelongDistributionVO;
+import com.timevale.forward.facade.api.result.BugOfflineCountVO;
+import com.timevale.forward.facade.api.result.BugOfflineReasonDistributionVO;
+import com.timevale.forward.facade.api.result.BugOfflineTrendVO;
+import com.timevale.forward.facade.api.result.ProjectBoardDataIndicatorVO;
+import com.timevale.forward.facade.api.result.ProjectBoardDemandWorkTimeVO;
+import com.timevale.forward.facade.api.result.ProjectBoardSinglelWorkTimeVO;
+import com.timevale.forward.facade.api.result.ProjectBoardTaskVO;
+import com.timevale.forward.facade.api.result.TaskOverdueCountVO;
+import com.timevale.forward.model.enums.BugLogTypeEnum;
+import com.timevale.forward.model.enums.BugStatusEnum;
+import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.model.enums.PriorityEnum;
+import com.timevale.forward.model.enums.ProductDemandStatusEnum;
+import com.timevale.forward.model.enums.ProjectRiskStatusEnum;
+import com.timevale.forward.model.enums.TaskStatusEnum;
+import com.timevale.forward.model.enums.TestBillResultEnum;
+import com.timevale.forward.model.enums.TestBillStatusEnum;
+import com.timevale.forward.service.component.ProductDemandComponent;
 import com.timevale.forward.service.component.SqlOrderComponent;
 import com.timevale.forward.service.copy.BugOfflineCopier;
 import com.timevale.forward.service.copy.TaskCopier;
@@ -30,7 +69,14 @@ import org.apache.commons.lang3.StringUtils;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -43,6 +89,9 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
 
     @Resource
     private ProjectProductDemandMapper projectProductDemandMapper;
+
+    @Resource
+    private ProductDemandComponent productDemandComponent;
 
     @Resource
     private TaskMapper taskMapper;
@@ -235,8 +284,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         log.info("人员工时,参数:{}", projectId);
         List<ProjectBoardSinglelWorkTimeVO> result = new ArrayList<>();
         List<TaskDO> taskDos = taskMapper.getByProjectId(projectId);
-        List<TaskDO> filtered = taskDos.stream().filter(a -> !TaskStatusEnum.INVALID.getCode().equals(a.getStatus())
-                && a.getPlanStartDate() != null && a.getPlanEndDate() != null).collect(Collectors.toList());
+        List<TaskDO> filtered = filterValidTasks(taskDos);
 
         if (CollectionUtils.isEmpty(filtered)) {
             return BaseResult.success(result);
@@ -267,29 +315,11 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         personDOList.forEach(a -> {
             TaskDO taskDO = taskMap.get(a.getMainId());
             ProjectBoardTaskVO projectBoardTaskVO = TaskCopier.INSTANCE.convert2ProjectBoard(taskDO);
-            if (taskDO.getActualStartDate() == null) {
-                projectBoardTaskVO.setStartDate(taskDO.getPlanStartDate());
-                projectBoardTaskVO.setEndDate(taskDO.getPlanEndDate());
-            } else if (taskDO.getActualEndDate() != null) {
-                //实际开始和结束都不为空
-                projectBoardTaskVO.setStartDate(taskDO.getActualStartDate());
-                projectBoardTaskVO.setEndDate(taskDO.getActualEndDate());
-            } else if (taskDO.getActualStartDate().after(taskDO.getPlanEndDate())) {
-                //实际开始不空,结束为空,实际开始大于计划结束时间
-                projectBoardTaskVO.setStartDate(taskDO.getActualStartDate());
-                projectBoardTaskVO.setEndDate(current);
-
-            } else {
-                //实际开始不空,结束为空,实际开始小于计划结束时间
-                projectBoardTaskVO.setStartDate(taskDO.getActualStartDate());
-                projectBoardTaskVO.setEndDate(taskDO.getPlanEndDate());
-            }
+            setStartAndEndDates(taskDO, projectBoardTaskVO, current);
             projectBoardTaskVO.setStatusName(TaskStatusEnum.getTextByCode(taskDO.getStatus()));
             projectBoardTaskVO.setExecutor(a.getUserName());
             projectBoardTaskVO.setExecutorId(a.getUserId());
-            boolean delay = (taskDO.getActualEndDate() == null && new Date().after(taskDO.getPlanEndDate())) ||
-                    (taskDO.getActualEndDate() != null && taskDO.getActualEndDate().after(taskDO.getPlanEndDate()));
-            projectBoardTaskVO.setIsDelay(delay);
+            projectBoardTaskVO.setIsDelay(isTaskDelayed(taskDO, current));
             projectBoardTaskVoMap.computeIfAbsent(a.getUserId(), v -> new ArrayList<>()).add(projectBoardTaskVO);
         });
 
@@ -298,7 +328,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         projectBoardTaskVoMap.forEach((k, v) -> {
             ProjectBoardSinglelWorkTimeVO singleWorkTimeVO = new ProjectBoardSinglelWorkTimeVO();
 
-            BigDecimal planUseTime = v.stream().filter(a -> a.getPlanUseTime() != null).map(ProjectBoardTaskVO::getPlanUseTime).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
+            BigDecimal planUseTime = v.stream().map(ProjectBoardTaskVO::getPlanUseTime).filter(Objects::nonNull).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
             singleWorkTimeVO.setExecutor(v.get(0).getExecutor());
             singleWorkTimeVO.setExecutorId(v.get(0).getExecutorId());
             singleWorkTimeVO.setIsPm(Objects.equals(v.get(0).getExecutorId(), projectDO.getPmId()));
@@ -373,4 +403,178 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         return BaseResult.success(BugOfflineCopier.INSTANCE.convertBelongDistributions(belongDistributions));
     }
 
+    /**
+     * 获取项目需求工时信息
+     * 根据项目ID查询并计算项目中各个需求的工时信息，包括需求的基本信息和关联的任务信息
+     * @param projectId 项目ID，用于查询项目需求工时信息
+     * @return 包含项目需求工时信息的列表
+     */
+    @Override
+    public BaseResult<List<ProjectBoardDemandWorkTimeVO>> getDemandTime(Long projectId) {
+        // 记录方法入口参数
+        log.info("需求工时,参数:{}", projectId);
+        // 初始化结果列表
+        List<ProjectBoardDemandWorkTimeVO> result = new ArrayList<>();
+
+        // 查询项目基本信息
+        ProjectDO projectDO = projectMapper.get(projectId);
+        // 如果项目不存在，抛出异常
+        if (projectDO == null) {
+            throw new BaseBizRuntimeException("找不到该项目");
+        }
+
+        // 确定项目实际开始日期，如果实际开始日期为空，则使用计划开始日期
+        Date projectStartDate = projectDO.getActualStartDate() == null ? projectDO.getPlanStartDate() : projectDO.getActualStartDate();
+        // 确定项目实际结束日期，如果实际结束日期为空，则使用计划结束日期
+        Date projectEndDate;
+        if (projectDO.getActualEndDate() != null) {
+            // 获取项目节点信息，并计算实际结束日期
+            List<ProjectNodeDO> projectNodeDos = projectNodeMapper.get(projectId);
+            Optional<ProjectNodeDO> max = projectNodeDos.stream()
+                    .filter(a -> a.getActualDate() != null)
+                    .max(Comparator.comparing(ProjectNodeDO::getActualDate));
+            projectEndDate = max.map(ProjectNodeDO::getActualDate).orElse(projectDO.getPlanEndDate());
+        } else {
+            projectEndDate = projectDO.getPlanEndDate();
+        }
+
+        // 查询项目关联的需求信息
+        List<ProjectProductDemandDO> byProjectId = projectProductDemandMapper.getByProjectId(projectId);
+        // 提取需求ID列表
+        List<Long> demandIds = byProjectId.stream()
+                .map(ProjectProductDemandDO::getProductDemandId)
+                .collect(Collectors.toList());
+
+        // 根据需求ID列表查询关联的任务信息
+        List<TaskProductDemandDO> taskProductDemandDOS = taskProductDemandMapper.selectByProductDemandId(demandIds);
+        // 提取任务ID列表
+        List<Long> taskIds = taskProductDemandDOS.stream()
+                .map(TaskProductDemandDO::getTaskId)
+                .collect(Collectors.toList());
+
+        // 查询任务基本信息
+        List<TaskDO> taskDOS = taskMapper.getByIdList(taskIds);
+        // 过滤无效任务和缺少日期信息的任务
+        List<TaskDO> filtered = filterValidTasks(taskDOS);
+
+        // 如果没有有效任务，直接返回空结果
+        if (CollectionUtils.isEmpty(filtered)) {
+            return BaseResult.success(result);
+        }
+
+        // 将过滤后的任务信息转换为Map，便于后续查询
+        Map<Long, TaskDO> taskMap = filtered.stream()
+                .collect(Collectors.toMap(TaskDO::getId, k -> k, (v1, v2) -> v2));
+
+        // 查询需求详细信息
+        List<ProductDemandListDO> productDemandListDOList = productDemandComponent.list(
+                ProductDemandListCondition.builder().inProductDemandIds(demandIds).build());
+        // 将需求信息转换为Map，便于后续查询
+        Map<Long, ProductDemandListDO> demandListDOMap = productDemandListDOList.stream()
+                .collect(Collectors.toMap(ProductDemandListDO::getId, k -> k));
+
+        // 查询任务执行人信息
+        Map<Long, PersonDO> personMap = personMapper.get(taskIds, PersonTypeEnum.TASK_EXECUTOR.getCode()).stream()
+                .collect(Collectors.toMap(PersonDO::getMainId, p -> p, (v1, v2) -> v2));
+
+        // 初始化任务信息Map
+        Map<Long, List<ProjectBoardTaskVO>> projectBoardTaskVoMap = new HashMap<>();
+        // 获取当前日期
+        Date current = new Date();
+
+        // 遍历任务信息，转换并计算任务的工时信息
+        taskProductDemandDOS.forEach(taskProductDemandDO -> {
+            Long taskId = taskProductDemandDO.getTaskId();
+            TaskDO taskDO = taskMap.get(taskId);
+            if (taskDO == null) return;
+
+            ProjectBoardTaskVO projectBoardTaskVO = TaskCopier.INSTANCE.convert2ProjectBoard(taskDO);
+            // 设置任务的开始和结束日期
+            setStartAndEndDates(taskDO, projectBoardTaskVO, current);
+
+            // 设置任务状态名称
+            projectBoardTaskVO.setStatusName(TaskStatusEnum.getTextByCode(taskDO.getStatus()));
+            // 设置任务执行人信息
+            PersonDO person = personMap.get(taskId);
+            projectBoardTaskVO.setExecutor(person != null ? person.getUserId() : "未知");
+            projectBoardTaskVO.setExecutorId(person != null ? person.getUserName() : "未知");
+
+            // 判断任务是否延期
+            projectBoardTaskVO.setIsDelay(isTaskDelayed(taskDO, current));
+
+            // 将任务信息添加到对应需求的列表中
+            projectBoardTaskVoMap.computeIfAbsent(taskProductDemandDO.getProductDemandId(), k -> new ArrayList<>())
+                    .add(projectBoardTaskVO);
+        });
+
+        // 遍历需求信息，构建并添加到结果列表中
+        projectBoardTaskVoMap.forEach((k, v) -> {
+            ProductDemandListDO productDemandListDO = demandListDOMap.get(k);
+            if (productDemandListDO == null) return;
+
+            ProjectBoardDemandWorkTimeVO demandWorkTimeVO = new ProjectBoardDemandWorkTimeVO();
+
+            BigDecimal planUseTime = v.stream().map(ProjectBoardTaskVO::getPlanUseTime).filter(Objects::nonNull).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
+
+            // 设置需求基本信息
+            demandWorkTimeVO.setDemandId(productDemandListDO.getId());
+            demandWorkTimeVO.setDemand(productDemandListDO.getName());
+            demandWorkTimeVO.setOwnerId(productDemandListDO.getOwnerId());
+            demandWorkTimeVO.setOwner(productDemandListDO.getOwner());
+            demandWorkTimeVO.setPriority(productDemandListDO.getPriority());
+            demandWorkTimeVO.setPriorityName(PriorityEnum.getTextByCode(productDemandListDO.getPriority()));
+            demandWorkTimeVO.setExpectScheduleTime(productDemandListDO.getExpectScheduleTime());
+            demandWorkTimeVO.setProductLineName(productDemandListDO.getProductLineName());
+            demandWorkTimeVO.setBizDomainName(productDemandListDO.getBizDomainName());
+            demandWorkTimeVO.setStatusName(ProductDemandStatusEnum.getTextByCode(productDemandListDO.getStatus()));
+            // 设置项目开始和结束日期
+            demandWorkTimeVO.setProjectStartDate(projectStartDate);
+            demandWorkTimeVO.setProjectEndDate(projectEndDate);
+            demandWorkTimeVO.setTotalPlanUseTime(planUseTime);
+            // 设置任务信息
+            demandWorkTimeVO.setTaskCount(v.size());
+            List<ProjectBoardTaskVO> sortedTasks = v.stream()
+                    .sorted(Comparator.comparing(ProjectBoardTaskVO::getStartDate))
+                    .collect(Collectors.toList());
+            demandWorkTimeVO.setProjectBoardTaskVos(sortedTasks);
+            // 将需求工时信息添加到结果列表中
+            result.add(demandWorkTimeVO);
+        });
+
+        // 返回结果
+        return BaseResult.success(result);
+    }
+
+    private void setStartAndEndDates(TaskDO taskDO, ProjectBoardTaskVO vo, Date current) {
+        if (taskDO.getActualStartDate() == null) {
+            vo.setStartDate(taskDO.getPlanStartDate());
+            vo.setEndDate(taskDO.getPlanEndDate());
+        } else if (taskDO.getActualEndDate() != null) {
+            vo.setStartDate(taskDO.getActualStartDate());
+            vo.setEndDate(taskDO.getActualEndDate());
+        } else if (taskDO.getActualStartDate().after(taskDO.getPlanEndDate())) {
+            vo.setStartDate(taskDO.getActualStartDate());
+            vo.setEndDate(current);
+        } else {
+            vo.setStartDate(taskDO.getActualStartDate());
+            vo.setEndDate(taskDO.getPlanEndDate());
+        }
+    }
+
+    private boolean isTaskDelayed(TaskDO taskDO, Date current) {
+        if (taskDO.getActualEndDate() == null) {
+            return current.after(taskDO.getPlanEndDate());
+        }
+        return taskDO.getActualEndDate().after(taskDO.getPlanEndDate());
+    }
+
+    /**
+     * 过滤掉无效任务及缺少计划起止时间的任务
+     */
+    private List<TaskDO> filterValidTasks(List<TaskDO> taskList) {
+        return taskList.stream()
+                .filter(a -> !TaskStatusEnum.INVALID.getCode().equals(a.getStatus())
+                        && a.getPlanStartDate() != null && a.getPlanEndDate() != null)
+                .collect(Collectors.toList());
+    }
 }

@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -57,6 +58,14 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
         // 记录任务开始执行的日志
         log.info("[sendWorkHoursSubmitStatisticsJob]开始执行");
 
+        // 避开休息日
+        LocalDate date = LocalDate.now();
+        DayOfWeek dayOfWeek = date.getDayOfWeek();
+        if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
+            log.warn("[sendWorkHoursSubmitStatisticsJob]今天是周六或周日，不执行任务");
+            return ReturnT.SUCCESS;
+        }
+
         // 1. 查询开启通知的项目列表
         // 根据项目状态和类别查询项目，并筛选出需要通知的项目，按负责人分组
         Map<String, List<ProjectDO>> principalProjectMap = projectMapper.getByWorkHoursNotify(PROJECT_STATUSES, ProjectCategoryEnum.PRODUCT_PROJECT.getCode(), true)
@@ -81,6 +90,11 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
         LocalDate today = LocalDate.now();
         // 获取前一天
         LocalDate yesterday = today.minusDays(1);
+        // 如果是周一，则获取周五的
+        if (dayOfWeek == DayOfWeek.MONDAY) {
+            yesterday = yesterday.minusDays(2);
+        }
+
         // 前一天的开始时间（00:00:00）
         LocalDateTime startOfYesterday = yesterday.atStartOfDay();
         // 前一天的结束时间（23:59:59.999999999）
