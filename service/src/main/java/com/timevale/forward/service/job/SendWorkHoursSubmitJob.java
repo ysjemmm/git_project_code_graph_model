@@ -24,6 +24,7 @@ import org.assertj.core.util.Lists;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -60,7 +61,8 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
         log.info("[sendWorkHoursSubmitJob]开始执行");
 
         // 避开休息日
-        LocalDate today = LocalDate.now();
+        ZoneId zoneId = ZoneId.of("Asia/Shanghai");
+        LocalDate today = LocalDate.now(zoneId);
         DayOfWeek dayOfWeek = today.getDayOfWeek();
         if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
             log.warn("[sendWorkHoursSubmitJob]今天是周六或周日，不执行任务");

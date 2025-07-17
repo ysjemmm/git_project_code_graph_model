@@ -74,6 +74,9 @@ public class ProjectModifyReq extends ToString {
     @ApiModelProperty("是否有项目目标：0否，1是")
     private Integer isWithGoal;
 
+    @ApiModelProperty("是否发送钉钉工时通知：0否，1是")
+    private Integer workHoursNotify;
+
     @Valid
     @ApiModelProperty("项目目标列表")
     private List<ProjectGoalAddReq> projectGoals;

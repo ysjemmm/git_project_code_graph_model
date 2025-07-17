@@ -116,6 +116,9 @@ public class ProjectDetailVO extends ToString {
     @ApiModelProperty("是否有项目目标")
     private Integer isWithGoal;
 
+    @ApiModelProperty("是否发送钉钉工时通知")
+    private Integer workHoursNotify;
+
     @ApiModelProperty("项目等级：0普通 10重点")
     private Integer level;
 

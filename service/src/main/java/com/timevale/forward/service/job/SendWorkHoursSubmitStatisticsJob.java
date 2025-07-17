@@ -1,11 +1,15 @@
 package com.timevale.forward.service.job;
 
-import cn.hutool.core.collection.CollUtil;
 import com.timevale.forward.dal.condition.WorkHoursRecordCondition;
+import com.timevale.forward.dal.dao.BizDomainMapper;
+import com.timevale.forward.dal.dao.ProductLineMapper;
+import com.timevale.forward.dal.dao.ProjectBizDomainMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.WorkHoursRecordMapper;
+import com.timevale.forward.dal.entity.BizDomainDO;
 import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.entity.ProjectProductLineBizDomain;
 import com.timevale.forward.dal.entity.WorkHoursRecordDO;
 import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.model.enums.ProjectCategoryEnum;
@@ -21,16 +25,22 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -43,6 +53,9 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
     private final WorkHoursRecordMapper workHoursRecordMapper;
     private final PersonComponent personComponent;
     private final MessageRetryManager messageRetryManager;
+    private final ProjectBizDomainMapper projectBizDomainMapper;
+    private final ProductLineMapper productLineMapper;
+    private final BizDomainMapper bizDomainMapper;
 
     private static final List<Integer> PROJECT_STATUSES = Arrays.asList(
             ProjectStatusEnum.PLANING.getCode(),
@@ -53,116 +66,182 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    /**
+     * 执行发送工作小时提交统计信息的任务
+     *
+     * 该方法主要用于统计并通知项目成员的工作小时提交情况，只在工作日执行
+     * 它会根据项目负责人和业务域来组织信息，并发送给相应的人员
+     *
+     * @param s 任务参数，未使用
+     * @return 返回执行结果，始终为成功
+     * @throws Exception 如果执行过程中发生错误
+     */
     @Override
     public ReturnT<String> execute(String s) throws Exception {
         // 记录任务开始执行的日志
         log.info("[sendWorkHoursSubmitStatisticsJob]开始执行");
 
-        // 避开休息日
-        LocalDate date = LocalDate.now();
-        DayOfWeek dayOfWeek = date.getDayOfWeek();
+        // 获取上海时区的当前日期
+        ZoneId zoneId = ZoneId.of("Asia/Shanghai");
+        LocalDate today = LocalDate.now(zoneId);
+        DayOfWeek dayOfWeek = today.getDayOfWeek();
+
+        // 如果今天是周末，则不执行任务
         if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
             log.warn("[sendWorkHoursSubmitStatisticsJob]今天是周六或周日，不执行任务");
             return ReturnT.SUCCESS;
         }
 
-        // 1. 查询开启通知的项目列表
-        // 根据项目状态和类别查询项目，并筛选出需要通知的项目，按负责人分组
-        Map<String, List<ProjectDO>> principalProjectMap = projectMapper.getByWorkHoursNotify(PROJECT_STATUSES, ProjectCategoryEnum.PRODUCT_PROJECT.getCode(), true)
-                .stream()
+        // 获取需要通知的工作小时项目
+        List<ProjectDO> byWorkHoursNotifyProjects = projectMapper.getByWorkHoursNotify(
+                PROJECT_STATUSES, ProjectCategoryEnum.PRODUCT_PROJECT.getCode(), true);
+
+        // 如果没有需要通知的项目，则结束任务
+        if (byWorkHoursNotifyProjects.isEmpty()) {
+            log.info("[sendWorkHoursSubmitStatisticsJob]没有需要通知的项目");
+            return ReturnT.SUCCESS;
+        }
+
+        // 将项目按负责人分组
+        Map<String, List<ProjectDO>> principalProjectMap = byWorkHoursNotifyProjects.stream()
                 .filter(e -> StringUtils.isNotEmpty(e.getPrincipalId()))
                 .collect(Collectors.groupingBy(ProjectDO::getPrincipalId));
 
-        // 查询所有项目id
-        // 将项目列表转换为项目ID列表，以便后续查询
+        // 获取所有项目ID
         List<Long> projectIdList = principalProjectMap.values().stream()
                 .flatMap(List::stream)
                 .map(ProjectDO::getId)
+                .distinct()
                 .collect(Collectors.toList());
 
-        // 如果没有需要处理的项目，则记录日志并返回成功
+        // 如果项目ID列表为空，则结束任务
         if (projectIdList.isEmpty()) {
             log.info("[sendWorkHoursSubmitStatisticsJob]无需处理的项目");
             return ReturnT.SUCCESS;
         }
 
-        // 获取当前日期
-        LocalDate today = LocalDate.now();
-        // 获取前一天
-        LocalDate yesterday = today.minusDays(1);
-        // 如果是周一，则获取周五的
-        if (dayOfWeek == DayOfWeek.MONDAY) {
-            yesterday = yesterday.minusDays(2);
-        }
+        // 填充产品线/业务域信息
+        Map<String, List<Long>> bizDomainMap = productLineMapper.getByProjectIds(projectIdList)
+                .stream().collect(Collectors.groupingBy(ProjectProductLineBizDomain::getBizDomainName, Collectors.mapping(ProjectProductLineBizDomain::getProjectId, Collectors.toList())));
 
-        // 前一天的开始时间（00:00:00）
+        // 获取业务域名称列表
+        List<String> domainNameList = new ArrayList<>(bizDomainMap.keySet());
+
+        // 获取业务域信息
+        List<BizDomainDO> bizDomainDOS = Optional.ofNullable(bizDomainMapper.selectByName(domainNameList))
+                .orElse(Collections.emptyList());
+
+        // 将业务域按负责人分组
+        Map<String, List<String>> domainOwnerIdMap = bizDomainDOS.stream()
+                .collect(Collectors.groupingBy(BizDomainDO::getOwnerId,
+                        Collectors.mapping(BizDomainDO::getName, Collectors.toList())));
+
+        // 构建业务域负责人与项目ID的映射
+        Map<String, Set<Long>> domainOwnerProjectIdMap = new HashMap<>();
+        domainOwnerIdMap.forEach((ownerId, domainNames) -> {
+            Set<Long> ids = new HashSet<>();
+            for (String domainName : domainNames) {
+                List<Long> projectIds = bizDomainMap.get(domainName);
+                if (projectIds != null) {
+                    ids.addAll(projectIds);
+                }
+            }
+            domainOwnerProjectIdMap.put(ownerId, ids);
+        });
+
+        // 构建负责人与项目的映射，包括直接负责的项目和通过业务域关联的项目
+        Map<String, List<ProjectDO>> ownerProjectMap = new HashMap<>();
+        principalProjectMap.forEach((principalId, projects) -> {
+            Set<Long> projectIds = domainOwnerProjectIdMap.getOrDefault(principalId, Collections.emptySet());
+            List<ProjectDO> mergedList = new ArrayList<>(projects);
+            if (!projectIds.isEmpty()) {
+                mergedList.addAll(byWorkHoursNotifyProjects.stream()
+                        .filter(p -> projectIds.contains(p.getId()))
+                        .distinct()
+                        .collect(Collectors.toList()));
+            }
+            ownerProjectMap.put(principalId, mergedList);
+        });
+
+        // 对于没有直接负责项目但有业务域关联项目的负责人，构建其项目列表
+        domainOwnerProjectIdMap.forEach((ownerId, projectIds) -> {
+            if (!principalProjectMap.containsKey(ownerId)) {
+                List<ProjectDO> dos = byWorkHoursNotifyProjects.stream()
+                        .filter(e -> projectIds.contains(e.getId()))
+                        .collect(Collectors.toList());
+                ownerProjectMap.put(ownerId, dos);
+            }
+        });
+
+        // 封装昨日时间逻辑
+        LocalDate yesterday = getYesterday(today, dayOfWeek);
         LocalDateTime startOfYesterday = yesterday.atStartOfDay();
-        // 前一天的结束时间（23:59:59.999999999）
         LocalDateTime endOfYesterday = yesterday.atTime(LocalTime.MAX);
+        String startTimeStr = startOfYesterday.format(DATE_TIME_FORMATTER);
+        String endTimeStr = endOfYesterday.format(DATE_TIME_FORMATTER);
 
-        // 查询项目工时记录，并按项目ID分组
-        Map<Long, List<WorkHoursRecordDO>> projectWorkHoursMap = workHoursRecordMapper.list(WorkHoursRecordCondition.builder()
-                        .projectIds(projectIdList)
-                        // 前一天
-                        .stratTime(startOfYesterday.format(DATE_TIME_FORMATTER))
-                        .endTime(endOfYesterday.format(DATE_TIME_FORMATTER))
-                        .build())
+        // 获取每个项目的工作小时记录
+        Map<Long, List<WorkHoursRecordDO>> projectWorkHoursMap = workHoursRecordMapper.list(
+                        WorkHoursRecordCondition.builder()
+                                .projectIds(projectIdList)
+                                .stratTime(startTimeStr)
+                                .endTime(endTimeStr)
+                                .build())
                 .stream()
                 .collect(Collectors.groupingBy(WorkHoursRecordDO::getProjectId));
 
-        // 记录发送消息的计数器
+        // 统计发送消息的数量
         AtomicInteger sentCount = new AtomicInteger(0);
 
-        // 遍历每个项目负责人及其项目列表，构建并发送消息
-        principalProjectMap.forEach((principalId, projectList) -> {
+        // 遍历每个负责人及其项目，构建并发送消息
+        ownerProjectMap.forEach((principalId, projectList) -> {
             StringBuilder stringBuilder = new StringBuilder();
 
-            // 遍历每个项目，统计工时填报情况
+            // 构建项目工作小时统计信息
             for (ProjectDO project : projectList) {
                 Long projectId = project.getId();
-                List<WorkHoursRecordDO> workHoursRecordDOList = projectWorkHoursMap.getOrDefault(projectId, Collections.emptyList());
+                List<WorkHoursRecordDO> records = projectWorkHoursMap.getOrDefault(projectId, Collections.emptyList());
 
-                // 初始化统计变量
-                int count;
-                BigDecimal totalHours;
-                Set<String> createManIdSet = new HashSet<>();
-                Set<String> createManNameSet = new HashSet<>();
-
-                // 统计每个项目的工时记录
-                totalHours = workHoursRecordDOList.stream()
+                BigDecimal totalHours = records.stream()
                         .map(WorkHoursRecordDO::getWorkHours)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                        .reduce(BigDecimal.ZERO, (a, b) -> a.add(b, MathContext.DECIMAL64));
 
-                for (WorkHoursRecordDO workHoursRecordDO : workHoursRecordDOList) {
-                    createManIdSet.add(workHoursRecordDO.getCreateManId());
-                    createManNameSet.add(workHoursRecordDO.getCreateMan());
-                }
+                Set<String> filledUserIds = records.stream()
+                        .map(WorkHoursRecordDO::getCreateManId)
+                        .collect(Collectors.toSet());
 
-                // 计算填报人次
-                count = createManIdSet.size();
+                Set<String> filledNames = records.stream()
+                        .map(WorkHoursRecordDO::getCreateMan)
+                        .collect(Collectors.toSet());
 
-                // 查询项目成员列表
-                List<PersonDO> personList = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
-                List<String> teamMemberList = personList != null ?
-                        personList.stream().map(PersonDO::getUserName).collect(Collectors.toList()) :
-                        Collections.emptyList();
+                int filledCount = filledUserIds.size();
 
-                // 计算未填报成员列表
-                Set<String> filledManSet = new HashSet<>(createManNameSet);
-                List<String> unFillManList = teamMemberList.stream()
-                        .filter(n -> !filledManSet.contains(n))
+                List<PersonDO> personList = Optional.ofNullable(personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode()))
+                        .orElse(Collections.emptyList());
+
+                List<String> teamMembers = personList.stream()
+                        .map(PersonDO::getUserName)
                         .collect(Collectors.toList());
 
-                // 构建消息内容
+                List<String> unfilled = teamMembers.stream()
+                        .filter(n -> !filledNames.contains(n))
+                        .collect(Collectors.toList());
+
                 stringBuilder.append("项目：").append(project.getName()).append("  \n")
-                        .append("填报人次：").append(count).append("  \n")
-                        .append("填报工时：").append(totalHours).append("  \n")
-                        .append("应填报人次：").append(teamMemberList.size()).append("  \n")
-                        .append("未填报人次：").append(unFillManList.size()).append("  \n")
-                        .append("未填报项目成员：").append(CollUtil.isNotEmpty(unFillManList) ? String.join(",", unFillManList) : "无").append("  \n");
+                        .append("填报人次：").append(filledCount).append("  \n")
+                        .append("填报工时：").append(totalHours.setScale(2, RoundingMode.HALF_UP)).append("  \n")
+                        .append("应填报人次：").append(teamMembers.size()).append("  \n")
+                        .append("未填报人次：").append(unfilled.size()).append("  \n")
+                        .append("未填报项目成员：").append(String.join(",", unfilled)).append("  \n");
             }
 
-            // 构建并发送行动卡片消息
+            // 如果负责人没有需要发送的消息内容，则记录日志并跳过
+            if (stringBuilder.length() == 0) {
+                log.warn("[sendWorkHoursSubmitStatisticsJob]负责人 {} 没有需要发送的消息内容", principalId);
+                return;
+            }
+
+            // 构建并发送消息
             ActionCardMsg actionCardMsg = ActionCardMsg.builder()
                     .title("工时填报情况")
                     .markdown(stringBuilder.toString())
@@ -171,10 +250,18 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
                     .singleUrl("dingtalk://dingtalkclient/page/link?url=https://forward.esign.cn&ddtab=true")
                     .build();
 
-            // 异步发送消息
             messageRetryManager.sendAsyncMessage("sendWorkHoursSubmitStatisticsJob", actionCardMsg, principalId, sentCount);
         });
 
+        // 任务执行成功
         return ReturnT.SUCCESS;
+    }
+
+    private LocalDate getYesterday(LocalDate today, DayOfWeek dayOfWeek) {
+        LocalDate yesterday = today.minusDays(1);
+        if (dayOfWeek == DayOfWeek.MONDAY) {
+            yesterday = yesterday.minusDays(2);
+        }
+        return yesterday;
     }
 }

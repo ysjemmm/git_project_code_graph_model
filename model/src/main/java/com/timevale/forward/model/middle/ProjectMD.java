@@ -66,6 +66,9 @@ public class ProjectMD extends BaseMD{
     @FieldCompare(fieldName = "是否有项目目标",enumClass = YesOrNoEnum.class)
     private Integer isWithGoal;
 
+    @FieldCompare(fieldName = "是否发送钉钉工时通知",enumClass = YesOrNoEnum.class)
+    private Integer workHoursNotify;
+
     @FieldCompare(fieldName = "项目等级",enumClass = ProjectLevelEnum.class)
     private Integer level;
 
