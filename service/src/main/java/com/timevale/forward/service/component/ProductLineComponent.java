@@ -86,4 +86,13 @@ public class ProductLineComponent {
         return pdLineDomainTOs.stream().collect(Collectors.toMap(PdLineDomainTO::getProductLineId, Function.identity()));
     }
 
+    public List<String> getProductLineOwnersInBizDomain(Long bizDomainId) {
+        Set<String> owners = new HashSet<>();
+        BizDomainDO bizDomainDO = bizDomainMapper.selectById(bizDomainId);
+        List<ProductLineDO> productLineDOS = productLineMapper.getBizDomainId(bizDomainId);
+        owners.add(bizDomainDO.getOwnerId());
+        productLineDOS.forEach(productLineDO -> owners.add(productLineDO.getOwnerId()));
+        return owners.stream().collect(Collectors.toList());
+    }
+
 }

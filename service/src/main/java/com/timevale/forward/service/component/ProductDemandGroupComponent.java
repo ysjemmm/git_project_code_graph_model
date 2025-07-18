@@ -1,0 +1,44 @@
+package com.timevale.forward.service.component;
+
+import com.timevale.forward.dal.condition.ProductDemandGroupListCondition;
+import com.timevale.forward.dal.entity.ProductDemandDO;
+import com.timevale.forward.dal.entity.ProductDemandGroupDO;
+import java.util.List;
+
+/**
+ * 产品需求分组组件接口
+ * @author qiyuan
+ * @date 2025/07/14 15:00
+ */
+public interface ProductDemandGroupComponent {
+
+    /**
+     * 查询业务域需求分组列表
+     * @param productDemandGroupListCondition 查询条件
+     * @return 产品需求分组DO列表
+     */
+    List<ProductDemandGroupDO> list(ProductDemandGroupListCondition productDemandGroupListCondition);
+
+    /**
+     * 根据分组ID查询需求列表
+     * @param groupId 分组ID
+     * @return 产品需求分组DO列表
+     */
+    List<ProductDemandDO> listProductDemandByGroupId(Long groupId);
+
+    /**
+     * 根据id获取产品需求分组
+     * @param id 主键id
+     * @return 产品需求分组DO
+     */
+    ProductDemandGroupDO getById(Long id);
+
+    /**
+     * 修改产品需求分组
+     * @param productDemandGroupDO 产品需求分组DO
+     * @return 是否成功
+     */
+    void update(ProductDemandGroupDO productDemandGroupDO);
+
+
+} 

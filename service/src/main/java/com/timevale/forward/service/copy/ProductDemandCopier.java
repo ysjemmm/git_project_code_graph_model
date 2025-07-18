@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson.JSON;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.entity.ProductDemandDO;
+import com.timevale.forward.dal.entity.ProductDemandGroupItemListDO;
 import com.timevale.forward.dal.entity.ProductDemandListDO;
 import com.timevale.forward.facade.api.query.CustomLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandQueryList;
@@ -65,6 +66,14 @@ public interface ProductDemandCopier {
 
     @Mapping(target = "type", expression = "java(JSON.parseArray(productDemandListDO.getType(), Integer.class))")
     ProductDemandVO convert(ProductDemandListDO productDemandListDO);
+
+    @Mapping(target = "type", expression = "java(JSON.parseArray(productDemandGroupItemListDO.getType(), Integer.class))")
+    @Mapping(source = "demandCreateDate", target = "createDate")
+    @Mapping(source = "demandModifyDate", target = "modifyDate")
+    @Mapping(source = "demandCreateManId", target = "createManId")
+    @Mapping(source = "demandCreateMan", target = "createMan")
+    @Mapping(source = "productDemandId", target = "id")
+    ProductDemandVO convert(ProductDemandGroupItemListDO productDemandGroupItemListDO);
 
     /**
      * 转换转换DO

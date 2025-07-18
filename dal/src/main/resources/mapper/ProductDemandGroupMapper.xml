@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.timevale.forward.dal.dao.ProductDemandGroupMapper">
+
+    <!-- 查询业务域内的产品需求分组列表 -->
+    <select id="list" resultType="com.timevale.forward.dal.entity.ProductDemandGroupDO">
+        SELECT pdg.*
+        FROM product_demand_group pdg
+        <where>
+            pdg.biz_domain_id = #{bizDomainId}
+            AND pdg.is_deleted = false
+            <if test="groupCreateDateStart != null and groupCreateDateEnd != null">
+                and pdg.create_date &gt;= #{groupCreateDateStart} and pdg.create_date &lt;= #{groupCreateDateEnd}
+            </if>
+            <if test="ownerIds!=null and ownerIds.size()>0">
+                and pdg.owner_id in
+                <foreach collection="ownerIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and (pdg.status is null
+            <if test="groupStatus!=null and groupStatus.size()>0">
+                or pdg.status in
+                <foreach collection="groupStatus" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>)
+            <if test="productDemandQueryExist != null and productDemandQueryExist == true">
+                AND EXISTS (
+                    SELECT 1
+                    FROM product_demand_group_item pdgi
+                    JOIN product_demand pd ON pdgi.product_demand_id = pd.id
+                    JOIN product_line pl ON pd.product_line_id = pl.id
+                    <where>
+                        pdg.id = pdgi.product_demand_group_id
+                        AND pdgi.product_demand_id = pd.id
+                        <if test="id != null">and pd.id = #{id}</if>
+                        <if test="name != null and name != ''">and pd.name like concat('%',#{name},'%')</if>
+                        <if test="createDateStart != null and createDateEnd != null">
+                            and pd.create_date &gt;= #{createDateStart} and pd.create_date &lt;= #{createDateEnd}
+                        </if>
+                        <if test="modifyDateStart != null and modifyDateEnd != null">
+                            and pd.modify_date &gt;= #{modifyDateStart} and pd.modify_date &lt;= #{modifyDateEnd}
+                        </if>
+                        <if test="expectScheduleTimeStart != null and expectScheduleTimeEnd != null">
+                            and pd.expect_schedule_time &gt;= #{expectScheduleTimeStart} and pd.expect_schedule_time &lt;= #{expectScheduleTimeEnd}
+                        </if>
+                        <if test="priorities!=null and priorities.size()>0">
+                            and pd.priority in
+                            <foreach collection="priorities" item="item" separator="," open="(" close=")">
+                                #{item}
+                            </foreach>
+                        </if>
+                        <if test="productLineIds!=null and productLineIds.size()>0">
+                            and pd.product_line_id in
+                            <foreach collection="productLineIds" item="item" separator="," open="(" close=")">
+                                #{item}
+                            </foreach>
+                        </if>
+                        <if test="bizDomainId!=null ">
+                            and pl.biz_domain_id =  #{bizDomainId}
+                        </if>
+                        <if test="status!=null and status.size()>0">
+                            and pd.status in
+                            <foreach collection="status" item="item" separator="," open="(" close=")">
+                                #{item}
+                            </foreach>
+                        </if>
+                        <if test="filterProductDemandIds!=null and filterProductDemandIds.size()>0">
+                            and pd.id not in
+                            <foreach collection="filterProductDemandIds" item="item" separator="," open="(" close=")">
+                                #{item}
+                            </foreach>
+                        </if>
+                        <if test="inProductDemandIds!=null and inProductDemandIds.size()>0">
+                            and pd.id  in
+                            <foreach collection="inProductDemandIds" item="item" separator="," open="(" close=")">
+                                #{item}
+                            </foreach>
+                        </if>
+                        <if test="notInProductDemandIds!=null and notInProductDemandIds.size()>0">
+                            and pd.id not in
+                            <foreach collection="notInProductDemandIds" item="item" separator="," open="(" close=")">
+                                #{item}
+                            </foreach>
+                        </if>
+                        <if test="types!= null and types!='' ">
+                            and pd.type REGEXP CONCAT('[', #{types},']')
+                        </if>
+                        and  pd.is_deleted =false
+                    </where>
+
+                )
+            </if>
+        </where>
+    </select>
+
+    <!-- 新增一条产品需求分组信息 -->
+    <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProductDemandGroupDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO product_demand_group
+        (name, biz_domain_id, position, version, owner, owner_id, project_id, status, create_man_id, create_man)
+        VALUES
+        (#{name}, #{bizDomainId}, #{position}, #{version}, #{owner}, #{ownerId}, #{projectId}, #{status}, #{createManId}, #{createMan})
+    </insert>
+
+    <!-- 根据业务域id和名称查询产品需求分组 -->
+    <select id="getByBizDomainIdAndName" resultType="com.timevale.forward.dal.entity.ProductDemandGroupDO">
+        SELECT * FROM product_demand_group WHERE biz_domain_id = #{bizDomainId} AND name = #{name} AND is_deleted = 0
+    </select>
+
+    <!-- 更新产品需求分组信息 -->
+    <update id="update">
+        UPDATE product_demand_group
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="bizDomainId != null">biz_domain_id = #{bizDomainId},</if>
+            <if test="position != null">position = #{position},</if>
+            <if test="version != null">version = #{version},</if>
+            <if test="owner != null">owner = #{owner},</if>
+            <if test="ownerId != null">owner_id = #{ownerId},</if>
+            <if test="projectId != null">project_id = #{projectId},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyDate != null">modify_date = #{modifyDate},</if>
+        </set>
+        WHERE id = #{id} and is_deleted = false
+    </update>
+
+    <!-- 删除产品需求分组信息 -->
+    <update id="delete">
+        UPDATE product_demand_group
+        SET is_deleted = true, modify_man_id = #{modifyManId}, modify_man = #{modifyMan}
+        WHERE id = #{id} and is_deleted = false
+    </update>
+
+    <!-- 根据主键id获取产品需求分组信息 -->
+    <select id="get" resultType="com.timevale.forward.dal.entity.ProductDemandGroupDO">
+        SELECT * FROM product_demand_group WHERE id = #{id} AND is_deleted = 0
+    </select>
+
+
+</mapper> 

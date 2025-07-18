@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- MyBatis的Mapper XML文件 -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.timevale.forward.dal.dao.ProductDemandGroupItemMapper">
+
+    <select id="listProductDemand" resultType="com.timevale.forward.dal.entity.ProductDemandGroupItemListDO">
+        select  pdgi.id,pdgi.product_demand_id,pdgi.product_demand_group_id,pdgi.position,pdgi.version, pdgi.create_man,pdgi.create_man_id,pdgi.create_date,pdgi.modify_date,
+        a.name,a.priority,a.owner,a.owner_id,a.status, a.product_line_id,a.type, a.expect_schedule_time,a.create_man as demandCreateMan,a.create_man_id as demandCreateManId,
+        a.create_date as demandCreateDate,a.modify_date as demandModifyDate,c.name productLineName,d.name bizDomainName
+        <if test="copierId != null and copierId != ''">
+            ,e.user_name copier
+        </if>
+        from product_demand_group_item pdgi
+        left join product_demand a on pdgi.product_demand_id=a.id
+        left join product_line c on a.product_line_id=c.id
+        left join biz_domain d on c.biz_domain_id=d.id
+        <if test="copierId != null and copierId != ''">
+            left join person e on a.id=e.main_id and e.type =20 and e.is_deleted =false
+        </if>
+        <where>
+            pdgi.product_demand_group_id = #{groupId}
+            and pdgi.is_deleted =false
+            <if test="id != null">and a.id = #{id}</if>
+            <if test="name != null and name != ''">and a.name like concat('%',#{name},'%')</if>
+            <if test="copierId != null and copierId != ''">and e.user_id = #{copierId}</if>
+            <if test="createDateStart != null and createDateEnd != null">
+                and a.create_date &gt;= #{createDateStart} and a.create_date &lt;= #{createDateEnd}
+            </if>
+            <if test="modifyDateStart != null and modifyDateEnd != null">
+                and a.modify_date &gt;= #{modifyDateStart} and a.modify_date &lt;= #{modifyDateEnd}
+            </if>
+            <if test="expectScheduleTimeStart != null and expectScheduleTimeEnd != null">
+                and a.expect_schedule_time &gt;= #{expectScheduleTimeStart} and a.expect_schedule_time &lt;= #{expectScheduleTimeEnd}
+            </if>
+            <if test="priorities!=null and priorities.size()>0">
+                and a.priority in
+                <foreach collection="priorities" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="productLineIds!=null and productLineIds.size()>0">
+                and c.id in
+                <foreach collection="productLineIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="bizDomainId!=null ">
+                and d.id =  #{bizDomainId}
+            </if>
+            <if test="ownerIds!=null and ownerIds.size()>0">
+                and a.owner_id in
+                <foreach collection="ownerIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="status!=null and status.size()>0">
+                and a.status in
+                <foreach collection="status" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="filterProductDemandIds!=null and filterProductDemandIds.size()>0">
+                and a.id not in
+                <foreach collection="filterProductDemandIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="inProductDemandIds!=null and inProductDemandIds.size()>0">
+                and a.id  in
+                <foreach collection="inProductDemandIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="notInProductDemandIds!=null and notInProductDemandIds.size()>0">
+                and a.id not in
+                <foreach collection="notInProductDemandIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="types!= null and types!='' ">
+                and a.type REGEXP CONCAT('[', #{types},']')
+            </if>
+            and  a.is_deleted =false
+        </where>
+    </select>
+
+    <!-- 删除产品需求分组和产品需求关系 -->
+    <update id="deleteByGroupId">
+        UPDATE product_demand_group_item
+        SET is_deleted = true, modify_man_id = #{modifyManId}, modify_man = #{modifyMan}
+        WHERE product_demand_group_id = #{groupId} and is_deleted = false
+    </update>
+
+
+</mapper> 

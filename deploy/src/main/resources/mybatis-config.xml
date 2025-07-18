@@ -128,5 +128,7 @@
         <mapper resource="mapper/FastSearchConditionMapper.xml" />
         <mapper resource="mapper/BizTimeMapper.xml" />
         <mapper resource="mapper/WorkHoursRecordMapper.xml" />
+        <mapper resource="mapper/ProductDemandGroupMapper.xml"/>
+        <mapper resource="mapper/ProductDemandGroupItemMapper.xml"/>
     </mappers>
 </configuration>
