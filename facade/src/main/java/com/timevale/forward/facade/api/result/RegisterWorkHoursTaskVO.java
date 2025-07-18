@@ -36,7 +36,4 @@ public class RegisterWorkHoursTaskVO extends ToString {
 
     @ApiModelProperty("工作项类别")
     private Integer workItemType;
-
-    @ApiModelProperty("最新工时进度")
-    private Integer lastProgress;
 }

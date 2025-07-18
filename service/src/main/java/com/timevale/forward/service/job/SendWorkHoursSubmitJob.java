@@ -1,13 +1,11 @@
 package com.timevale.forward.service.job;
 
-import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.condition.TaskListCondition;
 import com.timevale.forward.dal.dao.PersonMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.TaskMapper;
 import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProjectDO;
-import com.timevale.forward.dal.entity.ProjectListDO;
 import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.result.TaskVO;
 import com.timevale.forward.model.enums.PersonTypeEnum;
@@ -24,6 +22,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -58,6 +59,15 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
     public ReturnT<String> execute(String s) throws Exception {
         // 开始执行定时任务的日志记录
         log.info("[sendWorkHoursSubmitJob]开始执行");
+
+        // 避开休息日
+        ZoneId zoneId = ZoneId.of("Asia/Shanghai");
+        LocalDate today = LocalDate.now(zoneId);
+        DayOfWeek dayOfWeek = today.getDayOfWeek();
+        if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
+            log.warn("[sendWorkHoursSubmitJob]今天是周六或周日，不执行任务");
+            return ReturnT.SUCCESS;
+        }
 
         // 1. 查询开启通知的项目列表
         // 通过项目状态和类别查询项目，并过滤出需要工时通知的项目，将其ID与名称映射为Map
@@ -118,10 +128,10 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
             }
 
             // 构建消息内容，列出待完成任务项
-            StringBuilder stringBuilder = new StringBuilder("待完成任务项: \n");
+            StringBuilder stringBuilder = new StringBuilder("待完成任务项:  \n");
             taskIdList.forEach(taskId -> {
                 TaskVO vo = taskVOMap.get(taskId);
-                stringBuilder.append("[").append(notifyProjectMap.get(vo.getProjectId())).append("]").append("-").append(vo.getName()).append("\n");
+                stringBuilder.append("【").append(notifyProjectMap.get(vo.getProjectId())).append("】").append("-").append(vo.getName()).append("  \n");
             });
 
             // 创建行动卡片消息对象

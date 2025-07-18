@@ -231,7 +231,7 @@ public class ProjectDO extends BaseDO {
     /**
      * 工时填报通知开关
      */
-    private Boolean workHoursNotify;
+    private Integer workHoursNotify;
 
     /**
      * 返回父节点id列表

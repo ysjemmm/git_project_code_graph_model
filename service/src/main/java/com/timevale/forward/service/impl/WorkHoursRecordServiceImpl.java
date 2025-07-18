@@ -67,6 +67,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -163,6 +164,10 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
     public BaseResult<Long> add(WorkHoursRecordAddReq workTimeRecordAddReq) {
         log.info("工时记录新增,参数:{}", workTimeRecordAddReq);
         WorkHoursRecordDO workHoursRecordDO = WorkHoursRecordCopier.INSTANCE.convert(workTimeRecordAddReq);
+        // 如果工时为0不登记
+        if (workHoursRecordDO.getWorkHours().compareTo(BigDecimal.ZERO) == 0) {
+            return BaseResult.success(null);
+        }
         // 登记人
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         workHoursRecordDO.setCreateMan(buildCreateMan(userInfo));
@@ -316,6 +321,9 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             // 填报总工时
             BigDecimal sum = hoursRecordDOList.stream().map(WorkHoursRecordDO::getWorkHours).reduce(BigDecimal.ZERO, BigDecimal::add);
 
+            // 最新工时进度
+            Integer progress = hoursRecordDOList.stream().map(WorkHoursRecordDO::getProgress).max(Comparator.comparingInt(Integer::intValue)).orElse(0);
+
             // 剩余工时
             BigDecimal remainingManHour = planUseTime.subtract(sum);
 
@@ -333,6 +341,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
 
             workHoursRemainVO.setEstimatedHours(planUseTime);
             workHoursRemainVO.setTotalManHour(sum);
+            workHoursRemainVO.setLatestProgress(progress);
             workHoursRemainVO.setRemainingManHour(remainingManHour);
             workHoursRemainVO.setRemainingHourDeviation(remainingHour);
         }
@@ -407,11 +416,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         List<Long> projectIds = progressTaskList.stream().map(TaskDO::getProjectId).collect(Collectors.toList());
         Map<Long, String> projectMap = projectMapper.getByIds(projectIds).stream().collect(Collectors.toMap(ProjectDO::getId, ProjectDO::getName, (v1, v2) -> v1));
 
-        // 最新进度
-        List<Long> taskIds = progressTaskList.stream().map(TaskDO::getId).collect(Collectors.toList());
-        List<WorkHoursRecordDO> lastProgressList = workHoursRecordMapper.getLastProgress(projectIds, BizTypeEnum.TASK.getCode(), taskIds);
-        // 进度Map
-        Map<Long,  Integer> lastProgressMap = lastProgressList.stream().collect(Collectors.toMap(WorkHoursRecordDO::getWorkItemId, WorkHoursRecordDO::getProgress, (v1, v2) -> v2));
+        // 任务列表
         for (TaskDO taskDO : progressTaskList) {
             RegisterWorkHoursTaskVO registerWorkHoursTaskVO = RegisterWorkHoursTaskVO.builder()
                     .workItemId(taskDO.getId())
@@ -419,7 +424,6 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
                     .projectName(projectMap.get(taskDO.getProjectId()))
                     .name(taskDO.getName())
                     .workItemType(BizTypeEnum.TASK.getCode())
-                    .lastProgress(lastProgressMap.getOrDefault(taskDO.getId(), 0))
                     .build();
             registerWorkHoursTaskVOS.add(registerWorkHoursTaskVO);
         }

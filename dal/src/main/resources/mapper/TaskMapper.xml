@@ -339,6 +339,12 @@
                     #{item}
                 </foreach>
             </if>
+            <if test="projectIds!=null and projectIds.size()>0">
+                and a.project_id in
+                <foreach collection="projectIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="id != null">and a.id = #{id}</if>
             <if test="name != null and name != ''">and a.name like concat('%',#{name},'%')</if>
             <if test="currentDate != null">

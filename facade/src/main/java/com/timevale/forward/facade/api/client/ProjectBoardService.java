@@ -70,4 +70,5 @@ public interface ProjectBoardService {
      */
     BaseResult<List<BugOfflineBelongDistributionVO>> getProjectBugBelongDistribution(Long projectId);
 
+    BaseResult<List<ProjectBoardDemandWorkTimeVO>> getDemandTime(Long projectId);
 }
