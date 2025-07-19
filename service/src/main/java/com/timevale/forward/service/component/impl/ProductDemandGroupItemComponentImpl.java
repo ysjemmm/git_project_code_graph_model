@@ -4,6 +4,7 @@ package com.timevale.forward.service.component.impl;
 import com.timevale.forward.dal.condition.ProductDemandGroupListCondition;
 import com.timevale.forward.dal.dao.ProductDemandGroupItemMapper;
 import com.timevale.forward.dal.entity.ProductDemandGroupItemListDO;
+import com.timevale.forward.dal.entity.ProductDemandListDO;
 import com.timevale.forward.service.component.ProductDemandGroupItemComponent;
 import com.timevale.forward.service.utils.StringUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
@@ -40,5 +41,13 @@ public class ProductDemandGroupItemComponentImpl implements ProductDemandGroupIt
         condition.setCreateDateEnd(DateUtil.getEndOfDay(condition.getCreateDateEnd()));
         condition.setProductDemandQueryExist(condition.judgeProductDemandQueryExist());
         return productDemandGroupItemMapper.listProductDemand(condition);
+    }
+
+    @Override
+    public List<ProductDemandListDO> listProductDemandBacklog(ProductDemandGroupListCondition condition) {
+        condition.setName(StringUtil.toLikeStr(condition.getName()));
+        condition.setCreateDateStart(DateUtil.getStartOfDay(condition.getCreateDateStart()));
+        condition.setCreateDateEnd(DateUtil.getEndOfDay(condition.getCreateDateEnd()));
+        return productDemandGroupItemMapper.listProductDemandBacklog(condition);
     }
 } 

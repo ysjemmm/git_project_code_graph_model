@@ -127,6 +127,15 @@
         WHERE id = #{id} and is_deleted = false
     </update>
 
+    <update id="updatePosition">
+        UPDATE product_demand_group
+        SET position = #{position},
+            version = version + 1,
+            modify_man = #{modifyMan},
+            modify_man_id = #{modifyManId}
+        WHERE id = #{id} and is_deleted = false and version = #{version}
+    </update>
+
     <!-- 删除产品需求分组信息 -->
     <update id="delete">
         UPDATE product_demand_group
@@ -136,8 +145,23 @@
 
     <!-- 根据主键id获取产品需求分组信息 -->
     <select id="get" resultType="com.timevale.forward.dal.entity.ProductDemandGroupDO">
-        SELECT * FROM product_demand_group WHERE id = #{id} AND is_deleted = 0
+        SELECT * FROM product_demand_group WHERE id = #{id} AND is_deleted = false
     </select>
 
 
-</mapper> 
+    <select id="getPreByPosition" resultType="com.timevale.forward.dal.entity.ProductDemandGroupDO">
+        select * from product_demand_group
+        where biz_domain_id = #{bizDomainId} and is_deleted = false
+        and `position` &gt; #{position}
+        order by `position`  asc
+        limit 1
+    </select>
+    <select id="getNextByPosition" resultType="com.timevale.forward.dal.entity.ProductDemandGroupDO">
+        select * from product_demand_group
+        where biz_domain_id = #{bizDomainId} and is_deleted = false
+        and `position` &lt; #{position}
+        order by `position` desc
+        limit 1
+    </select>
+
+</mapper>

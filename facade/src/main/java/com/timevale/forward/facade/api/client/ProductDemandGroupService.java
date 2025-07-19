@@ -24,7 +24,7 @@ public interface ProductDemandGroupService {
      * @param productDemandGroupQueryList 产品分组查询条件信息
      * @return 列表
      */
-    BaseResult<QueryResultVO<ProductDemandVO>> listProductDemandBacklog(ProductDemandGroupQueryList productDemandGroupQueryList);
+    BaseResult<PageQueryResult<ProductDemandVO>> listProductDemandBacklog(ProductDemandGroupQueryList productDemandGroupQueryList);
 
 
     /**

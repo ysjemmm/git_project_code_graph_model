@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotNull;
-import java.util.List;
 
 /**
  * 产品需求分组移动请求
@@ -22,9 +21,9 @@ public class ProductDemandGroupMoveReq extends BaseReq {
     @NotNull(message = "业务域id不能为空")
     private Long bizDomainId;
 
-    @ApiModelProperty("待移动ID列表")
-    @NotNull(message = "移动ID列表不能为空")
-    private List<Long> ids;
+    @ApiModelProperty("待移动ID")
+    @NotNull(message = "移动ID不能为空")
+    private Long id;
 
     @ApiModelProperty("前一个ID")
     private Long prevId;

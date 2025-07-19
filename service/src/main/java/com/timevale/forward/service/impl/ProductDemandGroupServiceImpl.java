@@ -28,14 +28,12 @@ import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -75,36 +73,78 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
     @Resource
     private ProductLineComponent productLineComponent;
 
+    /**
+     * 查询业务域内的待规划的产品需求
+     * @param productDemandGroupQueryList 产品分组查询条件信息
+     * @return
+     */
     @Override
-    public BaseResult<QueryResultVO<ProductDemandVO>> listProductDemandBacklog(ProductDemandGroupQueryList productDemandGroupQueryList) {
-        // mock返回一个QueryResultVO
-        QueryResultVO<ProductDemandVO> result = new QueryResultVO<>();
-        // mock分析列表为空
-        result.setAnalyseVOList(Collections.emptyList());
-        // 构造20条mock ProductDemandVO数据
-        List<ProductDemandVO> voList = new java.util.ArrayList<>();
-        for (int i = 1; i <= 20; i++) {
-            ProductDemandVO vo = new ProductDemandVO();
-            vo.setId((long) i); // mock主键id
-            vo.setName("mock产品需求" + i); // mock名称
-            vo.setStatus(1); // mock状态
-            vo.setOwner("owner" + i); // mock负责人
-            vo.setOwnerId("ownerId" + i); // mock负责人id
-            voList.add(vo);
+    public BaseResult<PageQueryResult<ProductDemandVO>> listProductDemandBacklog(ProductDemandGroupQueryList productDemandGroupQueryList) {
+        log.info("待规划产品需求接收参数:{}", productDemandGroupQueryList);
+        ProductDemandGroupListCondition condition = ProductDemandGroupCopier.INSTANCE.convert(productDemandGroupQueryList);
+        //是否打标
+        if (labelCondition(productDemandGroupQueryList, condition)) return BaseResult.success(ResultUtil.pageEmpty());
+
+        // 分页查询
+        PageHelper.startPage(productDemandGroupQueryList.getPageNum(), productDemandGroupQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+        List<ProductDemandListDO> productDemandListDO = productDemandGroupItemComponent.listProductDemandBacklog(condition);
+
+        List<ProductDemandVO> productDemandVOList = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
+        if (CollectionUtils.isEmpty(productDemandVOList)) {
+            return BaseResult.success(ResultUtil.pageEmpty());
         }
-        // 构造分页对象
+        List<Long> productDemandIds = productDemandListDO.stream().map(ProductDemandListDO::getId).collect(Collectors.toList());
+
+        Map<Long, List<BizLabelSimpleVO>> bizLabelMap = bizLabelComponent.getBizLabelMap(productDemandIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
+
+        for (ProductDemandVO a : productDemandVOList) {
+            a.setStatusName(ProductDemandStatusEnum.getTextByCode(a.getStatus()));
+            a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
+
+            List<BizLabelSimpleVO> labelSimpleVOList = bizLabelMap.get(a.getId());
+            if (CollectionUtils.isNotEmpty(labelSimpleVOList)) {
+                a.setLabelNames(labelSimpleVOList);
+            }
+
+            String typeName = a.getType().stream()
+                    .map(ProductDemandTypeEnum::getTextByCode)
+                    .collect(Collectors.joining(","));
+            a.setTypeName(typeName);
+        }
+
+        // 返回分页数据
+        PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
         PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
-        // 通过反射或直接赋值给items/total等字段（假设有setItems/setTotal方法）
-        try {
-            java.lang.reflect.Method setItems = pageQueryResult.getClass().getMethod("setItems", List.class);
-            setItems.invoke(pageQueryResult, voList); // 设置数据列表
-            java.lang.reflect.Method setTotal = pageQueryResult.getClass().getMethod("setTotal", long.class);
-            setTotal.invoke(pageQueryResult, 20L); // 设置总数
-        } catch (Exception e) {
-            // 反射失败忽略
+        pageQueryResult.setResultList(productDemandVOList);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+        return BaseResult.success(pageQueryResult);
+    }
+
+    private boolean labelCondition(ProductDemandGroupQueryList productDemandGroupQueryList, ProductDemandGroupListCondition condition) {
+        if (CollectionUtils.isNotEmpty(productDemandGroupQueryList.getLabelIds()) || CollectionUtils.isNotEmpty(productDemandGroupQueryList.getLabelCategoryIds())) {
+            Boolean containLabel = productDemandGroupQueryList.getContainLabel();
+
+            List<Long> newLabelIds = labelComponent.getLabelIds(productDemandGroupQueryList.getLabelIds(), productDemandGroupQueryList.getLabelCategoryIds());
+
+            // 查询包含且类别下没有标签
+            if (CollectionUtils.isEmpty(newLabelIds) && containLabel) {
+                return true;
+            }
+
+            // 查询使用这些标签的需求id
+            List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
+            List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+
+            if (containLabel) {
+                if (CollectionUtils.isEmpty(bizIds)) {
+                    return true;
+                }
+                condition.setInProductDemandIds(bizIds);
+            } else {
+                condition.setNotInProductDemandIds(bizIds);
+            }
         }
-        result.setPageQueryResult(pageQueryResult); // 设置分页结果
-        return BaseResult.success(result); // 返回成功结果
+        return false;
     }
 
     /**
@@ -136,29 +176,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
             condition.setOwnerIds(accountIds);
         }
         //是否打标
-        if (CollectionUtils.isNotEmpty(productDemandGroupQueryList.getLabelIds()) || CollectionUtils.isNotEmpty(productDemandGroupQueryList.getLabelCategoryIds())) {
-            Boolean containLabel = productDemandGroupQueryList.getContainLabel();
-
-            List<Long> newLabelIds = labelComponent.getLabelIds(productDemandGroupQueryList.getLabelIds(), productDemandGroupQueryList.getLabelCategoryIds());
-
-            // 查询包含且类别下没有标签
-            if (CollectionUtils.isEmpty(newLabelIds) && containLabel) {
-                return BaseResult.success(ResultUtil.pageEmpty());
-            }
-
-            // 查询使用这些标签的需求id
-            List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
-            List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
-
-            if (containLabel) {
-                if (CollectionUtils.isEmpty(bizIds)) {
-                    return BaseResult.success(ResultUtil.pageEmpty());
-                }
-                condition.setInProductDemandIds(bizIds);
-            } else {
-                condition.setNotInProductDemandIds(bizIds);
-            }
-        }
+        if (labelCondition(productDemandGroupQueryList, condition)) return BaseResult.success(ResultUtil.pageEmpty());
         // 设置分页
         PageHelper.startPage(productDemandGroupQueryList.getPageNum(), productDemandGroupQueryList.getPageSize());
         List<ProductDemandGroupDO> productDemandGroupListDO = productDemandGroupComponent.list(condition);
@@ -240,12 +258,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         if (productDemandGroup != null) {
             throw new BaseBizRuntimeException("该产品需求分组名称已存在,请修改后重试");
         }
-        double position = 0;
-        try {
-            position = PositionUtil.generate(productDemandGroupAddReq.getBizDomainId().toString(), System.currentTimeMillis());
-        } catch (Exception e) {
-            throw new BaseBizRuntimeException("获取产品需求分组位置错误,请修改后重试");
-        }
+        double position = PositionUtil.generate(productDemandGroupAddReq.getBizDomainId().toString(), System.currentTimeMillis());
         productDemandGroupDO.setPosition(position);
         productDemandGroupDO.setVersion(0L);
         productDemandGroupMapper.insert(productDemandGroupDO);
@@ -329,8 +342,64 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> moveProductDemandGroup(ProductDemandGroupMoveReq productDemandGroupMoveReq) {
         log.info("产品需求移动接收参数:{}", productDemandGroupMoveReq);
+        ProductDemandGroupDO targetGroupDO =  productDemandGroupMapper.get(productDemandGroupMoveReq.getId());
+        if (targetGroupDO == null) {
+            throw new BaseBizRuntimeException("产品需求分组不存在, 请刷新后重试");
+        }
+        ProductDemandGroupDO prevGroupDO = null;
+        if (productDemandGroupMoveReq.getPrevId() != null) {
+            prevGroupDO =  productDemandGroupMapper.get(productDemandGroupMoveReq.getPrevId());
+            if (prevGroupDO == null) {
+                throw new BaseBizRuntimeException("产品需求分组不存在, 请刷新后重试");
+            }
+        }
+        ProductDemandGroupDO nextGroupDO = null;
+        if (productDemandGroupMoveReq.getNextId() != null) {
+            nextGroupDO =  productDemandGroupMapper.get(productDemandGroupMoveReq.getNextId());
+            if (nextGroupDO == null) {
+                throw new BaseBizRuntimeException("产品需求分组不存在, 请刷新后重试");
+            }
+        }
+        double position;
+        if (productDemandGroupMoveReq.getPrevId() == null && productDemandGroupMoveReq.getNextId() == null) {
+            // 前后都为空，直接添加到第一个
+             position = PositionUtil.generate(productDemandGroupMoveReq.getBizDomainId().toString(), System.currentTimeMillis());
+        } else if (productDemandGroupMoveReq.getPrevId() == null && productDemandGroupMoveReq.getNextId() != null) {
+            // 前面为空，后面不为空
+            ProductDemandGroupDO nextPreGroupDO = productDemandGroupMapper.getPreByPosition(productDemandGroupMoveReq.getBizDomainId(), nextGroupDO.getPosition());
+            // 如果后面不是第一个（前面还存在）则(next.positon + next.pre.position)/2
+            if(nextPreGroupDO != null) {
+                position = (nextGroupDO.getPosition() + nextPreGroupDO.getPosition()) / 2;
+                // TODO 如果position和前后相同，说明需要重新排序
+            } else {
+                // 如果后面是第一个（前面不存在) 则直接添加到第一个
+                position = PositionUtil.generate(productDemandGroupMoveReq.getBizDomainId().toString(), System.currentTimeMillis());
+            }
+        } else {
+            // 前面不为空
+            ProductDemandGroupDO preNextPreGroupDO = productDemandGroupMapper.getNextByPosition(productDemandGroupMoveReq.getBizDomainId(), prevGroupDO.getPosition());
+            // 如果前面不是最后一个（后面还存在）则(pre.position + pre.next.position)/2
+            if (preNextPreGroupDO != null) {
+                position = (prevGroupDO.getPosition() + preNextPreGroupDO.getPosition()) / 2;
+                // TODO 如果position和前后相同，说明需要重新排序
+            } else {
+                // 如果前面是最后一个（后面不存在） 则pre.position - 5000000
+                position = prevGroupDO.getPosition() - 5000000;
+            }
+        }
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        String modifyManId = userInfo.getId();
+        String modifyMan = userInfo.getFullAlias();
+        val updateGroupDO = new ProductDemandGroupDO().setPosition(position)
+                .setVersion(targetGroupDO.getVersion());
+        updateGroupDO.setId(targetGroupDO.getId());
+        updateGroupDO.setModifyMan(modifyMan);
+        updateGroupDO.setModifyManId(modifyManId);
+        productDemandGroupMapper.updatePosition(updateGroupDO);
+        // TODO 如果更新失败【乐观锁更新失败，唯一键冲突失败】， 重试或者提示刷新页面重试
         return BaseResult.success(true);
     }
 

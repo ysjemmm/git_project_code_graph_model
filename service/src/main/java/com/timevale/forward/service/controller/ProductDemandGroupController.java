@@ -32,7 +32,7 @@ public class ProductDemandGroupController {
 
     @ApiOperation("查询待排序的产品需求")
     @PostMapping("/listProductDemandBacklog")
-    public BaseResult<QueryResultVO<ProductDemandVO>> listProductDemandBacklog(@RequestBody @Valid ProductDemandGroupQueryList productDemandGroupQueryList) {
+    public BaseResult<PageQueryResult<ProductDemandVO>> listProductDemandBacklog(@RequestBody @Valid ProductDemandGroupQueryList productDemandGroupQueryList) {
         return productDemandGroupService.listProductDemandBacklog(productDemandGroupQueryList);
     }
 

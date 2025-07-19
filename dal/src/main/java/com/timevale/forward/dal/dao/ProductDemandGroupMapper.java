@@ -3,10 +3,12 @@ package com.timevale.forward.dal.dao;
 import com.timevale.forward.dal.condition.ProductDemandGroupListCondition;
 import com.timevale.forward.dal.entity.ProductDemandGroupDO;
 import org.apache.ibatis.annotations.Param;
+
 import java.util.List;
 
 /**
  * 产品需求分组表Mapper
+ *
  * @author by qiyuan
  * @date 2025/07/14 14:42
  */
@@ -22,6 +24,7 @@ public interface ProductDemandGroupMapper {
 
     /**
      * 新增一条产品需求分组信息
+     *
      * @param productDemandGroupDO 产品需求分组DO
      * @return 影响行数
      */
@@ -29,22 +32,33 @@ public interface ProductDemandGroupMapper {
 
     /**
      * 更新产品需求分组信息
+     *
      * @param productDemandGroupDO 产品需求分组DO
      * @return 影响行数
      */
     int update(ProductDemandGroupDO productDemandGroupDO);
 
     /**
+     * 更新产品需求分组位置
+     *
+     * @param  productDemandGroupDO 产品需求分组DO
+     * @return 影响行数
+     */
+    int updatePosition(ProductDemandGroupDO productDemandGroupDO);
+
+    /**
      * 删除产品需求分组信息
-     * @param id 主键id
+     *
+     * @param id          主键id
      * @param modifyManId 修改人id
-     * @param modifyMan 修改人
+     * @param modifyMan   修改人
      * @return 影响行数
      */
     int delete(@Param("id") Long id, @Param("modifyManId") String modifyManId, @Param("modifyMan") String modifyMan);
 
     /**
      * 根据主键id获取产品需求分组信息
+     *
      * @param id 主键id
      * @return 产品需求分组DO
      */
@@ -52,9 +66,29 @@ public interface ProductDemandGroupMapper {
 
     /**
      * 根据业务域id和名称查询产品需求分组
+     *
      * @param bizDomainId 业务域id
-     * @param name 分组名称
+     * @param name        分组名称
      * @return 产品需求分组DO
      */
     ProductDemandGroupDO getByBizDomainIdAndName(@Param("bizDomainId") Long bizDomainId, @Param("name") String name);
+
+    /**
+     * 获取当前位置前一个分组
+     *
+     * @param bizDomainId 业务域id
+     * @param position    当前位置
+     * @return 产品需求分组DO
+     */
+    ProductDemandGroupDO getPreByPosition(@Param("bizDomainId") Long bizDomainId, @Param("position") Double position);
+
+    /**
+     * 获取当前位置后一个分组
+     *
+     * @param bizDomainId 业务域id
+     * @param position    当前位置
+     * @return 产品需求分组DO
+     */
+    ProductDemandGroupDO getNextByPosition(@Param("bizDomainId") Long bizDomainId, @Param("position") Double position);
+
 } 
