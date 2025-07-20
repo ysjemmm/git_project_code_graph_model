@@ -344,21 +344,21 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> moveProductDemandGroup(ProductDemandGroupMoveReq productDemandGroupMoveReq) {
-        log.info("产品需求移动接收参数:{}", productDemandGroupMoveReq);
-        ProductDemandGroupDO targetGroupDO =  productDemandGroupMapper.get(productDemandGroupMoveReq.getId());
+        log.info("产品需求移动分组接收参数:{}", productDemandGroupMoveReq);
+        ProductDemandGroupDO targetGroupDO =  productDemandGroupMapper.getByIdAndBizDomainId(productDemandGroupMoveReq.getBizDomainId(), productDemandGroupMoveReq.getId());
         if (targetGroupDO == null) {
             throw new BaseBizRuntimeException("产品需求分组不存在, 请刷新后重试");
         }
         ProductDemandGroupDO prevGroupDO = null;
         if (productDemandGroupMoveReq.getPrevId() != null) {
-            prevGroupDO =  productDemandGroupMapper.get(productDemandGroupMoveReq.getPrevId());
+            prevGroupDO =  productDemandGroupMapper.getByIdAndBizDomainId(productDemandGroupMoveReq.getBizDomainId(), productDemandGroupMoveReq.getPrevId());
             if (prevGroupDO == null) {
                 throw new BaseBizRuntimeException("产品需求分组不存在, 请刷新后重试");
             }
         }
         ProductDemandGroupDO nextGroupDO = null;
         if (productDemandGroupMoveReq.getNextId() != null) {
-            nextGroupDO =  productDemandGroupMapper.get(productDemandGroupMoveReq.getNextId());
+            nextGroupDO =  productDemandGroupMapper.getByIdAndBizDomainId(productDemandGroupMoveReq.getBizDomainId(), productDemandGroupMoveReq.getNextId());
             if (nextGroupDO == null) {
                 throw new BaseBizRuntimeException("产品需求分组不存在, 请刷新后重试");
             }
@@ -404,8 +404,66 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
     }
 
     @Override
-    public BaseResult<Boolean> moveProductDemand(ProductDemandGroupMoveReq productDemandGroupMoveReq) {
-        log.info("产品需求分组移动接收参数:{}", productDemandGroupMoveReq);
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> moveProductDemand(ProductDemandGroupItemMoveReq productDemandGroupItemMoveReq) {
+        log.info("产品需求移动接收参数:{}", productDemandGroupItemMoveReq);
+        ProductDemandGroupItemDO targetGroupItemDO =  productDemandGroupItemMapper.getByBizDomainIdAndId(productDemandGroupItemMoveReq.getBizDomainId(), productDemandGroupItemMoveReq.getId());
+        if (targetGroupItemDO == null) {
+            throw new BaseBizRuntimeException("产品需求分组的产品需求不存在, 请刷新后重试");
+        }
+        ProductDemandGroupItemDO prevGroupItemDO = null;
+        if (productDemandGroupItemMoveReq.getPrevId() != null) {
+            prevGroupItemDO =  productDemandGroupItemMapper.getByGroupIdAndId(productDemandGroupItemMoveReq.getBizDomainId(),
+                    productDemandGroupItemMoveReq.getTargetGroupId(), productDemandGroupItemMoveReq.getPrevId());
+            if (prevGroupItemDO == null) {
+                throw new BaseBizRuntimeException("产品需求分组的产品需求不存在, 请刷新后重试");
+            }
+        }
+        ProductDemandGroupItemDO nextGroupItemDO = null;
+        if (productDemandGroupItemMoveReq.getNextId() != null) {
+            nextGroupItemDO =  productDemandGroupItemMapper.getByGroupIdAndId(productDemandGroupItemMoveReq.getBizDomainId(),
+                    productDemandGroupItemMoveReq.getTargetGroupId(), productDemandGroupItemMoveReq.getNextId());
+            if (nextGroupItemDO == null) {
+                throw new BaseBizRuntimeException("产品需求分组的产品需求不存在, 请刷新后重试");
+            }
+        }
+        double position;
+        if (productDemandGroupItemMoveReq.getPrevId() == null && productDemandGroupItemMoveReq.getNextId() == null) {
+            // 前后都为空，直接添加到第一个
+            position = PositionUtil.generate(productDemandGroupItemMoveReq.getBizDomainId().toString(), System.currentTimeMillis());
+        } else if (productDemandGroupItemMoveReq.getPrevId() == null && productDemandGroupItemMoveReq.getNextId() != null) {
+            // 前面为空，后面不为空
+            ProductDemandGroupItemDO nextPreGroupItemDO = productDemandGroupItemMapper.getPreByPosition(targetGroupItemDO.getProductDemandGroupId(), nextGroupItemDO.getPosition());
+            // 如果后面不是第一个（前面还存在）则(next.positon + next.pre.position)/2
+            if(nextPreGroupItemDO != null) {
+                position = (nextGroupItemDO.getPosition() + nextPreGroupItemDO.getPosition()) / 2;
+                // TODO 如果position和前后相同，说明需要重新排序
+            } else {
+                // 如果后面是第一个（前面不存在) 则直接添加到第一个
+                position = PositionUtil.generate(productDemandGroupItemMoveReq.getBizDomainId().toString(), System.currentTimeMillis());
+            }
+        } else {
+            // 前面不为空
+            ProductDemandGroupItemDO preNextPreGroupItemDO = productDemandGroupItemMapper.getNextByPosition(targetGroupItemDO.getProductDemandGroupId(), prevGroupItemDO.getPosition());
+            // 如果前面不是最后一个（后面还存在）则(pre.position + pre.next.position)/2
+            if (preNextPreGroupItemDO != null) {
+                position = (prevGroupItemDO.getPosition() + preNextPreGroupItemDO.getPosition()) / 2;
+                // TODO 如果position和前后相同，说明需要重新排序
+            } else {
+                // 如果前面是最后一个（后面不存在） 则pre.position - 5000000
+                position = prevGroupItemDO.getPosition() - 5000000;
+            }
+        }
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        String modifyManId = userInfo.getId();
+        String modifyMan = userInfo.getFullAlias();
+        val updateGroupItemDO = new ProductDemandGroupItemDO().setPosition(position)
+                .setVersion(targetGroupItemDO.getVersion());
+        updateGroupItemDO.setId(targetGroupItemDO.getId());
+        updateGroupItemDO.setModifyMan(modifyMan);
+        updateGroupItemDO.setModifyManId(modifyManId);
+        productDemandGroupItemMapper.updatePosition(updateGroupItemDO);
+        // TODO 如果更新失败【乐观锁更新失败，唯一键冲突失败】， 重试或者提示刷新页面重试
         return BaseResult.success(true);
     }
 }

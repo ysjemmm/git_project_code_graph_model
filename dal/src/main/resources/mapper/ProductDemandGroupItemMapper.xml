@@ -173,5 +173,56 @@
         WHERE product_demand_group_id = #{groupId} and is_deleted = false
     </update>
 
+    <!-- 根据主键id和业务域id获取产品需求分组和产品需求关系 -->
+    <select id="get" resultType="com.timevale.forward.dal.entity.ProductDemandGroupItemDO">
+        SELECT * FROM product_demand_group_item WHERE id = #{id} AND is_deleted = false
+    </select>
+
+    <!-- 根据主键id和业务域id获取产品需求分组和产品需求关系 -->
+    <select id="getByBizDomainIdAndId" resultType="com.timevale.forward.dal.entity.ProductDemandGroupItemDO">
+        select pdgi.* from product_demand_group_item pdgi, product_demand_group pdg
+        where pdgi.product_demand_group_id = pdg.id
+          and pdg.is_deleted = false
+          and pdgi.is_deleted = false
+          and pdgi.id = #{id}
+          and pdg.biz_domain_id = #{bizDomainId}
+    </select>
+
+    <!-- 根据主键id和分组id获取产品需求分组和产品需求关系 -->
+    <select id="getByGroupIdAndId" resultType="com.timevale.forward.dal.entity.ProductDemandGroupItemDO">
+        select pdgi.* from product_demand_group_item pdgi, product_demand_group pdg
+        where pdgi.product_demand_group_id = pdg.id
+          and pdg.is_deleted = false
+          and pdgi.is_deleted = false
+          and pdgi.id = #{id}
+          and pdg.biz_domain_id = #{bizDomainId}
+          and pdgi.product_demand_group_id = #{groupId}
+    </select>
+
+    <select id="getPreByPosition" resultType="com.timevale.forward.dal.entity.ProductDemandGroupItemDO">
+        select *
+        from product_demand_group_item
+        where product_demand_group_id = #{productDemandGroupId}
+          and is_deleted = false
+          and `position` &gt; #{position}
+        order by `position` asc limit 1
+    </select>
+    <select id="getNextByPosition" resultType="com.timevale.forward.dal.entity.ProductDemandGroupItemDO">
+        select *
+        from product_demand_group_item
+        where product_demand_group_id = #{productDemandGroupId}
+          and is_deleted = false
+          and `position` &lt; #{position}
+        order by `position` desc limit 1
+    </select>
+
+    <update id="updatePosition">
+        UPDATE product_demand_group_item
+        SET position = #{position},
+            version = version + 1,
+            modify_man = #{modifyMan},
+            modify_man_id = #{modifyManId}
+        WHERE id = #{id} and is_deleted = false and version = #{version}
+    </update>
 
 </mapper> 

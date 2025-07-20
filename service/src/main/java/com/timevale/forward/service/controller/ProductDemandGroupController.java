@@ -74,8 +74,8 @@ public class ProductDemandGroupController {
 
     @ApiOperation("产品需求拖动")
     @PostMapping("/moveProductDemand")
-    public BaseResult<Boolean> moveProductDemand(@RequestBody @Valid ProductDemandGroupMoveReq productDemandGroupMoveReq) {
-        return productDemandGroupService.moveProductDemand(productDemandGroupMoveReq);
+    public BaseResult<Boolean> moveProductDemand(@RequestBody @Valid ProductDemandGroupItemMoveReq productDemandGroupItemMoveReq) {
+        return productDemandGroupService.moveProductDemand(productDemandGroupItemMoveReq);
     }
 
     @ApiOperation("产品需求分组拖动")

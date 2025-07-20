@@ -1,6 +1,7 @@
 package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.condition.ProductDemandGroupListCondition;
+import com.timevale.forward.dal.entity.ProductDemandGroupItemDO;
 import com.timevale.forward.dal.entity.ProductDemandGroupItemListDO;
 import com.timevale.forward.dal.entity.ProductDemandListDO;
 import org.apache.ibatis.annotations.Param;
@@ -38,5 +39,57 @@ public interface ProductDemandGroupItemMapper {
      */
     int deleteByGroupId(@Param("groupId") Long groupId, @Param("modifyManId") String modifyManId, @Param("modifyMan") String modifyMan);
 
+    /**
+     * 根据主键id获取产品需求分组和产品需求关系
+     *
+     * @param id 主键id
+     * @return 产品需求分组和产品需求关系
+     */
+    ProductDemandGroupItemDO get(@Param("id") Long id);
 
+    /**
+     * 根据业务域和主键id获取产品需求分组和产品需求关系
+     *
+     * @param bizDomainId 业务域id
+     * @param id 主键id
+     * @return 产品需求分组和产品需求关系
+     */
+    ProductDemandGroupItemDO getByBizDomainIdAndId(@Param("bizDomainId") Long bizDomainId, @Param("id") Long id);
+
+
+    /**
+     * 根据分组id和主键id获取产品需求分组和产品需求关系
+     *
+     * @param bizDomainId 业务域id
+     * @param groupId 分组id
+     * @param id 主键id
+     * @return 产品需求分组和产品需求关系
+     */
+    ProductDemandGroupItemDO getByGroupIdAndId(@Param("bizDomainId") Long bizDomainId, @Param("groupId") Long groupId, @Param("id") Long id);
+
+    /**
+     * 获取当前位置前一个分组和产品需求关系
+     *
+     * @param productDemandGroupId 分组id
+     * @param position    当前位置
+     * @return 产品需求分组和产品需求关系
+     */
+    ProductDemandGroupItemDO getPreByPosition(@Param("productDemandGroupId") Long productDemandGroupId, @Param("position") Double position);
+
+    /**
+     * 获取当前位置后一个分组和产品需求关系
+     *
+     * @param productDemandGroupId 分组id
+     * @param position    当前位置
+     * @return 产品需求分组和产品需求关系
+     */
+    ProductDemandGroupItemDO getNextByPosition(@Param("productDemandGroupId") Long productDemandGroupId, @Param("position") Double position);
+
+    /**
+     * 更新产品需求分组和产品需求关系的位置
+     *
+     * @param  productDemandGroupItemDO 产品需求分组和产品需求关系
+     * @return 影响行数
+     */
+    int updatePosition(ProductDemandGroupItemDO productDemandGroupItemDO);
 } 

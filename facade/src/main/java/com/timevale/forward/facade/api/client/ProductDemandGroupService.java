@@ -72,15 +72,15 @@ public interface ProductDemandGroupService {
 
     /**
      * 移动产品需求
-     * @param productDemandGroupMoveReq 产品需求移动请求
+     * @param productDemandGroupMoveReq 产品需求分组移动请求
      * @return 是否成功
      */
     BaseResult<Boolean> moveProductDemandGroup(ProductDemandGroupMoveReq productDemandGroupMoveReq);
 
     /**
      * 移动产品需分组
-     * @param productDemandGroupMoveReq 产品需求分组移动请求
+     * @param productDemandGroupItemMoveReq 产品需求移动请求
      * @return 是否成功
      */
-    BaseResult<Boolean> moveProductDemand(ProductDemandGroupMoveReq productDemandGroupMoveReq);
+    BaseResult<Boolean> moveProductDemand(ProductDemandGroupItemMoveReq productDemandGroupItemMoveReq);
 } 

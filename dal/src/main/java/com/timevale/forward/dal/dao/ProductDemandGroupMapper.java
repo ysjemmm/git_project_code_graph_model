@@ -65,6 +65,15 @@ public interface ProductDemandGroupMapper {
     ProductDemandGroupDO get(@Param("id") Long id);
 
     /**
+     * 根据业务域id和id查询产品需求分组
+     *
+     * @param bizDomainId 业务域id
+     * @param id 主键id
+     * @return 产品需求分组DO
+     */
+    ProductDemandGroupDO getByIdAndBizDomainId(@Param("bizDomainId") Long bizDomainId, @Param("id") Long id);
+
+    /**
      * 根据业务域id和名称查询产品需求分组
      *
      * @param bizDomainId 业务域id

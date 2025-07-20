@@ -148,6 +148,10 @@
         SELECT * FROM product_demand_group WHERE id = #{id} AND is_deleted = false
     </select>
 
+    <!-- 根据主键id和业务域id获取产品需求分组信息 -->
+    <select id="getByIdAndBizDomainId" resultType="com.timevale.forward.dal.entity.ProductDemandGroupDO">
+        SELECT * FROM product_demand_group WHERE id = #{id} AND biz_domain_id = #{bizDomainId} AND is_deleted = false
+    </select>
 
     <select id="getPreByPosition" resultType="com.timevale.forward.dal.entity.ProductDemandGroupDO">
         select * from product_demand_group
