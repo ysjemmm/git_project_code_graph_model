@@ -98,9 +98,9 @@
     <!-- 新增一条产品需求分组信息 -->
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProductDemandGroupDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
         INSERT INTO product_demand_group
-        (name, biz_domain_id, position, version, owner, owner_id, project_id, status, create_man_id, create_man)
+        (name, biz_domain_id, position, version, owner, owner_id, project_id, status, create_man_id, create_man, is_active)
         VALUES
-        (#{name}, #{bizDomainId}, #{position}, #{version}, #{owner}, #{ownerId}, #{projectId}, #{status}, #{createManId}, #{createMan})
+        (#{name}, #{bizDomainId}, #{position}, #{version}, #{owner}, #{ownerId}, #{projectId}, #{status}, #{createManId}, #{createMan}, #{isActive})
     </insert>
 
     <!-- 根据业务域id和名称查询产品需求分组 -->
@@ -139,7 +139,7 @@
     <!-- 删除产品需求分组信息 -->
     <update id="delete">
         UPDATE product_demand_group
-        SET is_deleted = true, modify_man_id = #{modifyManId}, modify_man = #{modifyMan}
+        SET is_deleted = true, modify_man_id = #{modifyManId}, modify_man = #{modifyMan}, is_active = null
         WHERE id = #{id} and is_deleted = false
     </update>
 

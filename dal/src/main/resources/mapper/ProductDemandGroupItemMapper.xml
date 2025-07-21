@@ -169,7 +169,7 @@
     <!-- 删除产品需求分组和产品需求关系 -->
     <update id="deleteByGroupId">
         UPDATE product_demand_group_item
-        SET is_deleted = true, modify_man_id = #{modifyManId}, modify_man = #{modifyMan}
+        SET is_deleted = true, modify_man_id = #{modifyManId}, modify_man = #{modifyMan}, is_active = null
         WHERE product_demand_group_id = #{groupId} and is_deleted = false
     </update>
 
@@ -199,6 +199,14 @@
           and pdgi.product_demand_group_id = #{groupId}
     </select>
 
+    <!-- 根据主键id和分组id获取产品需求分组和产品需求关系 -->
+    <select id="getByGroupIdAndDemandId" resultType="com.timevale.forward.dal.entity.ProductDemandGroupItemDO">
+        select pdgi.* from product_demand_group_item pdgi
+        where  pdgi.is_deleted = false
+          and pdgi.product_demand_id = #{demandId}
+          and pdgi.product_demand_group_id = #{groupId}
+    </select>
+
     <select id="getPreByPosition" resultType="com.timevale.forward.dal.entity.ProductDemandGroupItemDO">
         select *
         from product_demand_group_item
@@ -219,10 +227,25 @@
     <update id="updatePosition">
         UPDATE product_demand_group_item
         SET position = #{position},
+            product_demand_group_id = #{productDemandGroupId},
             version = version + 1,
             modify_man = #{modifyMan},
             modify_man_id = #{modifyManId}
         WHERE id = #{id} and is_deleted = false and version = #{version}
     </update>
 
+    <!-- 新增 -->
+    <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProductDemandGroupItemDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO product_demand_group_item
+        (product_demand_id, product_demand_group_id, position, version, create_man_id, create_man, is_active)
+        VALUES
+            (#{productDemandId}, #{productDemandGroupId}, #{position}, #{version}, #{createManId}, #{createMan}, #{isActive})
+    </insert>
+
+    <!-- 删除 -->
+    <update id="delete">
+        UPDATE product_demand_group_item
+        SET is_deleted = true, modify_man_id = #{modifyManId}, modify_man = #{modifyMan}, is_active = null
+        WHERE id = #{id} and is_deleted = false
+    </update>
 </mapper> 

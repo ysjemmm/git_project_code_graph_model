@@ -22,4 +22,9 @@ public class ProductDemandGroupItemDO extends BaseDO {
     private Double position;
     // 版本号
     private Long version;
+    /**
+     * 虚拟列，用于唯一索引
+     * 已删除的这个字段为null
+     */
+    private Boolean isActive;
 } 

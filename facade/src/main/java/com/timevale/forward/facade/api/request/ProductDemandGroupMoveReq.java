@@ -23,7 +23,7 @@ public class ProductDemandGroupMoveReq extends BaseReq {
 
     @ApiModelProperty("待移动ID")
     @NotNull(message = "移动ID不能为空")
-    private Long id;
+    private Long id; // moveIn时时productDemandId， 其他时为productDemandGroupItemId
 
     @ApiModelProperty("前一个ID")
     private Long prevId;
