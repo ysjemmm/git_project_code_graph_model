@@ -1,6 +1,7 @@
 package com.timevale.forward.dal.condition;
 
 import com.timevale.forward.dal.annotation.WildcardEscape;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -257,6 +258,11 @@ public class ProjectListCondition {
      * 项目验收状态:0-无需验收，1-未发起验收，2-已发起验收，3-验收完毕
      */
     private Integer projectAcceptanceStatus;
+
+    /**
+     * 是否发送工时通知
+     */
+    private Integer workHoursNotify;
 
     private Integer pageNum = 1;
 
