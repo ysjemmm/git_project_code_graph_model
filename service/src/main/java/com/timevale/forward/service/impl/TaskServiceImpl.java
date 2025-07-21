@@ -172,7 +172,10 @@ public class TaskServiceImpl implements TaskService {
         //耗时表入库
         insertTaskTime(taskDO);
         // 计算任务耗时
-//        calTaskTime(taskDO);
+        ProjectDO projectDO = projectMapper.get(taskDO.getProjectId());
+        if (projectDO != null && projectDO.getKind() != ProjectKindEnum.PBG_BASE.getCode()) {
+            calTaskTime(taskDO);
+        }
 
         if (TaskStatusEnum.DONE.getCode().equals(taskDO.getStatus())) {
             // 更新任务耗时
@@ -226,7 +229,10 @@ public class TaskServiceImpl implements TaskService {
         sendDingTodo(taskDO, executorIds);
 
         // 计算任务耗时
-//        calTaskTime(taskDO);
+        ProjectDO projectDO = projectMapper.get(taskDO.getProjectId());
+        if (projectDO != null && projectDO.getKind() != ProjectKindEnum.PBG_BASE.getCode()) {
+            calTaskTime(taskDO);
+        }
 
         taskMapper.update(taskDO);
 
@@ -389,7 +395,10 @@ public class TaskServiceImpl implements TaskService {
         taskTimeComponent.updateEndDate(taskDO.getId(), taskDO.getActualEndDate());
 
         // 计算任务耗时
-//        calTaskTime(taskDO);
+        ProjectDO projectDO = projectMapper.get(taskDO.getProjectId());
+        if (projectDO != null && projectDO.getKind() != ProjectKindEnum.PBG_BASE.getCode()) {
+            calTaskTime(taskDO);
+        }
         taskMapper.update(taskDO);
         //更新待办
         List<String> existExecutorIds = personComponent.select(taskId, PersonTypeEnum.TASK_EXECUTOR.getCode())
