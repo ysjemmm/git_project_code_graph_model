@@ -150,7 +150,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             throw new BaseBizRuntimeException("不存在对应的工时记录");
         }
         // 只有任务执行人可删除
-        List<PersonDO> personDOList = personComponent.select(workHoursRecordId, PersonTypeEnum.TASK_EXECUTOR.getCode());
+        List<PersonDO> personDOList = personComponent.select(workHoursRecordDO.getWorkItemId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
         List<String> executorIds = PersonCopier.INSTANCE.transform(personDOList).stream().map(PersonVO::getUserId).collect(Collectors.toList());
         if (!executorIds.contains(workHoursRecordDO.getCreateManId())) {
             throw new BaseBizRuntimeException("非任务执行人不能删除该任务工时");
