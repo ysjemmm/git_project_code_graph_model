@@ -31,6 +31,19 @@ public class LocalSessionUtils {
             return (UserInfo)o;
         }
 
+        //如果指定了登录用户，则不在用户中心网关的用户
+        String loginUser = System.getProperty("loginUser");
+        if (StringUtils.isNotBlank(loginUser)) {
+            String[] loginUserInfo = loginUser.split(",");
+            if (loginUserInfo.length == 3) {
+                UserInfo userInfo = new UserInfo();
+                userInfo.setId(loginUserInfo[0]);
+                userInfo.setAlias(loginUserInfo[1]);
+                userInfo.setName(loginUserInfo[2]);
+                return userInfo;
+            }
+        }
+
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         if (attributes == null) {
             UserInfo userInfo = new UserInfo();

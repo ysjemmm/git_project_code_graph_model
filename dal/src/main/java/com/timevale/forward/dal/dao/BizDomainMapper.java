@@ -14,6 +14,13 @@ import java.util.List;
 public interface BizDomainMapper {
 
     /**
+     * 获取业务域列表, ownerId排在前面
+     *
+     * @return 列表
+     */
+    List<BizDomainDO> selectWithOrder(@Param("ownerId") String ownerId, @Param("name") String name, @Param("listingStatus") Integer listingStatus);
+
+    /**
      * 获取业务域列表
      *
      * @return 列表

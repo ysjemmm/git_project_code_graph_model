@@ -18,6 +18,8 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDomainCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
+import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -42,6 +44,20 @@ public class BizDomainServiceImpl implements BizDomainService {
     private BizDomainMapper bizDomainMapper;
     @Resource
     private ProductLineMapper productLineMapper;
+
+    @Override
+    public BaseResult<PageQueryResult<BizDomainVO>> bizDomainListWithOrder(BizDomainQueryList bizDomainQueryList) {
+
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        PageHelper.startPage(bizDomainQueryList.pageNum, bizDomainQueryList.pageSize);
+        List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectWithOrder(userInfo.getId(), bizDomainQueryList.getName(), bizDomainQueryList.getListingStatus());
+        List<BizDomainVO> bizDomainVOList = BizDomainCopier.INSTANCE.convert(bizDomainDOList);
+        PageInfo<BizDomainDO> pageInfo = new PageInfo<>(bizDomainDOList);
+        PageQueryResult<BizDomainVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(bizDomainVOList);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+        return BaseResult.success(pageQueryResult);
+    }
 
     @Override
     public BaseResult<List<BizDomainVO>> bizDomainList() {

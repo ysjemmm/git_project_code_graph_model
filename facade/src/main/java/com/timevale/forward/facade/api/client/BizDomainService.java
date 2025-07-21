@@ -22,6 +22,14 @@ public interface BizDomainService {
     /**
      * 列表
      *
+     * @return 返回业务域列表[当前用户owner派在前面]
+     */
+    BaseResult<PageQueryResult<BizDomainVO>> bizDomainListWithOrder(BizDomainQueryList bizDomainQueryList);
+
+
+    /**
+     * 列表
+     *
      * @return 返回业务域列表
      */
     BaseResult<List<BizDomainVO>> bizDomainList();

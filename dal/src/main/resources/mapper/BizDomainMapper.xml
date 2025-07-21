@@ -2,6 +2,31 @@
 <!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
 <mapper namespace="com.timevale.forward.dal.dao.BizDomainMapper">
 
+    <select id="selectWithOrder" resultType="com.timevale.forward.dal.entity.BizDomainDO">
+        select bd.*
+        from biz_domain bd
+        left join product_line pl on bd.id = pl.biz_domain_id and pl.owner_id = #{ownerId} and pl.is_deleted  = false
+        <where>
+            bd.is_deleted  = false
+            <if test="name != null and name!=''">
+                AND bd.`name` like concat('%',#{name},'%')
+            </if>
+            <if test="listingStatus != null">
+                AND bd.listing_status=#{listingStatus}
+            </if>
+        </where>
+        group by bd.id  -- 确保每个 biz_domain 只出现一次
+        order by
+        case
+        when bd.owner_id = #{ownerId} then 0
+        -- 当前用户拥有 biz_domain
+        when SUM(pl.id is not null) > 0 then 1
+        -- 当前用户拥有至少一个 product_line
+        else 2
+        -- 其他情况
+        end
+    </select>
+
     <select id="selectAllBizDomain" resultType="com.timevale.forward.dal.entity.BizDomainDO">
         select *
         from biz_domain

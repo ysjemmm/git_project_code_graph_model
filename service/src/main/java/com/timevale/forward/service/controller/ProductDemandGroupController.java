@@ -1,12 +1,12 @@
 package com.timevale.forward.service.controller;
 
-import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.client.ProductDemandGroupService;
 import com.timevale.forward.facade.api.query.ProductDemandGroupQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.ProductDemandGroupVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
-import com.timevale.forward.facade.api.result.QueryResultVO;
+import com.timevale.forward.service.utils.ResultUtils;
+import com.timevale.mandarin.common.result.BusinessResult;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -32,56 +32,56 @@ public class ProductDemandGroupController {
 
     @ApiOperation("查询待排序的产品需求")
     @PostMapping("/listProductDemandBacklog")
-    public BaseResult<PageQueryResult<ProductDemandVO>> listProductDemandBacklog(@RequestBody @Valid ProductDemandGroupQueryList productDemandGroupQueryList) {
-        return productDemandGroupService.listProductDemandBacklog(productDemandGroupQueryList);
+    public BusinessResult<PageQueryResult<ProductDemandVO>> listProductDemandBacklog(@RequestBody @Valid ProductDemandGroupQueryList productDemandGroupQueryList) {
+        return ResultUtils.result(productDemandGroupService.listProductDemandBacklog(productDemandGroupQueryList));
     }
 
     @ApiOperation("产品需求分组列表")
     @PostMapping("/list")
-    public BaseResult<PageQueryResult<ProductDemandGroupVO>> listProductDemandGroup(@RequestBody @Valid ProductDemandGroupQueryList productDemandGroupQueryList) {
-        return productDemandGroupService.listProductDemandGroup(productDemandGroupQueryList);
+    public BusinessResult<PageQueryResult<ProductDemandGroupVO>> listProductDemandGroup(@RequestBody @Valid ProductDemandGroupQueryList productDemandGroupQueryList) {
+        return ResultUtils.result(productDemandGroupService.listProductDemandGroup(productDemandGroupQueryList));
     }
 
     @ApiOperation("产品需求分组")
     @GetMapping("/get")
-    public BaseResult<ProductDemandGroupVO> get(@RequestParam Long id) {
-        return productDemandGroupService.getProductDemandGroupById( id);
+    public BusinessResult<ProductDemandGroupVO> get(@RequestParam Long id) {
+        return ResultUtils.result(productDemandGroupService.getProductDemandGroupById( id));
     }
 
     @ApiOperation("产品需求分组新增")
     @PostMapping("/add")
-    public BaseResult<Boolean> add(@RequestBody @Valid ProductDemandGroupAddReq productDemandGroupAddReq) {
-        return productDemandGroupService.add(productDemandGroupAddReq);
+    public BusinessResult<Boolean> add(@RequestBody @Valid ProductDemandGroupAddReq productDemandGroupAddReq) {
+        return ResultUtils.result(productDemandGroupService.add(productDemandGroupAddReq));
     }
 
     @ApiOperation("产品需求分组修改")
     @PostMapping("/modify")
-    public BaseResult<Boolean> modify(@RequestBody @Valid ProductDemandGroupModifyReq productDemandGroupModifyReq) {
-        return productDemandGroupService.modify(productDemandGroupModifyReq);
+    public BusinessResult<Boolean> modify(@RequestBody @Valid ProductDemandGroupModifyReq productDemandGroupModifyReq) {
+        return ResultUtils.result(productDemandGroupService.modify(productDemandGroupModifyReq));
     }
 
     @ApiOperation("产品需求分组删除")
     @PostMapping("/delete")
-    public BaseResult<Boolean> delete(@RequestBody @Valid ProductDemandGroupReq productDemandGroupReq) {
-        return productDemandGroupService.delete(productDemandGroupReq);
+    public BusinessResult<Boolean> delete(@RequestBody @Valid ProductDemandGroupReq productDemandGroupReq) {
+        return ResultUtils.result(productDemandGroupService.delete(productDemandGroupReq));
     }
 
     @ApiOperation("产品需求分组绑定项目")
     @PostMapping("/bindProject")
-    public BaseResult<Boolean> bindProject(@RequestBody @Valid ProductDemandGroupProjectReq productDemandGroupProjectReq) {
-        return productDemandGroupService.bindProject(productDemandGroupProjectReq);
+    public BusinessResult<Boolean> bindProject(@RequestBody @Valid ProductDemandGroupProjectReq productDemandGroupProjectReq) {
+        return ResultUtils.result(productDemandGroupService.bindProject(productDemandGroupProjectReq));
     }
 
     @ApiOperation("产品需求拖动")
     @PostMapping("/moveProductDemand")
-    public BaseResult<Boolean> moveProductDemand(@RequestBody @Valid ProductDemandGroupItemMoveReq productDemandGroupItemMoveReq) {
-        return productDemandGroupService.moveProductDemand(productDemandGroupItemMoveReq);
+    public BusinessResult<Boolean> moveProductDemand(@RequestBody @Valid ProductDemandGroupItemMoveReq productDemandGroupItemMoveReq) {
+        return ResultUtils.result(productDemandGroupService.moveProductDemand(productDemandGroupItemMoveReq));
     }
 
     @ApiOperation("产品需求分组拖动")
     @PostMapping("/moveProductDemandGroup")
-    public BaseResult<Boolean> moveProductDemandGroup(@RequestBody @Valid ProductDemandGroupMoveReq productDemandGroupMoveReq) {
-        return productDemandGroupService.moveProductDemandGroup(productDemandGroupMoveReq);
+    public BusinessResult<Boolean> moveProductDemandGroup(@RequestBody @Valid ProductDemandGroupMoveReq productDemandGroupMoveReq) {
+        return ResultUtils.result(productDemandGroupService.moveProductDemandGroup(productDemandGroupMoveReq));
     }
 
 }
