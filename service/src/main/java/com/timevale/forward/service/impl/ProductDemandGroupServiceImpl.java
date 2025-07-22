@@ -33,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 /**
@@ -77,8 +78,9 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
 
     /**
      * 查询业务域内的待规划的产品需求
+     *
      * @param productDemandGroupQueryList 产品分组查询条件信息
-     * @return
+     * @return 待规划产品需求
      */
     @Override
     public BaseResult<PageQueryResult<ProductDemandVO>> listProductDemandBacklog(ProductDemandGroupQueryList productDemandGroupQueryList) {
@@ -189,8 +191,8 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         // 遍历分组，获取分组下的需求
         for (ProductDemandGroupVO productDemandGroupVO : productDemandGroupListVO) {
             condition.setGroupId(productDemandGroupVO.getId());
-            // 查询分组下的需求
             // TODO 是否需要加分页？
+            // 查询分组下的需求
             List<ProductDemandGroupItemListDO> productDemandGroupItemListDOS = productDemandGroupItemComponent.listProductDemand(condition);
             List<ProductDemandGroupItemVO> productDemandGroupItemVOList = convert(productDemandGroupItemListDOS);
             // 获取分组下所有需求的标签
@@ -312,9 +314,9 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         ProductDemandGroupDO productDemandGroupDO = productDemandGroupMapper.get(productDemandGroupReq.getId());
         checkOperationPermission(productDemandGroupDO.getBizDomainId());
         // 删除产品需求分组
-        productDemandGroupMapper.delete(productDemandGroupReq.getId(),modifyManId, modifyMan);
+        productDemandGroupMapper.delete(productDemandGroupReq.getId(), modifyManId, modifyMan);
         // 删除产品需求分组下的产品需求
-        productDemandGroupItemMapper.deleteByGroupId(productDemandGroupReq.getId(),modifyManId, modifyMan);
+        productDemandGroupItemMapper.deleteByGroupId(productDemandGroupReq.getId(), modifyManId, modifyMan);
         return BaseResult.success(true);
     }
 
@@ -342,59 +344,76 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
     public BaseResult<Boolean> moveProductDemandGroup(ProductDemandGroupMoveReq productDemandGroupMoveReq) {
         log.info("产品需求拖动分组接收参数:{}", productDemandGroupMoveReq);
         checkOperationPermission(productDemandGroupMoveReq.getBizDomainId());
-        ProductDemandGroupDO targetGroupDO =  productDemandGroupMapper.getByIdAndBizDomainId(productDemandGroupMoveReq.getBizDomainId(), productDemandGroupMoveReq.getId());
+        ProductDemandGroupDO targetGroupDO = productDemandGroupMapper.getByIdAndBizDomainId(productDemandGroupMoveReq.getBizDomainId(), productDemandGroupMoveReq.getId());
         if (targetGroupDO == null) {
             throw new BaseBizRuntimeException("产品需求分组不存在, 请刷新后重试");
         }
         ProductDemandGroupDO prevGroupDO = null;
         if (productDemandGroupMoveReq.getPrevId() != null) {
-            prevGroupDO =  productDemandGroupMapper.getByIdAndBizDomainId(productDemandGroupMoveReq.getBizDomainId(), productDemandGroupMoveReq.getPrevId());
+            prevGroupDO = productDemandGroupMapper.getByIdAndBizDomainId(productDemandGroupMoveReq.getBizDomainId(), productDemandGroupMoveReq.getPrevId());
             if (prevGroupDO == null) {
                 throw new BaseBizRuntimeException("产品需求分组不存在, 请刷新后重试");
             }
         }
         ProductDemandGroupDO nextGroupDO = null;
         if (productDemandGroupMoveReq.getNextId() != null) {
-            nextGroupDO =  productDemandGroupMapper.getByIdAndBizDomainId(productDemandGroupMoveReq.getBizDomainId(), productDemandGroupMoveReq.getNextId());
+            nextGroupDO = productDemandGroupMapper.getByIdAndBizDomainId(productDemandGroupMoveReq.getBizDomainId(), productDemandGroupMoveReq.getNextId());
             if (nextGroupDO == null) {
                 throw new BaseBizRuntimeException("产品需求分组不存在, 请刷新后重试");
             }
         }
-        ProductDemandGroupDO targetNextGroupDO =  productDemandGroupMapper.getNextByPosition(productDemandGroupMoveReq.getBizDomainId(), targetGroupDO.getPosition());
+        ProductDemandGroupDO targetNextGroupDO = productDemandGroupMapper.getNextByPosition(productDemandGroupMoveReq.getBizDomainId(), targetGroupDO.getPosition());
         ProductDemandGroupDO targetPreGroupDO = productDemandGroupMapper.getPreByPosition(productDemandGroupMoveReq.getBizDomainId(), targetGroupDO.getPosition());
-        boolean preConditionEqual = (prevGroupDO == null && targetPreGroupDO == null) || (prevGroupDO!=null && targetPreGroupDO != null && prevGroupDO.getId().equals(targetPreGroupDO.getId()));
-        boolean nextConditionEqual = (nextGroupDO == null && targetNextGroupDO == null) || (nextGroupDO!=null && targetNextGroupDO != null && nextGroupDO.getId().equals(targetNextGroupDO.getId()));
+        boolean preConditionEqual = (prevGroupDO == null && targetPreGroupDO == null) || (prevGroupDO != null && targetPreGroupDO != null && prevGroupDO.getId().equals(targetPreGroupDO.getId()));
+        boolean nextConditionEqual = (nextGroupDO == null && targetNextGroupDO == null) || (nextGroupDO != null && targetNextGroupDO != null && nextGroupDO.getId().equals(targetNextGroupDO.getId()));
         if (preConditionEqual && nextConditionEqual) {
             throw new BaseBizRuntimeException("产品需求分组位置未变化，无需移动");
         }
-
-        double position;
-        if (productDemandGroupMoveReq.getPrevId() == null && productDemandGroupMoveReq.getNextId() == null) {
-            // 前后都为空，直接添加到第一个
-             position = PositionUtil.generate(productDemandGroupMoveReq.getBizDomainId().toString(), System.currentTimeMillis());
-        } else if (productDemandGroupMoveReq.getPrevId() == null && productDemandGroupMoveReq.getNextId() != null) {
-            // 前面为空，后面不为空
-            ProductDemandGroupDO nextPreGroupDO = productDemandGroupMapper.getPreByPosition(productDemandGroupMoveReq.getBizDomainId(), nextGroupDO.getPosition());
-            // 如果后面不是第一个（前面还存在）则(next.positon + next.pre.position)/2
-            if(nextPreGroupDO != null) {
-                position = (nextGroupDO.getPosition() + nextPreGroupDO.getPosition()) / 2;
-                // TODO 如果position和前后相同，说明需要重新排序
-            } else {
-                // 如果后面是第一个（前面不存在) 则直接添加到第一个
-                position = PositionUtil.generate(productDemandGroupMoveReq.getBizDomainId().toString(), System.currentTimeMillis());
-            }
-        } else {
-            // 前面不为空
-            ProductDemandGroupDO preNextPreGroupDO = productDemandGroupMapper.getNextByPosition(productDemandGroupMoveReq.getBizDomainId(), prevGroupDO.getPosition());
-            // 如果前面不是最后一个（后面还存在）则(pre.position + pre.next.position)/2
-            if (preNextPreGroupDO != null) {
-                position = (prevGroupDO.getPosition() + preNextPreGroupDO.getPosition()) / 2;
-                // TODO 如果position和前后相同，说明需要重新排序
-            } else {
-                // 如果前面是最后一个（后面不存在） 则pre.position - 5000000
-                position = prevGroupDO.getPosition() - 5000000;
-            }
-        }
+        // 定义 getPrevByPosition 和 getNextByPosition 函数
+        BiFunction<Long, Double, Double> getPrevByPosition = (targetGroupId, position) -> {
+            ProductDemandGroupDO preByPosition = productDemandGroupMapper.getPreByPosition(targetGroupId, position);
+            return preByPosition == null ? null : preByPosition.getPosition();
+        };
+        BiFunction<Long, Double, Double> getNextByPosition = (targetGroupId, position) -> {
+            ProductDemandGroupDO nextByPosition = productDemandGroupMapper.getNextByPosition(targetGroupId, position);
+            return nextByPosition == null ? null : nextByPosition.getPosition();
+        };
+        double position = calculateNewPosition(productDemandGroupMoveReq.getPrevId(),
+                prevGroupDO == null ? null : prevGroupDO.getPosition(),
+                productDemandGroupMoveReq.getNextId(),
+                nextGroupDO == null ? null : nextGroupDO.getPosition(),
+                productDemandGroupMoveReq.getBizDomainId(),
+                productDemandGroupMoveReq.getBizDomainId(),
+                getPrevByPosition,
+                getNextByPosition
+        );
+//        double position;
+//        if (productDemandGroupMoveReq.getPrevId() == null && productDemandGroupMoveReq.getNextId() == null) {
+//            // 前后都为空，直接添加到第一个
+//            position = PositionUtil.generate(productDemandGroupMoveReq.getBizDomainId().toString(), System.currentTimeMillis());
+//        } else if (productDemandGroupMoveReq.getPrevId() == null && productDemandGroupMoveReq.getNextId() != null) {
+//            // 前面为空，后面不为空
+//            ProductDemandGroupDO nextPreGroupDO = productDemandGroupMapper.getPreByPosition(productDemandGroupMoveReq.getBizDomainId(), nextGroupDO.getPosition());
+//            // 如果后面不是第一个（前面还存在）则(next.positon + next.pre.position)/2
+//            if (nextPreGroupDO != null) {
+//                position = (nextGroupDO.getPosition() + nextPreGroupDO.getPosition()) / 2;
+//                // TODO 如果position和前后相同，说明需要重新排序
+//            } else {
+//                // 如果后面是第一个（前面不存在) 则直接添加到第一个
+//                position = PositionUtil.generate(productDemandGroupMoveReq.getBizDomainId().toString(), System.currentTimeMillis());
+//            }
+//        } else {
+//            // 前面不为空
+//            ProductDemandGroupDO preNextPreGroupDO = productDemandGroupMapper.getNextByPosition(productDemandGroupMoveReq.getBizDomainId(), prevGroupDO.getPosition());
+//            // 如果前面不是最后一个（后面还存在）则(pre.position + pre.next.position)/2
+//            if (preNextPreGroupDO != null) {
+//                position = (prevGroupDO.getPosition() + preNextPreGroupDO.getPosition()) / 2;
+//                // TODO 如果position和前后相同，说明需要重新排序
+//            } else {
+//                // 如果前面是最后一个（后面不存在） 则pre.position - 5000000
+//                position = prevGroupDO.getPosition() - 5000000;
+//            }
+//        }
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         String modifyManId = userInfo.getId();
         String modifyMan = userInfo.getFullAlias();
@@ -425,7 +444,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         checkOperationPermission(productDemandGroupItemMoveReq.getBizDomainId());
         ProductDemandGroupItemDO prevGroupItemDO = null;
         if (productDemandGroupItemMoveReq.getPrevId() != null) {
-            prevGroupItemDO =  productDemandGroupItemMapper.getByGroupIdAndId(productDemandGroupItemMoveReq.getBizDomainId(),
+            prevGroupItemDO = productDemandGroupItemMapper.getByGroupIdAndId(productDemandGroupItemMoveReq.getBizDomainId(),
                     productDemandGroupItemMoveReq.getTargetGroupId(), productDemandGroupItemMoveReq.getPrevId());
             if (prevGroupItemDO == null) {
                 throw new BaseBizRuntimeException("产品需求分组的产品需求不存在, 请刷新后重试");
@@ -433,14 +452,15 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         }
         ProductDemandGroupItemDO nextGroupItemDO = null;
         if (productDemandGroupItemMoveReq.getNextId() != null) {
-            nextGroupItemDO =  productDemandGroupItemMapper.getByGroupIdAndId(productDemandGroupItemMoveReq.getBizDomainId(),
+            nextGroupItemDO = productDemandGroupItemMapper.getByGroupIdAndId(productDemandGroupItemMoveReq.getBizDomainId(),
                     productDemandGroupItemMoveReq.getTargetGroupId(), productDemandGroupItemMoveReq.getNextId());
             if (nextGroupItemDO == null) {
                 throw new BaseBizRuntimeException("产品需求分组的产品需求不存在, 请刷新后重试");
             }
         }
+
         ProductDemandGroupItemDO targetGroupItemDO = null;
-        if ("moveIn".equals(productDemandGroupItemMoveReq.getMode())) {
+        if (Objects.equals(ProductDemandGroupMoveModeEnum.MOVE_IN.getCode(), productDemandGroupItemMoveReq.getMode())) {
             // 查看产品需求是否是当前业务域里的
             ProductDemandDO productDemandDO = productDemandMapper.get(productDemandGroupItemMoveReq.getId());
             if (productDemandDO == null) {
@@ -455,56 +475,72 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
             if (byGroupIdAndDemandId != null) {
                 throw new BaseBizRuntimeException("产品需求已存在");
             }
-        } else if ("moveOut".equals(productDemandGroupItemMoveReq.getMode())) {
+        } else if (Objects.equals(ProductDemandGroupMoveModeEnum.MOVE_OUT.getCode(), productDemandGroupItemMoveReq.getMode())) {
 //            if (productDemandGroupItemMoveReq.getTargetGroupId() != 0 || productDemandGroupItemMoveReq.getPrevId() != null || productDemandGroupItemMoveReq.getNextId() != null) {
 //                throw new BaseBizRuntimeException("参数错误");
 //            }
         } else {
-            targetGroupItemDO =  productDemandGroupItemMapper.getByBizDomainIdAndId(productDemandGroupItemMoveReq.getBizDomainId(), productDemandGroupItemMoveReq.getId());
+            targetGroupItemDO = productDemandGroupItemMapper.getByBizDomainIdAndId(productDemandGroupItemMoveReq.getBizDomainId(), productDemandGroupItemMoveReq.getId());
             if (targetGroupItemDO == null) {
                 throw new BaseBizRuntimeException("产品需求分组的产品需求不存在, 请刷新后重试");
             }
 
-            ProductDemandGroupItemDO targetNextGroupItemDO =  productDemandGroupItemMapper.getNextByPosition(productDemandGroupItemMoveReq.getTargetGroupId(), targetGroupItemDO.getPosition());
+            ProductDemandGroupItemDO targetNextGroupItemDO = productDemandGroupItemMapper.getNextByPosition(productDemandGroupItemMoveReq.getTargetGroupId(), targetGroupItemDO.getPosition());
             ProductDemandGroupItemDO targetPreGroupItemDO = productDemandGroupItemMapper.getPreByPosition(productDemandGroupItemMoveReq.getTargetGroupId(), targetGroupItemDO.getPosition());
-            boolean preConditionEqual = (prevGroupItemDO == null && targetPreGroupItemDO == null) || (prevGroupItemDO!=null && targetPreGroupItemDO != null && prevGroupItemDO.getId().equals(targetPreGroupItemDO.getId()));
-            boolean nextConditionEqual = (nextGroupItemDO == null && targetNextGroupItemDO == null) || (nextGroupItemDO!=null && targetNextGroupItemDO != null && nextGroupItemDO.getId().equals(targetNextGroupItemDO.getId()));
+            boolean preConditionEqual = isProductGroupItemEqual(prevGroupItemDO, targetPreGroupItemDO);
+            boolean nextConditionEqual = isProductGroupItemEqual(nextGroupItemDO, targetNextGroupItemDO);
             if (preConditionEqual && nextConditionEqual) {
                 throw new BaseBizRuntimeException("产品需求位置未变化，无需移动");
             }
         }
-
-        double position;
-        if (productDemandGroupItemMoveReq.getPrevId() == null && productDemandGroupItemMoveReq.getNextId() == null) {
-            // 前后都为空，直接添加到第一个
-            position = PositionUtil.generate(productDemandGroupItemMoveReq.getBizDomainId().toString(), System.currentTimeMillis());
-        } else if (productDemandGroupItemMoveReq.getPrevId() == null && productDemandGroupItemMoveReq.getNextId() != null) {
-            // 前面为空，后面不为空
-            ProductDemandGroupItemDO nextPreGroupItemDO = productDemandGroupItemMapper.getPreByPosition(productDemandGroupItemMoveReq.getTargetGroupId(), nextGroupItemDO.getPosition());
-            // 如果后面不是第一个（前面还存在）则(next.positon + next.pre.position)/2
-            if(nextPreGroupItemDO != null) {
-                position = (nextGroupItemDO.getPosition() + nextPreGroupItemDO.getPosition()) / 2;
-                // TODO 如果position和前后相同，说明需要重新排序
-            } else {
-                // 如果后面是第一个（前面不存在) 则直接添加到第一个
-                position = PositionUtil.generate(productDemandGroupItemMoveReq.getBizDomainId().toString(), System.currentTimeMillis());
-            }
-        } else {
-            // 前面不为空
-            ProductDemandGroupItemDO preNextPreGroupItemDO = productDemandGroupItemMapper.getNextByPosition(productDemandGroupItemMoveReq.getTargetGroupId(), prevGroupItemDO.getPosition());
-            // 如果前面不是最后一个（后面还存在）则(pre.position + pre.next.position)/2
-            if (preNextPreGroupItemDO != null) {
-                position = (prevGroupItemDO.getPosition() + preNextPreGroupItemDO.getPosition()) / 2;
-                // TODO 如果position和前后相同，说明需要重新排序
-            } else {
-                // 如果前面是最后一个（后面不存在） 则pre.position - 5000000
-                position = prevGroupItemDO.getPosition() - 5000000;
-            }
-        }
+        // 定义 getPrevByPosition 和 getNextByPosition 函数
+        BiFunction<Long, Double, Double> getPrevByPosition = (targetGroupId, position) -> {
+            ProductDemandGroupItemDO preByPosition = productDemandGroupItemMapper.getPreByPosition(targetGroupId, position);
+            return preByPosition == null ? null : preByPosition.getPosition();
+        };
+        BiFunction<Long, Double, Double> getNextByPosition = (targetGroupId, position) -> {
+            ProductDemandGroupItemDO nextByPosition = productDemandGroupItemMapper.getNextByPosition(targetGroupId, position);
+            return nextByPosition == null ? null : nextByPosition.getPosition();
+        };
+        double position = calculateNewPosition(productDemandGroupItemMoveReq.getPrevId(),
+                prevGroupItemDO == null ? null : prevGroupItemDO.getPosition(),
+                productDemandGroupItemMoveReq.getNextId(),
+                nextGroupItemDO == null ? null : nextGroupItemDO.getPosition(),
+                productDemandGroupItemMoveReq.getBizDomainId(),
+                productDemandGroupItemMoveReq.getTargetGroupId(),
+                getPrevByPosition,
+                getNextByPosition
+                );
+//        if (productDemandGroupItemMoveReq.getPrevId() == null && productDemandGroupItemMoveReq.getNextId() == null) {
+//            // 前后都为空，直接添加到第一个
+//            position = PositionUtil.generate(productDemandGroupItemMoveReq.getBizDomainId().toString(), System.currentTimeMillis());
+//        } else if (productDemandGroupItemMoveReq.getPrevId() == null && productDemandGroupItemMoveReq.getNextId() != null) {
+//            // 前面为空，后面不为空
+//            ProductDemandGroupItemDO nextPreGroupItemDO = productDemandGroupItemMapper.getPreByPosition(productDemandGroupItemMoveReq.getTargetGroupId(), nextGroupItemDO.getPosition());
+//            // 如果后面不是第一个（前面还存在）则(next.positon + next.pre.position)/2
+//            if (nextPreGroupItemDO != null) {
+//                position = (nextGroupItemDO.getPosition() + nextPreGroupItemDO.getPosition()) / 2;
+//                // TODO 如果position和前后相同，说明需要重新排序
+//            } else {
+//                // 如果后面是第一个（前面不存在) 则直接添加到第一个
+//                position = PositionUtil.generate(productDemandGroupItemMoveReq.getBizDomainId().toString(), System.currentTimeMillis());
+//            }
+//        } else {
+//            // 前面不为空
+//            ProductDemandGroupItemDO preNextPreGroupItemDO = productDemandGroupItemMapper.getNextByPosition(productDemandGroupItemMoveReq.getTargetGroupId(), prevGroupItemDO.getPosition());
+//            // 如果前面不是最后一个（后面还存在）则(pre.position + pre.next.position)/2
+//            if (preNextPreGroupItemDO != null) {
+//                position = (prevGroupItemDO.getPosition() + preNextPreGroupItemDO.getPosition()) / 2;
+//                // TODO 如果position和前后相同，说明需要重新排序
+//            } else {
+//                // 如果前面是最后一个（后面不存在） 则pre.position - 5000000
+//                position = prevGroupItemDO.getPosition() - 5000000;
+//            }
+//        }
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         String modifyManId = userInfo.getId();
         String modifyMan = userInfo.getFullAlias();
-        if ("moveIn".equals(productDemandGroupItemMoveReq.getMode())) {
+        if (Objects.equals(ProductDemandGroupMoveModeEnum.MOVE_IN.getCode(), productDemandGroupItemMoveReq.getMode())) {
             // 创建
             val createGroupItemDO = new ProductDemandGroupItemDO().setPosition(position)
                     .setProductDemandId(productDemandGroupItemMoveReq.getId())
@@ -523,10 +559,13 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
                 throw new BaseBizRuntimeException("操作失败，请刷新页面重试");
             }
 
-        } else if ("moveOut".equals(productDemandGroupItemMoveReq.getMode())) {
+        } else if (Objects.equals(ProductDemandGroupMoveModeEnum.MOVE_OUT.getCode(), productDemandGroupItemMoveReq.getMode())) {
             // 删除
             productDemandGroupItemMapper.delete(productDemandGroupItemMoveReq.getId(), modifyManId, modifyMan);
         } else {
+            if (targetGroupItemDO == null) {
+                throw new BaseBizRuntimeException("产品需求分组的产品需求不存在, 请刷新后重试");
+            }
             // 更新位置或目标分组id
             val updateGroupItemDO = new ProductDemandGroupItemDO().setPosition(position)
                     .setVersion(targetGroupItemDO.getVersion())
@@ -549,5 +588,52 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         }
 
         return BaseResult.success(true);
+    }
+
+    private boolean isProductGroupItemEqual(ProductDemandGroupItemDO source, ProductDemandGroupItemDO target) {
+        if (source == null && target == null) {
+            return true;
+        }
+        if (source != null && target != null) {
+            return Objects.equals(source.getId(), target.getId());
+        }
+        return false;
+    }
+    private double calculateNewPosition(Long prevId,
+                                        Double prevPosition,
+                                        Long nextId,
+                                        Double nextPosition,
+                                        Long bizDomainId,
+                                        Long positionTarget,
+                                        BiFunction<Long, Double, Double> getPrevByPosition,
+                                        BiFunction<Long, Double, Double> getNextByPosition) {
+        double position;
+        if (prevId == null && nextId == null) {
+            // 前后都为空，直接添加到第一个
+            position = PositionUtil.generate(bizDomainId.toString(), System.currentTimeMillis());
+        } else if (prevId == null && nextId != null) {
+            // 前面为空，后面不为空
+            Double nextPrePosition = getPrevByPosition.apply(positionTarget, nextPosition);
+            // 如果后面不是第一个（前面还存在）则(next.positon + next.pre.position)/2
+            if (nextPrePosition != null) {
+                position = (nextPosition + nextPrePosition) / 2;
+                // TODO 如果position和前后相同，说明需要重新排序
+            } else {
+                // 如果后面是第一个（前面不存在) 则直接添加到第一个
+                position = PositionUtil.generate(bizDomainId.toString(), System.currentTimeMillis());
+            }
+        } else {
+            // 前面不为空
+            Double preNextPosition = getNextByPosition.apply(positionTarget, prevPosition);
+            // 如果前面不是最后一个（后面还存在）则(pre.position + pre.next.position)/2
+            if (preNextPosition != null) {
+                position = (prevPosition + preNextPosition) / 2;
+                // TODO 如果position和前后相同，说明需要重新排序
+            } else {
+                // 如果前面是最后一个（后面不存在） 则pre.position - 5000000
+                position = prevPosition - 5000000;
+            }
+        }
+        return position;
     }
 }
