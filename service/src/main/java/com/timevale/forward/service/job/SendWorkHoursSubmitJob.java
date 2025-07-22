@@ -27,9 +27,9 @@ import org.assertj.core.util.Lists;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -57,6 +57,8 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
             TaskStatusEnum.WAITING.getCode(),
             TaskStatusEnum.PROGRESS.getCode()
     );
+
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Override
     public ReturnT<String> execute(String s) throws Exception {
@@ -89,12 +91,14 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
         // 将通知项目的ID收集到列表中
         List<Long> projectIds = new ArrayList<>(notifyProjectMap.keySet());
 
+        // 字符串日期不要时间
+        String dateStr = today.format(DATE_FORMATTER);
         // 2. 查询项目中待通知的任务
         // 根据项目ID列表和其他条件查询待处理的任务列表
         List<TaskDO> progressTaskList = taskMapper.getProgressTaskList(TaskListCondition.builder()
                 .projectIds(projectIds)
                 .status(TASK_STATUSES)
-                .currentDate(new Date())
+                .currentDate(dateStr)
                 .build());
 
         // 如果没有找到待通知的任务，则记录日志并结束执行
@@ -145,7 +149,7 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
                     .markdown(stringBuilder.toString())
                     .receivers(Lists.newArrayList(userId))
                     .singleTitle("去填报")
-                    .singleUrl(url + "/mobileTimeRegistration")
+                    .singleUrl(url + "/mobileTimeRegistration?dataStr=" + dateStr)
                     .build();
 
             messageRetryManager.sendAsyncMessage("sendWorkHoursSubmitJob", actionCardMsg, userId, sentCount);

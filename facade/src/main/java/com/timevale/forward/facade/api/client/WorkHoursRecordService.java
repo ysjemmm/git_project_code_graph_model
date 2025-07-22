@@ -77,7 +77,7 @@ public interface WorkHoursRecordService {
 
     BaseResult<WorkHoursProgressVO> progressInfo(WorkHoursRecordQueryReq workHoursRecordQueryReq);
 
-    BaseResult<List<RegisterWorkHoursTaskVO>> waitRegisterTaskList();
+    BaseResult<List<RegisterWorkHoursTaskVO>> waitRegisterTaskList(String dateStr);
 
     BaseResult<List<WorkbenchesWorkHoursVO>> workbenches(List<Long> bizDomainIds, List<Long> productLineIds, List<Long> projectIds, List<Integer> status);
 }

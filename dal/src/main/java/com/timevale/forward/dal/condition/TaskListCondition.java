@@ -114,6 +114,6 @@ public class TaskListCondition extends QueryBase {
     /**
      * 当前日期
      */
-    private Date currentDate;
+    private String currentDate;
 
 }
