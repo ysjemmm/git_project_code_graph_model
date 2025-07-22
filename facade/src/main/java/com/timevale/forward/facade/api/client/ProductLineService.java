@@ -21,6 +21,13 @@ import java.util.List;
 public interface ProductLineService {
 
     /**
+     * 业务域产品线列表
+     *
+     * @return 返回业务域的产品线列表
+     */
+    BaseResult<List<ProductLineVO>> listBizDomainProductLines(Long bizDomainId);
+
+    /**
      * 列表
      *
      * @return 返回产品线列表

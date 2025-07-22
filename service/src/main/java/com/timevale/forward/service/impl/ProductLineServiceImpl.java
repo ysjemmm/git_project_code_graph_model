@@ -71,6 +71,20 @@ public class ProductLineServiceImpl implements ProductLineService {
     private TroubleTicketMapper troubleTicketMapper;
 
     @Override
+    public BaseResult<List<ProductLineVO>> listBizDomainProductLines(Long bizDomainId) {
+        List<ProductLineDO> productLineDOList = productLineMapper.getBizDomainId(bizDomainId);
+        final BizDomainDO bizDomainDO = bizDomainMapper.selectById(bizDomainId);
+        List<ProductLineVO> productLineVOList = ProductLineCopier.INSTANCE.convert(productLineDOList);
+        // 填充产品线对应业务域负责人信息
+        productLineVOList.forEach(e -> {
+            e.setBizDomainOwner(bizDomainDO.getOwner());
+            e.setBizDomainOwnerId(bizDomainDO.getOwnerId());
+            e.setBizDomainName(bizDomainDO.getName());
+        });
+        return BaseResult.success(productLineVOList);
+    }
+
+    @Override
     public BaseResult<List<ProductLineVO>> productLineList() {
         List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectAllBizDomain();
 
