@@ -276,6 +276,10 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         List<Future<?>> futures = new ArrayList<>();
         for (WorkHoursRecordAddReq a : workHoursSimples) {
             Future<?> future = threadPoolTaskExecutor.submit(() -> {
+                // 如果工时为0，则不处理
+                if (a.getWorkHours().compareTo(BigDecimal.ZERO) <= 0) {
+                    return;
+                }
                 // 转换
                 WorkHoursRecordDO workHoursRecordDO = WorkHoursRecordCopier.INSTANCE.convert(a);
                 workHoursRecordDO.setCreateMan(createMan);
