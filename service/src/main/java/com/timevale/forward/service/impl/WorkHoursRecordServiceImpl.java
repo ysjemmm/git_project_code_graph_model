@@ -51,6 +51,7 @@ import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -112,6 +113,8 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
     private ProductLineMapper productLineMapper;
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     private static final List<Integer> TASK_STATUSES = Arrays.asList(
             TaskStatusEnum.WAITING.getCode(),
@@ -389,7 +392,15 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
     }
 
     @Override
-    public BaseResult<List<RegisterWorkHoursTaskVO>> waitRegisterTaskList() {
+    public BaseResult<List<RegisterWorkHoursTaskVO>> waitRegisterTaskList(String dateStr) {
+        LocalDate localDate;
+        if (StringUtils.isBlank(dateStr)) {
+            // 字符串日期不要时间
+            localDate = LocalDate.now();
+        } else {
+            localDate = LocalDate.parse(dateStr);
+        }
+
         List<RegisterWorkHoursTaskVO> registerWorkHoursTaskVOS = new ArrayList<>();
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
@@ -398,10 +409,12 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         if (executorTaskIds.isEmpty()) {
             return BaseResult.success(registerWorkHoursTaskVOS);
         }
+
+        String date = localDate.format(DATE_FORMATTER);
         // 查询当前用户进行中的任务
         List<TaskDO> progressTaskList = taskMapper.getProgressTaskList(TaskListCondition.builder()
                 .status(TASK_STATUSES)
-                .currentDate(new Date())
+                .currentDate(date)
                 .ids(executorTaskIds)
                 .build());
         // 是否存在进行中的任务

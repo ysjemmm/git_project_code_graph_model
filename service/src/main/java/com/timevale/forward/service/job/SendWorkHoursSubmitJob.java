@@ -1,5 +1,6 @@
 package com.timevale.forward.service.job;
 
+import com.timevale.crm.sdk.common.constant.enums.EnvEnum;
 import com.timevale.forward.dal.condition.TaskListCondition;
 import com.timevale.forward.dal.dao.PersonMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
@@ -15,6 +16,7 @@ import com.timevale.forward.model.enums.TaskStatusEnum;
 import com.timevale.forward.service.copy.TaskCopier;
 import com.timevale.forward.service.integration.erp.model.ActionCardMsg;
 import com.timevale.forward.service.manager.MessageRetryManager;
+import com.timevale.forward.service.utils.EnvUtils;
 import com.timevale.framework.schedulerT.client.annotaion.JobHandler;
 import com.timevale.framework.schedulerT.core.biz.model.ReturnT;
 import com.timevale.framework.schedulerT.core.handler.IJobHandler;
@@ -25,9 +27,9 @@ import org.assertj.core.util.Lists;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -42,6 +44,7 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
     private final TaskMapper taskMapper;
     private final PersonMapper personMapper;
     private final MessageRetryManager messageRetryManager;
+    private final EnvUtils envUtils;
 
     private static final List<Integer> PROJECT_STATUSES = Arrays.asList(
             ProjectStatusEnum.PLANING.getCode(),
@@ -54,6 +57,8 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
             TaskStatusEnum.WAITING.getCode(),
             TaskStatusEnum.PROGRESS.getCode()
     );
+
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Override
     public ReturnT<String> execute(String s) throws Exception {
@@ -68,6 +73,8 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
             log.warn("[sendWorkHoursSubmitJob]今天是周六或周日，不执行任务");
             return ReturnT.SUCCESS;
         }
+
+        String url = EnvEnum.PROD.equals(envUtils.getEnv()) ? "https://forward.esign.cn" : "https://testforward.tsign.cn";
 
         // 1. 查询开启通知的项目列表
         // 通过项目状态和类别查询项目，并过滤出需要工时通知的项目，将其ID与名称映射为Map
@@ -84,12 +91,14 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
         // 将通知项目的ID收集到列表中
         List<Long> projectIds = new ArrayList<>(notifyProjectMap.keySet());
 
+        // 字符串日期不要时间
+        String dateStr = today.format(DATE_FORMATTER);
         // 2. 查询项目中待通知的任务
         // 根据项目ID列表和其他条件查询待处理的任务列表
         List<TaskDO> progressTaskList = taskMapper.getProgressTaskList(TaskListCondition.builder()
                 .projectIds(projectIds)
                 .status(TASK_STATUSES)
-                .currentDate(new Date())
+                .currentDate(dateStr)
                 .build());
 
         // 如果没有找到待通知的任务，则记录日志并结束执行
@@ -140,7 +149,7 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
                     .markdown(stringBuilder.toString())
                     .receivers(Lists.newArrayList(userId))
                     .singleTitle("去填报")
-                    .singleUrl("dingtalk://dingtalkclient/page/link?url=https://forward.esign.cn&ddtab=true")
+                    .singleUrl(url + "/mobileTimeRegistration?dataStr=" + dateStr)
                     .build();
 
             messageRetryManager.sendAsyncMessage("sendWorkHoursSubmitJob", actionCardMsg, userId, sentCount);

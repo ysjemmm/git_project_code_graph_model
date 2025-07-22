@@ -348,7 +348,7 @@
             <if test="id != null">and a.id = #{id}</if>
             <if test="name != null and name != ''">and a.name like concat('%',#{name},'%')</if>
             <if test="currentDate != null">
-                and a.plan_start_date &lt;= #{currentDate} and a.plan_end_date &gt;= #{currentDate}
+                and date(a.plan_start_date) &lt;= #{currentDate} and date(a.plan_end_date) &gt;= #{currentDate}
             </if>
             <if test="createManIds!=null and createManIds.size()>0">
                 and a.create_man_id in
