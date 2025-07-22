@@ -8,9 +8,7 @@ import com.google.common.collect.Lists;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.TaskListCondition;
 import com.timevale.forward.dal.condition.WorkHoursRecordCondition;
-import com.timevale.forward.dal.dao.BizDomainMapper;
 import com.timevale.forward.dal.dao.PersonMapper;
-import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.TaskMapper;
 import com.timevale.forward.dal.dao.WorkHoursRecordMapper;
@@ -105,12 +103,6 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
 
     @Resource
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
-
-    @Resource
-    private BizDomainMapper bizDomainMapper;
-
-    @Resource
-    private ProductLineMapper productLineMapper;
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -433,6 +425,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             registerWorkHoursTaskVO.setProjectName(projectMap.get(taskDO.getProjectId()));
             registerWorkHoursTaskVO.setName(taskDO.getName());
             registerWorkHoursTaskVO.setWorkItemType(BizTypeEnum.TASK.getCode());
+            registerWorkHoursTaskVO.setDateStr(date);
             registerWorkHoursTaskVOS.add(registerWorkHoursTaskVO);
         }
         return BaseResult.success(registerWorkHoursTaskVOS);
