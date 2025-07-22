@@ -1,23 +1,21 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.date.DateField;
-import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Lists;
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.condition.TaskListCondition;
 import com.timevale.forward.dal.condition.WorkHoursRecordCondition;
+import com.timevale.forward.dal.dao.BizDomainMapper;
 import com.timevale.forward.dal.dao.PersonMapper;
+import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.TaskMapper;
 import com.timevale.forward.dal.dao.WorkHoursRecordMapper;
 import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProjectDO;
-import com.timevale.forward.dal.entity.ProjectListDO;
 import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.dal.entity.WorkHoursRecordDO;
 import com.timevale.forward.facade.api.client.TaskService;
@@ -29,7 +27,6 @@ import com.timevale.forward.facade.api.request.WorkHoursRecordAddReq;
 import com.timevale.forward.facade.api.request.WorkHoursRecordBatchAddReq;
 import com.timevale.forward.facade.api.request.WorkHoursRecordModifyReq;
 import com.timevale.forward.facade.api.request.WorkHoursRecordQueryReq;
-import com.timevale.forward.facade.api.request.WorkHoursRecordRangeReq;
 import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.forward.facade.api.result.RegisterWorkHoursTaskVO;
 import com.timevale.forward.facade.api.result.WorkHoursProgressVO;
@@ -38,11 +35,11 @@ import com.timevale.forward.facade.api.result.WorkHoursRemainVO;
 import com.timevale.forward.facade.api.result.WorkbenchesWorkHoursVO;
 import com.timevale.forward.model.enums.BizTypeEnum;
 import com.timevale.forward.model.enums.PersonTypeEnum;
-import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.model.enums.TaskStatusEnum;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.PersonCopier;
+import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.copy.WorkHoursRecordCopier;
 import com.timevale.forward.service.utils.ExceptionUtil;
 import com.timevale.forward.service.utils.ResultUtil;
@@ -63,13 +60,13 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -108,14 +105,13 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
     @Resource
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    @Resource
+    private BizDomainMapper bizDomainMapper;
 
-    private static final List<Integer> PROJECT_STATUSES = Arrays.asList(
-            ProjectStatusEnum.PLANING.getCode(),
-            ProjectStatusEnum.DEVING.getCode(),
-            ProjectStatusEnum.TESTING.getCode(),
-            ProjectStatusEnum.RELEASED.getCode()
-    );
+    @Resource
+    private ProductLineMapper productLineMapper;
+
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private static final List<Integer> TASK_STATUSES = Arrays.asList(
             TaskStatusEnum.WAITING.getCode(),
@@ -431,83 +427,109 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
     }
 
     @Override
-    public BaseResult<List<WorkbenchesWorkHoursVO>> workbenches(WorkHoursRecordRangeReq workHoursRecordRangeReq) {
-        List<WorkbenchesWorkHoursVO> workbenchesWorkHoursVOS = new ArrayList<>();
-        // 解析开始时间和结束时间
-        DateTime start = DateUtil.parse(workHoursRecordRangeReq.getStartDate());
-        DateTime end = DateUtil.parse(workHoursRecordRangeReq.getEndDate());
+    public BaseResult<List<WorkbenchesWorkHoursVO>> workbenches(List<Long> bizDomainIds, List<Long> productLineIds, List<Long> projectIds, List<Integer> status) {
+        // 1. 批量获取项目数据
+        List<Long> projectIdList = projectMapper.getProjectIds(projectIds, productLineIds, bizDomainIds);
+        if (projectIdList.isEmpty()) {
+            return BaseResult.success(Collections.emptyList());
+        }
 
-        // 获取指定范围内的所有日期（按天）
-        List<String> dates = DateUtil.rangeToList(start, end, DateField.DAY_OF_YEAR)
-                .stream()
-                .map(date -> DateUtil.format(date, "yyyy-MM-dd"))
+        // 2. 并行获取所有必要数据
+        List<ProjectDO> projectDOList = projectMapper.getByIds(projectIdList);
+        if (CollUtil.isNotEmpty(status)) {
+            projectDOList = projectDOList.stream().filter(e -> status.contains(e.getStatus())).collect(Collectors.toList());
+        }
+        if (CollectionUtils.isEmpty(projectDOList)) {
+            return BaseResult.success(Collections.emptyList());
+        }
+
+        // 3. 批量查询工时记录和人员信息
+        WorkHoursRecordCondition condition = WorkHoursRecordCondition.builder().projectIds(projectIdList).build();
+        List<WorkHoursRecordDO> hoursRecordDOList = workHoursRecordMapper.list(condition);
+        List<PersonDO> personDOList = personMapper.get(projectIdList, PersonTypeEnum.PROJECT_MEMBER.getCode());
+
+        // 4. 预处理数据映射
+        Map<Long, List<WorkHoursRecordDO>> projectWorkHoursMap = hoursRecordDOList.stream()
+                .collect(Collectors.groupingBy(WorkHoursRecordDO::getProjectId));
+
+        Map<Long, List<PersonDO>> projectMembersMap = personDOList.stream()
+                .collect(Collectors.groupingBy(PersonDO::getMainId));
+
+        // 5. 准备时间范围
+        ZoneId zoneId = ZoneId.of("Asia/Shanghai");
+        LocalDate today = LocalDate.now(zoneId);
+        LocalDate yesterday = today.minusDays(1);
+
+        // 6. 处理工时记录的时间映射
+        Map<Long, LocalDate> recordDateMap = hoursRecordDOList.stream()
+                .collect(Collectors.toMap(
+                        WorkHoursRecordDO::getId,
+                        record -> record.getCreateDate().toInstant().atZone(zoneId).toLocalDate()
+                ));
+
+        // 7. 构建结果
+        List<WorkbenchesWorkHoursVO> result = projectDOList.parallelStream()
+                .map(projectDO -> {
+                    Long projectId = projectDO.getId();
+                    WorkbenchesWorkHoursVO vo = new WorkbenchesWorkHoursVO();
+                    vo.setProject(ProjectCopier.INSTANCE.transform(projectDO));
+
+                    List<PersonDO> members = projectMembersMap.getOrDefault(projectId, Collections.emptyList());
+                    List<WorkHoursRecordDO> records = projectWorkHoursMap.getOrDefault(projectId, Collections.emptyList());
+
+                    // 按成员分组工时记录
+                    Map<String, List<WorkHoursRecordDO>> memberRecordsMap = records.stream()
+                            .collect(Collectors.groupingBy(WorkHoursRecordDO::getCreateManId));
+
+                    List<WorkbenchesWorkHoursVO.TeamMemberHours> memberHours = members.stream()
+                            .map(member -> {
+                                List<WorkHoursRecordDO> memberRecords = memberRecordsMap.getOrDefault(member.getUserId(), Collections.emptyList());
+
+                                // 计算各类工时
+                                BigDecimal[] hours = memberRecords.stream()
+                                        .collect(
+                                                // total, today, yesterday
+                                                () -> new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO},
+                                                (acc, record) -> {
+                                                    LocalDate recordDate = recordDateMap.get(record.getId());
+                                                    BigDecimal workHours = record.getWorkHours();
+
+                                                    // 总工时
+                                                    acc[0] = acc[0].add(workHours);
+                                                    if (recordDate.equals(today)) {
+                                                        // 今日工时
+                                                        acc[1] = acc[1].add(workHours);
+                                                    } else if (recordDate.equals(yesterday)) {
+                                                        // 昨日工时
+                                                        acc[2] = acc[2].add(workHours);
+                                                    }
+                                                },
+                                                (a, b) -> {
+                                                    a[0] = a[0].add(b[0]);
+                                                    a[1] = a[1].add(b[1]);
+                                                    a[2] = a[2].add(b[2]);
+                                                }
+                                        );
+
+                                WorkbenchesWorkHoursVO.TeamMemberHours teamMemberHours = new WorkbenchesWorkHoursVO.TeamMemberHours();
+                                teamMemberHours.setTeamMemberId(member.getUserId());
+                                teamMemberHours.setTeamMemberName(member.getUserName());
+                                teamMemberHours.setTotalHours(hours[0]);
+                                teamMemberHours.setTodayHours(hours[1]);
+                                teamMemberHours.setYesterdayHours(hours[2]);
+
+                                return teamMemberHours;
+                            })
+                            .collect(Collectors.toList());
+
+                    vo.setMemberHoursList(memberHours);
+                    return vo;
+                })
+                .sorted(Comparator.comparing(e -> e.getProject().getPlanStartDate(), Comparator.reverseOrder()))
                 .collect(Collectors.toList());
 
-        // 查询进行中的任务列表
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-
-        // TODO 补充，登录人为项目经理时展示项目的全部进行中的任务
-        List<Long> projectIds = projectMapper.list(ProjectListCondition.builder().status(PROJECT_STATUSES).pms(Lists.newArrayList(userInfo.getId())).build())
-                .stream().map(ProjectListDO::getId).collect(Collectors.toList());
-
-        // 获取当前用户进行中的任务
-        List<Long> executorTaskIds = personMapper.getMainIds(Lists.newArrayList(userInfo.getId()), null, PersonTypeEnum.TASK_EXECUTOR.getCode());
-        // 项目列表为空并且任务列表为空
-        if (executorTaskIds.isEmpty() && projectIds.isEmpty()) {
-            return BaseResult.success(workbenchesWorkHoursVOS);
-        }
-        // 获取指定范围内的所有工时记录
-        List<WorkHoursRecordDO> rangeWorkHoursList = workHoursRecordMapper.getRangeWorkHours(dates, projectIds, executorTaskIds);
-
-        // 存在任务
-        if (CollUtil.isNotEmpty(rangeWorkHoursList)) {
-            List<Long> rangeProjectIds = new ArrayList<>();
-            List<Long> rangeTaskIds = new ArrayList<>();
-            for (WorkHoursRecordDO workHoursRecordDO : rangeWorkHoursList) {
-                rangeProjectIds.add(workHoursRecordDO.getProjectId());
-                rangeTaskIds.add(workHoursRecordDO.getWorkItemId());
-            }
-            List<TaskDO> progressTaskList = taskMapper.getProgressTaskList(TaskListCondition.builder().projectIds(rangeProjectIds).ids(rangeTaskIds).build());
-
-            // TODO
-            Map<Long, String> taskIdMap = new HashMap<>();
-            if (CollUtil.isNotEmpty(projectIds)) {
-                List<Long> taskIds = progressTaskList.stream().map(TaskDO::getId).collect(Collectors.toList());
-                taskIdMap = personMapper.get(taskIds, PersonTypeEnum.TASK_EXECUTOR.getCode()).stream().collect(Collectors.toMap(PersonDO::getMainId, PersonDO::getUserName, (v1, v2) -> v1));
-            }
-            for (TaskDO taskDO : progressTaskList) {
-                WorkbenchesWorkHoursVO workbenchesWorkHoursVO = new WorkbenchesWorkHoursVO();
-                // 列信息
-                WorkbenchesWorkHoursVO.ColumnField columnField = new WorkbenchesWorkHoursVO.ColumnField();
-                columnField.setWorkItemType(BizTypeEnum.TASK.getCode());
-                // TODO 任务名称
-                String name = buildCreateMan(userInfo).equals(taskIdMap.getOrDefault(taskDO.getId(), "")) ? taskDO.getName() : "【" + taskIdMap.getOrDefault(taskDO.getId(), "") + "】" + taskDO.getName();
-                columnField.setName(name);
-                columnField.setProjectId(taskDO.getProjectId());
-                columnField.setWorkItemId(taskDO.getId());
-                workbenchesWorkHoursVO.setColumnField(columnField);
-                // 工时轴
-                WorkbenchesWorkHoursVO.ActualHoursSeries actualHoursSeries = new WorkbenchesWorkHoursVO.ActualHoursSeries();
-                actualHoursSeries.setTimes(dates);
-                Map<Date, BigDecimal> dateHoursMap = rangeWorkHoursList.stream()
-                        .filter(workHoursRecordDO -> workHoursRecordDO.getWorkItemId().equals(taskDO.getId()))
-                        .collect(Collectors.toMap(WorkHoursRecordDO::getCreateDate, WorkHoursRecordDO::getWorkHours));
-                // 轴值
-                List<BigDecimal> values = new ArrayList<>();
-                for (String date : dates) {
-                    values.add(dateHoursMap.getOrDefault(DateUtil.parse(date), BigDecimal.ZERO));
-                }
-                actualHoursSeries.setValues(values);
-                workbenchesWorkHoursVO.setActualHoursSeries(actualHoursSeries);
-                // 总工时
-                workbenchesWorkHoursVO.setActualHours(workbenchesWorkHoursVO.getActualHoursSeries().getValues().stream().reduce(BigDecimal::add).orElse(BigDecimal.ZERO));
-                workbenchesWorkHoursVOS.add(workbenchesWorkHoursVO);
-            }
-        }
-        return BaseResult.success(workbenchesWorkHoursVOS);
+        return BaseResult.success(result);
     }
-
-
 
     private String buildCreateMan(UserInfo userInfo) {
         return userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();

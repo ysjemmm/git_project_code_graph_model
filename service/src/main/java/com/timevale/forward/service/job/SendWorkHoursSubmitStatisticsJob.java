@@ -3,7 +3,6 @@ package com.timevale.forward.service.job;
 import com.timevale.forward.dal.condition.WorkHoursRecordCondition;
 import com.timevale.forward.dal.dao.BizDomainMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
-import com.timevale.forward.dal.dao.ProjectBizDomainMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.WorkHoursRecordMapper;
 import com.timevale.forward.dal.entity.BizDomainDO;
@@ -53,7 +52,6 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
     private final WorkHoursRecordMapper workHoursRecordMapper;
     private final PersonComponent personComponent;
     private final MessageRetryManager messageRetryManager;
-    private final ProjectBizDomainMapper projectBizDomainMapper;
     private final ProductLineMapper productLineMapper;
     private final BizDomainMapper bizDomainMapper;
 

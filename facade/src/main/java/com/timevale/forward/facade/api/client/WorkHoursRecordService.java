@@ -7,7 +7,6 @@ import com.timevale.forward.facade.api.request.WorkHoursRecordAddReq;
 import com.timevale.forward.facade.api.request.WorkHoursRecordBatchAddReq;
 import com.timevale.forward.facade.api.request.WorkHoursRecordModifyReq;
 import com.timevale.forward.facade.api.request.WorkHoursRecordQueryReq;
-import com.timevale.forward.facade.api.request.WorkHoursRecordRangeReq;
 import com.timevale.forward.facade.api.result.RegisterWorkHoursTaskVO;
 import com.timevale.forward.facade.api.result.WorkHoursProgressVO;
 import com.timevale.forward.facade.api.result.WorkHoursRecordVO;
@@ -80,5 +79,5 @@ public interface WorkHoursRecordService {
 
     BaseResult<List<RegisterWorkHoursTaskVO>> waitRegisterTaskList();
 
-    BaseResult<List<WorkbenchesWorkHoursVO>> workbenches(WorkHoursRecordRangeReq workHoursRecordRangeReq);
+    BaseResult<List<WorkbenchesWorkHoursVO>> workbenches(List<Long> bizDomainIds, List<Long> productLineIds, List<Long> projectIds, List<Integer> status);
 }

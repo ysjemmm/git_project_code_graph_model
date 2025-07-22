@@ -19,39 +19,28 @@ import java.util.List;
 @ApiModel("工作台任务工时")
 public class WorkbenchesWorkHoursVO extends ToString {
 
-    @ApiModelProperty("总计工时")
-    private BigDecimal actualHours;
+    @ApiModelProperty("项目")
+    private ProjectVO project;
 
-    @ApiModelProperty("实际工时集合")
-    private ActualHoursSeries actualHoursSeries;
-
-    @ApiModelProperty("工作项信息")
-    private ColumnField columnField;
+    @ApiModelProperty("项目成员工时集合")
+    private List<TeamMemberHours> memberHoursList;
 
     @Data
-    public static class ActualHoursSeries extends ToString {
+    public static class TeamMemberHours extends ToString {
 
-        @ApiModelProperty("日期时间轴")
-        private List<String> times;
+        @ApiModelProperty("成员id")
+        private String teamMemberId;
 
-        @ApiModelProperty("工时轴")
-        private List<BigDecimal> values;
-    }
+        @ApiModelProperty("成员名称")
+        private String teamMemberName;
 
-    @Data
-    public static class ColumnField extends ToString {
+        @ApiModelProperty("昨日投入工时")
+        private BigDecimal yesterdayHours;
 
-        @ApiModelProperty("工作项类型")
-        private Integer workItemType;
+        @ApiModelProperty("今日投入工时")
+        private BigDecimal todayHours;
 
-        @ApiModelProperty("名称")
-        private String name;
-
-        @ApiModelProperty("项目id")
-        private Long projectId;
-
-        @ApiModelProperty("工作项id")
-        private Long workItemId;
-
+        @ApiModelProperty("累计投入工时")
+        private BigDecimal totalHours;
     }
 }
