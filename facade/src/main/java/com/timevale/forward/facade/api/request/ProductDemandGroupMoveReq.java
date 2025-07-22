@@ -8,21 +8,21 @@ import lombok.EqualsAndHashCode;
 import javax.validation.constraints.NotNull;
 
 /**
- * 产品需求分组移动请求
+ * 产品需求分组拖动请求
  * @author qiyuan
  * @date 2025/07/15 15:30
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("产品需求分组移动请求")
+@ApiModel("产品需求分组拖动请求")
 public class ProductDemandGroupMoveReq extends BaseReq {
 
-    @ApiModelProperty("业务域id")
+    @ApiModelProperty(value = "业务域id", required = true)
     @NotNull(message = "业务域id不能为空")
     private Long bizDomainId;
 
-    @ApiModelProperty("待移动ID")
-    @NotNull(message = "移动ID不能为空")
+    @ApiModelProperty(value = "待拖动ID, mode为moveIn时为产品需求id，其他为分组需求id", required = true)
+    @NotNull(message = "拖动ID不能为空")
     private Long id; // moveIn时时productDemandId， 其他时为productDemandGroupItemId
 
     @ApiModelProperty("前一个ID")

@@ -340,7 +340,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> moveProductDemandGroup(ProductDemandGroupMoveReq productDemandGroupMoveReq) {
-        log.info("产品需求移动分组接收参数:{}", productDemandGroupMoveReq);
+        log.info("产品需求拖动分组接收参数:{}", productDemandGroupMoveReq);
         checkOperationPermission(productDemandGroupMoveReq.getBizDomainId());
         ProductDemandGroupDO targetGroupDO =  productDemandGroupMapper.getByIdAndBizDomainId(productDemandGroupMoveReq.getBizDomainId(), productDemandGroupMoveReq.getId());
         if (targetGroupDO == null) {
@@ -421,7 +421,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> moveProductDemand(ProductDemandGroupItemMoveReq productDemandGroupItemMoveReq) {
-        log.info("产品需求移动接收参数:{}", productDemandGroupItemMoveReq);
+        log.info("产品需求拖动接收参数:{}", productDemandGroupItemMoveReq);
         checkOperationPermission(productDemandGroupItemMoveReq.getBizDomainId());
         ProductDemandGroupItemDO prevGroupItemDO = null;
         if (productDemandGroupItemMoveReq.getPrevId() != null) {

@@ -16,11 +16,11 @@ import javax.validation.constraints.NotNull;
 @Data
 @ApiModel("产品需求分组项目请求")
 public class ProductDemandGroupProjectReq extends ProductDemandGroupReq {
-    @ApiModelProperty("项目id")
+    @ApiModelProperty(value = "项目id", required = true)
     @NotNull(message = "项目id不能为空")
     private Long projectId;
 
-    @ApiModelProperty("绑定类型: true(绑定) false(取消绑定)")
+    @ApiModelProperty(value = "绑定类型: true(绑定) false(取消绑定)", required = true)
     @NotNull(message = "绑定类型不能为空")
     private Boolean type;
 }

@@ -8,19 +8,19 @@ import lombok.EqualsAndHashCode;
 import javax.validation.constraints.NotNull;
 
 /**
- * 产品需求分组需求移动请求
+ * 产品需求分组需求拖动请求
  * @author qiyuan
  * @date 2025/07/15 15:30
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("产品需求分组需求移动请求")
+@ApiModel("产品需求分组需求拖动请求")
 public class ProductDemandGroupItemMoveReq extends ProductDemandGroupMoveReq {
-    @ApiModelProperty("需求移动类型")
+    @ApiModelProperty(value = "需求拖动类型, follow: 分组之间拖动， moveIn： 待规划需求拖进来， moveOut: 需求拖到待规划列表", required = true)
     @NotNull(message = "mode不能为空")
     private String mode; // follow: 分组之间拖动， moveIn: 待规划拖进来，moveOut: 拖到待规划
 
-    @ApiModelProperty("目标分组id")
+    @ApiModelProperty(value = "目标分组id, mode为moveOut时，传0， 其他传具体的分组id", required = true)
     @NotNull(message = "目标分组id不能为空")
     private Long targetGroupId;
 }

@@ -17,15 +17,15 @@ import javax.validation.constraints.NotNull;
 @ApiModel("产品需求分组新增请求")
 public class ProductDemandGroupAddReq extends BaseReq {
 
-    @ApiModelProperty("名称")
+    @ApiModelProperty(value = "名称", required = true)
     @NotNull(message = "名称不能为空")
     private String name;
 
-    @ApiModelProperty("业务域id")
+    @ApiModelProperty(value = "业务域id", required = true)
     @NotNull(message = "业务域id不能为空")
     private Long bizDomainId;
 
-    @ApiModelProperty("需求负责人")
+    @ApiModelProperty(value = "需求负责人", required = true)
     @NotNull(message = "需求负责人不能为空")
     private PersonAddReq owner;
 

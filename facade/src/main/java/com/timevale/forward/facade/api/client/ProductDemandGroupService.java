@@ -71,15 +71,15 @@ public interface ProductDemandGroupService {
     BaseResult<Boolean> bindProject(ProductDemandGroupProjectReq productDemandGroupProjectReq);
 
     /**
-     * 移动产品需求
-     * @param productDemandGroupMoveReq 产品需求分组移动请求
+     * 拖动产品需求
+     * @param productDemandGroupMoveReq 产品需求分组拖动请求
      * @return 是否成功
      */
     BaseResult<Boolean> moveProductDemandGroup(ProductDemandGroupMoveReq productDemandGroupMoveReq);
 
     /**
-     * 移动产品需分组
-     * @param productDemandGroupItemMoveReq 产品需求移动请求
+     * 拖动产品需分组
+     * @param productDemandGroupItemMoveReq 产品需求拖动请求
      * @return 是否成功
      */
     BaseResult<Boolean> moveProductDemand(ProductDemandGroupItemMoveReq productDemandGroupItemMoveReq);

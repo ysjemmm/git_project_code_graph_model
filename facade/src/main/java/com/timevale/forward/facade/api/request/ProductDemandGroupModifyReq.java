@@ -17,7 +17,7 @@ import javax.validation.constraints.NotNull;
 @ApiModel("产品需求分组修改请求")
 public class ProductDemandGroupModifyReq extends ProductDemandGroupAddReq {
 
-    @ApiModelProperty("主键id")
+    @ApiModelProperty(value = "主键id", required = true)
     @NotNull(message = "主键id不能为空")
     private Long id;
 } 

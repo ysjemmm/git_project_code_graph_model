@@ -21,11 +21,11 @@ import javax.validation.constraints.NotBlank;
 @ApiModel("添加相关人员")
 public class PersonAddReq extends ToString {
 
-    @ApiModelProperty("人员姓名")
+    @ApiModelProperty(value = "人员姓名", required = true)
     @NotBlank(message = "人员姓名不能为空")
     private String userName;
 
-    @ApiModelProperty("人员id")
+    @ApiModelProperty(value = "人员id", required = true)
     @NotBlank(message = "人员id不能为空")
     private String userId;
 }
