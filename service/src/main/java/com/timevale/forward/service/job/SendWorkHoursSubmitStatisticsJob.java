@@ -1,5 +1,6 @@
 package com.timevale.forward.service.job;
 
+import com.timevale.crm.sdk.common.constant.enums.EnvEnum;
 import com.timevale.forward.dal.condition.WorkHoursRecordCondition;
 import com.timevale.forward.dal.dao.BizDomainMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
@@ -16,6 +17,7 @@ import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.integration.erp.model.ActionCardMsg;
 import com.timevale.forward.service.manager.MessageRetryManager;
+import com.timevale.forward.service.utils.EnvUtils;
 import com.timevale.framework.schedulerT.client.annotaion.JobHandler;
 import com.timevale.framework.schedulerT.core.biz.model.ReturnT;
 import com.timevale.framework.schedulerT.core.handler.IJobHandler;
@@ -54,6 +56,7 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
     private final MessageRetryManager messageRetryManager;
     private final ProductLineMapper productLineMapper;
     private final BizDomainMapper bizDomainMapper;
+    private final EnvUtils envUtils;
 
     private static final List<Integer> PROJECT_STATUSES = Arrays.asList(
             ProjectStatusEnum.PLANING.getCode(),
@@ -66,7 +69,6 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
 
     /**
      * 执行发送工作小时提交统计信息的任务
-     *
      * 该方法主要用于统计并通知项目成员的工作小时提交情况，只在工作日执行
      * 它会根据项目负责人和业务域来组织信息，并发送给相应的人员
      *
@@ -89,6 +91,8 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
             log.warn("[sendWorkHoursSubmitStatisticsJob]今天是周六或周日，不执行任务");
             return ReturnT.SUCCESS;
         }
+
+        String url = EnvEnum.PROD.equals(envUtils.getEnv()) ? "https://forward.esign.cn" : "https://testforward.tsign.cn";
 
         // 获取需要通知的工作小时项目
         List<ProjectDO> byWorkHoursNotifyProjects = projectMapper.getByWorkHoursNotify(
@@ -195,6 +199,14 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
         ownerProjectMap.forEach((principalId, projectList) -> {
             StringBuilder stringBuilder = new StringBuilder();
 
+            if (projectList.isEmpty()) {
+                return;
+            }
+            // 找到第一个项目
+            Long proId = Optional.of(projectList)
+                    .map(list -> list.get(0).getId())
+                    .orElse(null);
+
             // 构建项目工作小时统计信息
             for (ProjectDO project : projectList) {
                 Long projectId = project.getId();
@@ -245,7 +257,7 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
                     .markdown(stringBuilder.toString())
                     .receivers(Collections.singletonList(principalId))
                     .singleTitle("查看工时填报明细")
-                    .singleUrl("dingtalk://dingtalkclient/page/link?url=https://forward.esign.cn&ddtab=true")
+                    .singleUrl(url + "/projectManagement/edit?id=" + proId + "&type=check")
                     .build();
 
             messageRetryManager.sendAsyncMessage("sendWorkHoursSubmitStatisticsJob", actionCardMsg, principalId, sentCount);
