@@ -68,6 +68,16 @@ public interface ProductDemandGroupItemMapper {
     ProductDemandGroupItemDO getByGroupIdAndId(@Param("bizDomainId") Long bizDomainId, @Param("groupId") Long groupId, @Param("id") Long id);
 
     /**
+     * 根据分组id和产品需求id获取产品需求分组和产品需求关系
+     *
+     * @param demandId 产品需求id
+     * @param groupId 分组id
+     * @return 产品需求分组和产品需求关系
+     */
+    ProductDemandGroupItemDO getByGroupIdAndDemandId(@Param("groupId") Long groupId, @Param("demandId") Long demandId);
+
+
+    /**
      * 获取当前位置前一个分组和产品需求关系
      *
      * @param productDemandGroupId 分组id
@@ -88,8 +98,27 @@ public interface ProductDemandGroupItemMapper {
     /**
      * 更新产品需求分组和产品需求关系的位置
      *
-     * @param  productDemandGroupItemDO 产品需求分组和产品需求关系
+     * @param  productDemandGroupItemDO productDemandGroupItemDO
      * @return 影响行数
      */
     int updatePosition(ProductDemandGroupItemDO productDemandGroupItemDO);
+
+    /**
+     * 新增一条产品需求分组产品需求关系
+     *
+     * @param productDemandGroupItemDO productDemandGroupItemDO
+     * @return 影响行数
+     */
+    int insert(ProductDemandGroupItemDO productDemandGroupItemDO);
+
+    /**
+     * 删除产品需求分组产品需求关系
+     *
+     * @param id          主键id
+     * @param modifyManId 修改人id
+     * @param modifyMan   修改人
+     * @return 影响行数
+     */
+    int delete(@Param("id") Long id, @Param("modifyManId") String modifyManId, @Param("modifyMan") String modifyMan);
+
 } 

@@ -5,9 +5,7 @@ import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Lists;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProductDemandGroupListCondition;
-import com.timevale.forward.dal.dao.BizLabelMapper;
-import com.timevale.forward.dal.dao.ProductDemandGroupItemMapper;
-import com.timevale.forward.dal.dao.ProductDemandGroupMapper;
+import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProductDemandGroupService;
 import com.timevale.forward.facade.api.query.ProductDemandGroupQueryList;
@@ -30,6 +28,7 @@ import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.collections.CollectionUtils;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -72,6 +71,9 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
 
     @Resource
     private ProductLineComponent productLineComponent;
+
+    @Resource
+    private ProductDemandMapper productDemandMapper;
 
     /**
      * 查询业务域内的待规划的产品需求
@@ -234,6 +236,14 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         return productDemandGroupItemVOList;
     }
 
+    private void checkOperationPermission(Long bizDomainId) {
+        // 只有业务域有里的产品经理才能新增
+        List<String> productLineOwners = productLineComponent.getProductLineOwnersInBizDomain(bizDomainId);
+        if (!productLineOwners.contains(LocalSessionUtils.getUserInfo().getId())) {
+            throw new BaseBizRuntimeException("只有业务域有里的产品经理才能操作");
+        }
+    }
+
     /**
      * 新增产品需求分组
      *
@@ -247,12 +257,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         if (productDemandGroupAddReq.getName().contains(CommonConstant.BLANK)) {
             throw new BaseBizRuntimeException("产品需求分组名称中请勿包含空格");
         }
-        // 只有业务域有里的产品经理才能新增
-        List<String> productLineOwners = productLineComponent.getProductLineOwnersInBizDomain(productDemandGroupAddReq.getBizDomainId());
-        if (!productLineOwners.contains(LocalSessionUtils.getUserInfo().getId())) {
-            throw new BaseBizRuntimeException("只有业务域有里的产品经理才能新增产品需求分组");
-        }
-
+        checkOperationPermission(productDemandGroupAddReq.getBizDomainId());
         ProductDemandGroupDO productDemandGroupDO = ProductDemandGroupCopier.INSTANCE.toDO(productDemandGroupAddReq);
         ProductDemandGroupDO productDemandGroup = productDemandGroupMapper.getByBizDomainIdAndName(productDemandGroupDO.getBizDomainId(), productDemandGroupDO.getName());
         if (productDemandGroup != null) {
@@ -261,6 +266,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         double position = PositionUtil.generate(productDemandGroupAddReq.getBizDomainId().toString(), System.currentTimeMillis());
         productDemandGroupDO.setPosition(position);
         productDemandGroupDO.setVersion(0L);
+        productDemandGroupDO.setIsActive(true);
         productDemandGroupMapper.insert(productDemandGroupDO);
         return BaseResult.success(true);
     }
@@ -278,12 +284,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         if (productDemandGroupModifyReq.getName().contains(CommonConstant.BLANK)) {
             throw new BaseBizRuntimeException("产品需求分组名称中请勿包含空格");
         }
-
-        // 只有业务域有里的产品经理才能修改
-        List<String> productLineOwners = productLineComponent.getProductLineOwnersInBizDomain(productDemandGroupModifyReq.getBizDomainId());
-        if (!productLineOwners.contains(LocalSessionUtils.getUserInfo().getId())) {
-            throw new BaseBizRuntimeException("只有业务域有里的产品经理才能修改产品需求分组");
-        }
+        checkOperationPermission(productDemandGroupModifyReq.getBizDomainId());
 
         ProductDemandGroupDO productDemandGroupDO = ProductDemandGroupCopier.INSTANCE.toDO(productDemandGroupModifyReq);
         ProductDemandGroupDO productDemandGroup = productDemandGroupMapper.get(productDemandGroupDO.getId());
@@ -309,12 +310,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         String modifyManId = userInfo.getId();
         String modifyMan = userInfo.getFullAlias();
         ProductDemandGroupDO productDemandGroupDO = productDemandGroupMapper.get(productDemandGroupReq.getId());
-        // 只有业务域有里的产品经理才能删除
-        List<String> productLineOwners = productLineComponent.getProductLineOwnersInBizDomain(productDemandGroupDO.getBizDomainId());
-        if (!productLineOwners.contains(modifyManId)) {
-            throw new BaseBizRuntimeException("只有业务域有里的产品经理才能删除产品需求分组");
-        }
-
+        checkOperationPermission(productDemandGroupDO.getBizDomainId());
         // 删除产品需求分组
         productDemandGroupMapper.delete(productDemandGroupReq.getId(),modifyManId, modifyMan);
         // 删除产品需求分组下的产品需求
@@ -345,6 +341,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> moveProductDemandGroup(ProductDemandGroupMoveReq productDemandGroupMoveReq) {
         log.info("产品需求移动分组接收参数:{}", productDemandGroupMoveReq);
+        checkOperationPermission(productDemandGroupMoveReq.getBizDomainId());
         ProductDemandGroupDO targetGroupDO =  productDemandGroupMapper.getByIdAndBizDomainId(productDemandGroupMoveReq.getBizDomainId(), productDemandGroupMoveReq.getId());
         if (targetGroupDO == null) {
             throw new BaseBizRuntimeException("产品需求分组不存在, 请刷新后重试");
@@ -363,6 +360,14 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
                 throw new BaseBizRuntimeException("产品需求分组不存在, 请刷新后重试");
             }
         }
+        ProductDemandGroupDO targetNextGroupDO =  productDemandGroupMapper.getNextByPosition(productDemandGroupMoveReq.getBizDomainId(), targetGroupDO.getPosition());
+        ProductDemandGroupDO targetPreGroupDO = productDemandGroupMapper.getPreByPosition(productDemandGroupMoveReq.getBizDomainId(), targetGroupDO.getPosition());
+        boolean preConditionEqual = (prevGroupDO == null && targetPreGroupDO == null) || (prevGroupDO!=null && targetPreGroupDO != null && prevGroupDO.getId().equals(targetPreGroupDO.getId()));
+        boolean nextConditionEqual = (nextGroupDO == null && targetNextGroupDO == null) || (nextGroupDO!=null && targetNextGroupDO != null && nextGroupDO.getId().equals(targetNextGroupDO.getId()));
+        if (preConditionEqual && nextConditionEqual) {
+            throw new BaseBizRuntimeException("产品需求分组位置未变化，无需移动");
+        }
+
         double position;
         if (productDemandGroupMoveReq.getPrevId() == null && productDemandGroupMoveReq.getNextId() == null) {
             // 前后都为空，直接添加到第一个
@@ -398,7 +403,17 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         updateGroupDO.setId(targetGroupDO.getId());
         updateGroupDO.setModifyMan(modifyMan);
         updateGroupDO.setModifyManId(modifyManId);
-        productDemandGroupMapper.updatePosition(updateGroupDO);
+        try {
+            int updatePosition = productDemandGroupMapper.updatePosition(updateGroupDO);
+            if (updatePosition != 1) {
+                log.error("更新产品需求分组位置失败：{}", updateGroupDO);
+                throw new BaseBizRuntimeException("操作失败，请刷新页面重试");
+            }
+        } catch (DuplicateKeyException e) {
+            log.error("更新产品需求分组位置失败：{}", updateGroupDO, e);
+            throw new BaseBizRuntimeException("操作失败，请刷新页面重试");
+        }
+
         // TODO 如果更新失败【乐观锁更新失败，唯一键冲突失败】， 重试或者提示刷新页面重试
         return BaseResult.success(true);
     }
@@ -407,10 +422,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> moveProductDemand(ProductDemandGroupItemMoveReq productDemandGroupItemMoveReq) {
         log.info("产品需求移动接收参数:{}", productDemandGroupItemMoveReq);
-        ProductDemandGroupItemDO targetGroupItemDO =  productDemandGroupItemMapper.getByBizDomainIdAndId(productDemandGroupItemMoveReq.getBizDomainId(), productDemandGroupItemMoveReq.getId());
-        if (targetGroupItemDO == null) {
-            throw new BaseBizRuntimeException("产品需求分组的产品需求不存在, 请刷新后重试");
-        }
+        checkOperationPermission(productDemandGroupItemMoveReq.getBizDomainId());
         ProductDemandGroupItemDO prevGroupItemDO = null;
         if (productDemandGroupItemMoveReq.getPrevId() != null) {
             prevGroupItemDO =  productDemandGroupItemMapper.getByGroupIdAndId(productDemandGroupItemMoveReq.getBizDomainId(),
@@ -427,13 +439,48 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
                 throw new BaseBizRuntimeException("产品需求分组的产品需求不存在, 请刷新后重试");
             }
         }
+        ProductDemandGroupItemDO targetGroupItemDO = null;
+        if ("moveIn".equals(productDemandGroupItemMoveReq.getMode())) {
+            // 查看产品需求是否是当前业务域里的
+            ProductDemandDO productDemandDO = productDemandMapper.get(productDemandGroupItemMoveReq.getId());
+            if (productDemandDO == null) {
+                throw new BaseBizRuntimeException("产品需求不存在");
+            }
+            ProductLineDO productLineDO = productLineComponent.getById(productDemandDO.getProductLineId());
+            if (productLineDO == null || !productDemandGroupItemMoveReq.getBizDomainId().equals(productLineDO.getBizDomainId())) {
+                throw new BaseBizRuntimeException("产品需求不属于当前业务域, 不能操作");
+            }
+            // 查看产品需求是否已经在分组里
+            ProductDemandGroupItemDO byGroupIdAndDemandId = productDemandGroupItemMapper.getByGroupIdAndDemandId(productDemandGroupItemMoveReq.getTargetGroupId(), productDemandGroupItemMoveReq.getId());
+            if (byGroupIdAndDemandId != null) {
+                throw new BaseBizRuntimeException("产品需求已存在");
+            }
+        } else if ("moveOut".equals(productDemandGroupItemMoveReq.getMode())) {
+//            if (productDemandGroupItemMoveReq.getTargetGroupId() != 0 || productDemandGroupItemMoveReq.getPrevId() != null || productDemandGroupItemMoveReq.getNextId() != null) {
+//                throw new BaseBizRuntimeException("参数错误");
+//            }
+        } else {
+            targetGroupItemDO =  productDemandGroupItemMapper.getByBizDomainIdAndId(productDemandGroupItemMoveReq.getBizDomainId(), productDemandGroupItemMoveReq.getId());
+            if (targetGroupItemDO == null) {
+                throw new BaseBizRuntimeException("产品需求分组的产品需求不存在, 请刷新后重试");
+            }
+
+            ProductDemandGroupItemDO targetNextGroupItemDO =  productDemandGroupItemMapper.getNextByPosition(productDemandGroupItemMoveReq.getTargetGroupId(), targetGroupItemDO.getPosition());
+            ProductDemandGroupItemDO targetPreGroupItemDO = productDemandGroupItemMapper.getPreByPosition(productDemandGroupItemMoveReq.getTargetGroupId(), targetGroupItemDO.getPosition());
+            boolean preConditionEqual = (prevGroupItemDO == null && targetPreGroupItemDO == null) || (prevGroupItemDO!=null && targetPreGroupItemDO != null && prevGroupItemDO.getId().equals(targetPreGroupItemDO.getId()));
+            boolean nextConditionEqual = (nextGroupItemDO == null && targetNextGroupItemDO == null) || (nextGroupItemDO!=null && targetNextGroupItemDO != null && nextGroupItemDO.getId().equals(targetNextGroupItemDO.getId()));
+            if (preConditionEqual && nextConditionEqual) {
+                throw new BaseBizRuntimeException("产品需求位置未变化，无需移动");
+            }
+        }
+
         double position;
         if (productDemandGroupItemMoveReq.getPrevId() == null && productDemandGroupItemMoveReq.getNextId() == null) {
             // 前后都为空，直接添加到第一个
             position = PositionUtil.generate(productDemandGroupItemMoveReq.getBizDomainId().toString(), System.currentTimeMillis());
         } else if (productDemandGroupItemMoveReq.getPrevId() == null && productDemandGroupItemMoveReq.getNextId() != null) {
             // 前面为空，后面不为空
-            ProductDemandGroupItemDO nextPreGroupItemDO = productDemandGroupItemMapper.getPreByPosition(targetGroupItemDO.getProductDemandGroupId(), nextGroupItemDO.getPosition());
+            ProductDemandGroupItemDO nextPreGroupItemDO = productDemandGroupItemMapper.getPreByPosition(productDemandGroupItemMoveReq.getTargetGroupId(), nextGroupItemDO.getPosition());
             // 如果后面不是第一个（前面还存在）则(next.positon + next.pre.position)/2
             if(nextPreGroupItemDO != null) {
                 position = (nextGroupItemDO.getPosition() + nextPreGroupItemDO.getPosition()) / 2;
@@ -444,7 +491,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
             }
         } else {
             // 前面不为空
-            ProductDemandGroupItemDO preNextPreGroupItemDO = productDemandGroupItemMapper.getNextByPosition(targetGroupItemDO.getProductDemandGroupId(), prevGroupItemDO.getPosition());
+            ProductDemandGroupItemDO preNextPreGroupItemDO = productDemandGroupItemMapper.getNextByPosition(productDemandGroupItemMoveReq.getTargetGroupId(), prevGroupItemDO.getPosition());
             // 如果前面不是最后一个（后面还存在）则(pre.position + pre.next.position)/2
             if (preNextPreGroupItemDO != null) {
                 position = (prevGroupItemDO.getPosition() + preNextPreGroupItemDO.getPosition()) / 2;
@@ -457,13 +504,50 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         String modifyManId = userInfo.getId();
         String modifyMan = userInfo.getFullAlias();
-        val updateGroupItemDO = new ProductDemandGroupItemDO().setPosition(position)
-                .setVersion(targetGroupItemDO.getVersion());
-        updateGroupItemDO.setId(targetGroupItemDO.getId());
-        updateGroupItemDO.setModifyMan(modifyMan);
-        updateGroupItemDO.setModifyManId(modifyManId);
-        productDemandGroupItemMapper.updatePosition(updateGroupItemDO);
-        // TODO 如果更新失败【乐观锁更新失败，唯一键冲突失败】， 重试或者提示刷新页面重试
+        if ("moveIn".equals(productDemandGroupItemMoveReq.getMode())) {
+            // 创建
+            val createGroupItemDO = new ProductDemandGroupItemDO().setPosition(position)
+                    .setProductDemandId(productDemandGroupItemMoveReq.getId())
+                    .setProductDemandGroupId(productDemandGroupItemMoveReq.getTargetGroupId())
+                    .setVersion(0L).setIsActive(true);
+            createGroupItemDO.setCreateMan(modifyMan);
+            createGroupItemDO.setCreateManId(modifyManId);
+            try {
+                int createPosition = productDemandGroupItemMapper.insert(createGroupItemDO);
+                if (createPosition != 1) {
+                    log.error("创建产品需求分组产品需求失败:{}", createGroupItemDO);
+                    throw new BaseBizRuntimeException("操作失败，请刷新页面重试");
+                }
+            } catch (DuplicateKeyException e) {
+                log.error("创建产品需求分组产品需求失败:{}", createGroupItemDO, e);
+                throw new BaseBizRuntimeException("操作失败，请刷新页面重试");
+            }
+
+        } else if ("moveOut".equals(productDemandGroupItemMoveReq.getMode())) {
+            // 删除
+            productDemandGroupItemMapper.delete(productDemandGroupItemMoveReq.getId(), modifyManId, modifyMan);
+        } else {
+            // 更新位置或目标分组id
+            val updateGroupItemDO = new ProductDemandGroupItemDO().setPosition(position)
+                    .setVersion(targetGroupItemDO.getVersion())
+                    .setProductDemandGroupId(productDemandGroupItemMoveReq.getTargetGroupId());
+            updateGroupItemDO.setId(targetGroupItemDO.getId());
+            updateGroupItemDO.setModifyMan(modifyMan);
+            updateGroupItemDO.setModifyManId(modifyManId);
+            try {
+                int updatePosition = productDemandGroupItemMapper.updatePosition(updateGroupItemDO);
+                if (updatePosition != 1) {
+                    log.error("更新产品需求分组产品需求位置失败:{}", updateGroupItemDO);
+                    throw new BaseBizRuntimeException("操作失败，请刷新页面重试");
+                }
+            } catch (DuplicateKeyException e) {
+                log.error("更新产品需求分组产品需求位置失败:{}", updateGroupItemDO, e);
+                throw new BaseBizRuntimeException("操作失败，请刷新页面重试");
+            }
+
+            // TODO 如果更新失败【乐观锁更新失败，唯一键冲突失败】， 重试或者提示刷新页面重试
+        }
+
         return BaseResult.success(true);
     }
 }

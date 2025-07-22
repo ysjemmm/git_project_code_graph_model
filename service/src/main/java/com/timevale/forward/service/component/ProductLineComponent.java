@@ -95,4 +95,8 @@ public class ProductLineComponent {
         return owners.stream().collect(Collectors.toList());
     }
 
+    public ProductLineDO getById(Long id) {
+        return productLineMapper.selectById(id);
+    }
+
 }
