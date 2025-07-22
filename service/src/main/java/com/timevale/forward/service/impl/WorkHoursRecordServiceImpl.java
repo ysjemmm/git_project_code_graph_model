@@ -61,6 +61,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -394,7 +395,11 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             // 字符串日期不要时间
             localDate = LocalDate.now();
         } else {
-            localDate = LocalDate.parse(dateStr);
+            try {
+                localDate = LocalDate.parse(dateStr);
+            } catch (DateTimeParseException e) {
+                throw new BaseBizRuntimeException("日期格式错误");
+            }
         }
 
         List<RegisterWorkHoursTaskVO> registerWorkHoursTaskVOS = new ArrayList<>();
