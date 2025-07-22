@@ -414,13 +414,12 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
 
         // 任务列表
         for (TaskDO taskDO : progressTaskList) {
-            RegisterWorkHoursTaskVO registerWorkHoursTaskVO = RegisterWorkHoursTaskVO.builder()
-                    .workItemId(taskDO.getId())
-                    .projectId(taskDO.getProjectId())
-                    .projectName(projectMap.get(taskDO.getProjectId()))
-                    .name(taskDO.getName())
-                    .workItemType(BizTypeEnum.TASK.getCode())
-                    .build();
+            RegisterWorkHoursTaskVO registerWorkHoursTaskVO = new RegisterWorkHoursTaskVO();
+            registerWorkHoursTaskVO.setWorkItemId(taskDO.getId());
+            registerWorkHoursTaskVO.setProjectId(taskDO.getProjectId());
+            registerWorkHoursTaskVO.setProjectName(projectMap.get(taskDO.getProjectId()));
+            registerWorkHoursTaskVO.setName(taskDO.getName());
+            registerWorkHoursTaskVO.setWorkItemType(BizTypeEnum.TASK.getCode());
             registerWorkHoursTaskVOS.add(registerWorkHoursTaskVO);
         }
         return BaseResult.success(registerWorkHoursTaskVOS);
