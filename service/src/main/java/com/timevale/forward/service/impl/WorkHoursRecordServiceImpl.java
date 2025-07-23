@@ -187,7 +187,19 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             List<WorkHoursRecordDO> lastProgressList = workHoursRecordMapper.getLastProgress(Collections.singletonList(taskDO.getProjectId()), BizTypeEnum.TASK.getCode(), Collections.singletonList(taskDO.getId()));
             // 进度Map
             Map<Long, Integer> lastProgressMap = lastProgressList.stream().collect(Collectors.toMap(WorkHoursRecordDO::getWorkItemId, WorkHoursRecordDO::getProgress, (v1, v2) -> v2));
-            if (workHoursRecordDO.getProgress() <= lastProgressMap.getOrDefault(taskDO.getId(), 0)) {
+            Integer historyMaxProgress = lastProgressMap.getOrDefault(taskDO.getId(), 0);
+            // 如果是修改，则减去历史进度
+            if (workHoursRecordDO.getId() != null) {
+                List<WorkHoursRecordDO> hoursRecordDOList = workHoursRecordMapper
+                        .list(WorkHoursRecordCondition.builder()
+                                .projectId(taskDO.getProjectId())
+                                .workItemType(BizTypeEnum.TASK.getCode()).workItemId(taskDO.getId()).build());
+
+                // 从大到小排序后取进度第二大的进度
+                hoursRecordDOList.sort(Comparator.comparingInt(WorkHoursRecordDO::getProgress).reversed());
+                historyMaxProgress = hoursRecordDOList.size() > 1 ? hoursRecordDOList.get(1).getProgress() : 0;
+            }
+            if (workHoursRecordDO.getProgress() <= historyMaxProgress) {
                 throw new BaseBizRuntimeException("进度不能小于等于历史进度");
             }
             // 获取当前日期
