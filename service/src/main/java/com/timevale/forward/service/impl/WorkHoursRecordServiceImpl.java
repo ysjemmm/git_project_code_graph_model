@@ -263,7 +263,12 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             throw new BaseBizRuntimeException("该工时记录不存在");
         }
         WorkHoursRecordVO workHoursRecordVO = WorkHoursRecordCopier.INSTANCE.convert(workHoursRecordDO);
-
+        if (workHoursRecordDO.getWorkItemType() == BizTypeEnum.TASK.getCode()) {
+            TaskDO taskDO = taskMapper.getById(workHoursRecordDO.getWorkItemId());
+            ProjectDO projectDO = projectMapper.get(taskDO.getProjectId());
+            workHoursRecordVO.setProjectName(projectDO.getName());
+            workHoursRecordVO.setTaskName(taskDO.getName());
+        }
         return BaseResult.success(workHoursRecordVO);
     }
 

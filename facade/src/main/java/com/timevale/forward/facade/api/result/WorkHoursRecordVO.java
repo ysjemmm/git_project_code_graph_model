@@ -28,6 +28,9 @@ public class WorkHoursRecordVO extends ToString {
     @ApiModelProperty("项目id")
     private Long projectId;
 
+    @ApiModelProperty("项目名称")
+    private String projectName;
+
     @ApiModelProperty("描述")
     private String desc;
 
@@ -36,6 +39,9 @@ public class WorkHoursRecordVO extends ToString {
 
     @ApiModelProperty("工作项id")
     private Long workItemId;
+
+    @ApiModelProperty("任务名称")
+    private String taskName;
 
     @ApiModelProperty("创建人id")
     private String createManId;
