@@ -136,12 +136,18 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
                 return;
             }
 
-            // 构建消息内容，列出待完成任务项
-            StringBuilder stringBuilder = new StringBuilder("待完成任务项:  \n");
+            String fullUrl = url + "/mobileTimeRegistration?dataStr=" + dateStr;
+            // Markdown 内容包含提示
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("## 工时填报  \n");
+            stringBuilder.append("请完成以下任务的工时填报：  \n");
             taskIdList.forEach(taskId -> {
                 TaskVO vo = taskVOMap.get(taskId);
-                stringBuilder.append("【").append(notifyProjectMap.get(vo.getProjectId())).append("】").append("-").append(vo.getName()).append("  \n");
+                stringBuilder.append("- 【").append(notifyProjectMap.get(vo.getProjectId())).append("】").append("-").append(vo.getName()).append("  \n");
             });
+            stringBuilder.append("  \n👉 [点击跳转填报页面](").append(fullUrl).append(")  \n");
+            stringBuilder.append("⚠️ 如跳转失败，请复制下方链接在浏览器打开：  \n");
+            stringBuilder.append(fullUrl);
 
             // 创建行动卡片消息对象
             ActionCardMsg actionCardMsg = ActionCardMsg.builder()
@@ -149,7 +155,7 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
                     .markdown(stringBuilder.toString())
                     .receivers(Lists.newArrayList(userId))
                     .singleTitle("去填报")
-                    .singleUrl(url + "/mobileTimeRegistration?dataStr=" + dateStr)
+                    .singleUrl(fullUrl)
                     .build();
 
             messageRetryManager.sendAsyncMessage("sendWorkHoursSubmitJob", actionCardMsg, userId, sentCount);
