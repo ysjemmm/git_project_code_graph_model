@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 /**
  * @auther: yuhua
@@ -19,28 +18,18 @@ import java.util.List;
 @ApiModel("工作台任务工时")
 public class WorkbenchesWorkHoursVO extends ToString {
 
-    @ApiModelProperty("项目")
-    private ProjectVO project;
+    @ApiModelProperty("成员id")
+    private String teamMemberId;
 
-    @ApiModelProperty("项目成员工时集合")
-    private List<TeamMemberHours> memberHoursList;
+    @ApiModelProperty("成员名称")
+    private String teamMemberName;
 
-    @Data
-    public static class TeamMemberHours extends ToString {
+    @ApiModelProperty("昨日投入工时")
+    private BigDecimal yesterdayHours;
 
-        @ApiModelProperty("成员id")
-        private String teamMemberId;
+    @ApiModelProperty("今日投入工时")
+    private BigDecimal todayHours;
 
-        @ApiModelProperty("成员名称")
-        private String teamMemberName;
-
-        @ApiModelProperty("昨日投入工时")
-        private BigDecimal yesterdayHours;
-
-        @ApiModelProperty("今日投入工时")
-        private BigDecimal todayHours;
-
-        @ApiModelProperty("累计投入工时")
-        private BigDecimal totalHours;
-    }
+    @ApiModelProperty("累计投入工时")
+    private BigDecimal totalHours;
 }

@@ -2,6 +2,7 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
+import com.timevale.forward.facade.api.query.TaskExecutorWorkHoursQueryList;
 import com.timevale.forward.facade.api.query.WorkHoursRecordQueryList;
 import com.timevale.forward.facade.api.request.WorkHoursRecordAddReq;
 import com.timevale.forward.facade.api.request.WorkHoursRecordBatchAddReq;
@@ -79,5 +80,5 @@ public interface WorkHoursRecordService {
 
     BaseResult<List<RegisterWorkHoursTaskVO>> waitRegisterTaskList(String dateStr);
 
-    BaseResult<List<WorkbenchesWorkHoursVO>> workbenches(List<Long> bizDomainIds, List<Long> productLineIds, List<Long> projectIds, List<Integer> status);
+    BaseResult<PageQueryResult<WorkbenchesWorkHoursVO>> workbenches(TaskExecutorWorkHoursQueryList query);
 }
