@@ -142,6 +142,7 @@ public class ProductDemandGroupListCondition extends QueryBase {
     public Boolean judgeProductDemandQueryExist() {
         return this.id != null ||
                 !Strings.isNullOrEmpty(this.name) ||
+                CollectionUtils.isNotEmpty(this.bizDomainIds) ||
                 CollectionUtils.isNotEmpty(this.productLineIds) ||
                 CollectionUtils.isNotEmpty(this.priorities) ||
                 CollectionUtils.isNotEmpty(this.status) ||

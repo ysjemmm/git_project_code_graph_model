@@ -126,11 +126,15 @@
                     #{item}
                 </foreach>
             </if>
-            <if test="bizDomainIds!=null and bizDomainIds.size()>0">
+            <!--<if test="bizDomainIds!=null and bizDomainIds.size()>0">
                 and d.id in
                 <foreach collection="bizDomainIds" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
+            </if>-->
+            <!-- 只查询当前业务域下的产品需求 -->
+            <if test="groupBizDomainId!=null ">
+                and d.id = #{groupBizDomainId}
             </if>
             <if test="ownerIds!=null and ownerIds.size()>0">
                 and a.owner_id in
