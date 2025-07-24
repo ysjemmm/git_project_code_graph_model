@@ -440,6 +440,10 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
 
         // 查询项目关联的需求信息
         List<ProjectProductDemandDO> byProjectId = projectProductDemandMapper.getByProjectId(projectId);
+        // 如果没有关联的需求，直接返回结果
+        if (CollectionUtils.isEmpty(byProjectId)) {
+            return BaseResult.success(result);
+        }
         // 提取需求ID列表
         List<Long> demandIds = byProjectId.stream()
                 .map(ProjectProductDemandDO::getProductDemandId)
@@ -451,7 +455,10 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         List<Long> taskIds = taskProductDemandDOS.stream()
                 .map(TaskProductDemandDO::getTaskId)
                 .collect(Collectors.toList());
-
+        // 如果没有关联的任务，直接返回结果
+        if (CollectionUtils.isEmpty(taskIds)) {
+            return BaseResult.success(result);
+        }
         // 查询任务基本信息
         List<TaskDO> taskDOS = taskMapper.getByIdList(taskIds);
         // 过滤无效任务和缺少日期信息的任务

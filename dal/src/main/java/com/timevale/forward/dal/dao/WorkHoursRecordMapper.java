@@ -30,10 +30,10 @@ public interface WorkHoursRecordMapper {
     /**
      * 查询
      *
-     * @param id id
+     * @param condition
      * @return 工时记录信息
      */
-    WorkHoursRecordDO get(@Param("id") Long id);
+    WorkHoursRecordDO get(WorkHoursRecordCondition condition);
 
     /**
      * 新增单条工时记录
