@@ -67,6 +67,8 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
     /**
      * 执行发送工作小时提交统计信息的任务
      * 该方法主要用于统计并通知项目成员的工作小时提交情况，只在工作日执行
@@ -257,7 +259,7 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
             // 构建并发送消息
             ActionCardMsg actionCardMsg = ActionCardMsg.builder()
                     .title("工时填报情况")
-                    .markdown(buildMarkdownMessage(stringBuilder, fullUrl))
+                    .markdown(buildMarkdownMessage(stringBuilder, yesterday, fullUrl))
                     .receivers(Collections.singletonList(principalId))
                     .singleTitle("查看工时填报明细")
                     .singleUrl(fullUrl)
@@ -270,9 +272,9 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
         return ReturnT.SUCCESS;
     }
 
-    private String buildMarkdownMessage(StringBuilder content, String fullUrl) {
+    private String buildMarkdownMessage(StringBuilder content, LocalDate yesterday, String fullUrl) {
         StringBuilder sb = new StringBuilder();
-        sb.append("## 工时填报情况  \n");
+        sb.append("## " + yesterday.format(DATE_FORMATTER) + "工时填报情况  \n");
         sb.append(content);
         sb.append("  \n👉 [点击跳转填报详情页面](").append(fullUrl).append(")  \n");
         sb.append("⚠️ 如跳转失败，请复制下方链接在浏览器打开：  \n");

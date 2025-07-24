@@ -139,7 +139,7 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
             String fullUrl = url + "/mobileTimeRegistration?dataStr=" + dateStr;
             // Markdown 内容包含提示
             StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append("## 工时填报  \n");
+            stringBuilder.append("## " + today.format(DATE_FORMATTER) + "工时填报  \n");
             stringBuilder.append("请完成以下任务的工时填报：  \n");
             taskIdList.forEach(taskId -> {
                 TaskVO vo = taskVOMap.get(taskId);
