@@ -4,6 +4,7 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
+import com.timevale.forward.dal.condition.WorkHoursRecordCondition;
 import com.timevale.forward.dal.dao.BugLogMapper;
 import com.timevale.forward.dal.dao.BugOfflineMapper;
 import com.timevale.forward.dal.dao.PersonMapper;
@@ -14,6 +15,7 @@ import com.timevale.forward.dal.dao.ProjectRiskMapper;
 import com.timevale.forward.dal.dao.TaskMapper;
 import com.timevale.forward.dal.dao.TaskProductDemandMapper;
 import com.timevale.forward.dal.dao.TestBillMapper;
+import com.timevale.forward.dal.dao.WorkHoursRecordMapper;
 import com.timevale.forward.dal.dto.BugOfflineBelongDistributionDTO;
 import com.timevale.forward.dal.dto.BugOfflineCountDTO;
 import com.timevale.forward.dal.dto.BugOfflineReasonDistributionDTO;
@@ -30,6 +32,7 @@ import com.timevale.forward.dal.entity.ProjectRiskDO;
 import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.dal.entity.TaskProductDemandDO;
 import com.timevale.forward.dal.entity.TestBillDO;
+import com.timevale.forward.dal.entity.WorkHoursRecordDO;
 import com.timevale.forward.facade.api.client.ProjectBoardService;
 import com.timevale.forward.facade.api.query.ProjectBugOfflineCountQueryList;
 import com.timevale.forward.facade.api.query.TaskOverdueRankQueryList;
@@ -43,6 +46,7 @@ import com.timevale.forward.facade.api.result.ProjectBoardDemandWorkTimeVO;
 import com.timevale.forward.facade.api.result.ProjectBoardSinglelWorkTimeVO;
 import com.timevale.forward.facade.api.result.ProjectBoardTaskVO;
 import com.timevale.forward.facade.api.result.TaskOverdueCountVO;
+import com.timevale.forward.model.enums.BizTypeEnum;
 import com.timevale.forward.model.enums.BugLogTypeEnum;
 import com.timevale.forward.model.enums.BugStatusEnum;
 import com.timevale.forward.model.enums.PersonTypeEnum;
@@ -119,6 +123,9 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
 
     @Resource
     private ProjectNodeMapper projectNodeMapper;
+
+    @Resource
+    private WorkHoursRecordMapper workHoursRecordMapper;
 
     @Override
     public BaseResult<ProjectBoardDataIndicatorVO> getDataIndicator(Long projectId) {
@@ -484,6 +491,19 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         Map<Long, PersonDO> personMap = personMapper.get(taskIds, PersonTypeEnum.TASK_EXECUTOR.getCode()).stream()
                 .collect(Collectors.toMap(PersonDO::getMainId, p -> p, (v1, v2) -> v2));
 
+        // 查询工时信息
+        List<WorkHoursRecordDO> workHoursRecordDOS = workHoursRecordMapper.list(WorkHoursRecordCondition.builder().projectId(projectId).workItemType(BizTypeEnum.TASK.getCode()).workItemIds(taskIds).build());
+        // 任务的累计工时Map
+        Map<Long, BigDecimal> taskWorkHoursMap = workHoursRecordDOS.stream()
+                .collect(Collectors.groupingBy(WorkHoursRecordDO::getWorkItemId,
+                        Collectors.mapping(WorkHoursRecordDO::getWorkHours, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))));
+        // 任务的最新进度Map,按创建时间排序取最新一条
+        Map<Long, Integer> taskProgressMap = workHoursRecordDOS.stream()
+                .collect(Collectors.groupingBy(WorkHoursRecordDO::getWorkItemId,
+                        Collectors.collectingAndThen(
+                                Collectors.maxBy(Comparator.comparing(WorkHoursRecordDO::getCreateDate)),
+                                record -> record.map(WorkHoursRecordDO::getProgress).orElse(0)
+                        )));
         // 初始化任务信息Map
         Map<Long, List<ProjectBoardTaskVO>> projectBoardTaskVoMap = new HashMap<>();
         // 获取当前日期
@@ -509,6 +529,11 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
             // 判断任务是否延期
             projectBoardTaskVO.setIsDelay(isTaskDelayed(taskDO, current));
 
+            // 设置任务进度
+            projectBoardTaskVO.setNewProgress(taskProgressMap.getOrDefault(taskId, 0));
+            // 设置任务工时信息
+            projectBoardTaskVO.setTotalWorkHours(taskWorkHoursMap.getOrDefault(taskId, BigDecimal.ZERO));
+
             // 将任务信息添加到对应需求的列表中
             projectBoardTaskVoMap.computeIfAbsent(taskProductDemandDO.getProductDemandId(), k -> new ArrayList<>())
                     .add(projectBoardTaskVO);
@@ -522,6 +547,9 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
             ProjectBoardDemandWorkTimeVO demandWorkTimeVO = new ProjectBoardDemandWorkTimeVO();
 
             BigDecimal planUseTime = v.stream().map(ProjectBoardTaskVO::getPlanUseTime).filter(Objects::nonNull).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
+            // 需求进度，总的任务进度除任务数量,保留两位小数
+            double avgProgress = v.stream().mapToDouble(ProjectBoardTaskVO::getNewProgress).average().orElse(0.0);
+            demandWorkTimeVO.setNewProgress(new BigDecimal(avgProgress).setScale(2, RoundingMode.HALF_UP).doubleValue());
 
             // 设置需求基本信息
             demandWorkTimeVO.setDemandId(productDemandListDO.getId());

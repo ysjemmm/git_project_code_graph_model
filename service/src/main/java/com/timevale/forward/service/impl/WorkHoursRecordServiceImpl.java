@@ -133,7 +133,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         // 转换查询条件
         WorkHoursRecordCondition workHoursRecordCondition = WorkHoursRecordCopier.INSTANCE.convert(workHoursRecordQueryList);
         // 开始分页
-        PageHelper.startPage(workHoursRecordCondition.getPageNum(), workHoursRecordCondition.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+        PageHelper.startPage(workHoursRecordCondition.getPageNum(), workHoursRecordCondition.getPageSize(), CommonConstant.CREATE_DESC_ORDER_BY);
         // 查询
         List<WorkHoursRecordDO> workHoursRecordDOList = workHoursRecordMapper.list(workHoursRecordCondition);
         // 转换
