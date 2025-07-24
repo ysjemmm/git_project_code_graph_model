@@ -317,6 +317,9 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
 
         List<PersonDO> personDOList = personMapper.get(taskIds, PersonTypeEnum.TASK_EXECUTOR.getCode());
 
+        // 查询工时信息
+        List<WorkHoursRecordDO> workHoursRecordDOS = workHoursRecordMapper.list(WorkHoursRecordCondition.builder().projectId(projectId).workItemType(BizTypeEnum.TASK.getCode()).workItemIds(taskIds).build());
+
         Map<String, List<ProjectBoardTaskVO>> projectBoardTaskVoMap = new HashMap<>();
         Date current = new Date();
         personDOList.forEach(a -> {
@@ -327,6 +330,10 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
             projectBoardTaskVO.setExecutor(a.getUserName());
             projectBoardTaskVO.setExecutorId(a.getUserId());
             projectBoardTaskVO.setIsDelay(isTaskDelayed(taskDO, current));
+            // 设置任务进度
+            projectBoardTaskVO.setNewProgress(getTaskProgressMap(workHoursRecordDOS).getOrDefault(taskDO.getId(), 0));
+            // 设置任务工时信息
+            projectBoardTaskVO.setTotalWorkHours(getWorkHoursMap(workHoursRecordDOS).getOrDefault(taskDO.getId(), BigDecimal.ZERO));
             projectBoardTaskVoMap.computeIfAbsent(a.getUserId(), v -> new ArrayList<>()).add(projectBoardTaskVO);
         });
 
@@ -349,6 +356,27 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         });
 
         return BaseResult.success(result);
+    }
+
+    /**
+     * 获取项目下所有任务工时统计
+     */
+    private Map<Long, BigDecimal> getWorkHoursMap(List<WorkHoursRecordDO> workHoursRecordDOS) {
+        return workHoursRecordDOS.stream()
+                .collect(Collectors.groupingBy(WorkHoursRecordDO::getWorkItemId,
+                        Collectors.mapping(WorkHoursRecordDO::getWorkHours, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))));
+    }
+
+    /**
+     * 获取任务进度
+     */
+    private Map<Long, Integer> getTaskProgressMap(List<WorkHoursRecordDO> workHoursRecordDOS) {
+        return workHoursRecordDOS.stream()
+                .collect(Collectors.groupingBy(WorkHoursRecordDO::getWorkItemId,
+                        Collectors.collectingAndThen(
+                                Collectors.maxBy(Comparator.comparing(WorkHoursRecordDO::getCreateDate)),
+                                record -> record.map(WorkHoursRecordDO::getProgress).orElse(0)
+                        )));
     }
 
     @Override
@@ -493,17 +521,6 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
 
         // 查询工时信息
         List<WorkHoursRecordDO> workHoursRecordDOS = workHoursRecordMapper.list(WorkHoursRecordCondition.builder().projectId(projectId).workItemType(BizTypeEnum.TASK.getCode()).workItemIds(taskIds).build());
-        // 任务的累计工时Map
-        Map<Long, BigDecimal> taskWorkHoursMap = workHoursRecordDOS.stream()
-                .collect(Collectors.groupingBy(WorkHoursRecordDO::getWorkItemId,
-                        Collectors.mapping(WorkHoursRecordDO::getWorkHours, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))));
-        // 任务的最新进度Map,按创建时间排序取最新一条
-        Map<Long, Integer> taskProgressMap = workHoursRecordDOS.stream()
-                .collect(Collectors.groupingBy(WorkHoursRecordDO::getWorkItemId,
-                        Collectors.collectingAndThen(
-                                Collectors.maxBy(Comparator.comparing(WorkHoursRecordDO::getCreateDate)),
-                                record -> record.map(WorkHoursRecordDO::getProgress).orElse(0)
-                        )));
         // 初始化任务信息Map
         Map<Long, List<ProjectBoardTaskVO>> projectBoardTaskVoMap = new HashMap<>();
         // 获取当前日期
@@ -530,9 +547,9 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
             projectBoardTaskVO.setIsDelay(isTaskDelayed(taskDO, current));
 
             // 设置任务进度
-            projectBoardTaskVO.setNewProgress(taskProgressMap.getOrDefault(taskId, 0));
+            projectBoardTaskVO.setNewProgress(getTaskProgressMap(workHoursRecordDOS).getOrDefault(taskId, 0));
             // 设置任务工时信息
-            projectBoardTaskVO.setTotalWorkHours(taskWorkHoursMap.getOrDefault(taskId, BigDecimal.ZERO));
+            projectBoardTaskVO.setTotalWorkHours(getWorkHoursMap(workHoursRecordDOS).getOrDefault(taskId, BigDecimal.ZERO));
 
             // 将任务信息添加到对应需求的列表中
             projectBoardTaskVoMap.computeIfAbsent(taskProductDemandDO.getProductDemandId(), k -> new ArrayList<>())
