@@ -44,8 +44,11 @@
                     #{item}
                 </foreach>
             </if>
-            <if test="bizDomainId!=null ">
-                and d.id =  #{bizDomainId}
+            <if test="bizDomainIds!=null and bizDomainIds.size()>0">
+                and d.id in
+                <foreach collection="bizDomainIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
             </if>
             <if test="ownerIds!=null and ownerIds.size()>0">
                 and a.owner_id in
@@ -81,6 +84,7 @@
                 and a.type REGEXP CONCAT('[', #{types},']')
             </if>
             and  a.is_deleted =false
+            order by pdgi.`position` desc
         </where>
     </select>
     <!-- 产下待规划的产品需求 -->
@@ -122,8 +126,11 @@
                     #{item}
                 </foreach>
             </if>
-            <if test="bizDomainId!=null ">
-                and d.id =  #{bizDomainId}
+            <if test="bizDomainIds!=null and bizDomainIds.size()>0">
+                and d.id in
+                <foreach collection="bizDomainIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
             </if>
             <if test="ownerIds!=null and ownerIds.size()>0">
                 and a.owner_id in

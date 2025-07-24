@@ -7,7 +7,7 @@
         SELECT pdg.*
         FROM product_demand_group pdg
         <where>
-            pdg.biz_domain_id = #{bizDomainId}
+            pdg.biz_domain_id = #{groupBizDomainId}
             AND pdg.is_deleted = false
             <if test="groupCreateDateStart != null and groupCreateDateEnd != null">
                 and pdg.create_date &gt;= #{groupCreateDateStart} and pdg.create_date &lt;= #{groupCreateDateEnd}
@@ -57,8 +57,11 @@
                                 #{item}
                             </foreach>
                         </if>
-                        <if test="bizDomainId!=null ">
-                            and pl.biz_domain_id =  #{bizDomainId}
+                        <if test="bizDomainIds!=null and bizDomainIds.size()>0">
+                            and pl.biz_domain_id in
+                            <foreach collection="bizDomainIds" item="item" separator="," open="(" close=")">
+                                #{item}
+                            </foreach>
                         </if>
                         <if test="status!=null and status.size()>0">
                             and pd.status in
@@ -89,9 +92,9 @@
                         </if>
                         and  pd.is_deleted =false
                     </where>
-
                 )
             </if>
+            order by pdg.`position` desc
         </where>
     </select>
 

@@ -18,6 +18,10 @@ import java.util.List;
 @Data
 @ApiModel("产品需求分组查询")
 public class ProductDemandGroupQueryList extends QueryBase {
+
+    @ApiModelProperty(value = "业务域（分组查询条件）")
+    private Long groupBizDomainId;
+
     @ApiModelProperty("id")
     private Long id;
 
@@ -27,9 +31,8 @@ public class ProductDemandGroupQueryList extends QueryBase {
     @ApiModelProperty("优先级:0(P0),1(P1),2(P2),3(P3)")
     private List<Integer> priorities;
 
-    @ApiModelProperty(value = "业务域", required = true)
-    @NotNull(message = "业务域id不能为空")
-    private Long bizDomainId;
+    @ApiModelProperty(value = "业务域（产品需求条件）")
+    private List<Long> bizDomainIds;
 
     @ApiModelProperty("产品线")
     private List<Long> productLineIds;
