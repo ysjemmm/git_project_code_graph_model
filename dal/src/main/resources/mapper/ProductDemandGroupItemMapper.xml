@@ -89,7 +89,7 @@
     </select>
     <!-- 产下待规划的产品需求 -->
     <select id="listProductDemandBacklog" resultType="com.timevale.forward.dal.entity.ProductDemandListDO">
-        select  a.id,a.name,a.priority,a.owner,a.owner_id,a.status, a.product_line_id,
+        select a.id,a.name,a.priority,a.owner,a.owner_id,a.status, a.product_line_id,
         a.create_man,a.create_man_id,a.create_date,a.modify_date, a.type, a.expect_schedule_time,
         c.name productLineName ,d.name bizDomainName
         <if test="copierId != null and copierId != ''">
@@ -169,10 +169,10 @@
             <if test="types!= null and types!='' ">
                 and a.type REGEXP CONCAT('[', #{types},']')
             </if>
-            and  a.is_deleted =false
+            and  a.is_deleted = false
             and not exists (
                 select 1 from product_demand_group_item pdgi
-                where pdgi.product_demand_id  = a.id
+                where pdgi.product_demand_id  = a.id and pdgi.is_deleted = false
             )
         </where>
     </select>
@@ -187,6 +187,11 @@
     <!-- 根据主键id和业务域id获取产品需求分组和产品需求关系 -->
     <select id="get" resultType="com.timevale.forward.dal.entity.ProductDemandGroupItemDO">
         SELECT * FROM product_demand_group_item WHERE id = #{id} AND is_deleted = false
+    </select>
+
+    <!-- 根据分组id获取产品需求关系列表 -->
+    <select id="getByGroupId" resultType="com.timevale.forward.dal.entity.ProductDemandGroupItemDO">
+        SELECT * FROM product_demand_group_item WHERE product_demand_group_id = #{groupId} AND is_deleted = false
     </select>
 
     <!-- 根据主键id和业务域id获取产品需求分组和产品需求关系 -->

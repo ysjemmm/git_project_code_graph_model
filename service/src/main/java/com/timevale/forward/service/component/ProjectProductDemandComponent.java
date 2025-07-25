@@ -1,8 +1,18 @@
 package com.timevale.forward.service.component;
 
+import com.timevale.forward.facade.api.request.ProjectProductDemandLinkReq;
+
 import java.util.List;
 
 public interface ProjectProductDemandComponent {
+
+    /**
+     * 关联or取消关联
+     *
+     * @param productDemandLinkReq 产品需求
+     */
+    void linkOrUnLinkProductDemand(ProjectProductDemandLinkReq productDemandLinkReq);
+
     /**
      *
      * @param projectId projectId

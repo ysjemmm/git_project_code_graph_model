@@ -32,12 +32,12 @@ public interface ProductDemandGroupItemMapper {
 
     /**
      * 删除产品需求分组和产品需求关系
-     * @param groupId 分组id
+     *
+     * @param groupId     分组id
      * @param modifyManId 修改人id
-     * @param modifyMan 修改人
-     * @return 影响行数
+     * @param modifyMan   修改人
      */
-    int deleteByGroupId(@Param("groupId") Long groupId, @Param("modifyManId") String modifyManId, @Param("modifyMan") String modifyMan);
+    void deleteByGroupId(@Param("groupId") Long groupId, @Param("modifyManId") String modifyManId, @Param("modifyMan") String modifyMan);
 
     /**
      * 根据主键id获取产品需求分组和产品需求关系
@@ -46,6 +46,14 @@ public interface ProductDemandGroupItemMapper {
      * @return 产品需求分组和产品需求关系
      */
     ProductDemandGroupItemDO get(@Param("id") Long id);
+
+    /**
+     * 根据分组id获取产品需求关系列表
+     *
+     * @param groupId 分组id
+     * @return 产品需求分组和产品需求关系列表
+     */
+    List<ProductDemandGroupItemDO> getByGroupId(@Param("groupId") Long groupId);
 
     /**
      * 根据业务域和主键id获取产品需求分组和产品需求关系

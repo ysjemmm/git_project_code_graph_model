@@ -36,9 +36,19 @@ public interface ProductDemandGroupComponent {
     /**
      * 修改产品需求分组
      * @param productDemandGroupDO 产品需求分组DO
-     * @return 是否成功
      */
     void update(ProductDemandGroupDO productDemandGroupDO);
 
+    /**
+     * 判断项目是否已经存在
+     * @param projectId 项目id
+     * @return 是否存在
+     */
+    boolean existProject(Long projectId);
+
+    /**
+     * 取消关联项目
+     */
+    void removeProject(Long id);
 
 } 

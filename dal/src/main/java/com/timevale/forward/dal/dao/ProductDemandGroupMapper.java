@@ -100,4 +100,18 @@ public interface ProductDemandGroupMapper {
      */
     ProductDemandGroupDO getNextByPosition(@Param("bizDomainId") Long bizDomainId, @Param("position") Double position);
 
+    /**
+     * 统计个数
+     *
+     * @param projectId 项目id
+     * @return {@link Long}
+     */
+    Long countProject(@Param("projectId") Long projectId);
+
+    /**
+     * 取消关联项目
+     *
+     * @param id 主键id
+     */
+    void removeProject(@Param("id") Long id);
 } 

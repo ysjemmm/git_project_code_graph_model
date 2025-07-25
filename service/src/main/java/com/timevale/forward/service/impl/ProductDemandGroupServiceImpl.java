@@ -3,11 +3,13 @@ package com.timevale.forward.service.impl;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProductDemandGroupListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProductDemandGroupService;
+import com.timevale.forward.facade.api.client.ProjectService;
 import com.timevale.forward.facade.api.query.ProductDemandGroupQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
@@ -22,6 +24,7 @@ import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.forward.service.utils.position.PositionUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.BaseInfoResponse;
@@ -75,6 +78,18 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
 
     @Resource
     private ProductDemandMapper productDemandMapper;
+
+    @Resource
+    private ProjectMapper projectMapper;
+
+    @Resource
+    private ProjectProductDemandMapper projectProductDemandMapper;
+
+    @Resource
+    private ProjectService projectService;
+
+    @Resource
+    private ProjectProductDemandComponent projectProductDemandComponent;
 
     /**
      * 查询业务域内的待规划的产品需求
@@ -387,33 +402,6 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
                 getPrevByPosition,
                 getNextByPosition
         );
-//        double position;
-//        if (productDemandGroupMoveReq.getPrevId() == null && productDemandGroupMoveReq.getNextId() == null) {
-//            // 前后都为空，直接添加到第一个
-//            position = PositionUtil.generate(productDemandGroupMoveReq.getBizDomainId().toString(), System.currentTimeMillis());
-//        } else if (productDemandGroupMoveReq.getPrevId() == null && productDemandGroupMoveReq.getNextId() != null) {
-//            // 前面为空，后面不为空
-//            ProductDemandGroupDO nextPreGroupDO = productDemandGroupMapper.getPreByPosition(productDemandGroupMoveReq.getBizDomainId(), nextGroupDO.getPosition());
-//            // 如果后面不是第一个（前面还存在）则(next.positon + next.pre.position)/2
-//            if (nextPreGroupDO != null) {
-//                position = (nextGroupDO.getPosition() + nextPreGroupDO.getPosition()) / 2;
-//                // TODO 如果position和前后相同，说明需要重新排序
-//            } else {
-//                // 如果后面是第一个（前面不存在) 则直接添加到第一个
-//                position = PositionUtil.generate(productDemandGroupMoveReq.getBizDomainId().toString(), System.currentTimeMillis());
-//            }
-//        } else {
-//            // 前面不为空
-//            ProductDemandGroupDO preNextPreGroupDO = productDemandGroupMapper.getNextByPosition(productDemandGroupMoveReq.getBizDomainId(), prevGroupDO.getPosition());
-//            // 如果前面不是最后一个（后面还存在）则(pre.position + pre.next.position)/2
-//            if (preNextPreGroupDO != null) {
-//                position = (prevGroupDO.getPosition() + preNextPreGroupDO.getPosition()) / 2;
-//                // TODO 如果position和前后相同，说明需要重新排序
-//            } else {
-//                // 如果前面是最后一个（后面不存在） 则pre.position - 5000000
-//                position = prevGroupDO.getPosition() - 5000000;
-//            }
-//        }
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         String modifyManId = userInfo.getId();
         String modifyMan = userInfo.getFullAlias();
@@ -510,33 +498,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
                 productDemandGroupItemMoveReq.getTargetGroupId(),
                 getPrevByPosition,
                 getNextByPosition
-                );
-//        if (productDemandGroupItemMoveReq.getPrevId() == null && productDemandGroupItemMoveReq.getNextId() == null) {
-//            // 前后都为空，直接添加到第一个
-//            position = PositionUtil.generate(productDemandGroupItemMoveReq.getBizDomainId().toString(), System.currentTimeMillis());
-//        } else if (productDemandGroupItemMoveReq.getPrevId() == null && productDemandGroupItemMoveReq.getNextId() != null) {
-//            // 前面为空，后面不为空
-//            ProductDemandGroupItemDO nextPreGroupItemDO = productDemandGroupItemMapper.getPreByPosition(productDemandGroupItemMoveReq.getTargetGroupId(), nextGroupItemDO.getPosition());
-//            // 如果后面不是第一个（前面还存在）则(next.positon + next.pre.position)/2
-//            if (nextPreGroupItemDO != null) {
-//                position = (nextGroupItemDO.getPosition() + nextPreGroupItemDO.getPosition()) / 2;
-//                // TODO 如果position和前后相同，说明需要重新排序
-//            } else {
-//                // 如果后面是第一个（前面不存在) 则直接添加到第一个
-//                position = PositionUtil.generate(productDemandGroupItemMoveReq.getBizDomainId().toString(), System.currentTimeMillis());
-//            }
-//        } else {
-//            // 前面不为空
-//            ProductDemandGroupItemDO preNextPreGroupItemDO = productDemandGroupItemMapper.getNextByPosition(productDemandGroupItemMoveReq.getTargetGroupId(), prevGroupItemDO.getPosition());
-//            // 如果前面不是最后一个（后面还存在）则(pre.position + pre.next.position)/2
-//            if (preNextPreGroupItemDO != null) {
-//                position = (prevGroupItemDO.getPosition() + preNextPreGroupItemDO.getPosition()) / 2;
-//                // TODO 如果position和前后相同，说明需要重新排序
-//            } else {
-//                // 如果前面是最后一个（后面不存在） 则pre.position - 5000000
-//                position = prevGroupItemDO.getPosition() - 5000000;
-//            }
-//        }
+        );
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         String modifyManId = userInfo.getId();
         String modifyMan = userInfo.getFullAlias();
@@ -590,6 +552,72 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         return BaseResult.success(true);
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> linkOrUnlinkProject(ProductDemandGroupProjectLinkReq req) {
+        log.info("关联or取消关联项目需求,参数:{}", req);
+        Long projectId = req.getProjectId();
+        Long groupId = req.getProductDemandGroupId();
+        ProductDemandGroupDO productDemandGroupDO = productDemandGroupComponent.getById(groupId);
+        AssertUtil.notNull(productDemandGroupDO, "分组不存在");
+        if (LinkOrUnLinkEnum.LINK.getCode().equals(req.getType())) {
+            // 校验关联项目
+            ProjectDO projectDO = projectMapper.get(projectId);
+            AssertUtil.notNull(projectDO, "项目不存在");
+            // 已结项 | 已暂停 | 已中止 | 已废除 不支持关联
+            ArrayList<Integer> nonSupportStatuses = Lists.newArrayList(ProjectStatusEnum.INVALID.getCode(),
+                    ProjectStatusEnum.SUSPEND.getCode(), ProjectStatusEnum.CONCLUSION.getCode(), ProjectStatusEnum.CANCELLATION.getCode());
+            AssertUtil.checkState(!nonSupportStatuses.contains(projectDO.getStatus()),
+                    String.format("项目状态为%s,不能关联分组", ProjectStatusEnum.getTextByCode(projectDO.getStatus())));
+            boolean existProject = productDemandGroupComponent.existProject(projectId);
+            AssertUtil.checkState(!existProject, "当前项目已经被关联，不能重复关联");
+
+            // 更新分组的项目
+            val newProductDemandGroupDO = new ProductDemandGroupDO().setProjectId(projectId);
+            newProductDemandGroupDO.setId(groupId);
+            productDemandGroupComponent.update(newProductDemandGroupDO);
+            // 分组内的产品需求更项目关联
+            List<ProductDemandGroupItemDO> groupItems = productDemandGroupItemMapper.getByGroupId(groupId);
+            HashMap<Long, List<Long>> unlinkProductDemandIdMap = Maps.newHashMap();
+            List<Long> linkProductDemandIds = Lists.newArrayList();
+            for (ProductDemandGroupItemDO groupItem : groupItems) {
+                // 产品需求关联到这个项目
+                ProjectProductDemandDO projectProduct = projectProductDemandMapper.getByProductDemandId(groupItem.getProductDemandId());
+                if (projectProduct == null) {
+                    // 当前需求没有关联项目，直接关联项目
+                    linkProductDemandIds.add(groupItem.getProductDemandId());
+                } else if (!Objects.equals(projectProduct.getProjectId(), projectId)) {
+                    // 当前需求关联的项目不是当前项目, 需要先取消关联再关联
+                    unlinkProductDemandIdMap.computeIfAbsent(projectProduct.getProjectId(), k -> new ArrayList<>()).add(groupItem.getProductDemandId());
+                    linkProductDemandIds.add(groupItem.getProductDemandId());
+                }
+            }
+            // 需求取消关联项目
+            if (!unlinkProductDemandIdMap.isEmpty()) {
+                unlinkProductDemandIdMap.forEach((unlinkProjectId, unlinkProductDemandIds) -> {
+                    ProjectProductDemandLinkReq unLinkReq = new ProjectProductDemandLinkReq();
+                    unLinkReq.setProjectId(unlinkProjectId);
+                    unLinkReq.setType(LinkOrUnLinkEnum.UN_LINK.getCode());
+                    unLinkReq.setProductDemandIds(unlinkProductDemandIds);
+                    projectProductDemandComponent.linkOrUnLinkProductDemand(unLinkReq);
+                });
+            }
+
+            // 需求关联项目
+            if (!linkProductDemandIds.isEmpty()) {
+                ProjectProductDemandLinkReq linkReq = new ProjectProductDemandLinkReq();
+                linkReq.setProjectId(projectId);
+                linkReq.setType(LinkOrUnLinkEnum.LINK.getCode());
+                linkReq.setProductDemandIds(linkProductDemandIds);
+                projectProductDemandComponent.linkOrUnLinkProductDemand(linkReq);
+            }
+        } else {
+            // 删除分组的项目
+            productDemandGroupComponent.removeProject(groupId);
+        }
+        return BaseResult.success(true);
+    }
+
     private boolean isProductGroupItemEqual(ProductDemandGroupItemDO source, ProductDemandGroupItemDO target) {
         if (source == null && target == null) {
             return true;
@@ -599,6 +627,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         }
         return false;
     }
+
     private double calculateNewPosition(Long prevId,
                                         Double prevPosition,
                                         Long nextId,

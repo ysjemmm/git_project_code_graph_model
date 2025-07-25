@@ -27,10 +27,8 @@ import java.util.List;
  */
 @Component
 public class ProductDemandGroupComponentImpl implements ProductDemandGroupComponent {
-
     @Resource
     private ProductDemandGroupMapper productDemandGroupMapper;
-
     @Resource
     private ProductDemandGroupItemMapper productDemandGroupItemMapper;
 
@@ -64,6 +62,16 @@ public class ProductDemandGroupComponentImpl implements ProductDemandGroupCompon
         productDemandGroupDO.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         productDemandGroupDO.setModifyManId(userInfo.getId());
         productDemandGroupMapper.update(productDemandGroupDO);
+    }
+
+    @Override
+    public boolean existProject(Long projectId) {
+        return productDemandGroupMapper.countProject(projectId) > 0;
+    }
+
+    @Override
+    public void removeProject(Long id) {
+        productDemandGroupMapper.removeProject(id);
     }
 
     @Override

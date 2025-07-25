@@ -171,4 +171,18 @@
         limit 1
     </select>
 
+    <select id="countProject" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM product_demand_group
+        WHERE project_id = #{projectId}
+        AND is_deleted = false
+    </select>
+
+    <!-- 删除产品需求分组信息 -->
+    <update id="removeProject">
+        UPDATE product_demand_group
+        SET project_id = null
+        WHERE id = #{id} and is_deleted = false
+    </update>
+
 </mapper>

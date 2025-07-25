@@ -84,4 +84,10 @@ public class ProductDemandGroupController {
         return ResultUtils.result(productDemandGroupService.moveProductDemandGroup(productDemandGroupMoveReq));
     }
 
+    @ApiOperation("关联或取消关联项目")
+    @PostMapping("/linkOrUnlinkProject")
+    public BusinessResult<Boolean> linkOrUnlinkProject(@RequestBody @Valid ProductDemandGroupProjectLinkReq productDemandGroupItemMoveReq) {
+        return ResultUtils.result(productDemandGroupService.linkOrUnlinkProject(productDemandGroupItemMoveReq));
+    }
+
 }

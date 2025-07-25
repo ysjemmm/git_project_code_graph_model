@@ -83,4 +83,13 @@ public interface ProductDemandGroupService {
      * @return 是否成功
      */
     BaseResult<Boolean> moveProductDemand(ProductDemandGroupItemMoveReq productDemandGroupItemMoveReq);
+
+    /**
+     * 关联or取消关联项目
+     * @param productDemandGroupItemMoveReq 关联项目请求
+     * @return 是否成功
+     */
+    BaseResult<Boolean> linkOrUnlinkProject(ProductDemandGroupProjectLinkReq productDemandGroupItemMoveReq);
+
+
 } 

@@ -2,9 +2,14 @@ package com.timevale.forward.service.component.impl;
 
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.facade.api.request.ProjectProductDemandLinkReq;
+import com.timevale.forward.model.enums.ButtonActionEnum;
+import com.timevale.forward.model.enums.LinkOrUnLinkEnum;
+import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.utils.date.DateStyle;
 import com.timevale.forward.service.utils.date.DateUtil;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Component;
@@ -50,6 +55,88 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
 
     @Resource
     private CustomDemandLogComponent customDemandLogComponent;
+
+    @Resource
+    private ProjectMapper projectMapper;
+
+    @Resource
+    private ProductDemandMapper productDemandMapper;
+
+    @Resource
+    private ProductDemandComponent productDemandComponent;
+
+    @Resource
+    private ProjectProductDemandComponent projectProductDemandComponent;
+
+    @Resource
+    private ProjectLogComponent projectLogComponent;
+
+    @Resource
+    private ProductDemandLogComponent productDemandLogComponent;
+
+    @Resource
+    private TaskProductDemandComponent taskProductDemandComponent;
+
+    @Override
+    public void linkOrUnLinkProductDemand(ProjectProductDemandLinkReq productDemandLinkReq) {
+        ProjectDO projectDO = projectMapper.get(productDemandLinkReq.getProjectId());
+        if (projectDO == null) {
+            throw new BaseBizRuntimeException("找不到该项目");
+        }
+        List<Long> productDemandIds = productDemandLinkReq.getProductDemandIds();
+        List<ProductDemandDO> productDemands = productDemandMapper.selectByIdList(productDemandIds);
+        Map<Long, String> pdNameMap = productDemands.stream().collect(Collectors.toMap(ProductDemandDO::getId, ProductDemandDO::getName, (v1, v2) -> v2));
+        Map<Long, Integer> statusMap = productDemands.stream().collect(Collectors.toMap(ProductDemandDO::getId, ProductDemandDO::getStatus, (v1, v2) -> v2));
+
+        if (LinkOrUnLinkEnum.LINK.getCode().equals(productDemandLinkReq.getType())) {
+            List<ProjectProductDemandDO> productDemand = projectProductDemandMapper.getLinkedProductDemand(productDemandIds);
+            if (CollectionUtils.isNotEmpty(productDemand)) {
+                List<Long> existedIds = productDemand.stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
+                throw new BaseBizRuntimeException("产品需求id为" + existedIds + "已被项目关联,请刷后重试");
+            }
+            List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.getByProductDemandIds(productDemandIds);
+            Map<Long, Integer> bizIdMap = productBizDemandDOList.stream().collect(Collectors.toMap(ProductBizDemandDO::getBizDemandId, ProductBizDemandDO::getStatus, (v1, v2) -> v2));
+
+            productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus(), productDemandIds);
+
+            projectProductDemandComponent.batchInsert(projectDO.getId(), productDemandIds);
+
+            //项目关联后,业务需求的发布时间可能变化
+            bizIdMap.forEach((k, v) -> {
+                BizDemandDO bizDemandDO = bizDemandMapper.get(k);
+                productDemandComponent.sendDingMsg(v, bizDemandDO.getStatus(), k);
+            });
+
+            projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(), pdNameMap, ButtonActionEnum.LINK.getText());
+
+        } else {
+            // 原先只更新第一个【页面只能一个一个删除】，现在改为更新全部【分组邦定灰批量删除】
+            Integer newStatus = ProductDemandStatusEnum.WAITING.getCode();
+            for (Long productDemandId : productDemandIds) {
+                ProductDemandDO productDemandDO = new ProductDemandDO();
+                productDemandDO.setId(productDemandId);
+                productDemandDO.setStatus(newStatus);
+                productDemandComponent.update(productDemandDO);
+
+                projectProductDemandComponent.update(null, productDemandId);
+            }
+
+//            ProductDemandDO productDemandDO = new ProductDemandDO();
+//            productDemandDO.setId(productDemandIds.get(0));
+//            productDemandDO.setStatus(ProductDemandStatusEnum.WAITING.getCode());
+//            productDemandComponent.update(productDemandDO);
+//            projectProductDemandComponent.update(null, productDemandIds.get(0));
+
+            // 一个产品需求下的业务需求
+            productDemandComponent.updateDemandStatusAsProductStatusChange(productDemandIds, false);
+
+            projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(), pdNameMap, ButtonActionEnum.UN_LINK.getText());
+            productDemandLogComponent.addLogAsProjectStatusChange(statusMap, newStatus);
+
+            // 取消产品需求和任务的关联
+            productDemandIds.forEach(a -> taskProductDemandComponent.update(null, a));
+        }
+    }
 
     @Override
     public void update(Long projectId, Long productDemandId) {
