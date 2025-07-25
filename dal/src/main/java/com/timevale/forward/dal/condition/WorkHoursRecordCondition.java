@@ -45,6 +45,11 @@ public class WorkHoursRecordCondition extends QueryBase {
     private Long workItemId;
 
     /**
+     * 工作项ids
+     */
+    private List<Long> workItemIds;
+
+    /**
      * 创建人id
      */
     private String createManId;

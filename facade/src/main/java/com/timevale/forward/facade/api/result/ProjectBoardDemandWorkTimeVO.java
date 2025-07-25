@@ -63,6 +63,9 @@ public class ProjectBoardDemandWorkTimeVO extends ToString {
     @ApiModelProperty("任务计划耗时")
     private BigDecimal totalPlanUseTime;
 
+    @ApiModelProperty("需求最新进度")
+    private Double newProgress;
+
     @ApiModelProperty("项目任务")
     private List<ProjectBoardTaskVO> projectBoardTaskVos;
 }

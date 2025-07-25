@@ -60,6 +60,12 @@
             </if>
             <if test="projectId != null">and project_id = #{projectId}</if>
             <if test="workItemType != null">and work_item_type = #{workItemType}</if>
+            <if test="workItemIds != null and workItemIds.size() > 0">
+                and work_item_id in
+                <foreach collection="workItemIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="workItemId != null">and work_item_id = #{workItemId}</if>
             <if test="createManId != null">and create_man_id = #{createManId}</if>
             <if test="stratTime != null and endTime != null">

@@ -34,6 +34,7 @@ import com.timevale.forward.facade.api.result.WorkHoursRemainVO;
 import com.timevale.forward.facade.api.result.WorkbenchesWorkHoursVO;
 import com.timevale.forward.model.enums.BizTypeEnum;
 import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.model.enums.TaskStatusEnum;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.component.SqlOrderComponent;
@@ -114,6 +115,13 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
+    private static final List<Integer> PROJECT_STATUSES = Arrays.asList(
+            ProjectStatusEnum.PLANING.getCode(),
+            ProjectStatusEnum.DEVING.getCode(),
+            ProjectStatusEnum.TESTING.getCode(),
+            ProjectStatusEnum.RELEASED.getCode()
+    );
+
     private static final List<Integer> TASK_STATUSES = Arrays.asList(
             TaskStatusEnum.WAITING.getCode(),
             TaskStatusEnum.PROGRESS.getCode()
@@ -125,7 +133,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         // 转换查询条件
         WorkHoursRecordCondition workHoursRecordCondition = WorkHoursRecordCopier.INSTANCE.convert(workHoursRecordQueryList);
         // 开始分页
-        PageHelper.startPage(workHoursRecordCondition.getPageNum(), workHoursRecordCondition.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+        PageHelper.startPage(workHoursRecordCondition.getPageNum(), workHoursRecordCondition.getPageSize(), CommonConstant.CREATE_DESC_ORDER_BY);
         // 查询
         List<WorkHoursRecordDO> workHoursRecordDOList = workHoursRecordMapper.list(workHoursRecordCondition);
         // 转换
@@ -161,8 +169,14 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
     public BaseResult<Long> add(WorkHoursRecordAddReq workTimeRecordAddReq) {
         log.info("工时记录新增,参数:{}", workTimeRecordAddReq);
         WorkHoursRecordDO workHoursRecordDO = WorkHoursRecordCopier.INSTANCE.convert(workTimeRecordAddReq);
+        List<WorkHoursRecordDO> lastProgress = workHoursRecordMapper.getLastProgress(Collections.singletonList(workHoursRecordDO.getProjectId()), workHoursRecordDO.getWorkItemType(), Collections.singletonList(workHoursRecordDO.getWorkItemId()));
+        // 如果集合不为空，取最大进度
+        int maxProgress = lastProgress.stream()
+                .mapToInt(WorkHoursRecordDO::getProgress)
+                .max()
+                .orElse(0);
         // 如果工时为0不登记
-        if (workHoursRecordDO.getWorkHours().compareTo(BigDecimal.ZERO) == 0) {
+        if (workHoursRecordDO.getWorkHours().compareTo(BigDecimal.ZERO) == 0 && maxProgress == workHoursRecordDO.getProgress()) {
             return BaseResult.success(null);
         }
         // 登记人
@@ -256,7 +270,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             throw new BaseBizRuntimeException("该工时记录不存在");
         }
         WorkHoursRecordVO workHoursRecordVO = WorkHoursRecordCopier.INSTANCE.convert(workHoursRecordDO);
-        if (workHoursRecordDO.getWorkItemType() == BizTypeEnum.TASK.getCode()) {
+        if (Objects.equals(workHoursRecordDO.getWorkItemType(), BizTypeEnum.TASK.getCode())) {
             TaskDO taskDO = taskMapper.getById(workHoursRecordDO.getWorkItemId());
             ProjectDO projectDO = projectMapper.get(taskDO.getProjectId());
             workHoursRecordVO.setProjectName(projectDO.getName());
@@ -277,11 +291,23 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         String createMan = buildCreateMan(userInfo);
         String createManId = userInfo.getId();
 
+        List<Long> projectIds = new ArrayList<>();
+        List<Long> workItemIds = new ArrayList<>();
+        workHoursSimples.forEach(a -> {
+            projectIds.add(a.getProjectId());
+            workItemIds.add(a.getWorkItemId());
+        });
+
+        // 如果工时为0且进度不更新，则不处理
+        List<WorkHoursRecordDO> lastProgress = workHoursRecordMapper.getLastProgress(projectIds, BizTypeEnum.TASK.getCode(), workItemIds);
+        // 获取进度Map
+        Map<Long,  Integer> lastProgressMap = lastProgress.stream().collect(Collectors.toMap(WorkHoursRecordDO::getWorkItemId, WorkHoursRecordDO::getProgress, (v1, v2) -> v2));
+
         List<Future<?>> futures = new ArrayList<>();
         for (WorkHoursRecordAddReq a : workHoursSimples) {
             Future<?> future = threadPoolTaskExecutor.submit(() -> {
-                // 如果工时为0，则不处理
-                if (a.getWorkHours().compareTo(BigDecimal.ZERO) <= 0) {
+                // 如果工时为0不登记且进度没有更新，则不处理
+                if (a.getWorkHours().compareTo(BigDecimal.ZERO) <= 0 && Objects.equals(lastProgressMap.getOrDefault(a.getWorkItemId(), 0), a.getProgress())) {
                     return;
                 }
                 // 转换
@@ -427,10 +453,11 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         }
         // 查询任务对应的项目名称
         List<Long> projectIds = progressTaskList.stream().map(TaskDO::getProjectId).collect(Collectors.toList());
-        Map<Long, String> projectMap = projectMapper.getByIds(projectIds).stream().collect(Collectors.toMap(ProjectDO::getId, ProjectDO::getName, (v1, v2) -> v1));
-
+        Map<Long, String> projectMap = projectMapper.getByIds(projectIds).stream().filter(e -> PROJECT_STATUSES.contains(e.getStatus())).collect(Collectors.toMap(ProjectDO::getId, ProjectDO::getName, (v1, v2) -> v1));
+        // 过滤掉无效项目
+        List<TaskDO> taskDOList = progressTaskList.stream().filter(taskDO -> projectMap.containsKey(taskDO.getProjectId())).collect(Collectors.toList());
         // 任务列表
-        for (TaskDO taskDO : progressTaskList) {
+        for (TaskDO taskDO : taskDOList) {
             RegisterWorkHoursTaskVO registerWorkHoursTaskVO = new RegisterWorkHoursTaskVO();
             registerWorkHoursTaskVO.setWorkItemId(taskDO.getId());
             registerWorkHoursTaskVO.setProjectId(taskDO.getProjectId());
