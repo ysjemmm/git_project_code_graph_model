@@ -223,6 +223,13 @@
           and pdgi.product_demand_group_id = #{groupId}
     </select>
 
+    <select id="countByProductDemandId" resultType="java.lang.Integer">
+        select count(*)
+        from product_demand_group_item
+        where product_demand_id = #{productDemandId}
+          and is_deleted = false
+    </select>
+
     <select id="getPreByPosition" resultType="com.timevale.forward.dal.entity.ProductDemandGroupItemDO">
         select *
         from product_demand_group_item

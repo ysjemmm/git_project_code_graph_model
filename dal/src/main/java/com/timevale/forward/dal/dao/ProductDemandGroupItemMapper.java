@@ -84,6 +84,13 @@ public interface ProductDemandGroupItemMapper {
      */
     ProductDemandGroupItemDO getByGroupIdAndDemandId(@Param("groupId") Long groupId, @Param("demandId") Long demandId);
 
+    /**
+     * 查询产品需求id是否被关联
+     *
+     * @param productDemandId 产品需求id
+     * @return 产品需求分组和产品需求关系
+     */
+    Integer countByProductDemandId(@Param("productDemandId") Long productDemandId);
 
     /**
      * 获取当前位置前一个分组和产品需求关系

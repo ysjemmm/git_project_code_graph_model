@@ -86,9 +86,6 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
     private ProjectProductDemandMapper projectProductDemandMapper;
 
     @Resource
-    private ProjectService projectService;
-
-    @Resource
     private ProjectProductDemandComponent projectProductDemandComponent;
 
     /**
@@ -429,6 +426,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> moveProductDemand(ProductDemandGroupItemMoveReq productDemandGroupItemMoveReq) {
         log.info("产品需求拖动接收参数:{}", productDemandGroupItemMoveReq);
+        // 校验操作权限
         checkOperationPermission(productDemandGroupItemMoveReq.getBizDomainId());
         ProductDemandGroupItemDO prevGroupItemDO = null;
         if (productDemandGroupItemMoveReq.getPrevId() != null) {
@@ -446,41 +444,9 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
                 throw new BaseBizRuntimeException("产品需求分组的产品需求不存在, 请刷新后重试");
             }
         }
-
-        ProductDemandGroupItemDO targetGroupItemDO = null;
-        if (Objects.equals(ProductDemandGroupMoveModeEnum.MOVE_IN.getCode(), productDemandGroupItemMoveReq.getMode())) {
-            // 查看产品需求是否是当前业务域里的
-            ProductDemandDO productDemandDO = productDemandMapper.get(productDemandGroupItemMoveReq.getId());
-            if (productDemandDO == null) {
-                throw new BaseBizRuntimeException("产品需求不存在");
-            }
-            ProductLineDO productLineDO = productLineComponent.getById(productDemandDO.getProductLineId());
-            if (productLineDO == null || !productDemandGroupItemMoveReq.getBizDomainId().equals(productLineDO.getBizDomainId())) {
-                throw new BaseBizRuntimeException("产品需求不属于当前业务域, 不能操作");
-            }
-            // 查看产品需求是否已经在分组里
-            ProductDemandGroupItemDO byGroupIdAndDemandId = productDemandGroupItemMapper.getByGroupIdAndDemandId(productDemandGroupItemMoveReq.getTargetGroupId(), productDemandGroupItemMoveReq.getId());
-            if (byGroupIdAndDemandId != null) {
-                throw new BaseBizRuntimeException("产品需求已存在");
-            }
-        } else if (Objects.equals(ProductDemandGroupMoveModeEnum.MOVE_OUT.getCode(), productDemandGroupItemMoveReq.getMode())) {
-//            if (productDemandGroupItemMoveReq.getTargetGroupId() != 0 || productDemandGroupItemMoveReq.getPrevId() != null || productDemandGroupItemMoveReq.getNextId() != null) {
-//                throw new BaseBizRuntimeException("参数错误");
-//            }
-        } else {
-            targetGroupItemDO = productDemandGroupItemMapper.getByBizDomainIdAndId(productDemandGroupItemMoveReq.getBizDomainId(), productDemandGroupItemMoveReq.getId());
-            if (targetGroupItemDO == null) {
-                throw new BaseBizRuntimeException("产品需求分组的产品需求不存在, 请刷新后重试");
-            }
-
-            ProductDemandGroupItemDO targetNextGroupItemDO = productDemandGroupItemMapper.getNextByPosition(productDemandGroupItemMoveReq.getTargetGroupId(), targetGroupItemDO.getPosition());
-            ProductDemandGroupItemDO targetPreGroupItemDO = productDemandGroupItemMapper.getPreByPosition(productDemandGroupItemMoveReq.getTargetGroupId(), targetGroupItemDO.getPosition());
-            boolean preConditionEqual = isProductGroupItemEqual(prevGroupItemDO, targetPreGroupItemDO);
-            boolean nextConditionEqual = isProductGroupItemEqual(nextGroupItemDO, targetNextGroupItemDO);
-            if (preConditionEqual && nextConditionEqual) {
-                throw new BaseBizRuntimeException("产品需求位置未变化，无需移动");
-            }
-        }
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        String modifyManId = userInfo.getId();
+        String modifyMan = userInfo.getFullAlias();
         // 定义 getPrevByPosition 和 getNextByPosition 函数
         BiFunction<Long, Double, Double> getPrevByPosition = (targetGroupId, position) -> {
             ProductDemandGroupItemDO preByPosition = productDemandGroupItemMapper.getPreByPosition(targetGroupId, position);
@@ -490,20 +456,40 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
             ProductDemandGroupItemDO nextByPosition = productDemandGroupItemMapper.getNextByPosition(targetGroupId, position);
             return nextByPosition == null ? null : nextByPosition.getPosition();
         };
-        double position = calculateNewPosition(productDemandGroupItemMoveReq.getPrevId(),
-                prevGroupItemDO == null ? null : prevGroupItemDO.getPosition(),
-                productDemandGroupItemMoveReq.getNextId(),
-                nextGroupItemDO == null ? null : nextGroupItemDO.getPosition(),
-                productDemandGroupItemMoveReq.getBizDomainId(),
-                productDemandGroupItemMoveReq.getTargetGroupId(),
-                getPrevByPosition,
-                getNextByPosition
-        );
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        String modifyManId = userInfo.getId();
-        String modifyMan = userInfo.getFullAlias();
+        final ArrayList<Integer> notAllowProductDemandStatuses = Lists.newArrayList(ProductDemandStatusEnum.INVALID.getCode(), ProductDemandStatusEnum.SUSPEND.getCode());
         if (Objects.equals(ProductDemandGroupMoveModeEnum.MOVE_IN.getCode(), productDemandGroupItemMoveReq.getMode())) {
+            // 查看产品需求是否是当前业务域里的
+            ProductDemandDO productDemandDO = productDemandMapper.get(productDemandGroupItemMoveReq.getId());
+            if (productDemandDO == null) {
+                throw new BaseBizRuntimeException("产品需求不存在");
+            }
+            if (notAllowProductDemandStatuses.contains(productDemandDO.getStatus())) {
+                throw new BaseBizRuntimeException(String.format("产品需求状态为%s, 不能操作", ProductDemandStatusEnum.getTextByCode(productDemandDO.getStatus())));
+            }
+            ProductLineDO productLineDO = productLineComponent.getById(productDemandDO.getProductLineId());
+            if (productLineDO == null || !productDemandGroupItemMoveReq.getBizDomainId().equals(productLineDO.getBizDomainId())) {
+                throw new BaseBizRuntimeException("产品需求不属于当前业务域, 不能操作");
+            }
+            // 查看产品需求是否已经被拖到分组里
+            final Integer countByProductDemandId = productDemandGroupItemMapper.countByProductDemandId(productDemandGroupItemMoveReq.getId());
+            if (countByProductDemandId > 0) {
+                throw new BaseBizRuntimeException("产品需求已被拖动到分组，请刷新后重试");
+            }
+            // 查看产品需求是否已经在分组里
+//            ProductDemandGroupItemDO byGroupIdAndDemandId = productDemandGroupItemMapper.getByGroupIdAndDemandId(productDemandGroupItemMoveReq.getTargetGroupId(), productDemandGroupItemMoveReq.getId());
+//            if (byGroupIdAndDemandId != null) {
+//                throw new BaseBizRuntimeException("产品需求已存在");
+//            }
             // 创建
+            double position = calculateNewPosition(productDemandGroupItemMoveReq.getPrevId(),
+                    prevGroupItemDO == null ? null : prevGroupItemDO.getPosition(),
+                    productDemandGroupItemMoveReq.getNextId(),
+                    nextGroupItemDO == null ? null : nextGroupItemDO.getPosition(),
+                    productDemandGroupItemMoveReq.getBizDomainId(),
+                    productDemandGroupItemMoveReq.getTargetGroupId(),
+                    getPrevByPosition,
+                    getNextByPosition
+            );
             val createGroupItemDO = new ProductDemandGroupItemDO().setPosition(position)
                     .setProductDemandId(productDemandGroupItemMoveReq.getId())
                     .setProductDemandGroupId(productDemandGroupItemMoveReq.getTargetGroupId())
@@ -521,18 +507,66 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
                 throw new BaseBizRuntimeException("操作失败，请刷新页面重试");
             }
 
+            // 如果分组已经绑定了项目，需要将产品需求关联项目
+            final ProductDemandGroupDO productDemandGroupDO = productDemandGroupComponent.getById(productDemandGroupItemMoveReq.getTargetGroupId());
+            if (productDemandGroupDO.getProjectId() != null) {
+                // moveIn是productDemandGroupItemMoveReq.getId()为产品需求id
+                productDemandGroupComponent.linkOrUnLinkProductDemand(productDemandGroupDO.getProjectId(), productDemandGroupItemMoveReq.getId(), LinkOrUnLinkEnum.LINK);
+            }
         } else if (Objects.equals(ProductDemandGroupMoveModeEnum.MOVE_OUT.getCode(), productDemandGroupItemMoveReq.getMode())) {
-            // 删除
-            productDemandGroupItemMapper.delete(productDemandGroupItemMoveReq.getId(), modifyManId, modifyMan);
-        } else {
-            if (targetGroupItemDO == null) {
+            if (productDemandGroupItemMoveReq.getPrevId() != null || productDemandGroupItemMoveReq.getNextId() != null) {
+                throw new BaseBizRuntimeException("参数错误");
+            }
+            final ProductDemandGroupItemDO productDemandGroupItemDO = productDemandGroupItemMapper.get(productDemandGroupItemMoveReq.getId());
+            if (productDemandGroupItemDO == null || !Objects.equals(productDemandGroupItemDO.getProductDemandGroupId(), productDemandGroupItemMoveReq.getTargetGroupId())) {
+                throw new BaseBizRuntimeException("产品需求已经不在当前分组，请刷新后重试");
+            }
+            ProductDemandGroupItemDO moveGroupItemDO = productDemandGroupItemMapper.getByBizDomainIdAndId(productDemandGroupItemMoveReq.getBizDomainId(), productDemandGroupItemMoveReq.getId());
+            if (moveGroupItemDO == null) {
                 throw new BaseBizRuntimeException("产品需求分组的产品需求不存在, 请刷新后重试");
             }
+            // 删除
+            productDemandGroupItemMapper.delete(productDemandGroupItemMoveReq.getId(), modifyManId, modifyMan);
+            // 如果分组已经绑定了项目， 需要将产品需求取消关联
+            final ProductDemandGroupDO productDemandGroupDO = productDemandGroupComponent.getById(productDemandGroupItemDO.getProductDemandGroupId());
+            if (productDemandGroupDO.getProjectId() != null) {
+                productDemandGroupComponent.linkOrUnLinkProductDemand(productDemandGroupDO.getProjectId(), moveGroupItemDO.getProductDemandId(), LinkOrUnLinkEnum.UN_LINK);
+            }
+        } else {
+            ProductDemandGroupItemDO moveGroupItemDO = productDemandGroupItemMapper.getByBizDomainIdAndId(productDemandGroupItemMoveReq.getBizDomainId(), productDemandGroupItemMoveReq.getId());
+            if (moveGroupItemDO == null) {
+                throw new BaseBizRuntimeException("产品需求分组的产品需求不存在, 请刷新后重试");
+            }
+            ProductDemandDO moveProductDemandDO = productDemandMapper.get(moveGroupItemDO.getProductDemandId());
+            if (moveProductDemandDO == null) {
+                throw new BaseBizRuntimeException("产品需求不存在");
+            }
+            if (notAllowProductDemandStatuses.contains(moveProductDemandDO.getStatus())) {
+                throw new BaseBizRuntimeException(String.format("产品需求状态为%s, 不能操作", ProductDemandStatusEnum.getTextByCode(moveProductDemandDO.getStatus())));
+            }
+            if (Objects.equals(productDemandGroupItemMoveReq.getTargetGroupId(), moveGroupItemDO.getProductDemandGroupId())) {
+                ProductDemandGroupItemDO targetNextGroupItemDO = productDemandGroupItemMapper.getNextByPosition(productDemandGroupItemMoveReq.getTargetGroupId(), moveGroupItemDO.getPosition());
+                ProductDemandGroupItemDO targetPreGroupItemDO = productDemandGroupItemMapper.getPreByPosition(productDemandGroupItemMoveReq.getTargetGroupId(), moveGroupItemDO.getPosition());
+                boolean preConditionEqual = isProductGroupItemEqual(prevGroupItemDO, targetPreGroupItemDO);
+                boolean nextConditionEqual = isProductGroupItemEqual(nextGroupItemDO, targetNextGroupItemDO);
+                if (preConditionEqual && nextConditionEqual) {
+                    throw new BaseBizRuntimeException("产品需求位置未变化，无需移动");
+                }
+            }
             // 更新位置或目标分组id
+            double position = calculateNewPosition(productDemandGroupItemMoveReq.getPrevId(),
+                    prevGroupItemDO == null ? null : prevGroupItemDO.getPosition(),
+                    productDemandGroupItemMoveReq.getNextId(),
+                    nextGroupItemDO == null ? null : nextGroupItemDO.getPosition(),
+                    productDemandGroupItemMoveReq.getBizDomainId(),
+                    productDemandGroupItemMoveReq.getTargetGroupId(),
+                    getPrevByPosition,
+                    getNextByPosition
+            );
             val updateGroupItemDO = new ProductDemandGroupItemDO().setPosition(position)
-                    .setVersion(targetGroupItemDO.getVersion())
+                    .setVersion(moveGroupItemDO.getVersion())
                     .setProductDemandGroupId(productDemandGroupItemMoveReq.getTargetGroupId());
-            updateGroupItemDO.setId(targetGroupItemDO.getId());
+            updateGroupItemDO.setId(moveGroupItemDO.getId());
             updateGroupItemDO.setModifyMan(modifyMan);
             updateGroupItemDO.setModifyManId(modifyManId);
             try {
@@ -541,12 +575,23 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
                     log.error("更新产品需求分组产品需求位置失败:{}", updateGroupItemDO);
                     throw new BaseBizRuntimeException("操作失败，请刷新页面重试");
                 }
+                // TODO 如果更新失败【乐观锁更新失败，唯一键冲突失败】， 重试或者提示刷新页面重试
             } catch (DuplicateKeyException e) {
                 log.error("更新产品需求分组产品需求位置失败:{}", updateGroupItemDO, e);
                 throw new BaseBizRuntimeException("操作失败，请刷新页面重试");
             }
 
-            // TODO 如果更新失败【乐观锁更新失败，唯一键冲突失败】， 重试或者提示刷新页面重试
+            // 如果分组已经绑定了项目，需要将产品需求绑定项目
+            final ProductDemandGroupDO targetProductDemandGroupDO = productDemandGroupComponent.getById(productDemandGroupItemMoveReq.getTargetGroupId());
+            if (targetProductDemandGroupDO.getProjectId() != null) {
+                productDemandGroupComponent.linkOrUnLinkProductDemand(targetProductDemandGroupDO.getProjectId(), moveGroupItemDO.getProductDemandId(), LinkOrUnLinkEnum.LINK);
+            }
+
+            // 如果拖出分组已经绑定了项目， 需要将产品需求取消关联原项目
+            final ProductDemandGroupDO moveProductDemandGroupDO = productDemandGroupComponent.getById(moveGroupItemDO.getProductDemandGroupId());
+            if (moveProductDemandGroupDO.getProjectId() != null) {
+                productDemandGroupComponent.linkOrUnLinkProductDemand(moveProductDemandGroupDO.getProjectId(), moveGroupItemDO.getProductDemandId(), LinkOrUnLinkEnum.UN_LINK);
+            }
         }
 
         return BaseResult.success(true);
@@ -564,6 +609,10 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
             // 校验关联项目
             ProjectDO projectDO = projectMapper.get(projectId);
             AssertUtil.notNull(projectDO, "项目不存在");
+            // 客开项目 || 内部项目 || PBG项目/1-N客开项目 不能关联分组
+            if (projectDO.getCustomerDev() != 0 || projectDO.getCategory() != 0 || projectDO.getKind() == 2 ) {
+                throw new BaseBizRuntimeException("项目类型错误，不能关联分组");
+            }
             // 已结项 | 已暂停 | 已中止 | 已废除 不支持关联
             ArrayList<Integer> nonSupportStatuses = Lists.newArrayList(ProjectStatusEnum.INVALID.getCode(),
                     ProjectStatusEnum.SUSPEND.getCode(), ProjectStatusEnum.CONCLUSION.getCode(), ProjectStatusEnum.CANCELLATION.getCode());

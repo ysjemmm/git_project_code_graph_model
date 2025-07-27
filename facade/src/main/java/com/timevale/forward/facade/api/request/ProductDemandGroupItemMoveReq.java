@@ -20,7 +20,7 @@ public class ProductDemandGroupItemMoveReq extends ProductDemandGroupMoveReq {
     @NotNull(message = "mode不能为空")
     private String mode;
 
-    @ApiModelProperty(value = "目标分组id, mode为moveOut时，传0， 其他传具体的分组id", required = true)
+    @ApiModelProperty(value = "目标分组id, mode为moveOut时，传当前的分组id， 其他传具体的分组id", required = true)
     @NotNull(message = "目标分组id不能为空")
     private Long targetGroupId;
 }

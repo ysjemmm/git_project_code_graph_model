@@ -260,6 +260,11 @@ public class ProjectListCondition {
     private Integer projectAcceptanceStatus;
 
     /**
+     * 是否包含关联分组, true: 搜索未关联分组的项目，false: 所有
+     */
+    private Boolean unLinkGroup;
+
+    /**
      * 是否发送工时通知
      */
     private Integer workHoursNotify;

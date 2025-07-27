@@ -3,6 +3,8 @@ package com.timevale.forward.service.component;
 import com.timevale.forward.dal.condition.ProductDemandGroupListCondition;
 import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.dal.entity.ProductDemandGroupDO;
+import com.timevale.forward.model.enums.LinkOrUnLinkEnum;
+
 import java.util.List;
 
 /**
@@ -50,5 +52,7 @@ public interface ProductDemandGroupComponent {
      * 取消关联项目
      */
     void removeProject(Long id);
+
+    void linkOrUnLinkProductDemand(Long projectId, Long productDemandId, LinkOrUnLinkEnum type);
 
 } 
