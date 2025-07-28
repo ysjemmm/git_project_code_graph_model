@@ -59,6 +59,8 @@ public class NoLoginServiceImpl implements NoLoginService {
 
     @Override
     public String redirectUrl(String url) {
+        // 请求参数
+        log.info("重定向接收参数:{}", url);
         String baseUrl = EnvEnum.PROD.equals(envUtils.getEnv()) ? "https://forward.esign.cn" : "https://testforward.tsign.cn";
         String defaultRedirectUrl = baseUrl + "/mobileTimeRegistration";
 
@@ -86,6 +88,7 @@ public class NoLoginServiceImpl implements NoLoginService {
 
             // 验证并返回结果
             if (isValidUrl(longUrl)) {
+                log.info("重定向返回链接:{}", longUrl);
                 return longUrl;
             }
 
