@@ -178,6 +178,13 @@
         AND is_deleted = false
     </select>
 
+    <select id="getByProjectId" resultType="com.timevale.forward.dal.entity.ProductDemandGroupDO">
+        SELECT *
+        FROM product_demand_group
+        WHERE project_id = #{projectId}
+        AND is_deleted = false
+    </select>
+
     <!-- 删除产品需求分组信息 -->
     <update id="removeProject">
         UPDATE product_demand_group

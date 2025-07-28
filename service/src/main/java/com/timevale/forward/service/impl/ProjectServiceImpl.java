@@ -174,6 +174,10 @@ public class ProjectServiceImpl implements ProjectService {
     private ProjectBizDomainMapper projectBizDomainMapper;
     @Resource
     private BizDomainMapper bizDomainMapper;
+    @Resource
+    private ProductDemandGroupItemComponent productDemandGroupItemComponent;
+    @Resource
+    private ProductDemandGroupComponent productDemandGroupComponent;
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -1170,6 +1174,30 @@ public class ProjectServiceImpl implements ProjectService {
     public BaseResult<ProductDemandStatusVO> linkOrUnLinkProductDemand(ProjectProductDemandLinkReq productDemandLinkReq) {
         log.info("关联or取消关联接收参数:{}", productDemandLinkReq);
         projectProductDemandComponent.linkOrUnLinkProductDemand(productDemandLinkReq);
+        // 需求关联或取消关联产品需求分组
+        ProductDemandGroupDO productDemandGroupDO = productDemandGroupComponent.getByProjectId(productDemandLinkReq.getProjectId());
+        if (productDemandGroupDO != null && CollectionUtils.isNotEmpty(productDemandLinkReq.getProductDemandIds())) {
+            for (Long productDemandId : productDemandLinkReq.getProductDemandIds()) {
+                ProductDemandGroupItemMoveReq productDemandGroupItemMoveReq = new ProductDemandGroupItemMoveReq();
+                if (LinkOrUnLinkEnum.LINK.getCode().equals(productDemandLinkReq.getType())) {
+                    productDemandGroupItemMoveReq.setMode(ProductDemandGroupMoveModeEnum.MOVE_IN.getCode());
+                    productDemandGroupItemMoveReq.setTargetGroupId(productDemandGroupDO.getId());
+                    productDemandGroupItemMoveReq.setBizDomainId(productDemandGroupDO.getBizDomainId());
+                    productDemandGroupItemMoveReq.setId(productDemandId);
+                    productDemandGroupItemComponent.moveProductDemand(productDemandGroupItemMoveReq);
+                } else {
+                    ProductDemandGroupItemDO productDemandGroupItemDO = productDemandGroupItemComponent.getByGroupIdAndDemandId(productDemandGroupDO.getId(), productDemandId);
+                    if (productDemandGroupItemDO != null) {
+                        productDemandGroupItemMoveReq.setMode(ProductDemandGroupMoveModeEnum.MOVE_OUT.getCode());
+                        productDemandGroupItemMoveReq.setBizDomainId(productDemandGroupDO.getBizDomainId());
+                        productDemandGroupItemMoveReq.setTargetGroupId(productDemandGroupDO.getId());
+                        productDemandGroupItemMoveReq.setId(productDemandGroupItemDO.getId());
+                        productDemandGroupItemComponent.moveProductDemand(productDemandGroupItemMoveReq);
+                    }
+                }
+            }
+        }
+
         //产品需求和项目关联或删除时,需要给前端刷新产品需求状态
         List<Long> productDemandIds = productDemandLinkReq.getProductDemandIds();
         ProductDemandDO productDemandDO = productDemandMapper.selectById(productDemandIds.get(0));

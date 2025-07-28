@@ -109,6 +109,14 @@ public interface ProductDemandGroupMapper {
     Long countProject(@Param("projectId") Long projectId);
 
     /**
+     * 根据项目id获取产品需求分组
+     *
+     * @param projectId 项目id
+     * @return 产品需求分组DO
+     */
+    ProductDemandGroupDO getByProjectId(@Param("projectId") Long projectId);
+
+    /**
      * 取消关联项目
      *
      * @param id 主键id
