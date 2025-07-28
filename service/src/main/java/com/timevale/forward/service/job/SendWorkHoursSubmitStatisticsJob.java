@@ -1,8 +1,10 @@
 package com.timevale.forward.service.job;
 
+import cn.hutool.core.collection.CollUtil;
 import com.timevale.crm.sdk.common.constant.enums.EnvEnum;
 import com.timevale.forward.dal.condition.WorkHoursRecordCondition;
 import com.timevale.forward.dal.dao.BizDomainMapper;
+import com.timevale.forward.dal.dao.PersonMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.WorkHoursRecordMapper;
@@ -18,6 +20,8 @@ import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.integration.erp.model.ActionCardMsg;
 import com.timevale.forward.service.manager.MessageRetryManager;
 import com.timevale.forward.service.utils.EnvUtils;
+import com.timevale.forward.service.utils.JwtGeneratorUtil;
+import com.timevale.forward.service.utils.UrlGenerateUtil;
 import com.timevale.framework.schedulerT.client.annotaion.JobHandler;
 import com.timevale.framework.schedulerT.core.biz.model.ReturnT;
 import com.timevale.framework.schedulerT.core.handler.IJobHandler;
@@ -53,6 +57,7 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
     private final ProjectMapper projectMapper;
     private final WorkHoursRecordMapper workHoursRecordMapper;
     private final PersonComponent personComponent;
+    private final PersonMapper personMapper;
     private final MessageRetryManager messageRetryManager;
     private final ProductLineMapper productLineMapper;
     private final BizDomainMapper bizDomainMapper;
@@ -176,6 +181,10 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
                 ownerProjectMap.put(ownerId, dos);
             }
         });
+        // 负责人集合为空，则直接返回成功
+        if (CollUtil.isEmpty(ownerProjectMap)) {
+            return ReturnT.SUCCESS;
+        }
 
         // 封装昨日时间逻辑
         LocalDate yesterday = getYesterday(today, dayOfWeek);
@@ -196,6 +205,10 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
 
         // 统计发送消息的数量
         AtomicInteger sentCount = new AtomicInteger(0);
+
+        Map<String, String> userTokenMap = personMapper.selectByUserIds(ownerProjectMap.keySet())
+                .stream()
+                .collect(Collectors.toMap(PersonDO::getUserId, e -> JwtGeneratorUtil.generateJwt(e.getUserId(), e.getUserName().split("-")[0], e.getUserName().split("-")[1]), (v1, v2) -> v2));
 
         // 遍历每个负责人及其项目，构建并发送消息
         ownerProjectMap.forEach((principalId, projectList) -> {
@@ -254,12 +267,20 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
             }
 
             // 构建并发送消息
-            String fullUrl = url + "/projectManagement/edit?id=" + proId + "&type=check";
+            StringBuilder urlBuilder = new StringBuilder();
+            urlBuilder.append(url).append("/projectManagement/edit?id=").append(proId).append("&type=check");
+            String token = userTokenMap.get(principalId);
+            String dateStr = yesterday.format(DATE_FORMATTER);
+            // 使用盐值加密这个token
+
+            String shortUrl = UrlGenerateUtil.getUrl(principalId, token, urlBuilder, dateStr);
+
+            String fullUrl = url + "/forward/workHours/" + shortUrl;
 
             // 构建并发送消息
             ActionCardMsg actionCardMsg = ActionCardMsg.builder()
                     .title("工时填报情况")
-                    .markdown(buildMarkdownMessage(stringBuilder, yesterday, fullUrl))
+                    .markdown(buildMarkdownMessage(stringBuilder, dateStr, fullUrl))
                     .receivers(Collections.singletonList(principalId))
                     .singleTitle("查看工时填报明细")
                     .singleUrl(fullUrl)
@@ -272,14 +293,12 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
         return ReturnT.SUCCESS;
     }
 
-    private String buildMarkdownMessage(StringBuilder content, LocalDate yesterday, String fullUrl) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("## " + yesterday.format(DATE_FORMATTER) + "工时填报情况  \n");
-        sb.append(content);
-        sb.append("  \n👉 [点击跳转填报详情页面](").append(fullUrl).append(")  \n");
-        sb.append("⚠️ 如跳转失败，请复制下方链接在浏览器打开：  \n");
-        sb.append(fullUrl);
-        return sb.toString();
+    private String buildMarkdownMessage(StringBuilder content, String dateStr, String fullUrl) {
+        return "## " + dateStr + "工时填报情况  \n" +
+                content +
+                "  \n👉 [点击跳转填报详情页面](" + fullUrl + ")  \n" +
+                "⚠️ 如跳转失败，请复制下方链接在浏览器打开：  \n" +
+                fullUrl;
     }
 
 

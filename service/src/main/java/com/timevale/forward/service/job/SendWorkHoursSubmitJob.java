@@ -17,6 +17,8 @@ import com.timevale.forward.service.copy.TaskCopier;
 import com.timevale.forward.service.integration.erp.model.ActionCardMsg;
 import com.timevale.forward.service.manager.MessageRetryManager;
 import com.timevale.forward.service.utils.EnvUtils;
+import com.timevale.forward.service.utils.JwtGeneratorUtil;
+import com.timevale.forward.service.utils.UrlGenerateUtil;
 import com.timevale.framework.schedulerT.client.annotaion.JobHandler;
 import com.timevale.framework.schedulerT.core.biz.model.ReturnT;
 import com.timevale.framework.schedulerT.core.handler.IJobHandler;
@@ -114,9 +116,22 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
 
         // 3. 获取执行人信息
         // 根据任务ID列表查询任务执行人信息，并按执行人ID分组
-        Map<String, List<PersonDO>> executorMap = personMapper.get(progressTaskIdList, PersonTypeEnum.TASK_EXECUTOR.getCode())
+        List<PersonDO> personDOS = personMapper.get(progressTaskIdList, PersonTypeEnum.TASK_EXECUTOR.getCode());
+        // 如果没有执行人信息，则返回成功
+        if (personDOS.isEmpty()) {
+            return ReturnT.SUCCESS;
+        }
+        Map<String, List<PersonDO>> executorMap = personDOS
                 .stream()
                 .collect(Collectors.groupingBy(PersonDO::getUserId));
+
+        // 执行人token
+        // 替换原来的token生成逻辑
+        Map<String, String> userTokenMap = personDOS.stream().collect(Collectors.toMap(
+                PersonDO::getUserId,
+                e -> JwtGeneratorUtil.generateJwt(e.getUserId(), e.getUserName().split("-")[0], e.getUserName().split("-")[1]),
+                (v1, v2) -> v2
+        ));
 
         // 将任务信息转换为任务视图对象并映射为Map
         Map<Long, TaskVO> taskVOMap = TaskCopier.INSTANCE.convert(progressTaskList).stream()
@@ -136,10 +151,19 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
                 return;
             }
 
-            String fullUrl = url + "/mobileTimeRegistration?dataStr=" + dateStr;
+            // url
+            StringBuilder urlBuilder = new StringBuilder();
+            // 真实url地址
+            urlBuilder.append(url).append("/mobileTimeRegistration?dataStr=").append(dateStr);
+            String token = userTokenMap.get(userId);
+            // 生成短链接
+            String shortUrl = UrlGenerateUtil.getUrl(userId, token, urlBuilder, dateStr);
+            // 完整短链接
+            String fullUrl = url + "/forward/workHours/" +shortUrl;
+
             // Markdown 内容包含提示
             StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append("## " + today.format(DATE_FORMATTER) + "工时填报  \n");
+            stringBuilder.append("## ").append(today.format(DATE_FORMATTER)).append("工时填报  \n");
             stringBuilder.append("请完成以下任务的工时填报：  \n");
             taskIdList.forEach(taskId -> {
                 TaskVO vo = taskVOMap.get(taskId);
