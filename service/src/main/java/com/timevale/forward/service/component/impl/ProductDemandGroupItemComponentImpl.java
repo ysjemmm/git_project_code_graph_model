@@ -152,7 +152,7 @@ public class ProductDemandGroupItemComponentImpl implements ProductDemandGroupIt
                 log.error("创建产品需求分组产品需求失败:{}", createGroupItemDO, e);
                 throw new BaseBizRuntimeException("操作失败，请刷新页面重试");
             }
-            return new ProductDemandMoveDTO(req.getTargetGroupId(), null, req.getId(), null);
+            return new ProductDemandMoveDTO(req.getTargetGroupId(), null, req.getId(), null, false);
         } else if (Objects.equals(ProductDemandGroupMoveModeEnum.MOVE_OUT.getCode(), req.getMode())) {
             if (req.getPrevId() != null || req.getNextId() != null) {
                 throw new BaseBizRuntimeException("参数错误");
@@ -163,7 +163,7 @@ public class ProductDemandGroupItemComponentImpl implements ProductDemandGroupIt
             }
             // 删除
             productDemandGroupItemMapper.delete(req.getId(), modifyManId, modifyMan);
-            return new ProductDemandMoveDTO(null, req.getId(), moveGroupItemDO.getProductDemandId(), moveGroupItemDO.getProductDemandGroupId());
+            return new ProductDemandMoveDTO(null, req.getId(), moveGroupItemDO.getProductDemandId(), moveGroupItemDO.getProductDemandGroupId(), false);
         } else {
             final ProductDemandGroupItemDO moveGroupItemDO = productDemandGroupItemMapper.get(req.getId());
             if (moveGroupItemDO == null) {
@@ -182,7 +182,9 @@ public class ProductDemandGroupItemComponentImpl implements ProductDemandGroupIt
                 boolean preConditionEqual = isProductGroupItemEqual(prevGroupItemDO, targetPreGroupItemDO);
                 boolean nextConditionEqual = isProductGroupItemEqual(nextGroupItemDO, targetNextGroupItemDO);
                 if (preConditionEqual && nextConditionEqual) {
-                    throw new BaseBizRuntimeException("产品需求位置未变化，无需移动");
+                    log.info("产品需求位置未变化，无需移动");
+                    return new ProductDemandMoveDTO(null, null, null, null, true);
+//                    throw new BaseBizRuntimeException("产品需求位置未变化，无需移动");
                 }
             }
             // 更新位置或目标分组id
@@ -212,7 +214,7 @@ public class ProductDemandGroupItemComponentImpl implements ProductDemandGroupIt
                 log.error("更新产品需求分组产品需求位置失败:{}", updateGroupItemDO, e);
                 throw new BaseBizRuntimeException("操作失败，请刷新页面重试");
             }
-            return new ProductDemandMoveDTO(req.getTargetGroupId(), req.getId(), moveGroupItemDO.getProductDemandId(), moveGroupItemDO.getProductDemandGroupId());
+            return new ProductDemandMoveDTO(req.getTargetGroupId(), req.getId(), moveGroupItemDO.getProductDemandId(), moveGroupItemDO.getProductDemandGroupId(), false);
         }
     }
 

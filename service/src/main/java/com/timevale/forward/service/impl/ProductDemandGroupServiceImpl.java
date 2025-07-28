@@ -378,7 +378,9 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         boolean preConditionEqual = (prevGroupDO == null && targetPreGroupDO == null) || (prevGroupDO != null && targetPreGroupDO != null && prevGroupDO.getId().equals(targetPreGroupDO.getId()));
         boolean nextConditionEqual = (nextGroupDO == null && targetNextGroupDO == null) || (nextGroupDO != null && targetNextGroupDO != null && nextGroupDO.getId().equals(targetNextGroupDO.getId()));
         if (preConditionEqual && nextConditionEqual) {
-            throw new BaseBizRuntimeException("产品需求分组位置未变化，无需移动");
+            log.info("产品需求分组位置未变化，无需移动");
+            return BaseResult.success(true);
+//            throw new BaseBizRuntimeException("产品需求分组位置未变化，无需移动");
         }
         // 定义 getPrevByPosition 和 getNextByPosition 函数
         BiFunction<Long, Double, Double> getPrevByPosition = (targetGroupId, position) -> {
@@ -429,6 +431,9 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         checkOperationPermission(productDemandGroupItemMoveReq.getBizDomainId());
         // 拖动产品需求到分组
         ProductDemandMoveDTO productDemandMoveDTO = productDemandGroupItemComponent.moveProductDemand(productDemandGroupItemMoveReq);
+        if (productDemandMoveDTO.getIgnore()) {
+            return BaseResult.success(true);
+        }
         // 需求和项目关联
         if (Objects.equals(ProductDemandGroupMoveModeEnum.MOVE_IN.getCode(), productDemandGroupItemMoveReq.getMode())) {
             // 如果分组已经绑定了项目，需要将产品需求关联项目
