@@ -462,13 +462,13 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> linkOrUnlinkProject(ProductDemandGroupProjectLinkReq req) {
-        log.info("关联or取消关联项目需求,参数:{}", req);
-        Long projectId = req.getProjectId();
-        Long groupId = req.getProductDemandGroupId();
+    public BaseResult<Boolean> linkOrUnlinkProject(ProductDemandGroupProjectLinkReq productDemandGroupItemMoveReq) {
+        log.info("关联or取消关联项目需求,参数:{}", productDemandGroupItemMoveReq);
+        Long projectId = productDemandGroupItemMoveReq.getProjectId();
+        Long groupId = productDemandGroupItemMoveReq.getProductDemandGroupId();
         ProductDemandGroupDO productDemandGroupDO = productDemandGroupComponent.getById(groupId);
         AssertUtil.notNull(productDemandGroupDO, "分组不存在");
-        if (LinkOrUnLinkEnum.LINK.getCode().equals(req.getType())) {
+        if (LinkOrUnLinkEnum.LINK.getCode().equals(productDemandGroupItemMoveReq.getType())) {
             // 校验关联项目
             ProjectDO projectDO = projectMapper.get(projectId);
             AssertUtil.notNull(projectDO, "项目不存在");
