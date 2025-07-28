@@ -105,5 +105,17 @@
         </where>
     </select>
 
+    <select id="selectByUserIds" resultType="com.timevale.forward.dal.entity.PersonDO">
+        select id ,main_id,user_name,user_id, type,is_deleted,create_man ,create_date ,modify_man ,modify_date
+        from person
+        <where>
+            and user_id in
+            <foreach collection="userIds" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            and is_deleted=false
+        </where>
+    </select>
+
 
 </mapper>
