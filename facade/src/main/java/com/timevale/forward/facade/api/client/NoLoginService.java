@@ -22,8 +22,8 @@ public interface NoLoginService {
 
     /**
      * 跳转短链接
-     * @param url
+     * @param code
      * @return
      */
-    String redirectUrl(String url);
+    String redirectUrl(String code);
 }

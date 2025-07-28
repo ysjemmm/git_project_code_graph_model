@@ -2,11 +2,10 @@ package com.timevale.forward.service.controller;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.client.NoLoginService;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,9 +18,9 @@ import javax.annotation.Resource;
  * @date: 2025/7/27 17:02
  * @description:
  */
-@Slf4j
 @RestController
-@RequiredArgsConstructor
+@Api(tags = "工时填报登录")
+@Slf4j
 @RequestMapping("/workHours")
 public class NoLoginController {
 
@@ -35,9 +34,9 @@ public class NoLoginController {
         return noLoginService.getToken(dateStr, userId);
     }
 
-    @GetMapping("/{url}")
+    @GetMapping("/redirectUrl")
     public RedirectView redirectUrl(
-            @ApiParam(value = "短url") @PathVariable String url) {
-        return new RedirectView(noLoginService.redirectUrl(url));
+            @ApiParam(value = "加密用户id和短链code") @RequestParam(value = "code") String code) {
+        return new RedirectView(noLoginService.redirectUrl(code));
     }
 }

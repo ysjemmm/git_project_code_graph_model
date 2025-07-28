@@ -58,20 +58,20 @@ public class NoLoginServiceImpl implements NoLoginService {
     }
 
     @Override
-    public String redirectUrl(String url) {
+    public String redirectUrl(String code) {
         // 请求参数
-        log.info("重定向接收参数:{}", url);
+        log.info("重定向接收参数:{}", code);
         String baseUrl = EnvEnum.PROD.equals(envUtils.getEnv()) ? "https://forward.esign.cn" : "https://testforward.tsign.cn";
         String defaultRedirectUrl = baseUrl + "/mobileTimeRegistration";
 
         // 基本参数验证
-        if (StringUtils.isEmpty(url)) {
+        if (StringUtils.isEmpty(code)) {
             return defaultRedirectUrl;
         }
 
         try {
             // 解析URL参数
-            UrlComponentBO urlComponents = parseUrlComponents(url);
+            UrlComponentBO urlComponents = parseUrlComponents(code);
             if (urlComponents == null) {
                 return defaultRedirectUrl;
             }
@@ -93,7 +93,7 @@ public class NoLoginServiceImpl implements NoLoginService {
             }
 
         } catch (Exception e) {
-            log.warn("Error processing redirect URL: {}", url, e);
+            log.warn("Error processing redirect code: {}", code, e);
         }
 
         return defaultRedirectUrl;

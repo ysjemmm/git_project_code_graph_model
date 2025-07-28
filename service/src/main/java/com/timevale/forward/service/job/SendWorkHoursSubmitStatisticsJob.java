@@ -275,7 +275,7 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
 
             String shortUrl = UrlGenerateUtil.getUrl(principalId, token, urlBuilder, dateStr);
 
-            String fullUrl = url + "/forward/workHours/" + shortUrl;
+            String fullUrl = url + "/" +shortUrl;
 
             // 构建并发送消息
             ActionCardMsg actionCardMsg = ActionCardMsg.builder()
