@@ -206,13 +206,10 @@
 
     <!-- 根据主键id和分组id获取产品需求分组和产品需求关系 -->
     <select id="getByGroupIdAndId" resultType="com.timevale.forward.dal.entity.ProductDemandGroupItemDO">
-        select pdgi.* from product_demand_group_item pdgi, product_demand_group pdg
-        where pdgi.product_demand_group_id = pdg.id
-          and pdg.is_deleted = false
-          and pdgi.is_deleted = false
-          and pdgi.id = #{id}
-          and pdg.biz_domain_id = #{bizDomainId}
-          and pdgi.product_demand_group_id = #{groupId}
+        select * from product_demand_group_item
+        where is_deleted = false
+        and id = #{id}
+        and product_demand_group_id = #{groupId}
     </select>
 
     <!-- 根据主键id和分组id获取产品需求分组和产品需求关系 -->

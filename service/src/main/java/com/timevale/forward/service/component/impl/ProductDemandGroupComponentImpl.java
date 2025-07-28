@@ -52,20 +52,20 @@ public class ProductDemandGroupComponentImpl implements ProductDemandGroupCompon
         condition.setCreateDateEnd(DateUtil.getEndOfDay(condition.getCreateDateEnd()));
         condition.setProductDemandQueryExist(condition.judgeProductDemandQueryExist());
         // 分组条件默认值，后面如需求可以在页面传入
-        Date now = new Date(); // 当前时间
-        Date twoYearsAgo = DateUtil.addYear(now, -2); // 两年前的时间
-        List<Integer> statusList = new java.util.ArrayList<>();
-        // 遍历ProjectStatusEnum的所有枚举值
-        for (ProjectStatusEnum statusEnum : ProjectStatusEnum.values()) {
-            if (statusEnum != ProjectStatusEnum.CONCLUSION && 
-                statusEnum != ProjectStatusEnum.INVALID && 
-                statusEnum != ProjectStatusEnum.CANCELLATION ) {
-                statusList.add(statusEnum.getCode()); 
-            }
-        }
-        condition.setGroupStatus(statusList);
-        condition.setGroupCreateDateStart(DateUtil.getStartOfDay(twoYearsAgo));
-        condition.setGroupCreateDateEnd(DateUtil.getEndOfDay(now));
+//        Date now = new Date(); // 当前时间
+//        Date twoYearsAgo = DateUtil.addYear(now, -2); // 两年前的时间
+//        List<Integer> statusList = new java.util.ArrayList<>();
+//        // 遍历ProjectStatusEnum的所有枚举值
+//        for (ProjectStatusEnum statusEnum : ProjectStatusEnum.values()) {
+//            if (statusEnum != ProjectStatusEnum.CONCLUSION &&
+//                statusEnum != ProjectStatusEnum.INVALID &&
+//                statusEnum != ProjectStatusEnum.CANCELLATION ) {
+//                statusList.add(statusEnum.getCode());
+//            }
+//        }
+//        condition.setGroupStatus(statusList);
+//        condition.setGroupCreateDateStart(DateUtil.getStartOfDay(twoYearsAgo));
+//        condition.setGroupCreateDateEnd(DateUtil.getEndOfDay(now));
         return productDemandGroupMapper.list(condition);
     }
 

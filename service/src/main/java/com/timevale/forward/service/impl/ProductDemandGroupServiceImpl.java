@@ -203,7 +203,6 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         // 遍历分组，获取分组下的需求
         for (ProductDemandGroupVO productDemandGroupVO : productDemandGroupListVO) {
             condition.setGroupId(productDemandGroupVO.getId());
-            // TODO 是否需要加分页？
             // 查询分组下的需求
             List<ProductDemandGroupItemListDO> productDemandGroupItemListDOS = productDemandGroupItemComponent.listProductDemand(condition);
             List<ProductDemandGroupItemVO> productDemandGroupItemVOList = convert(productDemandGroupItemListDOS);

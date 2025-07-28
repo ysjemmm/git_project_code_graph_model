@@ -68,12 +68,11 @@ public interface ProductDemandGroupItemMapper {
     /**
      * 根据分组id和主键id获取产品需求分组和产品需求关系
      *
-     * @param bizDomainId 业务域id
      * @param groupId 分组id
      * @param id 主键id
      * @return 产品需求分组和产品需求关系
      */
-    ProductDemandGroupItemDO getByGroupIdAndId(@Param("bizDomainId") Long bizDomainId, @Param("groupId") Long groupId, @Param("id") Long id);
+    ProductDemandGroupItemDO getByGroupIdAndId(@Param("groupId") Long groupId, @Param("id") Long id);
 
     /**
      * 根据分组id和产品需求id获取产品需求分组和产品需求关系
