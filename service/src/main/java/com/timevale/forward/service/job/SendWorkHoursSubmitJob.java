@@ -159,7 +159,7 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
             // 生成短链接
             String shortUrl = UrlGenerateUtil.getUrl(userId, token, urlBuilder, dateStr);
             // 完整短链接
-            String fullUrl = url + "/forward/" +shortUrl;
+            String fullUrl = url + "/forward/workHours/" +shortUrl;
 
             // Markdown 内容包含提示
             StringBuilder stringBuilder = new StringBuilder();
