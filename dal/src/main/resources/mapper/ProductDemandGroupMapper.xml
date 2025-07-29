@@ -4,8 +4,9 @@
 
     <!-- 查询业务域内的产品需求分组列表 -->
     <select id="list" resultType="com.timevale.forward.dal.entity.ProductDemandGroupDO">
-        SELECT pdg.*
+        SELECT pdg.*, p.status, p.name as project_name
         FROM product_demand_group pdg
+        LEFT JOIN project p on pdg.project_id = p.id
         <where>
             pdg.biz_domain_id = #{groupBizDomainId}
             AND pdg.is_deleted = false
@@ -18,13 +19,12 @@
                     #{item}
                 </foreach>
             </if>
-            and (pdg.status is null
             <if test="groupStatus!=null and groupStatus.size()>0">
-                or pdg.status in
+                and p.status in
                 <foreach collection="groupStatus" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
-            </if>)
+            </if>
             <if test="productDemandQueryExist != null and productDemandQueryExist == true">
                 AND EXISTS (
                     SELECT 1
@@ -101,9 +101,9 @@
     <!-- 新增一条产品需求分组信息 -->
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProductDemandGroupDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
         INSERT INTO product_demand_group
-        (name, biz_domain_id, position, version, owner, owner_id, project_id, status, create_man_id, create_man, is_active)
+        (name, biz_domain_id, position, version, owner, owner_id, project_id, create_man_id, create_man, is_active)
         VALUES
-        (#{name}, #{bizDomainId}, #{position}, #{version}, #{owner}, #{ownerId}, #{projectId}, #{status}, #{createManId}, #{createMan}, #{isActive})
+        (#{name}, #{bizDomainId}, #{position}, #{version}, #{owner}, #{ownerId}, #{projectId}, #{createManId}, #{createMan}, #{isActive})
     </insert>
 
     <!-- 根据业务域id和名称查询产品需求分组 -->
@@ -122,7 +122,6 @@
             <if test="owner != null">owner = #{owner},</if>
             <if test="ownerId != null">owner_id = #{ownerId},</if>
             <if test="projectId != null">project_id = #{projectId},</if>
-            <if test="status != null">status = #{status},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyDate != null">modify_date = #{modifyDate},</if>

@@ -51,6 +51,9 @@ public class ProductDemandGroupVO extends ToString {
     @ApiModelProperty("项目状态")
     private Integer status;
 
+    @ApiModelProperty("项目名称")
+    private Integer projectName;
+
     @ApiModelProperty("删除标记")
     private Boolean isDeleted;
 
