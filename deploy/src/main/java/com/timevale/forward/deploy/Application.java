@@ -34,6 +34,7 @@ import org.springframework.cloud.netflix.feign.EnableFeignClients;
         "com.timevale.filesystem.common.service.api",
         "com.timevale.crm.custom.provider.facade.api",
         "com.timevale.soar.facade.api",
+        "com.timevale.shortlink.common.service.api",
 })
 @MapperScan("com.timevale.forward.dal")
 @SpringBootApplication(scanBasePackages = {

@@ -17,11 +17,12 @@ import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.model.enums.ProjectCategoryEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.PersonComponent;
+import com.timevale.forward.service.integration.ShortLinkClient;
 import com.timevale.forward.service.integration.erp.model.ActionCardMsg;
 import com.timevale.forward.service.manager.MessageRetryManager;
 import com.timevale.forward.service.utils.EnvUtils;
 import com.timevale.forward.service.utils.JwtGeneratorUtil;
-import com.timevale.forward.service.utils.UrlGenerateUtil;
+import com.timevale.forward.service.utils.TokenUtil;
 import com.timevale.framework.schedulerT.client.annotaion.JobHandler;
 import com.timevale.framework.schedulerT.core.biz.model.ReturnT;
 import com.timevale.framework.schedulerT.core.handler.IJobHandler;
@@ -62,6 +63,7 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
     private final ProductLineMapper productLineMapper;
     private final BizDomainMapper bizDomainMapper;
     private final EnvUtils envUtils;
+    private final ShortLinkClient shortLinkClient;
 
     private static final List<Integer> PROJECT_STATUSES = Arrays.asList(
             ProjectStatusEnum.PLANING.getCode(),
@@ -271,19 +273,18 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
             urlBuilder.append(url).append("/projectManagement/edit?id=").append(proId).append("&type=check");
             String token = userTokenMap.get(principalId);
             String dateStr = yesterday.format(DATE_FORMATTER);
-            // 使用盐值加密这个token
-
-            String shortUrl = UrlGenerateUtil.getUrl(principalId, token, urlBuilder, dateStr);
-
-            String fullUrl = url + "/" +shortUrl;
+            // 存储token
+            TokenUtil.setTokenExpireTime(principalId, token, urlBuilder, dateStr);
+            // 生成短链接
+            String shortUrl = shortLinkClient.getShortUrl(urlBuilder.toString()).getShortlink();
 
             // 构建并发送消息
             ActionCardMsg actionCardMsg = ActionCardMsg.builder()
                     .title("工时填报情况")
-                    .markdown(buildMarkdownMessage(stringBuilder, dateStr, fullUrl))
+                    .markdown(buildMarkdownMessage(stringBuilder, dateStr, shortUrl))
                     .receivers(Collections.singletonList(principalId))
                     .singleTitle("查看工时填报明细")
-                    .singleUrl(fullUrl)
+                    .singleUrl(shortUrl)
                     .build();
 
             messageRetryManager.sendAsyncMessage("sendWorkHoursSubmitStatisticsJob", actionCardMsg, principalId, sentCount);

@@ -118,5 +118,10 @@
             <artifactId>soar-facade</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.timevale.shortlink</groupId>
+            <artifactId>shortlink-facade</artifactId>
+        </dependency>
+
     </dependencies>
 </project>
