@@ -348,8 +348,11 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             // 填报总工时
             BigDecimal sum = hoursRecordDOList.stream().map(WorkHoursRecordDO::getWorkHours).reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            // 最新工时进度
-            Integer progress = hoursRecordDOList.stream().map(WorkHoursRecordDO::getProgress).max(Comparator.comparingInt(Integer::intValue)).orElse(0);
+            // 最新工时进度 - 按创建时间排序取最新一条
+            Integer progress = hoursRecordDOList.stream()
+                    .max(Comparator.comparing(WorkHoursRecordDO::getCreateDate))
+                    .map(WorkHoursRecordDO::getProgress)
+                    .orElse(0);
 
             // 剩余工时
             BigDecimal subtract = planUseTime.subtract(sum);
