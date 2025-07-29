@@ -350,7 +350,9 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             Integer progress = hoursRecordDOList.stream().map(WorkHoursRecordDO::getProgress).max(Comparator.comparingInt(Integer::intValue)).orElse(0);
 
             // 剩余工时
-            BigDecimal remainingManHour = planUseTime.subtract(sum);
+            BigDecimal subtract = planUseTime.subtract(sum);
+            // 确保不为负数
+            BigDecimal safeRemainingHour = subtract.signum() > 0 ? subtract : BigDecimal.ZERO;
 
             UserInfo userInfo = LocalSessionUtils.getUserInfo();
             String createManId = userInfo.getId();
@@ -367,7 +369,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             workHoursRemainVO.setEstimatedHours(planUseTime);
             workHoursRemainVO.setTotalManHour(sum);
             workHoursRemainVO.setLatestProgress(progress);
-            workHoursRemainVO.setRemainingManHour(remainingManHour);
+            workHoursRemainVO.setRemainingManHour(safeRemainingHour);
             workHoursRemainVO.setRemainingHourDeviation(remainingHour);
         }
         return BaseResult.success(workHoursRemainVO);
