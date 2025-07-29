@@ -19,11 +19,4 @@ public interface NoLoginService {
      * @return
      */
     BaseResult<String> getToken(String dateStr, String userId);
-
-    /**
-     * 跳转短链接
-     * @param code
-     * @return
-     */
-    String redirectUrl(String code);
 }

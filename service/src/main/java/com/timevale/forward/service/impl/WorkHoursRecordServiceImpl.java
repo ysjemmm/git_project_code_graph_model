@@ -132,6 +132,8 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         log.info("工时记录列表,参数:{}", workHoursRecordQueryList);
         // 转换查询条件
         WorkHoursRecordCondition workHoursRecordCondition = WorkHoursRecordCopier.INSTANCE.convert(workHoursRecordQueryList);
+        workHoursRecordCondition.setPageNum(workHoursRecordQueryList.getPageNum());
+        workHoursRecordCondition.setPageSize(workHoursRecordQueryList.getPageSize());
         // 开始分页
         PageHelper.startPage(workHoursRecordCondition.getPageNum(), workHoursRecordCondition.getPageSize(), CommonConstant.CREATE_DESC_ORDER_BY);
         // 查询
@@ -346,11 +348,16 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             // 填报总工时
             BigDecimal sum = hoursRecordDOList.stream().map(WorkHoursRecordDO::getWorkHours).reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            // 最新工时进度
-            Integer progress = hoursRecordDOList.stream().map(WorkHoursRecordDO::getProgress).max(Comparator.comparingInt(Integer::intValue)).orElse(0);
+            // 最新工时进度 - 按创建时间排序取最新一条
+            Integer progress = hoursRecordDOList.stream()
+                    .max(Comparator.comparing(WorkHoursRecordDO::getCreateDate))
+                    .map(WorkHoursRecordDO::getProgress)
+                    .orElse(0);
 
             // 剩余工时
-            BigDecimal remainingManHour = planUseTime.subtract(sum);
+            BigDecimal subtract = planUseTime.subtract(sum);
+            // 确保不为负数
+            BigDecimal safeRemainingHour = subtract.signum() > 0 ? subtract : BigDecimal.ZERO;
 
             UserInfo userInfo = LocalSessionUtils.getUserInfo();
             String createManId = userInfo.getId();
@@ -367,7 +374,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             workHoursRemainVO.setEstimatedHours(planUseTime);
             workHoursRemainVO.setTotalManHour(sum);
             workHoursRemainVO.setLatestProgress(progress);
-            workHoursRemainVO.setRemainingManHour(remainingManHour);
+            workHoursRemainVO.setRemainingManHour(safeRemainingHour);
             workHoursRemainVO.setRemainingHourDeviation(remainingHour);
         }
         return BaseResult.success(workHoursRemainVO);

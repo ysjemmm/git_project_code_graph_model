@@ -540,8 +540,8 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
             projectBoardTaskVO.setStatusName(TaskStatusEnum.getTextByCode(taskDO.getStatus()));
             // 设置任务执行人信息
             PersonDO person = personMap.get(taskId);
-            projectBoardTaskVO.setExecutor(person != null ? person.getUserId() : "未知");
-            projectBoardTaskVO.setExecutorId(person != null ? person.getUserName() : "未知");
+            projectBoardTaskVO.setExecutor(person != null ? person.getUserName() : "未知");
+            projectBoardTaskVO.setExecutorId(person != null ? person.getUserId() : "未知");
 
             // 判断任务是否延期
             projectBoardTaskVO.setIsDelay(isTaskDelayed(taskDO, current));

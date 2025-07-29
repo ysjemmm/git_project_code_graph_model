@@ -54,10 +54,17 @@
         <erp.message-facade.version>1.2.8-SNAPSHOT</erp.message-facade.version>
         <custom-provider-facade.version>2.4.1-SNAPSHOT</custom-provider-facade.version>
         <inuser.security.facade.version>1.1.18-SNAPSHOT</inuser.security.facade.version>
+        <shortlink.facade.version>2.1.3</shortlink.facade.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <!-- 短链 -->
+            <dependency>
+                <groupId>com.timevale.shortlink</groupId>
+                <artifactId>shortlink-facade</artifactId>
+                <version>${shortlink.facade.version}</version>
+            </dependency>
             <!-- 基础模型 -->
             <dependency>
                 <groupId>com.timevale.footstone-base</groupId>

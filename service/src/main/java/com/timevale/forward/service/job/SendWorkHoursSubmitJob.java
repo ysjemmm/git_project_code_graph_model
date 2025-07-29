@@ -14,11 +14,12 @@ import com.timevale.forward.model.enums.ProjectCategoryEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.model.enums.TaskStatusEnum;
 import com.timevale.forward.service.copy.TaskCopier;
+import com.timevale.forward.service.integration.ShortLinkClient;
 import com.timevale.forward.service.integration.erp.model.ActionCardMsg;
 import com.timevale.forward.service.manager.MessageRetryManager;
 import com.timevale.forward.service.utils.EnvUtils;
 import com.timevale.forward.service.utils.JwtGeneratorUtil;
-import com.timevale.forward.service.utils.UrlGenerateUtil;
+import com.timevale.forward.service.utils.TokenUtil;
 import com.timevale.framework.schedulerT.client.annotaion.JobHandler;
 import com.timevale.framework.schedulerT.core.biz.model.ReturnT;
 import com.timevale.framework.schedulerT.core.handler.IJobHandler;
@@ -47,6 +48,7 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
     private final PersonMapper personMapper;
     private final MessageRetryManager messageRetryManager;
     private final EnvUtils envUtils;
+    private final ShortLinkClient shortLinkClient;
 
     private static final List<Integer> PROJECT_STATUSES = Arrays.asList(
             ProjectStatusEnum.PLANING.getCode(),
@@ -156,10 +158,10 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
             // 真实url地址
             urlBuilder.append(url).append("/mobileTimeRegistration?dataStr=").append(dateStr);
             String token = userTokenMap.get(userId);
+            // 存储token
+            TokenUtil.setTokenExpireTime(userId, token, urlBuilder, dateStr);
             // 生成短链接
-            String shortUrl = UrlGenerateUtil.getUrl(userId, token, urlBuilder, dateStr);
-            // 完整短链接
-            String fullUrl = url + "/" +shortUrl;
+            String shortUrl = shortLinkClient.getShortUrl(urlBuilder.toString()).getShortlink();
 
             // Markdown 内容包含提示
             StringBuilder stringBuilder = new StringBuilder();
@@ -169,9 +171,9 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
                 TaskVO vo = taskVOMap.get(taskId);
                 stringBuilder.append("- 【").append(notifyProjectMap.get(vo.getProjectId())).append("】").append("-").append(vo.getName()).append("  \n");
             });
-            stringBuilder.append("  \n👉 [点击跳转填报页面](").append(fullUrl).append(")  \n");
+            stringBuilder.append("  \n👉 [点击跳转填报页面](").append(shortUrl).append(")  \n");
             stringBuilder.append("⚠️ 如跳转失败，请复制下方链接在浏览器打开：  \n");
-            stringBuilder.append(fullUrl);
+            stringBuilder.append(shortUrl);
 
             // 创建行动卡片消息对象
             ActionCardMsg actionCardMsg = ActionCardMsg.builder()
@@ -179,7 +181,7 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
                     .markdown(stringBuilder.toString())
                     .receivers(Lists.newArrayList(userId))
                     .singleTitle("去填报")
-                    .singleUrl(fullUrl)
+                    .singleUrl(shortUrl)
                     .build();
 
             messageRetryManager.sendAsyncMessage("sendWorkHoursSubmitJob", actionCardMsg, userId, sentCount);
