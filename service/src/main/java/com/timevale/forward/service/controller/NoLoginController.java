@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.view.RedirectView;
 
 import javax.annotation.Resource;
 
@@ -32,11 +31,5 @@ public class NoLoginController {
             @ApiParam(value = "日期") @RequestParam(value = "dateStr") String dateStr,
             @ApiParam(value = "用户id") @RequestParam(value = "userId") String userId) {
         return noLoginService.getToken(dateStr, userId);
-    }
-
-    @GetMapping("/redirectUrl")
-    public RedirectView redirectUrl(
-            @ApiParam(value = "加密用户id和短链code") @RequestParam(value = "code") String code) {
-        return new RedirectView(noLoginService.redirectUrl(code));
     }
 }
