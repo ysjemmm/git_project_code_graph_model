@@ -52,7 +52,7 @@ public class ProductDemandGroupDO extends BaseDO {
     /**
      * 项目名
      */
-    private Long projectName;
+    private String projectName;
 
     /**
      * 项目状态：0-待启动，5-启动中，10-规划中，15-执行中，20-研发中，25-收尾中，30-测试中，35-运营中，40-已发布，45-已完成，50-已结项，-10-已暂停，-20-已作废

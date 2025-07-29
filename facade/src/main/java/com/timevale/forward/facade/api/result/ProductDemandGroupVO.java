@@ -52,7 +52,7 @@ public class ProductDemandGroupVO extends ToString {
     private Integer status;
 
     @ApiModelProperty("项目名称")
-    private Integer projectName;
+    private String projectName;
 
     @ApiModelProperty("删除标记")
     private Boolean isDeleted;
