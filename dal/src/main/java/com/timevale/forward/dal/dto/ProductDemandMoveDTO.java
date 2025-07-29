@@ -27,6 +27,6 @@ public class ProductDemandMoveDTO {
    private Long moveGroupId;
 
    // 忽略移动
-   private Boolean ignore = false;
+   private boolean ignore = false;
 
 }

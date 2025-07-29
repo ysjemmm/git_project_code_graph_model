@@ -90,7 +90,8 @@
                         <if test="types!= null and types!='' ">
                             and pd.type REGEXP CONCAT('[', #{types},']')
                         </if>
-                        and  pd.is_deleted =false
+                        and pd.is_deleted =false
+                        and pdgi.is_deleted = false
                     </where>
                 )
             </if>

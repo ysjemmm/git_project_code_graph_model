@@ -431,7 +431,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         checkOperationPermission(productDemandGroupItemMoveReq.getBizDomainId());
         // 拖动产品需求到分组
         ProductDemandMoveDTO productDemandMoveDTO = productDemandGroupItemComponent.moveProductDemand(productDemandGroupItemMoveReq);
-        if (productDemandMoveDTO.getIgnore()) {
+        if (productDemandMoveDTO.isIgnore()) {
             return BaseResult.success(true);
         }
         // 需求和项目关联
