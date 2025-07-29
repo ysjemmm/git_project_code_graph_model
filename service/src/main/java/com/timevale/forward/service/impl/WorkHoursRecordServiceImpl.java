@@ -132,6 +132,8 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         log.info("工时记录列表,参数:{}", workHoursRecordQueryList);
         // 转换查询条件
         WorkHoursRecordCondition workHoursRecordCondition = WorkHoursRecordCopier.INSTANCE.convert(workHoursRecordQueryList);
+        workHoursRecordCondition.setPageNum(workHoursRecordQueryList.getPageNum());
+        workHoursRecordCondition.setPageSize(workHoursRecordQueryList.getPageSize());
         // 开始分页
         PageHelper.startPage(workHoursRecordCondition.getPageNum(), workHoursRecordCondition.getPageSize(), CommonConstant.CREATE_DESC_ORDER_BY);
         // 查询
