@@ -413,7 +413,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
 
             // 最新工时进度 - 按创建时间排序取最新一条
             Integer progress = hoursRecordDOList.stream()
-                    .max(Comparator.comparing(WorkHoursRecordDO::getCreateDate))
+                    .max(Comparator.comparing(WorkHoursRecordDO::getRegistrationDate))
                     .map(WorkHoursRecordDO::getProgress)
                     .orElse(0);
 

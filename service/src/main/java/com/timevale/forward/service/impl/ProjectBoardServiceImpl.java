@@ -374,7 +374,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         return workHoursRecordDOS.stream()
                 .collect(Collectors.groupingBy(WorkHoursRecordDO::getWorkItemId,
                         Collectors.collectingAndThen(
-                                Collectors.maxBy(Comparator.comparing(WorkHoursRecordDO::getCreateDate)),
+                                Collectors.maxBy(Comparator.comparing(WorkHoursRecordDO::getRegistrationDate)),
                                 record -> record.map(WorkHoursRecordDO::getProgress).orElse(0)
                         )));
     }
