@@ -306,6 +306,13 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             throw new BaseBizRuntimeException("工时记录不存在，请新增后修改");
         }
         WorkHoursRecordDO workHoursRecordDO = WorkHoursRecordCopier.INSTANCE.convert(workHoursRecordModifyReq);
+        // 登记时间，保持日期部分不变
+        LocalDate registrationDate = workHoursRecordDO.getRegistrationDate().toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+
+        // 时间部分设为当前时间
+        workHoursRecordDO.setRegistrationDate(Date.from(registrationDate.atTime(LocalTime.now()).atZone(ZoneId.systemDefault()).toInstant()));
         // 检测
         updateBeforeCheckTask(workHoursRecordDO);
         workHoursRecordMapper.update(workHoursRecordDO);
