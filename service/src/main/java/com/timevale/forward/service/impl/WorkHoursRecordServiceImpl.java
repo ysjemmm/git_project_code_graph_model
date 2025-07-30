@@ -571,7 +571,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         // 4. 构建工时记录时间映射
         Map<Long, LocalDate> recordDateMap = hoursRecordDOList.stream()
                 .collect(Collectors.toMap(WorkHoursRecordDO::getId,
-                        record -> record.getCreateDate().toInstant().atZone(zoneId).toLocalDate()));
+                        record -> record.getRegistrationDate().toInstant().atZone(zoneId).toLocalDate()));
 
         // 5. 按用户分组工时记录
         Map<String, List<WorkHoursRecordDO>> memberRecordsMap = hoursRecordDOList.stream()
