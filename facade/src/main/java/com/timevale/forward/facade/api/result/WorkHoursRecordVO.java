@@ -55,6 +55,9 @@ public class WorkHoursRecordVO extends ToString {
     @ApiModelProperty("修改时间")
     private Date modifyDate;
 
+    @ApiModelProperty("登记时间")
+    private Date registrationDate;
+
     @ApiModelProperty("进度")
     private Integer progress;
 
