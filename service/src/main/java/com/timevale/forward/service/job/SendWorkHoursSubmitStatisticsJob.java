@@ -1,6 +1,7 @@
 package com.timevale.forward.service.job;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
 import com.timevale.crm.sdk.common.constant.enums.EnvEnum;
 import com.timevale.forward.dal.condition.WorkHoursRecordCondition;
 import com.timevale.forward.dal.dao.BizDomainMapper;
@@ -19,6 +20,7 @@ import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.integration.ShortLinkClient;
 import com.timevale.forward.service.integration.erp.model.ActionCardMsg;
+import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.manager.MessageRetryManager;
 import com.timevale.forward.service.utils.EnvUtils;
 import com.timevale.forward.service.utils.JwtGeneratorUtil;
@@ -33,7 +35,6 @@ import org.apache.commons.lang3.StringUtils;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -42,6 +43,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -64,6 +67,7 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
     private final BizDomainMapper bizDomainMapper;
     private final EnvUtils envUtils;
     private final ShortLinkClient shortLinkClient;
+    private final ElapsedTimeClient elapsedTimeClient;
 
     private static final List<Integer> PROJECT_STATUSES = Arrays.asList(
             ProjectStatusEnum.PLANING.getCode(),
@@ -90,14 +94,11 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
         // 记录任务开始执行的日志
         log.info("[sendWorkHoursSubmitStatisticsJob]开始执行");
 
-        // 获取上海时区的当前日期
-        ZoneId zoneId = ZoneId.of("Asia/Shanghai");
-        LocalDate today = LocalDate.now(zoneId);
-        DayOfWeek dayOfWeek = today.getDayOfWeek();
-
-        // 如果今天是周末，则不执行任务
-        if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
-            log.warn("[sendWorkHoursSubmitStatisticsJob]今天是周六或周日，不执行任务");
+        // 避开节假日
+        Date todayDate = new Date();
+        List<String> holidays = elapsedTimeClient.getHolidays(todayDate, todayDate, true);
+        if (!holidays.isEmpty()) {
+            log.warn("[sendWorkHoursSubmitStatisticsJob]今天是节假日，不执行任务");
             return ReturnT.SUCCESS;
         }
 
@@ -189,11 +190,11 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
         }
 
         // 封装昨日时间逻辑
-        LocalDate yesterday = getYesterday(today, dayOfWeek);
-        LocalDateTime startOfYesterday = yesterday.atStartOfDay();
-        LocalDateTime endOfYesterday = yesterday.atTime(LocalTime.MAX);
-        String startTimeStr = startOfYesterday.format(DATE_TIME_FORMATTER);
-        String endTimeStr = endOfYesterday.format(DATE_TIME_FORMATTER);
+        LocalDate latestWorkday = getLatestWorkday(todayDate);
+        LocalDateTime startOfLatestWorkday = latestWorkday.atStartOfDay();
+        LocalDateTime endOfLatestWorkday = latestWorkday.atTime(LocalTime.MAX);
+        String startTimeStr = startOfLatestWorkday.format(DATE_TIME_FORMATTER);
+        String endTimeStr = endOfLatestWorkday.format(DATE_TIME_FORMATTER);
 
         // 获取每个项目的工作小时记录
         Map<Long, List<WorkHoursRecordDO>> projectWorkHoursMap = workHoursRecordMapper.list(
@@ -272,7 +273,7 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
             StringBuilder urlBuilder = new StringBuilder();
             urlBuilder.append(url).append("/projectManagement/edit?id=").append(proId).append("&type=check");
             String token = userTokenMap.get(principalId);
-            String dateStr = yesterday.format(DATE_FORMATTER);
+            String dateStr = latestWorkday.format(DATE_FORMATTER);
             // 存储token
             TokenUtil.setTokenExpireTime(principalId, token, urlBuilder, dateStr);
             // 生成短链接
@@ -302,12 +303,31 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
                 fullUrl;
     }
 
-
-    private LocalDate getYesterday(LocalDate today, DayOfWeek dayOfWeek) {
-        LocalDate yesterday = today.minusDays(1);
-        if (dayOfWeek == DayOfWeek.MONDAY) {
-            yesterday = yesterday.minusDays(2);
+    /**
+     * 在集合workdays中获取最新一天的日期
+     */
+    private LocalDate getLatestWorkday(Date todayDate) {
+        // 得到最近30天之前的日期
+        Date offsetDay = DateUtil.offsetDay(todayDate, -30);
+        Date yesterday = DateUtil.offsetDay(todayDate, -1);
+        List<String> workdays = elapsedTimeClient.getHolidays(offsetDay, yesterday, false);
+        // 默认返回昨天
+        LocalDate defaultDate = LocalDate.from(yesterday.toInstant().atZone(ZoneId.systemDefault()));
+        if (workdays == null || workdays.isEmpty()) {
+            // yesterday转为LocalDate
+            return defaultDate;
         }
-        return yesterday;
+
+        return workdays.stream()
+                .map(dateStr -> {
+                    try {
+                        return LocalDate.parse(dateStr, DATE_FORMATTER);
+                    } catch (Exception e) {
+                        log.warn("日期解析失败: {}", dateStr, e);
+                        return defaultDate;
+                    }
+                })
+                .max(Comparator.naturalOrder())
+                .orElse(defaultDate);
     }
 }
