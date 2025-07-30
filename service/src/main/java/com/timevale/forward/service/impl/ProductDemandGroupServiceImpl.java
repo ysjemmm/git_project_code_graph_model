@@ -174,25 +174,21 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         log.info("产品需求分组接收参数:{}", productDemandGroupQueryList);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProductDemandGroupListCondition condition = ProductDemandGroupCopier.INSTANCE.convert(productDemandGroupQueryList);
-        if (condition.getOwnerIds() == null) {
-            condition.setOwnerIds(Lists.newArrayList());
+        if (condition.getGroupOwnerIds() == null) {
+            condition.setGroupOwnerIds(Lists.newArrayList());
         }
         if (AscriptionEnum.CURRENT_USER.name().equals(productDemandGroupQueryList.getAscription())) {
-            condition.getOwnerIds().add(userInfo.getId());
+            condition.getGroupOwnerIds().add(userInfo.getId());
         } else if (AscriptionEnum.DEPARTMENT.name().equals(productDemandGroupQueryList.getAscription())) {
             List<BaseInfoResponse> baseInfos = innerUserPersonClient.getPersonByAccountNew(Lists.newArrayList(userInfo.getId()));
             String groupId = baseInfos.get(0).getDefaultGroup().getGroupId();
             List<String> accountIds = innerUserPersonClient.getAllByGroupId(groupId);
             log.info("用户默认部门id:{},同部门人员:{}", groupId, accountIds);
-            if (!CollectionUtils.isEmpty(productDemandGroupQueryList.getOwnerIds())) {
-                accountIds.retainAll(productDemandGroupQueryList.getOwnerIds());
-                log.info("用户默认部门id:{},过滤后:{}", groupId, accountIds);
-            }
             if (CollectionUtils.isEmpty(accountIds)) {
                 //所选人员不在我的部门中
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
-            condition.setOwnerIds(accountIds);
+            condition.setGroupOwnerIds(accountIds);
         }
         //是否打标
         if (labelCondition(productDemandGroupQueryList, condition)) return BaseResult.success(ResultUtil.pageEmpty());

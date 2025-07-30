@@ -13,9 +13,9 @@
             <if test="groupCreateDateStart != null and groupCreateDateEnd != null">
                 and pdg.create_date &gt;= #{groupCreateDateStart} and pdg.create_date &lt;= #{groupCreateDateEnd}
             </if>
-            <if test="ownerIds!=null and ownerIds.size()>0">
+            <if test="groupOwnerIds!=null and groupOwnerIds.size()>0">
                 and pdg.owner_id in
-                <foreach collection="ownerIds" item="item" separator="," open="(" close=")">
+                <foreach collection="groupOwnerIds" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
@@ -60,6 +60,12 @@
                         <if test="bizDomainIds!=null and bizDomainIds.size()>0">
                             and pl.biz_domain_id in
                             <foreach collection="bizDomainIds" item="item" separator="," open="(" close=")">
+                                #{item}
+                            </foreach>
+                        </if>
+                        <if test="ownerIds!=null and ownerIds.size()>0">
+                            and pl.owner_id in
+                            <foreach collection="ownerIds" item="item" separator="," open="(" close=")">
                                 #{item}
                             </foreach>
                         </if>
