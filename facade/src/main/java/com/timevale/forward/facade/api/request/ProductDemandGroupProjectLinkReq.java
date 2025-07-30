@@ -24,5 +24,6 @@ public class ProductDemandGroupProjectLinkReq extends BaseReq {
     private Long productDemandGroupId;
 
     @ApiModelProperty(value = "0:关联,1:取消", required = true)
+    @NotNull(message = "关联类型不能为空")
     private Integer type;
 }
