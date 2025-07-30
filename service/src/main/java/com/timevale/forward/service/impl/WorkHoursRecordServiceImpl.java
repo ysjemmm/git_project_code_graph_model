@@ -135,7 +135,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         workHoursRecordCondition.setPageNum(workHoursRecordQueryList.getPageNum());
         workHoursRecordCondition.setPageSize(workHoursRecordQueryList.getPageSize());
         // 开始分页
-        PageHelper.startPage(workHoursRecordCondition.getPageNum(), workHoursRecordCondition.getPageSize(), CommonConstant.CREATE_DESC_ORDER_BY);
+        PageHelper.startPage(workHoursRecordCondition.getPageNum(), workHoursRecordCondition.getPageSize(), CommonConstant.REGISTER_DESC_ORDER_BY);
         // 查询
         List<WorkHoursRecordDO> workHoursRecordDOList = workHoursRecordMapper.list(workHoursRecordCondition);
         // 转换
