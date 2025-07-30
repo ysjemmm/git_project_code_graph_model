@@ -437,26 +437,26 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         if (Objects.equals(ProductDemandGroupMoveModeEnum.MOVE_IN.getCode(), productDemandGroupItemMoveReq.getMode())) {
             // 如果分组已经绑定了项目，需要将产品需求关联项目
             final ProductDemandGroupDO productDemandGroupDO = productDemandGroupComponent.getById(productDemandMoveDTO.getTargetGroupId());
-            if (productDemandGroupDO.getProjectId() != null) {
+            if (productDemandGroupDO != null && productDemandGroupDO.getProjectId() != null) {
                 // moveIn是productDemandGroupItemMoveReq.getId()为产品需求id
                 productDemandGroupComponent.linkOrUnLinkProductDemand(productDemandGroupDO.getProjectId(), productDemandMoveDTO.getProductDemandId(), LinkOrUnLinkEnum.LINK);
             }
         } else if (Objects.equals(ProductDemandGroupMoveModeEnum.MOVE_OUT.getCode(), productDemandGroupItemMoveReq.getMode())) {
             // 如果分组已经绑定了项目， 需要将产品需求取消关联
             final ProductDemandGroupDO productDemandGroupDO = productDemandGroupComponent.getById(productDemandMoveDTO.getMoveGroupId());
-            if (productDemandGroupDO.getProjectId() != null) {
+            if (productDemandGroupDO != null && productDemandGroupDO.getProjectId() != null) {
                 productDemandGroupComponent.linkOrUnLinkProductDemand(productDemandGroupDO.getProjectId(), productDemandMoveDTO.getProductDemandId(), LinkOrUnLinkEnum.UN_LINK);
             }
         } else {
             // 如果拖出分组已经绑定了项目， 需要将产品需求取消关联原项目
-            final ProductDemandGroupDO moveProductDemandGroupDO = productDemandGroupComponent.getById(productDemandMoveDTO.getMoveItemId());
-            if (moveProductDemandGroupDO.getProjectId() != null) {
+            final ProductDemandGroupDO moveProductDemandGroupDO = productDemandGroupComponent.getById(productDemandMoveDTO.getMoveGroupId());
+            if (moveProductDemandGroupDO != null && moveProductDemandGroupDO.getProjectId() != null) {
                 productDemandGroupComponent.linkOrUnLinkProductDemand(moveProductDemandGroupDO.getProjectId(), productDemandMoveDTO.getProductDemandId(), LinkOrUnLinkEnum.UN_LINK);
             }
 
             // 如果分组已经绑定了项目，需要将产品需求绑定项目
             final ProductDemandGroupDO targetProductDemandGroupDO = productDemandGroupComponent.getById(productDemandMoveDTO.getTargetGroupId());
-            if (targetProductDemandGroupDO.getProjectId() != null) {
+            if (targetProductDemandGroupDO != null && targetProductDemandGroupDO.getProjectId() != null) {
                 productDemandGroupComponent.linkOrUnLinkProductDemand(targetProductDemandGroupDO.getProjectId(), productDemandMoveDTO.getProductDemandId(), LinkOrUnLinkEnum.LINK);
             }
         }
