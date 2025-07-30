@@ -137,6 +137,11 @@ public class ProductDemandGroupListCondition extends QueryBase {
     private List<Integer> groupStatus;
 
     /**
+     * 分组的负责人
+     */
+    private List<String> groupOwnerIds;
+
+    /**
      * 分组id
      */
     private Long groupId;
@@ -149,6 +154,7 @@ public class ProductDemandGroupListCondition extends QueryBase {
                 CollectionUtils.isNotEmpty(this.priorities) ||
                 CollectionUtils.isNotEmpty(this.status) ||
                 CollectionUtils.isNotEmpty(this.createManIds) ||
+                CollectionUtils.isNotEmpty(this.ownerIds) ||
                 this.createDateStart != null ||
                 this.createDateEnd != null ||
                 this.modifyDateStart != null ||
