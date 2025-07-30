@@ -1,5 +1,6 @@
 package com.timevale.forward.facade.api.request;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -9,6 +10,7 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.util.Date;
 
 /**
  * @auther: yuhua
@@ -34,6 +36,11 @@ public class WorkHoursRecordAddReq extends BaseReq {
     @ApiModelProperty(value = "工作项id")
     @NotNull(message = "工作项id不能为空")
     private Long workItemId;
+
+    @ApiModelProperty("登记日期")
+    @NotNull(message = "登记日期不能为空")
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd")
+    private Date registrationDate;
 
     @ApiModelProperty("实际工时")
     @NotNull(message = "实际工时不能为空")

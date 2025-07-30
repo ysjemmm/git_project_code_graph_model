@@ -36,6 +36,11 @@ public class WorkHoursRecordDO extends BaseDO {
     private Long workItemId;
 
     /**
+     * 登记日期
+     */
+    private Date registrationDate;
+
+    /**
      * 创建人id
      */
     private String createManId;

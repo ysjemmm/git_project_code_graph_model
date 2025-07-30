@@ -5,7 +5,7 @@
     <sql id="Base_Column_List">
         id
         , project_id,`desc`,work_item_type,work_item_id,create_man_id,create_man,
-        create_date,modify_man_id,modify_man,modify_date,progress,work_hours
+        create_date,modify_man_id,modify_man,modify_date,progress,work_hours,registration_date
     </sql>
 
     <delete id="deleteById">
@@ -69,7 +69,7 @@
             <if test="workItemId != null">and work_item_id = #{workItemId}</if>
             <if test="createManId != null">and create_man_id = #{createManId}</if>
             <if test="stratTime != null and endTime != null">
-                and create_date &gt;= #{stratTime} and create_date &lt;= #{endTime}
+                and registration_date &gt;= #{stratTime} and registration_date &lt;= #{endTime}
             </if>
         </where>
     </select>
@@ -77,8 +77,9 @@
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.WorkHoursRecordDO" useGeneratedKeys="true"
             keyProperty="id" keyColumn="id">
         insert into work_hours_record (project_id, `desc`, work_item_type, work_item_id, create_man_id, create_man,
-                                      progress,work_hours)
-        values (#{projectId}, #{desc}, #{workItemType}, #{workItemId}, #{createManId}, #{createMan}, #{progress}, #{workHours})
+                                       progress, work_hours, registration_date)
+        values (#{projectId}, #{desc}, #{workItemType}, #{workItemId}, #{createManId}, #{createMan}, #{progress},
+                #{workHours}, #{registrationDate})
     </insert>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.WorkHoursRecordDO">
@@ -98,6 +99,7 @@
         <set>
             <if test="workHours != null">work_hours = #{workHours},</if>
             <if test="progress != null">progress = #{progress},</if>
+            <if test="registrationDate != null">registration_date = #{registrationDate},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
             <if test="desc != null">`desc` = #{desc}</if>
@@ -109,14 +111,14 @@
 
     <select id="getById" resultType="com.timevale.forward.dal.entity.WorkHoursRecordDO">
         select
-            <include refid="Base_Column_List"/>
+        <include refid="Base_Column_List"/>
         from work_hours_record
         where id = #{id}
     </select>
 
     <select id="getByIdList" resultType="com.timevale.forward.dal.entity.WorkHoursRecordDO">
         select
-            <include refid="Base_Column_List"/>
+        <include refid="Base_Column_List"/>
         from work_hours_record
         <where>
             id in
@@ -128,7 +130,7 @@
 
     <select id="getLastProgress" resultType="com.timevale.forward.dal.entity.WorkHoursRecordDO">
         select
-            work_item_id, MAX(progress) as progress
+        work_item_id, MAX(progress) as progress
         from work_hours_record
         <where>
             <if test="projectIds != null and projectIds.size() > 0">
@@ -150,11 +152,11 @@
 
     <select id="getRangeWorkHours" resultType="com.timevale.forward.dal.entity.WorkHoursRecordDO">
         select
-        project_id, work_item_type, work_item_id, date(create_date) as create_date, sum(work_hours) as work_hours
+        project_id, work_item_type, work_item_id, date(registration_date) as registration_date, sum(work_hours) as work_hours
         from work_hours_record
         <where>
             <if test="dates != null and dates.size() > 0">
-                AND date(create_date) IN
+                AND date(registration_date) IN
                 <foreach collection="dates" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
@@ -182,7 +184,7 @@
                 )
             </if>
         </where>
-        GROUP BY project_id, work_item_type, work_item_id, date(create_date)
+        GROUP BY project_id, work_item_type, work_item_id, date(registration_date)
     </select>
 
 </mapper>

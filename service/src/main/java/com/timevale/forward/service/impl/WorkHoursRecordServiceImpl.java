@@ -187,6 +187,13 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         workHoursRecordDO.setCreateMan(buildCreateMan(userInfo));
         workHoursRecordDO.setCreateManId(userInfo.getId());
+        // 登记时间，保持日期部分不变
+        LocalDate registrationDate = workHoursRecordDO.getRegistrationDate().toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+
+        // 时间部分设为当前时间
+        workHoursRecordDO.setRegistrationDate(Date.from(registrationDate.atTime(LocalTime.now()).atZone(ZoneId.systemDefault()).toInstant()));
         // 检测
         saveBeforeCheckTask(workHoursRecordDO);
         // 入库
@@ -201,50 +208,92 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             if (taskDO == null) {
                 throw new BaseBizRuntimeException("任务不存在");
             }
-            // 获取当前日期
-            LocalDate today = LocalDate.now();
-            // 前一天的开始时间（00:00:00）
-            LocalDateTime startTime = today.atStartOfDay();
-            // 前一天的结束时间（23:59:59.999999999）
-            LocalDateTime endTime = today.atTime(LocalTime.MAX);
-            // 登记人当日已登记工时
-            BigDecimal remainingHourDeviation = workHoursRecordMapper.list(WorkHoursRecordCondition.builder()
-                            .projectId(taskDO.getProjectId())
-                            .workItemType(workHoursRecordDO.getWorkItemType())
-                            .workItemId(workHoursRecordDO.getWorkItemId())
-                            .createManId(workHoursRecordDO.getCreateManId())
-                            .stratTime(startTime.format(DATE_TIME_FORMATTER))
-                            .endTime(endTime.format(DATE_TIME_FORMATTER))
-                            .build())
-                    .stream()
-                    .map(WorkHoursRecordDO::getWorkHours)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-            // 检查该任务当日是否已经登记满24小时工时
-            if (remainingHourDeviation.add(workHoursRecordDO.getWorkHours()).compareTo(new BigDecimal(24)) > 0) {
-                throw new BaseBizRuntimeException("该任务当日工时超出24小时，请重新填写");
-            }
-
-            // 如果任务没有开启执行，则登记工时直接开启任务
-            if (TaskStatusEnum.WAITING.getCode().equals(taskDO.getStatus())) {
-                TaskExecuteReq taskExecuteReq = new TaskExecuteReq();
-                taskExecuteReq.setId(taskDO.getId());
-                taskExecuteReq.setActualStartDate(new Date());
-                taskService.execute(taskExecuteReq);
-            }
-            // 如果任务进度是100，则任务直接完成
-            if (workHoursRecordDO.getProgress() >= 100) {
-                TaskDoneReq taskDoneReq = new TaskDoneReq();
-                taskDoneReq.setId(taskDO.getId());
-                taskDoneReq.setActualEndDate(new Date());
-                taskService.done(taskDoneReq);
-            }
             // 执行人
             List<PersonDO> personDOList = personComponent.select(taskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
             List<String> executorIds = PersonCopier.INSTANCE.transform(personDOList).stream().map(PersonVO::getUserId).collect(Collectors.toList());
             if (!executorIds.contains(workHoursRecordDO.getCreateManId())) {
                 throw new BaseBizRuntimeException("非任务执行人不能登记该任务工时");
             }
+            // 获取登记日期
+            BigDecimal accumulateWorkHours = getAccumulateWorkHours(workHoursRecordDO, taskDO, workHoursRecordDO.getCreateManId());
+
+            // 检查该任务登记日期是否已经登记满24小时工时
+            if (accumulateWorkHours.add(workHoursRecordDO.getWorkHours()).compareTo(new BigDecimal(24)) > 0) {
+                throw new BaseBizRuntimeException("该任务当日工时超出24小时，请重新填写");
+            }
+
+            // 如果任务没有开启执行，则登记工时直接开启任务
+            updateTaskStatus(workHoursRecordDO, taskDO);
+        }
+    }
+
+    private void updateBeforeCheckTask(WorkHoursRecordDO workHoursRecordDO) {
+        // 查询登记工时所属任务
+        if (Objects.equals(BizTypeEnum.TASK.getCode(), workHoursRecordDO.getWorkItemType())) {
+            TaskDO taskDO = taskMapper.getById(workHoursRecordDO.getWorkItemId());
+            if (taskDO == null) {
+                throw new BaseBizRuntimeException("任务不存在");
+            }
+            WorkHoursRecordDO recordDO = workHoursRecordMapper.getById(workHoursRecordDO.getId());
+            if (recordDO == null) {
+                throw new BaseBizRuntimeException("工时记录不存在");
+            }
+            // 登记人
+            UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+            // 执行人
+            List<PersonDO> personDOList = personComponent.select(taskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
+            List<String> executorIds = PersonCopier.INSTANCE.transform(personDOList).stream().map(PersonVO::getUserId).collect(Collectors.toList());
+            if (!executorIds.contains(userInfo.getId())) {
+                throw new BaseBizRuntimeException("非任务执行人不能登记该任务工时");
+            }
+
+            BigDecimal accumulateWorkHours = getAccumulateWorkHours(workHoursRecordDO, taskDO, userInfo.getId());
+
+            // 检查该任务登记日期是否已经登记满24小时工时
+            if (accumulateWorkHours.subtract(recordDO.getWorkHours()).add(workHoursRecordDO.getWorkHours()).compareTo(new BigDecimal(24)) > 0) {
+                throw new BaseBizRuntimeException("该任务当日工时超出24小时，请重新填写");
+            }
+            // 检查该任务进度是否开启或者已经完成
+            updateTaskStatus(workHoursRecordDO, taskDO);
+        }
+    }
+
+    private BigDecimal getAccumulateWorkHours(WorkHoursRecordDO workHoursRecordDO, TaskDO taskDO, String userId) {
+        // 获取登记日期
+        Date registrationDate = workHoursRecordDO.getRegistrationDate();
+        // 开始时间（00:00:00）
+        LocalDateTime startTime = LocalDateTime.ofInstant(registrationDate.toInstant(), ZoneId.systemDefault()).with(LocalTime.MIN);
+        // 结束时间（23:59:59.999999999）
+        LocalDateTime endTime = LocalDateTime.ofInstant(registrationDate.toInstant(), ZoneId.systemDefault()).with(LocalTime.MAX);
+        // 登记人登记日期已登记工时
+        return workHoursRecordMapper.list(WorkHoursRecordCondition.builder()
+                        .projectId(taskDO.getProjectId())
+                        .workItemType(workHoursRecordDO.getWorkItemType())
+                        .workItemId(workHoursRecordDO.getWorkItemId())
+                        .createManId(userId)
+                        .stratTime(startTime.format(DATE_TIME_FORMATTER))
+                        .endTime(endTime.format(DATE_TIME_FORMATTER))
+                        .build())
+                .stream()
+                .map(WorkHoursRecordDO::getWorkHours)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private void updateTaskStatus(WorkHoursRecordDO workHoursRecordDO, TaskDO taskDO) {
+        // 如果任务没有开启执行，则登记工时直接开启任务
+        if (TaskStatusEnum.WAITING.getCode().equals(taskDO.getStatus())) {
+            TaskExecuteReq taskExecuteReq = new TaskExecuteReq();
+            taskExecuteReq.setId(taskDO.getId());
+            taskExecuteReq.setActualStartDate(new Date());
+            taskService.execute(taskExecuteReq);
+        }
+        // 如果任务进度是100，则任务直接完成
+        if (workHoursRecordDO.getProgress() >= 100) {
+            TaskDoneReq taskDoneReq = new TaskDoneReq();
+            taskDoneReq.setId(taskDO.getId());
+            taskDoneReq.setActualEndDate(new Date());
+            taskService.done(taskDoneReq);
         }
     }
 
@@ -257,10 +306,8 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             throw new BaseBizRuntimeException("工时记录不存在，请新增后修改");
         }
         WorkHoursRecordDO workHoursRecordDO = WorkHoursRecordCopier.INSTANCE.convert(workHoursRecordModifyReq);
-        workHoursRecordDO.setCreateManId(recordDO.getCreateManId());
-        workHoursRecordDO.setCreateMan(recordDO.getCreateMan());
         // 检测
-        saveBeforeCheckTask(workHoursRecordDO);
+        updateBeforeCheckTask(workHoursRecordDO);
         workHoursRecordMapper.update(workHoursRecordDO);
 
         return BaseResult.success(true);
@@ -305,7 +352,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         // 如果工时为0且进度不更新，则不处理
         List<WorkHoursRecordDO> lastProgress = workHoursRecordMapper.getLastProgress(projectIds, BizTypeEnum.TASK.getCode(), workItemIds);
         // 获取进度Map
-        Map<Long,  Integer> lastProgressMap = lastProgress.stream().collect(Collectors.toMap(WorkHoursRecordDO::getWorkItemId, WorkHoursRecordDO::getProgress, (v1, v2) -> v2));
+        Map<Long, Integer> lastProgressMap = lastProgress.stream().collect(Collectors.toMap(WorkHoursRecordDO::getWorkItemId, WorkHoursRecordDO::getProgress, (v1, v2) -> v2));
 
         List<Future<?>> futures = new ArrayList<>();
         for (WorkHoursRecordAddReq a : workHoursSimples) {
@@ -318,6 +365,13 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
                 WorkHoursRecordDO workHoursRecordDO = WorkHoursRecordCopier.INSTANCE.convert(a);
                 workHoursRecordDO.setCreateMan(createMan);
                 workHoursRecordDO.setCreateManId(createManId);
+                // 登记时间，保持日期部分不变
+                LocalDate registrationDate = workHoursRecordDO.getRegistrationDate().toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate();
+
+                // 时间部分设为当前时间
+                workHoursRecordDO.setRegistrationDate(Date.from(registrationDate.atTime(LocalTime.now()).atZone(ZoneId.systemDefault()).toInstant()));
                 saveBeforeCheckTask(workHoursRecordDO);
                 workHoursRecordMapper.insert(workHoursRecordDO);
             });
