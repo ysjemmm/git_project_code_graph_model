@@ -174,6 +174,9 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         log.info("产品需求分组接收参数:{}", productDemandGroupQueryList);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProductDemandGroupListCondition condition = ProductDemandGroupCopier.INSTANCE.convert(productDemandGroupQueryList);
+        if (condition.getOwnerIds() == null) {
+            condition.setOwnerIds(Lists.newArrayList());
+        }
         if (AscriptionEnum.CURRENT_USER.name().equals(productDemandGroupQueryList.getAscription())) {
             condition.getOwnerIds().add(userInfo.getId());
         } else if (AscriptionEnum.DEPARTMENT.name().equals(productDemandGroupQueryList.getAscription())) {
