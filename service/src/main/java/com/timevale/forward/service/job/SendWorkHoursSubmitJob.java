@@ -16,6 +16,7 @@ import com.timevale.forward.model.enums.TaskStatusEnum;
 import com.timevale.forward.service.copy.TaskCopier;
 import com.timevale.forward.service.integration.ShortLinkClient;
 import com.timevale.forward.service.integration.erp.model.ActionCardMsg;
+import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.manager.MessageRetryManager;
 import com.timevale.forward.service.utils.EnvUtils;
 import com.timevale.forward.service.utils.JwtGeneratorUtil;
@@ -27,12 +28,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -49,6 +50,7 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
     private final MessageRetryManager messageRetryManager;
     private final EnvUtils envUtils;
     private final ShortLinkClient shortLinkClient;
+    private final ElapsedTimeClient elapsedTimeClient;
 
     private static final List<Integer> PROJECT_STATUSES = Arrays.asList(
             ProjectStatusEnum.PLANING.getCode(),
@@ -68,13 +70,13 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
     public ReturnT<String> execute(String s) throws Exception {
         // 开始执行定时任务的日志记录
         log.info("[sendWorkHoursSubmitJob]开始执行");
-
-        // 避开休息日
         ZoneId zoneId = ZoneId.of("Asia/Shanghai");
         LocalDate today = LocalDate.now(zoneId);
-        DayOfWeek dayOfWeek = today.getDayOfWeek();
-        if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
-            log.warn("[sendWorkHoursSubmitJob]今天是周六或周日，不执行任务");
+        // 避开节假日
+        Date todayDate = new Date();
+        List<String> holidays = elapsedTimeClient.getHolidays(todayDate, todayDate, true);
+        if (!holidays.isEmpty()) {
+            log.warn("[sendWorkHoursSubmitJob]今天是节假日，不执行任务");
             return ReturnT.SUCCESS;
         }
 
