@@ -4,6 +4,7 @@ import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.query.QueryBase;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.assertj.core.util.Strings;
 
 import java.util.Date;
@@ -13,6 +14,7 @@ import java.util.List;
  * @author qiyuan
  * @date 2025-07-17 13:58
  **/
+@EqualsAndHashCode(callSuper = true)
 @Data
 @Builder
 public class ProductDemandGroupListCondition extends QueryBase {
