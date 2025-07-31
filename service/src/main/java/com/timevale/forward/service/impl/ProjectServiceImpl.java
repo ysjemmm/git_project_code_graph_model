@@ -1175,22 +1175,37 @@ public class ProjectServiceImpl implements ProjectService {
         log.info("关联or取消关联接收参数:{}", productDemandLinkReq);
         projectProductDemandComponent.linkOrUnLinkProductDemand(productDemandLinkReq);
         // 需求关联或取消关联产品需求分组
-        ProductDemandGroupDO productDemandGroupDO = productDemandGroupComponent.getByProjectId(productDemandLinkReq.getProjectId());
-        if (productDemandGroupDO != null && CollectionUtils.isNotEmpty(productDemandLinkReq.getProductDemandIds())) {
+        ProductDemandGroupDO projectGroupDO = productDemandGroupComponent.getByProjectId(productDemandLinkReq.getProjectId());
+        if (projectGroupDO != null && CollectionUtils.isNotEmpty(productDemandLinkReq.getProductDemandIds())) {
             for (Long productDemandId : productDemandLinkReq.getProductDemandIds()) {
                 ProductDemandGroupItemMoveReq productDemandGroupItemMoveReq = new ProductDemandGroupItemMoveReq();
                 if (LinkOrUnLinkEnum.LINK.getCode().equals(productDemandLinkReq.getType())) {
-                    productDemandGroupItemMoveReq.setMode(ProductDemandGroupMoveModeEnum.MOVE_IN.getCode());
-                    productDemandGroupItemMoveReq.setTargetGroupId(productDemandGroupDO.getId());
-                    productDemandGroupItemMoveReq.setBizDomainId(productDemandGroupDO.getBizDomainId());
-                    productDemandGroupItemMoveReq.setId(productDemandId);
+                    // 如果当前需求已被规划
+                    ProductDemandGroupItemDO productDemandGroupItemDO = productDemandGroupItemComponent.getByDemandId(productDemandId);
+                    if (productDemandGroupItemDO != null) {
+                        // 如果规划的分组和当前项目分组不是同一个业务域不能操作
+                        ProductDemandGroupDO demandGroup = productDemandGroupComponent.getById(productDemandGroupItemDO.getProductDemandGroupId());
+                        if (demandGroup != null && !Objects.equals(demandGroup.getBizDomainId(), projectGroupDO.getBizDomainId())) {
+                            BizDomainDO bizDomainDO = bizDomainMapper.selectById(demandGroup.getBizDomainId());
+                            ProductDemandGroupDO productDemandGroupDO = productDemandGroupComponent.getById(demandGroup.getId());
+                            throw new BaseBizRuntimeException(String.format("需求【%d】已被规划到其他业务域【%s】的分组【%s】中，不能关联",
+                                    productDemandId, bizDomainDO.getName(), productDemandGroupDO.getName()));
+                        }
+                        productDemandGroupItemMoveReq.setMode(ProductDemandGroupMoveModeEnum.FOLLOW.getCode());
+                        productDemandGroupItemMoveReq.setId(productDemandGroupItemDO.getId());
+                    } else {
+                        productDemandGroupItemMoveReq.setMode(ProductDemandGroupMoveModeEnum.MOVE_IN.getCode());
+                        productDemandGroupItemMoveReq.setId(productDemandId);
+                    }
+                    productDemandGroupItemMoveReq.setTargetGroupId(projectGroupDO.getId());
+                    productDemandGroupItemMoveReq.setBizDomainId(projectGroupDO.getBizDomainId());
                     productDemandGroupItemComponent.moveProductDemand(productDemandGroupItemMoveReq);
                 } else {
-                    ProductDemandGroupItemDO productDemandGroupItemDO = productDemandGroupItemComponent.getByGroupIdAndDemandId(productDemandGroupDO.getId(), productDemandId);
+                    ProductDemandGroupItemDO productDemandGroupItemDO = productDemandGroupItemComponent.getByGroupIdAndDemandId(projectGroupDO.getId(), productDemandId);
                     if (productDemandGroupItemDO != null) {
                         productDemandGroupItemMoveReq.setMode(ProductDemandGroupMoveModeEnum.MOVE_OUT.getCode());
-                        productDemandGroupItemMoveReq.setBizDomainId(productDemandGroupDO.getBizDomainId());
-                        productDemandGroupItemMoveReq.setTargetGroupId(productDemandGroupDO.getId());
+                        productDemandGroupItemMoveReq.setBizDomainId(projectGroupDO.getBizDomainId());
+                        productDemandGroupItemMoveReq.setTargetGroupId(projectGroupDO.getId());
                         productDemandGroupItemMoveReq.setId(productDemandGroupItemDO.getId());
                         productDemandGroupItemComponent.moveProductDemand(productDemandGroupItemMoveReq);
                     }

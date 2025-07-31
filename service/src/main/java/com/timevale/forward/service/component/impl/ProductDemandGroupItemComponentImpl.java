@@ -73,6 +73,11 @@ public class ProductDemandGroupItemComponentImpl implements ProductDemandGroupIt
     }
 
     @Override
+    public ProductDemandGroupItemDO getByDemandId(Long demandId) {
+        return productDemandGroupItemMapper.getByDemandId(demandId);
+    }
+
+    @Override
     public ProductDemandMoveDTO moveProductDemand(ProductDemandGroupItemMoveReq req) {
         ProductDemandGroupItemDO prevGroupItemDO = null;
         if (req.getPrevId() != null) {

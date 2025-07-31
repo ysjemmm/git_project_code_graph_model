@@ -24,6 +24,8 @@ public interface ProductDemandGroupItemComponent {
 
     ProductDemandGroupItemDO getByGroupIdAndDemandId(Long groupId, Long demandId);
 
+    ProductDemandGroupItemDO getByDemandId(Long demandId);
+
     ProductDemandMoveDTO moveProductDemand(ProductDemandGroupItemMoveReq productDemandGroupItemMoveReq);
     double calculateNewPosition(Long prevId,
                                 Double prevPosition,

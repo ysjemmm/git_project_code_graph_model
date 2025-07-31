@@ -194,16 +194,6 @@
         SELECT * FROM product_demand_group_item WHERE product_demand_group_id = #{groupId} AND is_deleted = false
     </select>
 
-    <!-- 根据主键id和业务域id获取产品需求分组和产品需求关系 -->
-    <select id="getByBizDomainIdAndId" resultType="com.timevale.forward.dal.entity.ProductDemandGroupItemDO">
-        select pdgi.* from product_demand_group_item pdgi, product_demand_group pdg
-        where pdgi.product_demand_group_id = pdg.id
-          and pdg.is_deleted = false
-          and pdgi.is_deleted = false
-          and pdgi.id = #{id}
-          and pdg.biz_domain_id = #{bizDomainId}
-    </select>
-
     <!-- 根据主键id和分组id获取产品需求分组和产品需求关系 -->
     <select id="getByGroupIdAndId" resultType="com.timevale.forward.dal.entity.ProductDemandGroupItemDO">
         select * from product_demand_group_item
@@ -212,12 +202,19 @@
         and product_demand_group_id = #{groupId}
     </select>
 
-    <!-- 根据主键id和分组id获取产品需求分组和产品需求关系 -->
+    <!-- 根据产品需求id和分组id获取产品需求分组和产品需求关系 -->
     <select id="getByGroupIdAndDemandId" resultType="com.timevale.forward.dal.entity.ProductDemandGroupItemDO">
         select pdgi.* from product_demand_group_item pdgi
         where  pdgi.is_deleted = false
           and pdgi.product_demand_id = #{demandId}
           and pdgi.product_demand_group_id = #{groupId}
+    </select>
+
+    <!-- 根据产品需求id获取产品需求分组和产品需求关系 -->
+    <select id="getByDemandId" resultType="com.timevale.forward.dal.entity.ProductDemandGroupItemDO">
+        select pdgi.* from product_demand_group_item pdgi
+        where  pdgi.is_deleted = false
+        and pdgi.product_demand_id = #{demandId}
     </select>
 
     <select id="countByProductDemandId" resultType="java.lang.Integer">
