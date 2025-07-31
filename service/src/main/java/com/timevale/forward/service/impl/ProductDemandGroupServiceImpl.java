@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.util.Pair;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -382,27 +383,42 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
 //            throw new BaseBizRuntimeException("产品需求分组位置未变化，无需移动");
         }
         // 定义 getPrevByPosition 和 getNextByPosition 函数
-        BiFunction<Long, Double, Double> getPrevByPosition = (targetGroupId, position) -> {
-            ProductDemandGroupDO preByPosition = productDemandGroupMapper.getPreByPosition(targetGroupId, position);
+        BiFunction<Long, Double, Double> getPrevByPosition = (bizDomainId, position) -> {
+            ProductDemandGroupDO preByPosition = productDemandGroupMapper.getPreByPosition(bizDomainId, position);
             return preByPosition == null ? null : preByPosition.getPosition();
         };
-        BiFunction<Long, Double, Double> getNextByPosition = (targetGroupId, position) -> {
-            ProductDemandGroupDO nextByPosition = productDemandGroupMapper.getNextByPosition(targetGroupId, position);
+        BiFunction<Long, Double, Double> getNextByPosition = (bizDomainId, position) -> {
+            ProductDemandGroupDO nextByPosition = productDemandGroupMapper.getNextByPosition(bizDomainId, position);
             return nextByPosition == null ? null : nextByPosition.getPosition();
         };
-        double position = productDemandGroupItemComponent.calculateNewPosition(productDemandGroupMoveReq.getPrevId(),
-                prevGroupDO == null ? null : prevGroupDO.getPosition(),
+        BiFunction<Long, Long, Double> getPosition = (bizDomainId, id) -> {
+            ProductDemandGroupDO nextByPosition = productDemandGroupMapper.getByIdAndBizDomainId(bizDomainId, id);
+            return nextByPosition == null ? null : nextByPosition.getPosition();
+        };
+        Pair<Double, Boolean> position = productDemandGroupItemComponent.calculateNewPosition(productDemandGroupMoveReq.getPrevId(),
                 productDemandGroupMoveReq.getNextId(),
-                nextGroupDO == null ? null : nextGroupDO.getPosition(),
                 productDemandGroupMoveReq.getBizDomainId(),
                 productDemandGroupMoveReq.getBizDomainId(),
+                getPosition,
                 getPrevByPosition,
                 getNextByPosition
         );
+        // position和前后相同，说明需要重新排序
+        if (!position.getSecond()) {
+            productDemandGroupComponent.resetPosition(productDemandGroupMoveReq.getBizDomainId());
+            position = productDemandGroupItemComponent.calculateNewPosition(productDemandGroupMoveReq.getPrevId(),
+                    productDemandGroupMoveReq.getNextId(),
+                    productDemandGroupMoveReq.getBizDomainId(),
+                    productDemandGroupMoveReq.getBizDomainId(),
+                    getPosition,
+                    getPrevByPosition,
+                    getNextByPosition
+            );
+        }
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         String modifyManId = userInfo.getId();
         String modifyMan = userInfo.getFullAlias();
-        val updateGroupDO = new ProductDemandGroupDO().setPosition(position)
+        val updateGroupDO = new ProductDemandGroupDO().setPosition(position.getFirst())
                 .setVersion(targetGroupDO.getVersion());
         updateGroupDO.setId(targetGroupDO.getId());
         updateGroupDO.setModifyMan(modifyMan);

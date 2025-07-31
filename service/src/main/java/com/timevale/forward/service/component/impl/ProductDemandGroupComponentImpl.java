@@ -21,7 +21,10 @@ import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 
+import com.timevale.forward.service.utils.position.PositionUtil;
 import com.timevale.mandarin.base.util.AssertUtil;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -33,6 +36,7 @@ import java.util.*;
  * @date 2025/07/14 15:00
  */
 @Component
+@Slf4j
 public class ProductDemandGroupComponentImpl implements ProductDemandGroupComponent {
     @Resource
     private ProductDemandGroupMapper productDemandGroupMapper;
@@ -141,8 +145,23 @@ public class ProductDemandGroupComponentImpl implements ProductDemandGroupCompon
     }
 
     @Override
-    public List<ProductDemandDO> listProductDemandByGroupId(Long groupId) {
-        return Collections.emptyList();
+    public void resetPosition(Long bizDomainId) {
+        log.info("开始对业务域{}的分组进行位置重排", bizDomainId);
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        String modifyManId = userInfo.getId();
+        String modifyMan = userInfo.getFullAlias();
+        // 获取当前业务域下的所有分组（按position倒序）
+        List<ProductDemandGroupDO> productDemandGroupDOS = productDemandGroupMapper.getByBizDomainId(bizDomainId);
+        double position = PositionUtil.generate(bizDomainId.toString(), System.currentTimeMillis());
+        for (ProductDemandGroupDO productDemandGroupDO : productDemandGroupDOS) {
+            log.info("业务域({})的分组({}-{})位置重排，{} -》 {}", bizDomainId, productDemandGroupDO.getId(),productDemandGroupDO.getName(), productDemandGroupDO.getPosition(), position);
+            val updateGroupDO = new ProductDemandGroupDO().setPosition(position);
+            updateGroupDO.setId(productDemandGroupDO.getId());
+            updateGroupDO.setModifyMan(modifyMan);
+            updateGroupDO.setModifyManId(modifyManId);
+            productDemandGroupMapper.update(updateGroupDO);
+            position = position - CommonConstant.POSITION_STEP;
+        }
     }
 
     /**

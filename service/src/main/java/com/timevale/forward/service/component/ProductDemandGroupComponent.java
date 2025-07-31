@@ -22,13 +22,6 @@ public interface ProductDemandGroupComponent {
     List<ProductDemandGroupDO> list(ProductDemandGroupListCondition productDemandGroupListCondition);
 
     /**
-     * 根据分组ID查询需求列表
-     * @param groupId 分组ID
-     * @return 产品需求分组DO列表
-     */
-    List<ProductDemandDO> listProductDemandByGroupId(Long groupId);
-
-    /**
      * 根据id获取产品需求分组
      * @param id 主键id
      * @return 产品需求分组DO
@@ -56,5 +49,7 @@ public interface ProductDemandGroupComponent {
     void removeProject(Long id);
 
     void linkOrUnLinkProductDemand(Long projectId, Long productDemandId, LinkOrUnLinkEnum type);
+
+    void resetPosition(Long bizDomainId);
 
 } 

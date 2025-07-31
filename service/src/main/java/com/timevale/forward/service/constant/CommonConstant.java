@@ -47,4 +47,8 @@ public class CommonConstant {
     public static final String INVALID = "已作废";
 
     public static final Integer DESC_MAX_LENGTH = 20000;
+
+    public static final double EPSILON = 1e-10;
+
+    public static final double POSITION_STEP = 5000000;
 }

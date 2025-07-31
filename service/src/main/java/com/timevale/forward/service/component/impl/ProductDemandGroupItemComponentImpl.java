@@ -11,6 +11,7 @@ import com.timevale.forward.facade.api.request.ProductDemandGroupItemMoveReq;
 import com.timevale.forward.model.enums.ProductDemandGroupMoveModeEnum;
 import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.service.component.ProductDemandGroupItemComponent;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.utils.StringUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -20,6 +21,7 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -39,7 +41,6 @@ public class ProductDemandGroupItemComponentImpl implements ProductDemandGroupIt
     private ProductDemandGroupItemMapper productDemandGroupItemMapper;
     @Resource
     private ProductDemandMapper productDemandMapper;
-
 
     @Override
     public void deleteByGroupId(Long groupId) {
@@ -105,6 +106,12 @@ public class ProductDemandGroupItemComponentImpl implements ProductDemandGroupIt
             ProductDemandGroupItemDO nextByPosition = productDemandGroupItemMapper.getNextByPosition(targetGroupId, position);
             return nextByPosition == null ? null : nextByPosition.getPosition();
         };
+
+        BiFunction<Long, Long, Double> getPosition = (targetGroupId, id) -> {
+            ProductDemandGroupItemDO item = productDemandGroupItemMapper.getByGroupIdAndId(targetGroupId, id);
+            return item == null ? null : item.getPosition();
+        };
+
         final ArrayList<Integer> notAllowProductDemandStatuses = Lists.newArrayList(ProductDemandStatusEnum.INVALID.getCode(), ProductDemandStatusEnum.SUSPEND.getCode());
         if (Objects.equals(ProductDemandGroupMoveModeEnum.MOVE_IN.getCode(), req.getMode())) {
             // 查看产品需求是否是当前业务域里的
@@ -132,16 +139,27 @@ public class ProductDemandGroupItemComponentImpl implements ProductDemandGroupIt
 //                throw new BaseBizRuntimeException("产品需求已存在");
 //            }
             // 创建
-            double position = calculateNewPosition(req.getPrevId(),
-                    prevGroupItemDO == null ? null : prevGroupItemDO.getPosition(),
+            Pair<Double, Boolean> position = calculateNewPosition(req.getPrevId(),
                     req.getNextId(),
-                    nextGroupItemDO == null ? null : nextGroupItemDO.getPosition(),
                     req.getBizDomainId(),
                     req.getTargetGroupId(),
+                    getPosition,
                     getPrevByPosition,
                     getNextByPosition
             );
-            val createGroupItemDO = new ProductDemandGroupItemDO().setPosition(position)
+            // position和前后相同，说明需要重新排序
+            if (!position.getSecond()) {
+                resetPosition(req.getTargetGroupId(), req.getBizDomainId());
+                position = calculateNewPosition(req.getPrevId(),
+                        req.getNextId(),
+                        req.getBizDomainId(),
+                        req.getTargetGroupId(),
+                        getPosition,
+                        getPrevByPosition,
+                        getNextByPosition
+                );
+            }
+            val createGroupItemDO = new ProductDemandGroupItemDO().setPosition(position.getFirst())
                     .setProductDemandId(req.getId())
                     .setProductDemandGroupId(req.getTargetGroupId())
                     .setVersion(0L).setIsActive(true);
@@ -193,16 +211,27 @@ public class ProductDemandGroupItemComponentImpl implements ProductDemandGroupIt
                 }
             }
             // 更新位置或目标分组id
-            double position = calculateNewPosition(req.getPrevId(),
-                    prevGroupItemDO == null ? null : prevGroupItemDO.getPosition(),
+            Pair<Double, Boolean> position = calculateNewPosition(req.getPrevId(),
                     req.getNextId(),
-                    nextGroupItemDO == null ? null : nextGroupItemDO.getPosition(),
                     req.getBizDomainId(),
                     req.getTargetGroupId(),
+                    getPosition,
                     getPrevByPosition,
                     getNextByPosition
             );
-            val updateGroupItemDO = new ProductDemandGroupItemDO().setPosition(position)
+            // position和前后相同，说明需要重新排序
+            if (!position.getSecond()) {
+                resetPosition(req.getTargetGroupId(), req.getBizDomainId());
+                position = calculateNewPosition(req.getPrevId(),
+                        req.getNextId(),
+                        req.getBizDomainId(),
+                        req.getTargetGroupId(),
+                        getPosition,
+                        getPrevByPosition,
+                        getNextByPosition
+                );
+            }
+            val updateGroupItemDO = new ProductDemandGroupItemDO().setPosition(position.getFirst())
                     .setVersion(moveGroupItemDO.getVersion())
                     .setProductDemandGroupId(req.getTargetGroupId());
             updateGroupItemDO.setId(moveGroupItemDO.getId());
@@ -223,43 +252,72 @@ public class ProductDemandGroupItemComponentImpl implements ProductDemandGroupIt
         }
     }
 
-    public double calculateNewPosition(Long prevId,
-                                        Double prevPosition,
-                                        Long nextId,
-                                        Double nextPosition,
-                                        Long bizDomainId,
-                                        Long positionTarget,
-                                        BiFunction<Long, Double, Double> getPrevByPosition,
-                                        BiFunction<Long, Double, Double> getNextByPosition) {
+    @Override
+    public Pair<Double, Boolean> calculateNewPosition(Long prevId,
+                                Long nextId,
+                                Long bizDomainId,
+                                Long positionTarget,
+                                BiFunction<Long, Long, Double> getPosition,
+                                BiFunction<Long, Double, Double> getPrevByPosition,
+                                BiFunction<Long, Double, Double> getNextByPosition) {
         double position;
         if (prevId == null && nextId == null) {
             // 前后都为空，直接添加到第一个
             position = PositionUtil.generate(bizDomainId.toString(), System.currentTimeMillis());
         } else if (prevId == null && nextId != null) {
+            Double nextPosition = getPosition.apply(positionTarget, nextId);
             // 前面为空，后面不为空
             Double nextPrePosition = getPrevByPosition.apply(positionTarget, nextPosition);
             // 如果后面不是第一个（前面还存在）则(next.positon + next.pre.position)/2
             if (nextPrePosition != null) {
                 position = (nextPosition + nextPrePosition) / 2;
-                // TODO 如果position和前后相同，说明需要重新排序
+                // 如果position和前后相同，说明需要重新排序
+                if (Math.abs(nextPosition - position) < CommonConstant.EPSILON || Math.abs(position - nextPrePosition) < CommonConstant.EPSILON) {
+                    return Pair.of(position, false);
+                }
             } else {
                 // 如果后面是第一个（前面不存在) 则直接添加到第一个
                 position = PositionUtil.generate(bizDomainId.toString(), System.currentTimeMillis());
             }
         } else {
+            Double prevPosition = getPosition.apply(positionTarget, prevId);
             // 前面不为空
             Double preNextPosition = getNextByPosition.apply(positionTarget, prevPosition);
             // 如果前面不是最后一个（后面还存在）则(pre.position + pre.next.position)/2
             if (preNextPosition != null) {
                 position = (prevPosition + preNextPosition) / 2;
-                // TODO 如果position和前后相同，说明需要重新排序
+                // 如果position和前后相同，说明需要重新排序
+                if (Math.abs(preNextPosition - position) < CommonConstant.EPSILON || Math.abs(position - prevPosition) < CommonConstant.EPSILON) {
+                    return Pair.of(position, false);
+                }
             } else {
                 // 如果前面是最后一个（后面不存在） 则pre.position - 5000000
-                position = prevPosition - 5000000;
+                position = prevPosition - CommonConstant.POSITION_STEP;
             }
         }
-        return position;
+        return Pair.of(position, true);
     }
+
+    @Override
+    public void resetPosition(Long groupId, Long bizDomainId) {
+        log.info("开始对分组{}进行位置重排", groupId);
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        String modifyManId = userInfo.getId();
+        String modifyMan = userInfo.getFullAlias();
+        // 获取当前分组下的所有（按position倒序）
+        List<ProductDemandGroupItemDO> productDemandGroupItemDOS = productDemandGroupItemMapper.getByGroupId(groupId);
+        double position = PositionUtil.generate(bizDomainId.toString(), System.currentTimeMillis());
+        for (ProductDemandGroupItemDO productDemandGroupItemDO : productDemandGroupItemDOS) {
+            log.info("分组元素({})的位置重排，{} -》 {}", productDemandGroupItemDO.getId(), productDemandGroupItemDO.getPosition(), position);
+            val updateGroupDO = new ProductDemandGroupItemDO().setPosition(position);
+            updateGroupDO.setId(productDemandGroupItemDO.getId());
+            updateGroupDO.setModifyMan(modifyMan);
+            updateGroupDO.setModifyManId(modifyManId);
+            productDemandGroupItemMapper.update(updateGroupDO);
+            position = position - CommonConstant.POSITION_STEP;
+        }
+    }
+
     private boolean isProductGroupItemEqual(ProductDemandGroupItemDO source, ProductDemandGroupItemDO target) {
         if (source == null && target == null) {
             return true;

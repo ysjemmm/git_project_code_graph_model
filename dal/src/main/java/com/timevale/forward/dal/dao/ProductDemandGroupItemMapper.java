@@ -116,6 +116,14 @@ public interface ProductDemandGroupItemMapper {
     int updatePosition(ProductDemandGroupItemDO productDemandGroupItemDO);
 
     /**
+     * 更新产品需求分组和产品需求关系
+     *
+     * @param  productDemandGroupItemDO productDemandGroupItemDO
+     * @return 影响行数
+     */
+    int update(ProductDemandGroupItemDO productDemandGroupItemDO);
+
+    /**
      * 新增一条产品需求分组产品需求关系
      *
      * @param productDemandGroupItemDO productDemandGroupItemDO
