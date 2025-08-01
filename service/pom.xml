@@ -123,5 +123,11 @@
             <artifactId>shortlink-facade</artifactId>
         </dependency>
 
+        <!-- 拼音，导入历史数据使用 -->
+        <dependency>
+            <groupId>com.belerweb</groupId>
+            <artifactId>pinyin4j</artifactId>
+        </dependency>
+
     </dependencies>
 </project>

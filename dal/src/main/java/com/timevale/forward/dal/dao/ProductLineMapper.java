@@ -109,6 +109,11 @@ public interface ProductLineMapper {
     ProductLineDO selectByName(@Param("name") String name);
 
     /**
+     * 根据名称集合获取产品线
+     */
+    List<ProductLineDO> selectByProductLineNames(@Param("names") List<String> names);
+
+    /**
      * 更新产品线等级
      *
      * @param id               id

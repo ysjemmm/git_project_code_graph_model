@@ -403,6 +403,10 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             TaskDO taskDO = taskMapper.getById(workHoursRecordQueryReq.getWorkItemId());
             BigDecimal planUseTime = taskDO.getPlanUseTime();
 
+            if (planUseTime == null) {
+                planUseTime = BigDecimal.ZERO;
+            }
+
             List<WorkHoursRecordDO> hoursRecordDOList = workHoursRecordMapper.list(WorkHoursRecordCondition.builder()
                     .projectId(taskDO.getProjectId())
                     .workItemType(workHoursRecordQueryReq.getWorkItemType())
