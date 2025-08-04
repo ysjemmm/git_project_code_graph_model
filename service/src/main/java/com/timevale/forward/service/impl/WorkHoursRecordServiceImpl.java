@@ -1,7 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.date.DateUtil;
-import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.BasePageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Lists;
 import com.timevale.footstone.base.model.response.BaseResult;
@@ -74,6 +74,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
@@ -135,7 +136,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         workHoursRecordCondition.setPageNum(workHoursRecordQueryList.getPageNum());
         workHoursRecordCondition.setPageSize(workHoursRecordQueryList.getPageSize());
         // 开始分页
-        PageHelper.startPage(workHoursRecordCondition.getPageNum(), workHoursRecordCondition.getPageSize(), CommonConstant.REGISTER_DESC_ORDER_BY);
+        BasePageHelper.startPage(workHoursRecordCondition.getPageNum(), workHoursRecordCondition.getPageSize(), CommonConstant.REGISTER_DESC_ORDER_BY);
         // 查询
         List<WorkHoursRecordDO> workHoursRecordDOList = workHoursRecordMapper.list(workHoursRecordCondition);
         // 转换
@@ -215,11 +216,11 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
                 throw new BaseBizRuntimeException("非任务执行人不能登记该任务工时");
             }
             // 获取登记日期
-            BigDecimal accumulateWorkHours = getAccumulateWorkHours(workHoursRecordDO, taskDO, workHoursRecordDO.getCreateManId());
+            BigDecimal accumulateWorkHours = getAccumulateWorkHours(workHoursRecordDO, workHoursRecordDO.getCreateManId());
 
-            // 检查该任务登记日期是否已经登记满24小时工时
+            // 检查登记日期是否已经登记满24小时工时
             if (accumulateWorkHours.add(workHoursRecordDO.getWorkHours()).compareTo(new BigDecimal(24)) > 0) {
-                throw new BaseBizRuntimeException("该任务当日工时超出24小时，请重新填写");
+                throw new BaseBizRuntimeException("您的当日工时超出24小时，请重新填写");
             }
 
             // 如果任务没有开启执行，则登记工时直接开启任务
@@ -248,18 +249,18 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
                 throw new BaseBizRuntimeException("非任务执行人不能登记该任务工时");
             }
 
-            BigDecimal accumulateWorkHours = getAccumulateWorkHours(workHoursRecordDO, taskDO, userInfo.getId());
+            BigDecimal accumulateWorkHours = getAccumulateWorkHours(workHoursRecordDO, userInfo.getId());
 
-            // 检查该任务登记日期是否已经登记满24小时工时
+            // 检查登记日期是否已经登记满24小时工时
             if (accumulateWorkHours.subtract(recordDO.getWorkHours()).add(workHoursRecordDO.getWorkHours()).compareTo(new BigDecimal(24)) > 0) {
-                throw new BaseBizRuntimeException("该任务当日工时超出24小时，请重新填写");
+                throw new BaseBizRuntimeException("您的当日工时超出24小时，请重新填写");
             }
             // 检查该任务进度是否开启或者已经完成
             updateTaskStatus(workHoursRecordDO, taskDO);
         }
     }
 
-    private BigDecimal getAccumulateWorkHours(WorkHoursRecordDO workHoursRecordDO, TaskDO taskDO, String userId) {
+    private BigDecimal getAccumulateWorkHours(WorkHoursRecordDO workHoursRecordDO, String userId) {
         // 获取登记日期
         Date registrationDate = workHoursRecordDO.getRegistrationDate();
         // 开始时间（00:00:00）
@@ -267,17 +268,15 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         // 结束时间（23:59:59.999999999）
         LocalDateTime endTime = LocalDateTime.ofInstant(registrationDate.toInstant(), ZoneId.systemDefault()).with(LocalTime.MAX);
         // 登记人登记日期已登记工时
-        return workHoursRecordMapper.list(WorkHoursRecordCondition.builder()
-                        .projectId(taskDO.getProjectId())
-                        .workItemType(workHoursRecordDO.getWorkItemType())
-                        .workItemId(workHoursRecordDO.getWorkItemId())
+        return workHoursRecordMapper.getDailyWorkingHours(WorkHoursRecordCondition.builder()
                         .createManId(userId)
                         .stratTime(startTime.format(DATE_TIME_FORMATTER))
                         .endTime(endTime.format(DATE_TIME_FORMATTER))
                         .build())
                 .stream()
                 .map(WorkHoursRecordDO::getWorkHours)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .findFirst()
+                .orElse(BigDecimal.ZERO);
     }
 
     private void updateTaskStatus(WorkHoursRecordDO workHoursRecordDO, TaskDO taskDO) {
@@ -387,7 +386,8 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         for (Future<?> future : futures) {
             try {
                 future.get();
-            } catch (Exception e) {
+            } catch (InterruptedException | ExecutionException e) {
+                Thread.currentThread().interrupt();
                 throw new BaseBizRuntimeException(ExceptionUtil.getRootExpMsg(e));
             }
         }
@@ -575,7 +575,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         // 4. 构建工时记录时间映射
         Map<Long, LocalDate> recordDateMap = hoursRecordDOList.stream()
                 .collect(Collectors.toMap(WorkHoursRecordDO::getId,
-                        record -> record.getRegistrationDate().toInstant().atZone(zoneId).toLocalDate()));
+                        workHoursRecordDO -> workHoursRecordDO.getRegistrationDate().toInstant().atZone(zoneId).toLocalDate()));
 
         // 5. 按用户分组工时记录
         Map<String, List<WorkHoursRecordDO>> memberRecordsMap = hoursRecordDOList.stream()
@@ -590,9 +590,9 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
                     BigDecimal[] hours = memberRecords.stream()
                             .collect(
                                     () -> new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO},
-                                    (acc, record) -> {
-                                        LocalDate recordDate = recordDateMap.get(record.getId());
-                                        BigDecimal workHours = record.getWorkHours();
+                                    (acc, workHoursRecordDO) -> {
+                                        LocalDate recordDate = recordDateMap.get(workHoursRecordDO.getId());
+                                        BigDecimal workHours = workHoursRecordDO.getWorkHours();
 
                                         acc[0] = acc[0].add(workHours);
                                         if (recordDate.equals(today)) {

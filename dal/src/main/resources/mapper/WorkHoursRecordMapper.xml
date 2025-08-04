@@ -187,4 +187,17 @@
         GROUP BY project_id, work_item_type, work_item_id, date(registration_date)
     </select>
 
+    <select id="getDailyWorkingHours" resultType="com.timevale.forward.dal.entity.WorkHoursRecordDO">
+        select
+        create_man_id, sum(work_hours) as work_hours
+        from work_hours_record
+        <where>
+            <if test="createManId != null">and create_man_id = #{createManId}</if>
+            <if test="stratTime != null and endTime != null">
+                and registration_date &gt;= #{stratTime} and registration_date &lt;= #{endTime}
+            </if>
+        </where>
+        group by create_man_id
+    </select>
+
 </mapper>
