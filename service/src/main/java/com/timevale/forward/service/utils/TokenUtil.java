@@ -12,7 +12,10 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class TokenUtil {
 
-    private static final String ALGORITHM = "AES";
+    private TokenUtil() {
+    }
+
+    private static final String ALGORITHM = System.getProperty("ALGORITHM", "AES");
 
     private static final String AES_KEY = System.getProperty("AES_KEY", "forward2025esign");
 
@@ -64,12 +67,12 @@ public class TokenUtil {
         }
     }
 
-    public static void setTokenExpireTime(String principalId, String token, StringBuilder urlBuilder, String dateStr) {
-        String encryptedUserId = TokenUtil.encrypt(principalId);
+    public static void setTokenExpireTime(String userId, String token, StringBuilder urlBuilder, String dateStr) {
+        String encryptedUserId = TokenUtil.encrypt(userId);
         if (StringUtils.isNotBlank(token)) {
             urlBuilder.append("&userId=").append(encryptedUserId);
             // 存回redis并设置过期
-            TedisUtil.set(USER_KEY_PREFIX + dateStr + ":" + principalId, token, EXPIRE_SECONDS, TimeUnit.SECONDS);
+            TedisUtil.set(USER_KEY_PREFIX + dateStr + ":" + userId, token, EXPIRE_SECONDS, TimeUnit.SECONDS);
         }
     }
 }

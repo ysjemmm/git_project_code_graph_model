@@ -167,7 +167,7 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
 
             // Markdown 内容包含提示
             StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append("## ").append(today.format(DATE_FORMATTER)).append("工时填报  \n");
+            stringBuilder.append("## ").append(dateStr).append("工时填报  \n");
             stringBuilder.append("请完成以下任务的工时填报：  \n");
             taskIdList.forEach(taskId -> {
                 TaskVO vo = taskVOMap.get(taskId);
