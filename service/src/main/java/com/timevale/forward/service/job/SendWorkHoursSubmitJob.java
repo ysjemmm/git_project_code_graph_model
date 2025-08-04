@@ -158,7 +158,7 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
             // url
             StringBuilder urlBuilder = new StringBuilder();
             // 真实url地址
-            urlBuilder.append(url).append("/mobileTimeRegistration?dataStr=").append(dateStr);
+            urlBuilder.append(url).append("/mobileTimeRegistration?dateStr=").append(dateStr);
             String token = userTokenMap.get(userId);
             // 存储token
             TokenUtil.setTokenExpireTime(userId, token, urlBuilder, dateStr);
