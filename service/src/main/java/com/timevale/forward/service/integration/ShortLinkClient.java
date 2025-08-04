@@ -21,6 +21,7 @@ public class ShortLinkClient {
         // 生成短链接
         ShortenRequest shortenRequest = new ShortenRequest();
         shortenRequest.setUrl(longUrl);
+        shortenRequest.setExpire(2592000L);
         return shortLinkRpcService.getShortLink(shortenRequest);
     }
 }
