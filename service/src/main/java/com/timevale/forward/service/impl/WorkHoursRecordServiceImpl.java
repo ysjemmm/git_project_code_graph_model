@@ -47,7 +47,9 @@ import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.framework.tedis.util.TedisUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.DateUtils;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
@@ -115,6 +117,9 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    // redis key前缀
+    private static final String USER_KEY_PREFIX = "FORWARD:USER_TOKEN:";
 
     private static final List<Integer> PROJECT_STATUSES = Arrays.asList(
             ProjectStatusEnum.PLANING.getCode(),
@@ -345,6 +350,19 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         }
 
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        // 最早登记时间
+        Date date = workHoursSimples.stream()
+                .map(WorkHoursRecordAddReq::getRegistrationDate)
+                .filter(Objects::nonNull)
+                .min(Comparator.naturalOrder())
+                .orElse(null);
+        if (Objects.nonNull(date)) {
+            String registrationDate = DateUtils.format(date, "yyyy-MM-dd");
+            if (Objects.isNull(TedisUtil.get(USER_KEY_PREFIX + registrationDate + ":" + userInfo.getId()))) {
+                throw new BaseBizRuntimeException("token已过期，请修改登记日期为近三天的日期");
+            }
+        }
+
         String createMan = buildCreateMan(userInfo);
         String createManId = userInfo.getId();
 
