@@ -1,6 +1,5 @@
 package com.timevale.forward.service.impl;
 
-import cn.hutool.core.date.DateUtil;
 import com.github.pagehelper.BasePageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Lists;
@@ -42,7 +41,6 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.copy.WorkHoursRecordCopier;
-import com.timevale.forward.service.utils.ExceptionUtil;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -76,8 +74,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 /**
@@ -342,6 +338,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> batchAdd(WorkHoursRecordBatchAddReq workHoursRecordBatchAddReq) {
         log.info("工时记录批量新增接收参数:{}", workHoursRecordBatchAddReq);
         List<WorkHoursRecordAddReq> workHoursSimples = workHoursRecordBatchAddReq.getWorkHoursSimples();
@@ -359,7 +356,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         if (Objects.nonNull(date)) {
             String registrationDate = DateUtils.format(date, "yyyy-MM-dd");
             if (Objects.isNull(TedisUtil.get(USER_KEY_PREFIX + registrationDate + ":" + userInfo.getId()))) {
-                throw new BaseBizRuntimeException("token已过期，请修改登记日期为近三天的日期");
+                throw new BaseBizRuntimeException("token已过期，请修改登记日期为近三天工作日的日期");
             }
         }
 
@@ -378,36 +375,32 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         // 获取进度Map
         Map<Long, Integer> lastProgressMap = lastProgress.stream().collect(Collectors.toMap(WorkHoursRecordDO::getWorkItemId, WorkHoursRecordDO::getProgress, (v1, v2) -> v2));
 
-        List<Future<?>> futures = new ArrayList<>();
-        for (WorkHoursRecordAddReq a : workHoursSimples) {
-            Future<?> future = threadPoolTaskExecutor.submit(() -> {
-                // 如果工时为0不登记且进度没有更新，则不处理
-                if (a.getWorkHours().compareTo(BigDecimal.ZERO) <= 0 && Objects.equals(lastProgressMap.getOrDefault(a.getWorkItemId(), 0), a.getProgress())) {
-                    return;
-                }
-                // 转换
-                WorkHoursRecordDO workHoursRecordDO = WorkHoursRecordCopier.INSTANCE.convert(a);
-                workHoursRecordDO.setCreateMan(createMan);
-                workHoursRecordDO.setCreateManId(createManId);
-                // 登记时间，保持日期部分不变
-                LocalDate registrationDate = workHoursRecordDO.getRegistrationDate().toInstant()
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDate();
+        // 收集需要处理的记录
+        List<WorkHoursRecordDO> recordsToInsert = new ArrayList<>();
 
-                // 时间部分设为当前时间
-                workHoursRecordDO.setRegistrationDate(Date.from(registrationDate.atTime(LocalTime.now()).atZone(ZoneId.systemDefault()).toInstant()));
-                saveBeforeCheckTask(workHoursRecordDO);
-                workHoursRecordMapper.insert(workHoursRecordDO);
-            });
-            futures.add(future);
-        }
-        for (Future<?> future : futures) {
-            try {
-                future.get();
-            } catch (InterruptedException | ExecutionException e) {
-                Thread.currentThread().interrupt();
-                throw new BaseBizRuntimeException(ExceptionUtil.getRootExpMsg(e));
+        for (WorkHoursRecordAddReq a : workHoursSimples) {
+            // 如果工时为0不登记且进度没有更新，则不处理
+            if (a.getWorkHours().compareTo(BigDecimal.ZERO) <= 0 && Objects.equals(lastProgressMap.getOrDefault(a.getWorkItemId(), 0), a.getProgress())) {
+                continue;
             }
+            // 转换
+            WorkHoursRecordDO workHoursRecordDO = WorkHoursRecordCopier.INSTANCE.convert(a);
+            workHoursRecordDO.setCreateMan(createMan);
+            workHoursRecordDO.setCreateManId(createManId);
+            // 登记时间，保持日期部分不变
+            LocalDate registrationDate = workHoursRecordDO.getRegistrationDate().toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate();
+
+            // 时间部分设为当前时间
+            workHoursRecordDO.setRegistrationDate(Date.from(registrationDate.atTime(LocalTime.now()).atZone(ZoneId.systemDefault()).toInstant()));
+            saveBeforeCheckTask(workHoursRecordDO);
+            recordsToInsert.add(workHoursRecordDO);
+        }
+
+        // 批量插入所有记录（在同一个事务中）
+        for (WorkHoursRecordDO workHoursRecordDO : recordsToInsert) {
+            workHoursRecordMapper.insert(workHoursRecordDO);
         }
 
         return BaseResult.success(true);
@@ -444,23 +437,10 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             // 确保不为负数
             BigDecimal safeRemainingHour = subtract.signum() > 0 ? subtract : BigDecimal.ZERO;
 
-            UserInfo userInfo = LocalSessionUtils.getUserInfo();
-            String createManId = userInfo.getId();
-
-            // 当日已登记工时
-            BigDecimal remainingHourDeviation = hoursRecordDOList.stream()
-                    .filter(a -> createManId.equals(a.getCreateManId()) && DateUtil.isSameDay(a.getCreateDate(), new Date()))
-                    .map(WorkHoursRecordDO::getWorkHours)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-            // 当日剩余工时
-            BigDecimal remainingHour = new BigDecimal(24).subtract(remainingHourDeviation);
-
             workHoursRemainVO.setEstimatedHours(planUseTime);
             workHoursRemainVO.setTotalManHour(sum);
             workHoursRemainVO.setLatestProgress(progress);
             workHoursRemainVO.setRemainingManHour(safeRemainingHour);
-            workHoursRemainVO.setRemainingHourDeviation(remainingHour);
         }
         return BaseResult.success(workHoursRemainVO);
     }
