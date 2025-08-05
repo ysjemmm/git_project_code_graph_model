@@ -327,7 +327,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
             ProjectBoardTaskVO projectBoardTaskVO = TaskCopier.INSTANCE.convert2ProjectBoard(taskDO);
             setStartAndEndDates(taskDO, projectBoardTaskVO, current);
             projectBoardTaskVO.setStatusName(TaskStatusEnum.getTextByCode(taskDO.getStatus()));
-            projectBoardTaskVO.setExecutor(a.getUserName());
+            projectBoardTaskVO.setExecutor(a.getUserName().split("-")[0]);
             projectBoardTaskVO.setExecutorId(a.getUserId());
             projectBoardTaskVO.setIsDelay(isTaskDelayed(taskDO, current));
             // 设置任务进度
@@ -343,7 +343,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
             ProjectBoardSinglelWorkTimeVO singleWorkTimeVO = new ProjectBoardSinglelWorkTimeVO();
 
             BigDecimal planUseTime = v.stream().map(ProjectBoardTaskVO::getPlanUseTime).filter(Objects::nonNull).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
-            singleWorkTimeVO.setExecutor(v.get(0).getExecutor());
+            singleWorkTimeVO.setExecutor(v.get(0).getExecutor().split("-")[0]);
             singleWorkTimeVO.setExecutorId(v.get(0).getExecutorId());
             singleWorkTimeVO.setIsPm(Objects.equals(v.get(0).getExecutorId(), projectDO.getPmId()));
             singleWorkTimeVO.setTaskCount(v.size());
@@ -375,7 +375,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
                 .collect(Collectors.groupingBy(WorkHoursRecordDO::getWorkItemId,
                         Collectors.collectingAndThen(
                                 Collectors.maxBy(Comparator.comparing(WorkHoursRecordDO::getRegistrationDate)),
-                                record -> record.map(WorkHoursRecordDO::getProgress).orElse(0)
+                                workHoursRecordDO -> workHoursRecordDO.map(WorkHoursRecordDO::getProgress).orElse(0)
                         )));
     }
 
@@ -540,7 +540,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
             projectBoardTaskVO.setStatusName(TaskStatusEnum.getTextByCode(taskDO.getStatus()));
             // 设置任务执行人信息
             PersonDO person = personMap.get(taskId);
-            projectBoardTaskVO.setExecutor(person != null ? person.getUserName() : "未知");
+            projectBoardTaskVO.setExecutor(person != null ? person.getUserName().split("-")[0] : "未知");
             projectBoardTaskVO.setExecutorId(person != null ? person.getUserId() : "未知");
 
             // 判断任务是否延期
@@ -566,13 +566,13 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
             BigDecimal planUseTime = v.stream().map(ProjectBoardTaskVO::getPlanUseTime).filter(Objects::nonNull).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
             // 需求进度，总的任务进度除任务数量,保留两位小数
             double avgProgress = v.stream().mapToDouble(ProjectBoardTaskVO::getNewProgress).average().orElse(0.0);
-            demandWorkTimeVO.setNewProgress(new BigDecimal(avgProgress).setScale(2, RoundingMode.HALF_UP).doubleValue());
+            demandWorkTimeVO.setNewProgress(BigDecimal.valueOf(avgProgress).setScale(2, RoundingMode.HALF_UP).doubleValue());
 
             // 设置需求基本信息
             demandWorkTimeVO.setDemandId(productDemandListDO.getId());
             demandWorkTimeVO.setDemand(productDemandListDO.getName());
             demandWorkTimeVO.setOwnerId(productDemandListDO.getOwnerId());
-            demandWorkTimeVO.setOwner(productDemandListDO.getOwner());
+            demandWorkTimeVO.setOwner(productDemandListDO.getOwner().split("-")[0]);
             demandWorkTimeVO.setPriority(productDemandListDO.getPriority());
             demandWorkTimeVO.setPriorityName(PriorityEnum.getTextByCode(productDemandListDO.getPriority()));
             demandWorkTimeVO.setExpectScheduleTime(productDemandListDO.getExpectScheduleTime());
