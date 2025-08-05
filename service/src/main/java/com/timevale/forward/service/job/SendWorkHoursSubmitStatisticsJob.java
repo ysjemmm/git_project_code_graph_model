@@ -266,14 +266,16 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
             String dateStr = latestWorkday.format(DATE_FORMATTER);
             // 生成短链接
             String shortUrl = shortLinkClient.getShortUrl(urlStr).getShortlink();
+            // 构建钉钉外部浏览器跳转链接
+            String dingtalkUrl = "dingtalk://dingtalkclient/page/link?url=" + shortUrl + "&pc_slide=false";
 
             // 构建并发送消息
             ActionCardMsg actionCardMsg = ActionCardMsg.builder()
                     .title("工时填报情况")
-                    .markdown(buildMarkdownMessage(stringBuilder, dateStr, shortUrl))
+                    .markdown(buildMarkdownMessage(stringBuilder, dateStr, dingtalkUrl))
                     .receivers(Collections.singletonList(principalId))
                     .singleTitle("查看工时填报明细")
-                    .singleUrl(shortUrl)
+                    .singleUrl(dingtalkUrl)
                     .build();
 
             messageRetryManager.sendAsyncMessage("sendWorkHoursSubmitStatisticsJob", actionCardMsg, principalId, sentCount);
