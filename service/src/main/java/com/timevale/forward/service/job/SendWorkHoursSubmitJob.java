@@ -158,7 +158,7 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
             // url
             StringBuilder urlBuilder = new StringBuilder();
             // 真实url地址
-            urlBuilder.append(url).append("/mobileTimeRegistration?dataStr=").append(dateStr);
+            urlBuilder.append(url).append("/mobileTimeRegistration?dateStr=").append(dateStr);
             String token = userTokenMap.get(userId);
             // 存储token
             TokenUtil.setTokenExpireTime(userId, token, urlBuilder, dateStr);
@@ -167,7 +167,7 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
 
             // Markdown 内容包含提示
             StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append("## ").append(today.format(DATE_FORMATTER)).append("工时填报  \n");
+            stringBuilder.append("## ").append(dateStr).append("工时填报  \n");
             stringBuilder.append("请完成以下任务的工时填报：  \n");
             taskIdList.forEach(taskId -> {
                 TaskVO vo = taskVOMap.get(taskId);

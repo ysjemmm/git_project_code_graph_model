@@ -191,6 +191,20 @@
         </where>
     </select>
 
+    <select id="selectByProductLineNames" resultType="com.timevale.forward.dal.entity.ProductLineDO">
+        SELECT *
+        FROM product_line
+        <where>
+            AND is_deleted = false
+            <if test="names != null and names.size() > 0">
+                AND `name` IN
+                <foreach collection="names" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
     <update id="updateProductLineLevel">
         UPDATE info_forward.product_line
         SET product_line_level = #{productLineLevel},

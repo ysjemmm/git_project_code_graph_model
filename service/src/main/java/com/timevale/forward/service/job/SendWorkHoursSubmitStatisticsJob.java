@@ -5,7 +5,6 @@ import cn.hutool.core.date.DateUtil;
 import com.timevale.crm.sdk.common.constant.enums.EnvEnum;
 import com.timevale.forward.dal.condition.WorkHoursRecordCondition;
 import com.timevale.forward.dal.dao.BizDomainMapper;
-import com.timevale.forward.dal.dao.PersonMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.WorkHoursRecordMapper;
@@ -23,8 +22,6 @@ import com.timevale.forward.service.integration.erp.model.ActionCardMsg;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.manager.MessageRetryManager;
 import com.timevale.forward.service.utils.EnvUtils;
-import com.timevale.forward.service.utils.JwtGeneratorUtil;
-import com.timevale.forward.service.utils.TokenUtil;
 import com.timevale.framework.schedulerT.client.annotaion.JobHandler;
 import com.timevale.framework.schedulerT.core.biz.model.ReturnT;
 import com.timevale.framework.schedulerT.core.handler.IJobHandler;
@@ -61,7 +58,6 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
     private final ProjectMapper projectMapper;
     private final WorkHoursRecordMapper workHoursRecordMapper;
     private final PersonComponent personComponent;
-    private final PersonMapper personMapper;
     private final MessageRetryManager messageRetryManager;
     private final ProductLineMapper productLineMapper;
     private final BizDomainMapper bizDomainMapper;
@@ -209,10 +205,6 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
         // 统计发送消息的数量
         AtomicInteger sentCount = new AtomicInteger(0);
 
-        Map<String, String> userTokenMap = personMapper.selectByUserIds(ownerProjectMap.keySet())
-                .stream()
-                .collect(Collectors.toMap(PersonDO::getUserId, e -> JwtGeneratorUtil.generateJwt(e.getUserId(), e.getUserName().split("-")[0], e.getUserName().split("-")[1]), (v1, v2) -> v2));
-
         // 遍历每个负责人及其项目，构建并发送消息
         ownerProjectMap.forEach((principalId, projectList) -> {
             StringBuilder stringBuilder = new StringBuilder();
@@ -270,22 +262,20 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
             }
 
             // 构建并发送消息
-            StringBuilder urlBuilder = new StringBuilder();
-            urlBuilder.append(url).append("/projectManagement/edit?id=").append(proId).append("&type=check");
-            String token = userTokenMap.get(principalId);
+            String urlStr = url + "/projectManagement/edit?id=" + proId + "&type=check";
             String dateStr = latestWorkday.format(DATE_FORMATTER);
-            // 存储token
-            TokenUtil.setTokenExpireTime(principalId, token, urlBuilder, dateStr);
             // 生成短链接
-            String shortUrl = shortLinkClient.getShortUrl(urlBuilder.toString()).getShortlink();
+            String shortUrl = shortLinkClient.getShortUrl(urlStr).getShortlink();
+            // 构建钉钉外部浏览器跳转链接
+            String dingtalkUrl = "dingtalk://dingtalkclient/page/link?url=" + shortUrl + "&pc_slide=false";
 
             // 构建并发送消息
             ActionCardMsg actionCardMsg = ActionCardMsg.builder()
                     .title("工时填报情况")
-                    .markdown(buildMarkdownMessage(stringBuilder, dateStr, shortUrl))
+                    .markdown(buildMarkdownMessage(stringBuilder, dateStr, dingtalkUrl))
                     .receivers(Collections.singletonList(principalId))
                     .singleTitle("查看工时填报明细")
-                    .singleUrl(shortUrl)
+                    .singleUrl(dingtalkUrl)
                     .build();
 
             messageRetryManager.sendAsyncMessage("sendWorkHoursSubmitStatisticsJob", actionCardMsg, principalId, sentCount);

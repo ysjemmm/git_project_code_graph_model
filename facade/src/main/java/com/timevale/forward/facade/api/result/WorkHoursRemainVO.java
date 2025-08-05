@@ -27,9 +27,6 @@ public class WorkHoursRemainVO extends ToString {
     @ApiModelProperty("剩余工时")
     private BigDecimal remainingManHour;
 
-    @ApiModelProperty("当日剩余可登记工时")
-    private BigDecimal remainingHourDeviation;
-
     @ApiModelProperty("最新工时进度")
     private Integer latestProgress;
 

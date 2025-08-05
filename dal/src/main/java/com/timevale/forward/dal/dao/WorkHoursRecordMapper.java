@@ -91,4 +91,12 @@ public interface WorkHoursRecordMapper {
      * @return
      */
     List<WorkHoursRecordDO> getRangeWorkHours(@Param("dates") List<String> dates, @Param("projectIds") List<Long> projectIds, @Param("workItemIds") List<Long> workItemIds);
+
+    /**
+     * 根据创建人获取当日登记工时
+     *
+     * @param condition 查询条件
+     * @return WorkTimeRecordDO列表
+     */
+    List<WorkHoursRecordDO> getDailyWorkingHours(WorkHoursRecordCondition condition);
 }
