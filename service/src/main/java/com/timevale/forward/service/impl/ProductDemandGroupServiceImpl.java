@@ -139,7 +139,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
 
     private boolean labelCondition(ProductDemandGroupQueryList productDemandGroupQueryList, ProductDemandGroupListCondition condition) {
         if (CollectionUtils.isNotEmpty(productDemandGroupQueryList.getLabelIds()) || CollectionUtils.isNotEmpty(productDemandGroupQueryList.getLabelCategoryIds())) {
-            Boolean containLabel = productDemandGroupQueryList.getContainLabel();
+            boolean containLabel = productDemandGroupQueryList.getContainLabel() == null || productDemandGroupQueryList.getContainLabel();
 
             List<Long> newLabelIds = labelComponent.getLabelIds(productDemandGroupQueryList.getLabelIds(), productDemandGroupQueryList.getLabelCategoryIds());
 
