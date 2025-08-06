@@ -56,6 +56,8 @@ public interface BizDemandService {
      */
     BaseResult<BizDemandDetailVO> getBizDemandById(Long bizDemandId);
 
+    BaseResult<ProductDemandDetailVO> transformBizDemand(Long bizDemandId);
+
     /**
      * 修改业务需求
      *
