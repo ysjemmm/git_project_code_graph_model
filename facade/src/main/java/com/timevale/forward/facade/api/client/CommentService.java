@@ -8,7 +8,6 @@ import com.timevale.forward.facade.api.request.CommentBatchAddReq;
 import com.timevale.forward.facade.api.request.CommentModifyReq;
 import com.timevale.forward.facade.api.result.CommentVO;
 import com.timevale.mandarin.common.annotation.RestClient;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -36,10 +35,8 @@ public interface CommentService {
 
     BaseResult<CommentVO> getCommentDetail(Long id);
 
-    @Transactional(rollbackFor = Exception.class)
     BaseResult<Boolean> delete(Long id);
 
-    @Transactional(rollbackFor = Exception.class)
     BaseResult<Boolean> modify(CommentModifyReq commentModifyReq);
 
     /**
