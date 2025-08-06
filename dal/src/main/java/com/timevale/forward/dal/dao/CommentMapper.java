@@ -17,7 +17,7 @@ public interface CommentMapper {
      * @param id id
      * @return CommentDO
      */
-    CommentDO get(@Param("id") Long id);
+    CommentDO getById(@Param("id") Long id);
 
     /**
      * 插入单个评论

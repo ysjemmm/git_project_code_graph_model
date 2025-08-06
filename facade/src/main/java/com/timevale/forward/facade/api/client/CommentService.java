@@ -34,8 +34,7 @@ public interface CommentService {
      */
     BaseResult<Boolean> add(CommentAddReq commentAddReq);
 
-    @Transactional(rollbackFor = Exception.class)
-    BaseResult<CommentVO> get(Long id);
+    BaseResult<CommentVO> getCommentDetail(Long id);
 
     @Transactional(rollbackFor = Exception.class)
     BaseResult<Boolean> delete(Long id);

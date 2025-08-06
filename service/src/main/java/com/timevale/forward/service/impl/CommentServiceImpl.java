@@ -149,9 +149,9 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public BaseResult<CommentVO> get(Long id) {
+    public BaseResult<CommentVO> getCommentDetail(Long id) {
         log.info("评论详情接收参数:{}", id);
-        CommentDO commentDO = commentMapper.get(id);
+        CommentDO commentDO = commentMapper.getById(id);
         AssertUtil.notNull(commentDO, "该工时记录不存在");
         CommentVO commentVO = CommentCopier.INSTANCE.change(commentDO);
 
@@ -166,7 +166,7 @@ public class CommentServiceImpl implements CommentService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> delete(Long id) {
         log.info("评论删除,参数:{}", id);
-        CommentDO commentDO = commentMapper.get(id);
+        CommentDO commentDO = commentMapper.getById(id);
         AssertUtil.notNull(commentDO, "评论不存在");
         // 删除评论
         commentMapper.deleteById(id);
@@ -177,7 +177,7 @@ public class CommentServiceImpl implements CommentService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modify(CommentModifyReq commentModifyReq) {
         log.info("评论修改,参数:{}", commentModifyReq);
-        CommentDO commentDO = commentMapper.get(commentModifyReq.getId());
+        CommentDO commentDO = commentMapper.getById(commentModifyReq.getId());
         AssertUtil.notNull(commentDO, "评论不存在");
 
         CommentDO updateCommentDO = CommentCopier.INSTANCE.convert(commentModifyReq);
@@ -200,7 +200,6 @@ public class CommentServiceImpl implements CommentService {
      * @param commentDO
      * @param toId
      * @param type
-     * @param receiverInfoList
      */
     private void handleCommentNotification(CommentDO commentDO, Long toId, Integer type, List<PersonQuery> receiverInfoList) {
         List<String> receivers = receiverInfoList.stream().map(PersonQuery::getUserId).collect(Collectors.toList());

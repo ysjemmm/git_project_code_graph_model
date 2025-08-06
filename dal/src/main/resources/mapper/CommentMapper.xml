@@ -17,7 +17,7 @@
         where id = #{id}
     </delete>
 
-    <select id="get" resultType="com.timevale.forward.dal.entity.CommentDO">
+    <select id="getById" resultType="com.timevale.forward.dal.entity.CommentDO">
         select id, to_id, type, content, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man,
         modify_date
         from comment
