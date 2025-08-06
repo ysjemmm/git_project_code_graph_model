@@ -53,7 +53,7 @@
                 modify_man_id = #{modifyManId},
             </if>
         </set>
-        where id = #{Id}
+        where id = #{id}
     </update>
 
     <update id="delete">
