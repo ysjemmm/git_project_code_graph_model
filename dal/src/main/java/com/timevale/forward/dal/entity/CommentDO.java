@@ -26,4 +26,9 @@ public class CommentDO extends BaseDO {
      */
     private String content;
 
+    /**
+     * 评论是否被删除
+     */
+    private Boolean isDeleted;
+
 }

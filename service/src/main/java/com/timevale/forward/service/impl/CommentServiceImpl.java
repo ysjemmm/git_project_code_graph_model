@@ -1,7 +1,16 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.dao.BizDemandMapper;
+import com.timevale.forward.dal.dao.BugOfflineMapper;
+import com.timevale.forward.dal.dao.BugOnlineMapper;
+import com.timevale.forward.dal.dao.CommentMapper;
+import com.timevale.forward.dal.dao.CustomDemandMapper;
+import com.timevale.forward.dal.dao.ProductDemandMapper;
+import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.dao.TaskMapper;
+import com.timevale.forward.dal.dao.TroubleTicketMapper;
 import com.timevale.forward.dal.entity.CommentDO;
 import com.timevale.forward.dal.entity.FileDO;
 import com.timevale.forward.dal.entity.TaskDO;
@@ -10,6 +19,7 @@ import com.timevale.forward.facade.api.query.CommentQueryList;
 import com.timevale.forward.facade.api.query.PersonQuery;
 import com.timevale.forward.facade.api.request.CommentAddReq;
 import com.timevale.forward.facade.api.request.CommentBatchAddReq;
+import com.timevale.forward.facade.api.request.CommentModifyReq;
 import com.timevale.forward.facade.api.request.FileAddReq;
 import com.timevale.forward.facade.api.result.CommentVO;
 import com.timevale.forward.facade.api.result.FileVO;
@@ -24,8 +34,10 @@ import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -122,8 +134,6 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public BaseResult<Boolean> add(CommentAddReq commentAddReq) {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-
         // 添加评论
         CommentDO commentDO = CommentCopier.INSTANCE.convert(commentAddReq);
         commentMapper.insert(commentDO);
@@ -133,25 +143,81 @@ public class CommentServiceImpl implements CommentService {
         fileComponent.add(fileList, commentDO.getId(), FileTypeEnum.COMMENT.getCode());
 
         // 评论接收人
-        List<String> receivers = commentAddReq.getReceiverInfoList().stream().map(PersonQuery::getUserId).collect(Collectors.toList());
+        handleCommentNotification(commentDO, commentAddReq.getToId(), commentAddReq.getType(), commentAddReq.getReceiverInfoList());
+
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<CommentVO> get(Long id) {
+        log.info("评论详情接收参数:{}", id);
+        CommentDO commentDO = commentMapper.get(id);
+        AssertUtil.notNull(commentDO, "该工时记录不存在");
+        CommentVO commentVO = CommentCopier.INSTANCE.change(commentDO);
+
+        List<FileDO> fileDOList = fileComponent.select(commentVO.getId(), FileTypeEnum.COMMENT.getCode());
+        if (CollUtil.isNotEmpty(fileDOList)) {
+            commentVO.setFileList(FileCopier.INSTANCE.transform(fileDOList));
+        }
+        return BaseResult.success(commentVO);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> delete(Long id) {
+        log.info("评论删除,参数:{}", id);
+        CommentDO commentDO = commentMapper.get(id);
+        AssertUtil.notNull(commentDO, "评论不存在");
+        // 删除评论
+        commentMapper.deleteById(id);
+        return BaseResult.success(true);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> modify(CommentModifyReq commentModifyReq) {
+        log.info("评论修改,参数:{}", commentModifyReq);
+        CommentDO commentDO = commentMapper.get(commentModifyReq.getId());
+        AssertUtil.notNull(commentDO, "评论不存在");
+
+        CommentDO updateCommentDO = CommentCopier.INSTANCE.convert(commentModifyReq);
+
+        // 添加评论
+        commentMapper.update(updateCommentDO);
+
+        // 修改附件
+        List<FileAddReq> fileList = commentModifyReq.getFileList();
+        fileComponent.update(fileList, updateCommentDO.getId(), FileTypeEnum.COMMENT.getCode());
+
+        // 评论接收人
+        handleCommentNotification(updateCommentDO, commentModifyReq.getToId(), commentModifyReq.getType(), commentModifyReq.getReceiverInfoList());
+
+        return BaseResult.success(true);
+    }
+
+    /**
+     *  处理评论通知
+     * @param commentDO
+     * @param toId
+     * @param type
+     * @param receiverInfoList
+     */
+    private void handleCommentNotification(CommentDO commentDO, Long toId, Integer type, List<PersonQuery> receiverInfoList) {
+        List<String> receivers = receiverInfoList.stream().map(PersonQuery::getUserId).collect(Collectors.toList());
         if (receivers.isEmpty()) {
-            return BaseResult.success(true);
+            return;
         }
 
-        Long toId = commentAddReq.getToId();
-        Integer type = commentAddReq.getType();
-        // 查询对应业务需求/产品需求/项目名称
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
         CommentTypeEnum commentType = CommentTypeEnum.getByCode(type);
         String name = commentMainNameFun.getOrDefault(commentType, id -> "").apply(toId);
 
-        // 任务特殊处理
         Long projectId = null;
         if (CommentTypeEnum.TASK.getCode().equals(type) || CommentTypeEnum.INNER_TASK.getCode().equals(type)) {
             TaskDO taskDO = taskMapper.getById(toId);
             projectId = taskDO.getProjectId();
         }
 
-        // 发送通知
         messageEventPublisher.publish(new CommentMsgEvent(
                 this,
                 toId,
@@ -162,8 +228,6 @@ public class CommentServiceImpl implements CommentService {
                 commentDO.getContent(),
                 projectId
         ));
-
-        return BaseResult.success(true);
     }
 
     @Override

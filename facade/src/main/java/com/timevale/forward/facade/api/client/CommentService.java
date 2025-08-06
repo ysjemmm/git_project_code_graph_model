@@ -5,8 +5,10 @@ import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.CommentQueryList;
 import com.timevale.forward.facade.api.request.CommentAddReq;
 import com.timevale.forward.facade.api.request.CommentBatchAddReq;
+import com.timevale.forward.facade.api.request.CommentModifyReq;
 import com.timevale.forward.facade.api.result.CommentVO;
 import com.timevale.mandarin.common.annotation.RestClient;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -31,6 +33,15 @@ public interface CommentService {
      * @return 数量
      */
     BaseResult<Boolean> add(CommentAddReq commentAddReq);
+
+    @Transactional(rollbackFor = Exception.class)
+    BaseResult<CommentVO> get(Long id);
+
+    @Transactional(rollbackFor = Exception.class)
+    BaseResult<Boolean> delete(Long id);
+
+    @Transactional(rollbackFor = Exception.class)
+    BaseResult<Boolean> modify(CommentModifyReq commentModifyReq);
 
     /**
      * 新增

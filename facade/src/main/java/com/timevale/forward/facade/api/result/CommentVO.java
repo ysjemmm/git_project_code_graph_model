@@ -32,4 +32,7 @@ public class CommentVO extends ToString {
 
     @ApiModelProperty("附件")
     private List<FileVO> fileList;
+
+    @ApiModelProperty("是否被删除")
+    private Boolean isDeleted;
 }

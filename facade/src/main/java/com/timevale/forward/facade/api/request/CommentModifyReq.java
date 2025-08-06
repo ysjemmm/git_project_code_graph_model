@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotNull;
-import java.util.List;
 
 /**
  * @author xingyun
@@ -15,12 +14,9 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("评论修改")
-public class CommentModifyReq extends BaseReq {
+public class CommentModifyReq extends CommentAddReq {
 
     @ApiModelProperty("评论id")
     @NotNull(message = "评论id不能为空")
     private Long id;
-
-    @ApiModelProperty("附件列表")
-    private List<FileAddReq> fileList;
 }

@@ -53,7 +53,6 @@ import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -103,9 +102,6 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
 
     @Resource
     private PersonMapper personMapper;
-
-    @Resource
-    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     @Resource
     private SqlOrderComponent sqlOrderComponent;
