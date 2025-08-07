@@ -9,23 +9,73 @@ import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.condition.TaskCondition;
 import com.timevale.forward.dal.condition.TaskListCondition;
 import com.timevale.forward.dal.condition.TaskProductDemandCondition;
-import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.dao.PersonMapper;
+import com.timevale.forward.dal.dao.ProductLineMapper;
+import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.dao.ProjectNodeMapper;
+import com.timevale.forward.dal.dao.ProjectProductDemandMapper;
+import com.timevale.forward.dal.dao.TaskMapper;
+import com.timevale.forward.dal.dao.TaskProductDemandMapper;
+import com.timevale.forward.dal.dao.TaskTimeMapper;
 import com.timevale.forward.dal.dto.TaskTimeDTO;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.entity.BaseDO;
+import com.timevale.forward.dal.entity.FileDO;
+import com.timevale.forward.dal.entity.PersonDO;
+import com.timevale.forward.dal.entity.ProductDemandListDO;
+import com.timevale.forward.dal.entity.ProductLineDO;
+import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.entity.ProjectNodeDO;
+import com.timevale.forward.dal.entity.ProjectProductDemandDO;
+import com.timevale.forward.dal.entity.TaskDO;
+import com.timevale.forward.dal.entity.TaskProductDemandDO;
+import com.timevale.forward.dal.entity.TaskTimeDO;
 import com.timevale.forward.facade.api.client.TaskService;
 import com.timevale.forward.facade.api.query.ProductDemandLinkTaskQueryList;
 import com.timevale.forward.facade.api.query.TaskLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.TaskProductDemandQueryList;
 import com.timevale.forward.facade.api.query.TaskQueryList;
-import com.timevale.forward.facade.api.request.*;
+import com.timevale.forward.facade.api.request.ElapsedEndTimeQueryReq;
+import com.timevale.forward.facade.api.request.ElapsedTimeQueryReq;
+import com.timevale.forward.facade.api.request.PersonAddReq;
+import com.timevale.forward.facade.api.request.TaskAddReq;
+import com.timevale.forward.facade.api.request.TaskBatchAddReq;
+import com.timevale.forward.facade.api.request.TaskDoneReq;
+import com.timevale.forward.facade.api.request.TaskExecuteReq;
+import com.timevale.forward.facade.api.request.TaskModifyReq;
+import com.timevale.forward.facade.api.request.TaskProductDemandLinkReq;
+import com.timevale.forward.facade.api.request.TaskSimpleAddReq;
+import com.timevale.forward.facade.api.request.TaskTransferReq;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.TaskDetailVO;
 import com.timevale.forward.facade.api.result.TaskListVO;
 import com.timevale.forward.facade.api.result.TaskVO;
-import com.timevale.forward.model.enums.*;
-import com.timevale.forward.service.component.*;
+import com.timevale.forward.model.enums.AscriptionEnum;
+import com.timevale.forward.model.enums.FileTypeEnum;
+import com.timevale.forward.model.enums.LinkOrUnLinkEnum;
+import com.timevale.forward.model.enums.PersonLevelEnum;
+import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.model.enums.PriorityEnum;
+import com.timevale.forward.model.enums.ProductDemandStatusEnum;
+import com.timevale.forward.model.enums.ProjectKindEnum;
+import com.timevale.forward.model.enums.ProjectNodeEnum;
+import com.timevale.forward.model.enums.ProjectStageEnum;
+import com.timevale.forward.model.enums.TaskStatusEnum;
+import com.timevale.forward.service.component.FileComponent;
+import com.timevale.forward.service.component.InnerProjectStatusUpdateComponent;
+import com.timevale.forward.service.component.PersonComponent;
+import com.timevale.forward.service.component.ProductDemandComponent;
+import com.timevale.forward.service.component.ProjectEvaluateComponent;
+import com.timevale.forward.service.component.TaskComponent;
+import com.timevale.forward.service.component.TaskProductDemandComponent;
+import com.timevale.forward.service.component.TaskTimeComponent;
+import com.timevale.forward.service.component.UserComponent;
 import com.timevale.forward.service.constant.CommonConstant;
-import com.timevale.forward.service.copy.*;
+import com.timevale.forward.service.copy.FileCopier;
+import com.timevale.forward.service.copy.PersonCopier;
+import com.timevale.forward.service.copy.ProductDemandCopier;
+import com.timevale.forward.service.copy.ProductLineCopier;
+import com.timevale.forward.service.copy.TaskCopier;
+import com.timevale.forward.service.copy.TaskTimeCopier;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
@@ -48,7 +98,15 @@ import org.springframework.transaction.support.TransactionTemplate;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -149,6 +207,8 @@ public class TaskServiceImpl implements TaskService {
         }
 
         TaskDO taskDO = TaskCopier.INSTANCE.convert(taskAddReq);
+        // 耗时校验
+        checkTaskUseTime(Collections.singletonList(taskDO));
         //名称查重
         checkNameExisted(taskDO);
         //阶段限制
@@ -201,6 +261,21 @@ public class TaskServiceImpl implements TaskService {
         taskProductDemandComponent.batchInsert(taskDO.getId(), taskAddReq.getProductDemandIds());
 
         return BaseResult.success(taskDO.getId());
+    }
+
+    private void checkTaskUseTime(List<TaskDO> taskDOs) {
+        for (TaskDO taskDO : taskDOs) {
+            if (taskDO.getPlanUseTime() != null && taskDO.getPlanUseTime().compareTo(BigDecimal.ZERO) < 0) {
+                throw new BaseBizRuntimeException("任务计划耗时不能为负数");
+            }
+            ElapsedTimeQueryReq elapsedTimeQueryReq = new ElapsedTimeQueryReq();
+            elapsedTimeQueryReq.setStartTime(taskDO.getPlanStartDate());
+            elapsedTimeQueryReq.setEndTime(taskDO.getPlanEndDate());
+            BigDecimal multiply = Optional.of(getElapsedTime(elapsedTimeQueryReq)).map(BaseResult::getData).orElse(BigDecimal.ZERO).multiply(BigDecimal.valueOf(3));
+            if (taskDO.getPlanUseTime().compareTo(multiply) > 0) {
+                throw new BaseBizRuntimeException(taskDO.getName() + "任务计划耗时每天不能超过24小时");
+            }
+        }
     }
 
     @Override
@@ -543,6 +618,9 @@ public class TaskServiceImpl implements TaskService {
         }
         //名称查重
         List<TaskDO> taskDos = TaskCopier.INSTANCE.tansfer(taskBatchAddReq.getTaskSimples());
+
+        // 耗时校验
+        checkTaskUseTime(taskDos);
 
         checkNameExisted(taskDos);
         //阶段限制
