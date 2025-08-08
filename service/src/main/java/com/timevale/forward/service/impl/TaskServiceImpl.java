@@ -238,6 +238,8 @@ public class TaskServiceImpl implements TaskService {
             calTaskTime(taskDO);
         }
 
+        checkTimeRange(Collections.singletonList(taskDO), projectDO);
+
         if (TaskStatusEnum.DONE.getCode().equals(taskDO.getStatus())) {
             // 更新任务耗时
             taskMapper.update(taskDO);
@@ -310,6 +312,8 @@ public class TaskServiceImpl implements TaskService {
             calTaskTime(taskDO);
         }
 
+        checkTimeRange(Collections.singletonList(taskDO), projectDO);
+
         taskMapper.update(taskDO);
 
         fileComponent.update(taskModifyReq.getFiles(), taskDO.getId(), FileTypeEnum.TASK.getCode());
@@ -329,6 +333,14 @@ public class TaskServiceImpl implements TaskService {
         innerProjectStatusUpdateComponent.updateProjectDateAndStatus(taskDO.getProjectId());
 
         return BaseResult.success(true);
+    }
+
+    private void checkTimeRange(List<TaskDO> taskDOS, ProjectDO projectDO) {
+        // 校验任务时间范围需要在项目时间内
+        for (TaskDO taskDO : taskDOS) {
+            AssertUtil.checkState(projectDO.getPlanStartDate().compareTo(taskDO.getPlanStartDate()) <= 0, "任务计划开始时间不在项目时间范围内，请修改");
+            AssertUtil.checkState(projectDO.getPlanEndDate().compareTo(taskDO.getPlanEndDate()) >= 0, "任务计划结束时间不在项目时间范围内，请修改");
+        }
     }
 
     @Override
@@ -627,6 +639,9 @@ public class TaskServiceImpl implements TaskService {
         checkNameExisted(taskDos);
         //阶段限制
         checkTaskStage(taskDos.get(0));
+
+        ProjectDO projectDO = projectMapper.get(taskDos.get(0).getProjectId());
+        checkTimeRange(taskDos, projectDO);
 
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         taskSimples.forEach(a -> threadPoolTaskExecutor.execute(() -> {
