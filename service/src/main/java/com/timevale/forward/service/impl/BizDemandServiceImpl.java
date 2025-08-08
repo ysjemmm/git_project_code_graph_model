@@ -599,7 +599,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 产品需求信息填充
         productDemandDetailVO.setName(bizDemandDO.getName());
         productDemandDetailVO.setPriority(bizDemandDO.getPriority());
-        productDemandDetailVO.setPriorityName(PriorityEnum.getTextChineseByCode(bizDemandDO.getPriority()));
+        productDemandDetailVO.setPriorityName(PriorityEnum.getTextByCode(bizDemandDO.getPriority()));
         //产品线
         productDemandDetailVO.setProductLineVO(ProductLineCopier.INSTANCE.convert(productLineDO));
         // 负责人
