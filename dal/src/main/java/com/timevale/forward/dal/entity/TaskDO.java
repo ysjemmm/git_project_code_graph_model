@@ -86,7 +86,7 @@ public class TaskDO extends BaseDO {
     private String desc;
 
     /**
-     * 任务类型：0-调研，1-详细设计，2-测试用例设计，3-开发，4-集测开发，5-code review，6-测试，7-线下bug修复，8-发布，9-线上bug修复
+     * 任务类型：0-其他，1-调研，2-详细设计，3-测试用例设计，4-开发，5-集测开发，6-code review，7-测试，8-线下bug修复，9-发布，10-线上bug修复
      */
     private Integer type;
 

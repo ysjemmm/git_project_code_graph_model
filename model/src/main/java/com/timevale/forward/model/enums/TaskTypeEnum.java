@@ -11,17 +11,18 @@ import java.util.Map;
 @AllArgsConstructor
 public enum TaskTypeEnum {
 
-    NULL(-1, "其他", ProjectStageEnum.NULL),
-    SURVEY(0, "调研", ProjectStageEnum.DEMAND),
-    DETAIL_DESIGN(1, "详细设计", ProjectStageEnum.DEV),
-    CASE_DESIGN(2, "测试用例设计", ProjectStageEnum.DEV),
-    DEVELOP(3, "开发", ProjectStageEnum.DEV),
-    INTEGRATED(4, "集测开发", ProjectStageEnum.DEV),
-    CODE_REVIEW(5, "code review", ProjectStageEnum.DEV),
-    TEST(6, "测试", ProjectStageEnum.TEST),
-    OFFLINE_BUG(7, "线下bug修复", ProjectStageEnum.TEST),
-    PUBLISH(8, "发布", ProjectStageEnum.TEST),
-    ONLINE_BUG(9, "线上bug修复", ProjectStageEnum.TEST);
+    NULL(-1, "未知", ProjectStageEnum.NULL),
+    OTHER(0, "其他", ProjectStageEnum.DEMAND),
+    SURVEY(1, "调研", ProjectStageEnum.DEMAND),
+    DETAIL_DESIGN(2, "详细设计", ProjectStageEnum.DEV),
+    CASE_DESIGN(3, "测试用例设计", ProjectStageEnum.DEV),
+    DEVELOP(4, "开发", ProjectStageEnum.DEV),
+    INTEGRATED(5, "集测开发", ProjectStageEnum.DEV),
+    CODE_REVIEW(6, "code review", ProjectStageEnum.DEV),
+    TEST(7, "测试", ProjectStageEnum.TEST),
+    OFFLINE_BUG(8, "线下bug修复", ProjectStageEnum.TEST),
+    PUBLISH(9, "发布", ProjectStageEnum.TEST),
+    ONLINE_BUG(10, "线上bug修复", ProjectStageEnum.TEST);
 
     private final Integer code;
     private final String text;
