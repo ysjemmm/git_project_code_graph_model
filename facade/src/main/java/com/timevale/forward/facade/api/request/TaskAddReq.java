@@ -79,4 +79,8 @@ public class TaskAddReq extends BaseReq {
 
     @ApiModelProperty("是否为里程碑")
     private Boolean milestoneFlag = false;
+
+    @ApiModelProperty(value = "0-调研，1-详细设计，2-测试用例设计，3-开发，4-集测开发，5-code review，6-测试，7-线下bug修复，8-发布，9-线上bug修复")
+    @NotNull(message = "任务类型")
+    private Integer type;
 }

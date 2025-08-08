@@ -33,7 +33,7 @@ public class TaskListCondition extends QueryBase {
     /**
      * 项目阶段
      */
-    private List<Integer>stages;
+    private List<Integer> stages;
 
     /**
      * 项目id
@@ -115,5 +115,10 @@ public class TaskListCondition extends QueryBase {
      * 当前日期
      */
     private String currentDate;
+
+    /**
+     * 任务类型
+     */
+    private List<Integer> types;
 
 }

@@ -107,4 +107,7 @@ public class TaskVO extends ToString {
 
     @ApiModelProperty("1-n负责人Id")
     private String otnPrincipalId;
+
+    @ApiModelProperty("任务类型：0-调研，1-详细设计，2-测试用例设计，3-开发，4-集测开发，5-code review，6-测试，7-线下bug修复，8-发布，9-线上bug修复")
+    private Integer type;
 }
