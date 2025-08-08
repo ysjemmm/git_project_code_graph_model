@@ -18,8 +18,8 @@ import com.timevale.forward.facade.api.result.TaskVO;
 import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.model.enums.ProjectStageEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
-import com.timevale.forward.model.enums.ProjectTypeEnum;
 import com.timevale.forward.model.enums.TaskStatusEnum;
+import com.timevale.forward.model.enums.TaskTypeEnum;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.component.TaskComponent;
 import com.timevale.forward.service.component.TaskProductDemandComponent;
@@ -161,7 +161,7 @@ public class TaskComponentImpl implements TaskComponent {
             a.setProductLineName(productLineMap.get(a.getProductLineId()));
             a.setStatusName(TaskStatusEnum.getTextByCode(a.getStatus()));
             a.setStageName(ProjectStageEnum.getTextByCode(a.getStage()));
-            a.setTypeName(ProjectTypeEnum.getTextByCode(a.getType()));
+            a.setTypeName(TaskTypeEnum.getTextByCode(a.getType()));
             a.setIsPMO(isPMO);
             if(a.getPlanEndDate()==null){
                 //老数据
