@@ -11,7 +11,7 @@ import java.util.Map;
 @AllArgsConstructor
 public enum TaskTypeEnum {
 
-    NULL(-1, "未知", ProjectStageEnum.NULL),
+    NULL(-1, "其他", ProjectStageEnum.NULL),
     SURVEY(0, "调研", ProjectStageEnum.DEMAND),
     DETAIL_DESIGN(1, "详细设计", ProjectStageEnum.DEV),
     CASE_DESIGN(2, "测试用例设计", ProjectStageEnum.DEV),
