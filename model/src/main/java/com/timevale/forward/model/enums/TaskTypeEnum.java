@@ -12,7 +12,7 @@ import java.util.Map;
 public enum TaskTypeEnum {
 
     NULL(-1, "未知", ProjectStageEnum.NULL),
-    OTHER(0, "其他", ProjectStageEnum.DEMAND),
+    OTHER(99, "其他", ProjectStageEnum.DEMAND),
     SURVEY(1, "调研", ProjectStageEnum.DEMAND),
     DETAIL_DESIGN(2, "详细设计", ProjectStageEnum.DEV),
     CASE_DESIGN(3, "测试用例设计", ProjectStageEnum.DEV),
