@@ -116,6 +116,7 @@ public interface TaskCopier {
      * @param taskSimpleAddReq taskSimpleAddReq
      * @return TaskDO
      */
+    @Mapping(target = "stage", expression = "java(TaskTypeEnum.getStageCode(taskSimpleAddReq.getType()))")
     TaskDO convert(TaskSimpleAddReq taskSimpleAddReq);
 
     /**
