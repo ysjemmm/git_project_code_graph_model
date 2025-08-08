@@ -59,6 +59,7 @@ import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.model.enums.ProjectKindEnum;
 import com.timevale.forward.model.enums.ProjectNodeEnum;
 import com.timevale.forward.model.enums.ProjectStageEnum;
+import com.timevale.forward.model.enums.ProjectTypeEnum;
 import com.timevale.forward.model.enums.TaskStatusEnum;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.InnerProjectStatusUpdateComponent;
@@ -341,6 +342,7 @@ public class TaskServiceImpl implements TaskService {
         TaskDetailVO taskDetailVO = TaskCopier.INSTANCE.convert(taskDO);
         taskDetailVO.setStatusName(TaskStatusEnum.getTextByCode(taskDetailVO.getStatus()));
         taskDetailVO.setStageName(ProjectStageEnum.getTextByCode(taskDetailVO.getStage()));
+        taskDetailVO.setTypeName(ProjectTypeEnum.getTextByCode(taskDetailVO.getType()));
         //项目
         ProjectDO projectDO = projectMapper.get(taskDO.getProjectId());
         taskDetailVO.setProjectId(projectDO.getId());
