@@ -29,7 +29,6 @@ public class TaskSimpleAddReq extends BaseReq {
     private Long productLineId;
 
     @ApiModelProperty(value = "0需求规划阶段,1研发阶段,2测试阶段")
-    @NotNull(message = "阶段不能为空")
     private Integer stage;
 
     @ApiModelProperty("是否创建待办")

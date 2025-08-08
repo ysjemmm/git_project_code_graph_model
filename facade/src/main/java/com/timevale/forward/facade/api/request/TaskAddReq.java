@@ -32,7 +32,6 @@ public class TaskAddReq extends BaseReq {
     private Long productLineId = 0L;
 
     @ApiModelProperty(value = "0需求规划阶段,1研发阶段,2测试阶段")
-    @NotNull(message = "阶段不能为空")
     private Integer stage;
 
     @ApiModelProperty("计划开始时间")
