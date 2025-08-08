@@ -4,14 +4,27 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.TaskListCondition;
-import com.timevale.forward.dal.dao.*;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.dao.PersonMapper;
+import com.timevale.forward.dal.dao.ProductLineMapper;
+import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.dao.TaskMapper;
+import com.timevale.forward.dal.dao.TaskTimeMapper;
+import com.timevale.forward.dal.entity.PersonDO;
+import com.timevale.forward.dal.entity.ProductLineDO;
+import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.entity.TaskDO;
+import com.timevale.forward.dal.entity.TaskStatusUpdateDO;
 import com.timevale.forward.facade.api.result.TaskVO;
 import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.model.enums.ProjectStageEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.model.enums.ProjectTypeEnum;
 import com.timevale.forward.model.enums.TaskStatusEnum;
-import com.timevale.forward.service.component.*;
+import com.timevale.forward.service.component.PersonComponent;
+import com.timevale.forward.service.component.TaskComponent;
+import com.timevale.forward.service.component.TaskProductDemandComponent;
+import com.timevale.forward.service.component.TaskTimeComponent;
+import com.timevale.forward.service.component.UserComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.TaskCopier;
 import com.timevale.forward.service.integration.erp.DingWorkRecordClient;
@@ -148,6 +161,7 @@ public class TaskComponentImpl implements TaskComponent {
             a.setProductLineName(productLineMap.get(a.getProductLineId()));
             a.setStatusName(TaskStatusEnum.getTextByCode(a.getStatus()));
             a.setStageName(ProjectStageEnum.getTextByCode(a.getStage()));
+            a.setTypeName(ProjectTypeEnum.getTextByCode(a.getType()));
             a.setIsPMO(isPMO);
             if(a.getPlanEndDate()==null){
                 //老数据
