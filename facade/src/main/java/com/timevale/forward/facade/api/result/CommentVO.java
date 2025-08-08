@@ -40,5 +40,5 @@ public class CommentVO extends ToString {
     private Date modifyDate;
 
     @ApiModelProperty("是否被修改")
-    private Boolean isModify;
+    private Boolean isModify = false;
 }
