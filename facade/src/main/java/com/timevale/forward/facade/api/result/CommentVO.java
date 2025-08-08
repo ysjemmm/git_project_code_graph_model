@@ -35,4 +35,10 @@ public class CommentVO extends ToString {
 
     @ApiModelProperty("是否被删除")
     private Boolean isDeleted;
+
+    @ApiModelProperty("修改时间")
+    private Date modifyDate;
+
+    @ApiModelProperty("是否被修改")
+    private Boolean isModify;
 }

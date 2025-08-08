@@ -127,6 +127,9 @@ public class CommentServiceImpl implements CommentService {
                 fileVOList = FileCopier.INSTANCE.transform(fileMap.get(e.getId()));
             }
             e.setFileList(fileVOList);
+            if (!e.getCreateDate().equals(e.getModifyDate())) {
+                e.setIsModify(true);
+            }
         }
 
         return BaseResult.success(commentVOList);
