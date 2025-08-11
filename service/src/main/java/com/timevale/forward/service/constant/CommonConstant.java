@@ -1,5 +1,7 @@
 package com.timevale.forward.service.constant;
 
+import java.math.BigDecimal;
+
 /**
  * @author xingyun
  * @date 2021-12-16 11:37
@@ -48,7 +50,6 @@ public class CommonConstant {
 
     public static final Integer DESC_MAX_LENGTH = 20000;
 
-    public static final double EPSILON = 1e-10;
-
-    public static final double POSITION_STEP = 5000000;
+    public static final BigDecimal POSITION_STEP = BigDecimal.valueOf(5000000);
+    public static final BigDecimal EPSILON = BigDecimal.valueOf(1e-10);
 }

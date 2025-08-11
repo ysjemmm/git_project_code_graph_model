@@ -5,6 +5,8 @@ import com.timevale.forward.dal.entity.ProductDemandGroupItemDO;
 import com.timevale.forward.dal.entity.ProductDemandGroupItemListDO;
 import com.timevale.forward.dal.entity.ProductDemandListDO;
 import org.apache.ibatis.annotations.Param;
+
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -96,7 +98,7 @@ public interface ProductDemandGroupItemMapper {
      * @param position    当前位置
      * @return 产品需求分组和产品需求关系
      */
-    ProductDemandGroupItemDO getPreByPosition(@Param("productDemandGroupId") Long productDemandGroupId, @Param("position") Double position);
+    ProductDemandGroupItemDO getPreByPosition(@Param("productDemandGroupId") Long productDemandGroupId, @Param("position") BigDecimal position);
 
     /**
      * 获取当前位置后一个分组和产品需求关系
@@ -105,7 +107,7 @@ public interface ProductDemandGroupItemMapper {
      * @param position    当前位置
      * @return 产品需求分组和产品需求关系
      */
-    ProductDemandGroupItemDO getNextByPosition(@Param("productDemandGroupId") Long productDemandGroupId, @Param("position") Double position);
+    ProductDemandGroupItemDO getNextByPosition(@Param("productDemandGroupId") Long productDemandGroupId, @Param("position") BigDecimal position);
 
     /**
      * 更新产品需求分组和产品需求关系的位置

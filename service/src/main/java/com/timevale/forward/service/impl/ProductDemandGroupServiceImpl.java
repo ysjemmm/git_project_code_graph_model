@@ -36,6 +36,7 @@ import org.springframework.data.util.Pair;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -276,7 +277,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         if (productDemandGroup != null) {
             throw new BaseBizRuntimeException("该产品需求分组名称已存在,请修改后重试");
         }
-        double position = PositionUtil.generate(productDemandGroupAddReq.getBizDomainId().toString(), System.currentTimeMillis());
+        BigDecimal position = PositionUtil.generate(productDemandGroupAddReq.getBizDomainId().toString(), System.currentTimeMillis());
         productDemandGroupDO.setPosition(position);
         productDemandGroupDO.setVersion(0L);
         productDemandGroupDO.setIsActive(true);
@@ -383,19 +384,19 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
 //            throw new BaseBizRuntimeException("产品需求分组位置未变化，无需移动");
         }
         // 定义 getPrevByPosition 和 getNextByPosition 函数
-        BiFunction<Long, Double, Double> getPrevByPosition = (bizDomainId, position) -> {
+        BiFunction<Long, BigDecimal, BigDecimal> getPrevByPosition = (bizDomainId, position) -> {
             ProductDemandGroupDO preByPosition = productDemandGroupMapper.getPreByPosition(bizDomainId, position);
             return preByPosition == null ? null : preByPosition.getPosition();
         };
-        BiFunction<Long, Double, Double> getNextByPosition = (bizDomainId, position) -> {
+        BiFunction<Long, BigDecimal, BigDecimal> getNextByPosition = (bizDomainId, position) -> {
             ProductDemandGroupDO nextByPosition = productDemandGroupMapper.getNextByPosition(bizDomainId, position);
             return nextByPosition == null ? null : nextByPosition.getPosition();
         };
-        BiFunction<Long, Long, Double> getPosition = (bizDomainId, id) -> {
+        BiFunction<Long, Long, BigDecimal> getPosition = (bizDomainId, id) -> {
             ProductDemandGroupDO nextByPosition = productDemandGroupMapper.getByIdAndBizDomainId(bizDomainId, id);
             return nextByPosition == null ? null : nextByPosition.getPosition();
         };
-        Pair<Double, Boolean> position = productDemandGroupItemComponent.calculateNewPosition(productDemandGroupMoveReq.getPrevId(),
+        Pair<BigDecimal, Boolean> position = productDemandGroupItemComponent.calculateNewPosition(productDemandGroupMoveReq.getPrevId(),
                 productDemandGroupMoveReq.getNextId(),
                 productDemandGroupMoveReq.getBizDomainId(),
                 productDemandGroupMoveReq.getBizDomainId(),

@@ -4,6 +4,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
+import java.math.BigDecimal;
+
 /**
  * 产品需求分组表DO
  * 对应表：product_demand_group
@@ -27,7 +29,7 @@ public class ProductDemandGroupDO extends BaseDO {
     /**
      * 相对位置
      */
-    private Double position;
+    private BigDecimal position;
 
     /**
      * 版本号

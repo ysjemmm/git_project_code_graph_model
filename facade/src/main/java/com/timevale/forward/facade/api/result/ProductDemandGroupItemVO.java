@@ -8,6 +8,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.math.BigDecimal;
+
 /**
  * @title: ProductDemandGroupItemVO
  * @Author qiyuan
@@ -25,7 +27,7 @@ public class ProductDemandGroupItemVO extends ToString {
     @ApiModelProperty("产品需求id")
     private Long productDemandId;
     @ApiModelProperty("相对位置")
-    private Double position;
+    private BigDecimal position;
     @ApiModelProperty("版本号")
     private Long version;
     @ApiModelProperty("产品需求")

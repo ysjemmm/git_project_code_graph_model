@@ -7,6 +7,7 @@ import com.timevale.framework.tedis.util.TedisUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import lombok.extern.slf4j.Slf4j;
 
+import java.math.BigDecimal;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -29,7 +30,7 @@ public class PositionUtil {
      * @throws Exception 
      * @throws LockNotAcquiredException 
      */
-    public static double generate(String key, long timestamp) {
+    public static BigDecimal generate(String key, long timestamp) {
         try {
             String redisKey = REDIS_KEY_PREFIX + key + ":" +timestamp;
             String lockKey = "lock:" + redisKey;
@@ -46,7 +47,7 @@ public class PositionUtil {
                 // 存回redis并设置过期
                 TedisUtil.set(redisKey, incr, EXPIRE_SECONDS, TimeUnit.SECONDS);
                 // 拼接当前时间戳和3位自增数（字符串拼接）
-                return timestamp*1000+ incr;
+                return BigDecimal.valueOf(timestamp*1000+ incr);
             });
         } catch (Exception e) {
             log.error("获取产品需求分组位置失败:{} , {}", key, timestamp, e);

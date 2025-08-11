@@ -28,6 +28,7 @@ import lombok.val;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.util.*;
 
 /**
@@ -152,7 +153,7 @@ public class ProductDemandGroupComponentImpl implements ProductDemandGroupCompon
         String modifyMan = userInfo.getFullAlias();
         // 获取当前业务域下的所有分组（按position倒序）
         List<ProductDemandGroupDO> productDemandGroupDOS = productDemandGroupMapper.getByBizDomainId(bizDomainId);
-        double position = PositionUtil.generate(bizDomainId.toString(), System.currentTimeMillis());
+        BigDecimal position = PositionUtil.generate(bizDomainId.toString(), System.currentTimeMillis());
         for (ProductDemandGroupDO productDemandGroupDO : productDemandGroupDOS) {
             log.info("业务域({})的分组({}-{})位置重排，{} -》 {}", bizDomainId, productDemandGroupDO.getId(),productDemandGroupDO.getName(), productDemandGroupDO.getPosition(), position);
             val updateGroupDO = new ProductDemandGroupDO().setPosition(position);
@@ -160,7 +161,7 @@ public class ProductDemandGroupComponentImpl implements ProductDemandGroupCompon
             updateGroupDO.setModifyMan(modifyMan);
             updateGroupDO.setModifyManId(modifyManId);
             productDemandGroupMapper.update(updateGroupDO);
-            position = position - CommonConstant.POSITION_STEP;
+            position = position.subtract(CommonConstant.POSITION_STEP);
         }
     }
 

@@ -9,6 +9,7 @@ import com.timevale.forward.dal.entity.ProductDemandListDO;
 import com.timevale.forward.facade.api.request.ProductDemandGroupItemMoveReq;
 import org.springframework.data.util.Pair;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.function.BiFunction;
 
@@ -28,12 +29,12 @@ public interface ProductDemandGroupItemComponent {
     ProductDemandGroupItemDO getByDemandId(Long demandId);
 
     ProductDemandMoveDTO moveProductDemand(ProductDemandGroupItemMoveReq productDemandGroupItemMoveReq);
-    Pair<Double, Boolean> calculateNewPosition(Long prevId,
+    Pair<BigDecimal, Boolean> calculateNewPosition(Long prevId,
                                                Long nextId,
                                                Long bizDomainId,
                                                Long positionTarget,
-                                               BiFunction<Long, Long, Double> getPosition,
-                                               BiFunction<Long, Double, Double> getPrevByPosition,
-                                               BiFunction<Long, Double, Double> getNextByPosition);
+                                               BiFunction<Long, Long, BigDecimal> getPosition,
+                                               BiFunction<Long, BigDecimal, BigDecimal> getPrevByPosition,
+                                               BiFunction<Long, BigDecimal, BigDecimal> getNextByPosition);
     void resetPosition(Long groupId, Long bizDomainId);
 }

@@ -9,6 +9,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -33,7 +34,7 @@ public class ProductDemandGroupVO extends ToString {
     private Long bizDomainId;
 
     @ApiModelProperty("相对位置")
-    private Double position;
+    private BigDecimal position;
 
     @ApiModelProperty("版本号")
     private Long version;
