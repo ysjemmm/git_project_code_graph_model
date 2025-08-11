@@ -660,6 +660,9 @@ public class TaskServiceImpl implements TaskService {
             taskMapper.insert(taskDO);
             //执行人
             personComponent.add(a.getExecutors(), taskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
+
+            //关联产品需求
+            taskProductDemandComponent.batchInsert(taskDO.getId(), a.getProductDemandIds());
         }));
 
         // 执行人

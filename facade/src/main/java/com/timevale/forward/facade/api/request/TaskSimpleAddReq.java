@@ -66,4 +66,7 @@ public class TaskSimpleAddReq extends BaseReq {
     @ApiModelProperty(value = "0-其他，1-调研，2-详细设计，3-测试用例设计，4-开发，5-集测开发，6-code review，7-测试，8-线下bug修复，9-发布，10-线上bug修复")
     @NotNull(message = "任务类型")
     private Integer type;
+
+    @ApiModelProperty(value = "产品需求id")
+    private List<Long> productDemandIds;
 }
