@@ -12,12 +12,28 @@ import java.util.List;
 public interface CommentMapper {
 
     /**
+     * 单个查询
+     *
+     * @param id id
+     * @return CommentDO
+     */
+    CommentDO getById(@Param("id") Long id);
+
+    /**
      * 插入单个评论
      *
      * @param commentDO 评论DO
      * @return int
      */
     int insert(CommentDO commentDO);
+
+    /**
+     * 更新
+     *
+     * @param commentDO commentDO
+     * @return int
+     */
+    int update(CommentDO commentDO);
 
 
     /**
@@ -37,4 +53,12 @@ public interface CommentMapper {
      * @return
      */
     Boolean delete(@Param("toId") Long toId, @Param("type") Integer type);
+
+    /**
+     * 删除评论
+     *
+     * @param id 评论id
+     * @return
+     */
+    Boolean deleteById(@Param("id") Long id);
 }

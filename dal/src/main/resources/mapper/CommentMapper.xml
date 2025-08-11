@@ -7,6 +7,25 @@
         values (#{toId}, #{type}, #{content}, #{createManId}, #{createMan});
     </insert>
 
+    <delete id="deleteById">
+        update comment
+        <set>
+            <if test="true">is_deleted=true,</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+        </set>
+        where id = #{id}
+    </delete>
+
+    <select id="getById" resultType="com.timevale.forward.dal.entity.CommentDO">
+        select id, to_id, type, content, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man,
+        modify_date
+        from comment
+        <where>
+            id = #{id} and is_deleted=false
+        </where>
+    </select>
+
     <select id="select" resultType="com.timevale.forward.dal.entity.CommentDO">
         select id, to_id, type, content, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man,
         modify_date
@@ -21,6 +40,21 @@
         </where>
         order by create_date desc;
     </select>
+
+    <update id="update">
+        update comment
+        <set>
+            <if test="toId != null and toId != ''">to_id = #{toId},</if>
+            <if test="type != null and type != ''">type = #{type},</if>
+            <if test="content != null and content != ''">content = #{content},</if>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="true">
+                modify_man = #{modifyMan},
+                modify_man_id = #{modifyManId},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
 
     <update id="delete">
         update comment

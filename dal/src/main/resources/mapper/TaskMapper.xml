@@ -57,7 +57,7 @@
     <select id="list" resultType="com.timevale.forward.dal.entity.TaskDO">
         select a.id,a.project_id,product_line_id, a.name, a.stage ,a.status,a.todo, a.todo_id,a.plan_start_date,a.plan_end_date,
         a.actual_start_date,a.actual_end_date,
-        a.create_man_id, a.create_man,a.create_date,a.modify_date
+        a.create_man_id, a.create_man,a.create_date,a.modify_date,a.type
         from task a
         <where>
             <if test="ids!=null and ids.size()>0">
@@ -101,6 +101,12 @@
                     #{item}
                 </foreach>
             </if>
+            <if test="types!=null and types.size()>0">
+                and a.type in
+                <foreach collection="types" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="isDelay!=null and isDelay==true">
                 and (
                 actual_end_date &gt; plan_end_date or (actual_end_date is null and now() &gt; plan_end_date)
@@ -120,12 +126,12 @@
         insert into task (project_id,product_line_id, name, stage ,status,todo,todo_id, `desc`
         , plan_start_date, plan_end_date, plan_use_time
         ,actual_start_date,actual_end_date,task_use_time
-        ,create_man,create_man_id)
+        ,create_man,create_man_id,type)
         values
         (#{projectId},#{productLineId}, #{name}, #{stage}, #{status}, #{todo}, #{todoId}, #{desc}
         , #{planStartDate}, #{planEndDate}, #{planUseTime}
         , #{actualStartDate}, #{actualEndDate}, #{taskUseTime}
-        ,#{createMan},#{createManId})
+        ,#{createMan},#{createManId},#{type})
     </insert>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.TaskDO">
@@ -133,7 +139,7 @@
         a.plan_use_time,a.task_use_time,
         a.plan_start_date,a.plan_end_date,
         a.actual_start_date,a.actual_end_date,a.is_deleted,
-        a.create_man_id, a.create_man,a.create_date,a.modify_date
+        a.create_man_id, a.create_man,a.create_date,a.modify_date,a.type
         from task a
         <where>
             <if test="id != null">and a.id = #{id}</if>
@@ -149,6 +155,7 @@
             <if test="name != null">name = #{name},</if>
             <if test="status != null">status = #{status},</if>
             <if test="stage != null">stage = #{stage},</if>
+            <if test="type != null">type = #{type},</if>
             <if test="todo != null">todo = #{todo},</if>
             <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
             <if test="planStartDate != null">plan_start_date = #{planStartDate},</if>
@@ -172,7 +179,7 @@
         select a.id,a.project_id,product_line_id, a.name, a.stage ,a.status,a.todo, a.todo_id,
             a.plan_start_date,a.plan_end_date, a.plan_use_time,a.task_use_time,
             a.actual_start_date,a.actual_end_date,
-            a.create_man_id, a.create_man,a.create_date,a.modify_date
+            a.create_man_id, a.create_man,a.create_date,a.modify_date,a.type
         from task a
         <where>
             a.project_id = #{projectId} and a.is_deleted=false
@@ -182,7 +189,7 @@
     <select id="getById" resultType="com.timevale.forward.dal.entity.TaskDO">
         select id, project_id, product_line_id, name, stage, status, todo, todo_id, plan_start_date, plan_end_date,
                plan_use_time, actual_start_date, actual_end_date, task_use_time, is_deleted, create_man_id, create_man,
-               create_date, modify_man_id, modify_man, modify_date
+               create_date, modify_man_id, modify_man, modify_date, type
         from task
         where id = #{id}
     </select>
@@ -190,7 +197,7 @@
     <select id="getByIdList" resultType="com.timevale.forward.dal.entity.TaskDO">
         select id, project_id, product_line_id, name, stage, status, todo, todo_id, plan_start_date, plan_end_date,
                plan_use_time, actual_start_date, actual_end_date, task_use_time, is_deleted, create_man_id, create_man,
-               create_date, modify_man_id, modify_man, modify_date
+               create_date, modify_man_id, modify_man, modify_date, type
         from task
         <where>
             id in
@@ -204,7 +211,7 @@
     <select id="selectByExecutorList" resultType="com.timevale.forward.dal.entity.TaskDO">
         select t.id, t.project_id, t.product_line_id, t.name, t.stage, t.status, t.todo, t.todo_id, t.plan_start_date,
                t.plan_end_date, t.plan_use_time, t.actual_start_date, t.actual_end_date, t.task_use_time, t.is_deleted,
-               t.create_man_id, t.create_man, t.create_date, t.modify_man_id, t.modify_man, t.modify_date
+               t.create_man_id, t.create_man, t.create_date, t.modify_man_id, t.modify_man, t.modify_date, t.type
         from person p join task t on p.main_id = t.id
         where
             p.user_id in
@@ -259,7 +266,7 @@
     <select id="getByNameAndPid" resultType="com.timevale.forward.dal.entity.TaskDO">
         select id, project_id, product_line_id, name, stage, status, todo, todo_id, plan_start_date, plan_end_date,
         plan_use_time, actual_start_date, actual_end_date, task_use_time, is_deleted, create_man_id, create_man,
-        create_date, modify_man_id, modify_man, modify_date
+        create_date, modify_man_id, modify_man, modify_date, type
         from task
         <where>
             project_id = #{projectId} and
@@ -274,7 +281,7 @@
     <select id="getByDate" resultType="com.timevale.forward.dal.dto.TaskBoardDTO">
         select distinct a.id, a.project_id, a.product_line_id, a.name, a.stage, a.status, a.todo, a.todo_id,
         a.plan_start_date, a.plan_end_date, a.plan_use_time, a.actual_start_date, a.actual_end_date, a.task_use_time,
-        a.is_deleted, a.create_man_id, a.create_man, a.create_date, a.modify_man_id, a.modify_man,
+        a.is_deleted, a.create_man_id, a.create_man, a.create_date, a.modify_man_id, a.modify_man, a.type,
         a.modify_date,c.plan_end_date projectPlanEndDate,c.name projectName, c.category
         from task a
         join person b on a.id=b.main_id and b.type=40 and b.is_deleted = false
@@ -330,7 +337,7 @@
     <select id="getProgressTaskList" resultType="com.timevale.forward.dal.entity.TaskDO">
         select a.id,a.project_id,product_line_id, a.name, a.stage ,a.status,a.todo, a.todo_id,a.plan_start_date,a.plan_end_date,
         a.actual_start_date,a.actual_end_date,
-        a.create_man_id, a.create_man,a.create_date,a.modify_date
+        a.create_man_id, a.create_man,a.create_date,a.modify_date,a.type
         from task a
         <where>
             <if test="ids!=null and ids.size()>0">

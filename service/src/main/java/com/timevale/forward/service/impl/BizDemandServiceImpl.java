@@ -8,22 +8,119 @@ import com.google.common.base.Objects;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.condition.BizDemandUpdateCondition;
-import com.timevale.forward.dal.dao.*;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.dao.BizChangeLogMapper;
+import com.timevale.forward.dal.dao.BizDemandMapper;
+import com.timevale.forward.dal.dao.BugLogMapper;
+import com.timevale.forward.dal.dao.BugOfflineMapper;
+import com.timevale.forward.dal.dao.BugOnlineBizDemandMapper;
+import com.timevale.forward.dal.dao.BugOnlineMapper;
+import com.timevale.forward.dal.dao.ProductBizDemandMapper;
+import com.timevale.forward.dal.dao.ProductLineMapper;
+import com.timevale.forward.dal.dao.ProjectBizDemandMapper;
+import com.timevale.forward.dal.entity.BizChangeLogDO;
+import com.timevale.forward.dal.entity.BizDemandCustomDO;
+import com.timevale.forward.dal.entity.BizDemandDO;
+import com.timevale.forward.dal.entity.BizDemandListDO;
+import com.timevale.forward.dal.entity.BizLabelDO;
+import com.timevale.forward.dal.entity.BugLogDO;
+import com.timevale.forward.dal.entity.BugOfflineDO;
+import com.timevale.forward.dal.entity.BugOnlineDO;
+import com.timevale.forward.dal.entity.FileDO;
+import com.timevale.forward.dal.entity.PersonDO;
+import com.timevale.forward.dal.entity.ProductLineDO;
+import com.timevale.forward.dal.entity.ProjectBizDemandDO;
+import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.facade.api.client.BizDemandService;
+import com.timevale.forward.facade.api.client.BizLabelService;
+import com.timevale.forward.facade.api.client.LabelCategoryService;
 import com.timevale.forward.facade.api.client.ProjectBizDemandService;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
-import com.timevale.forward.facade.api.request.*;
-import com.timevale.forward.facade.api.result.*;
-import com.timevale.forward.model.enums.*;
+import com.timevale.forward.facade.api.query.BizLabelQueryList;
+import com.timevale.forward.facade.api.query.LabelInCategoryQueryList;
+import com.timevale.forward.facade.api.request.BatchTransferReq;
+import com.timevale.forward.facade.api.request.BizDemandAddReq;
+import com.timevale.forward.facade.api.request.BizDemandAgreeReq;
+import com.timevale.forward.facade.api.request.BizDemandCompletedAgreeReq;
+import com.timevale.forward.facade.api.request.BizDemandCompletedRejectReq;
+import com.timevale.forward.facade.api.request.BizDemandCompletedReq;
+import com.timevale.forward.facade.api.request.BizDemandCustomAddReq;
+import com.timevale.forward.facade.api.request.BizDemandGetReq;
+import com.timevale.forward.facade.api.request.BizDemandLinkProjectReq;
+import com.timevale.forward.facade.api.request.BizDemandModifyReq;
+import com.timevale.forward.facade.api.request.BizDemandNoticeReceiverReq;
+import com.timevale.forward.facade.api.request.BizDemandRejectReq;
+import com.timevale.forward.facade.api.request.BizDemandResubmitReq;
+import com.timevale.forward.facade.api.request.BizDemandSimpleModifyReq;
+import com.timevale.forward.facade.api.request.BizDemandTransferReq;
+import com.timevale.forward.facade.api.request.BizDemandUpdateStatusReq;
+import com.timevale.forward.facade.api.request.FileAddReq;
+import com.timevale.forward.facade.api.request.PersonAddReq;
+import com.timevale.forward.facade.api.result.BizDemandCustomVO;
+import com.timevale.forward.facade.api.result.BizDemandDetailVO;
+import com.timevale.forward.facade.api.result.BizDemandSimpleVO;
+import com.timevale.forward.facade.api.result.BizDemandVO;
+import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
+import com.timevale.forward.facade.api.result.BugOnlineLinkVO;
+import com.timevale.forward.facade.api.result.FileVO;
+import com.timevale.forward.facade.api.result.LabelCategorySimpleVO;
+import com.timevale.forward.facade.api.result.LabelDetailVO;
+import com.timevale.forward.facade.api.result.LabelSimpleVO;
+import com.timevale.forward.facade.api.result.PersonVO;
+import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
+import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
+import com.timevale.forward.facade.api.result.ProjectVO;
+import com.timevale.forward.facade.api.result.QueryResultVO;
+import com.timevale.forward.model.enums.AscriptionEnum;
+import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
+import com.timevale.forward.model.enums.BizDemandReasonEnum;
+import com.timevale.forward.model.enums.BizDemandStatusEnum;
+import com.timevale.forward.model.enums.BizTypeEnum;
+import com.timevale.forward.model.enums.BugLogFieldEnum;
+import com.timevale.forward.model.enums.BugLogTypeEnum;
+import com.timevale.forward.model.enums.BugOnlineReasonEnum;
+import com.timevale.forward.model.enums.BugOnlineStatusEnum;
+import com.timevale.forward.model.enums.BugReasonEnum;
+import com.timevale.forward.model.enums.BugStatusEnum;
+import com.timevale.forward.model.enums.ButtonActionEnum;
+import com.timevale.forward.model.enums.FileTypeEnum;
+import com.timevale.forward.model.enums.LinkOrUnLinkEnum;
+import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.model.enums.PlanReleaseDateEnum;
+import com.timevale.forward.model.enums.PriorityEnum;
 import com.timevale.forward.model.to.PdLineDomainTO;
-import com.timevale.forward.service.component.*;
+import com.timevale.forward.service.component.BizDemandComponent;
+import com.timevale.forward.service.component.BizDemandCustomComponent;
+import com.timevale.forward.service.component.BizDemandLogComponent;
+import com.timevale.forward.service.component.BizLabelComponent;
+import com.timevale.forward.service.component.BugLogComponent;
+import com.timevale.forward.service.component.BugOnlineComponent;
+import com.timevale.forward.service.component.FileComponent;
+import com.timevale.forward.service.component.LabelComponent;
+import com.timevale.forward.service.component.OutBizDealComponent;
+import com.timevale.forward.service.component.PersonComponent;
+import com.timevale.forward.service.component.ProductLineComponent;
+import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.config.CommonConfig;
 import com.timevale.forward.service.constant.CommonConstant;
-import com.timevale.forward.service.copy.*;
+import com.timevale.forward.service.copy.BizDemandCopier;
+import com.timevale.forward.service.copy.BizDemandCustomCopier;
+import com.timevale.forward.service.copy.FileCopier;
+import com.timevale.forward.service.copy.PersonCopier;
+import com.timevale.forward.service.copy.ProductLineCopier;
+import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.integration.dock.CrmProjectClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
-import com.timevale.forward.service.observer.event.*;
+import com.timevale.forward.service.observer.event.BizDemandApprovedMsgEvent;
+import com.timevale.forward.service.observer.event.BizDemandBatchTransferMsgEvent;
+import com.timevale.forward.service.observer.event.BizDemandCompletedMsgEvent;
+import com.timevale.forward.service.observer.event.BizDemandCompletedRejectMsgEvent;
+import com.timevale.forward.service.observer.event.BizDemandInvalidMsgEvent;
+import com.timevale.forward.service.observer.event.BizDemandModifyMsgEvent;
+import com.timevale.forward.service.observer.event.BizDemandPlanReleaseDateMsgEvent;
+import com.timevale.forward.service.observer.event.BizDemandReceivedMsgEvent;
+import com.timevale.forward.service.observer.event.BizDemandRejectMsgEvent;
+import com.timevale.forward.service.observer.event.BizDemandToReceiveAaginMsgEvent;
+import com.timevale.forward.service.observer.event.BizDemandToReceiveMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
@@ -44,7 +141,15 @@ import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -108,6 +213,12 @@ public class BizDemandServiceImpl implements BizDemandService {
     private ProjectBizDemandService projectBizDemandService;
     @Resource
     private ProjectBizDemandMapper projectBizDemandMapper;
+
+    @Resource
+    private LabelCategoryService labelCategoryService;
+
+    @Resource
+    private BizLabelService bizLabelService;
 
     @Override
     public BaseResult<QueryResultVO<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList) {
@@ -465,6 +576,78 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         return BaseResult.success(bizDemandDetailVO);
+    }
+
+    @Override
+    public BaseResult<ProductDemandDetailVO> transformBizDemand(Long bizDemandId) {
+        ProductDemandDetailVO productDemandDetailVO = new ProductDemandDetailVO();
+        BizDemandDO bizDemandDO = bizDemandMapper.get(bizDemandId);
+        AssertUtil.notNull(bizDemandDO, "该业务需求不存在");
+
+        // 获取对应抄送人
+        List<PersonDO> personDOList = personComponent.select(bizDemandId, PersonTypeEnum.BIZ_DEMAND_CC.getCode());
+        List<PersonVO> personVOList = PersonCopier.INSTANCE.transform(personDOList);
+
+        // 获取对应产品线
+        ProductLineDO productLineDO = productLineMapper.selectById(bizDemandDO.getProductLineId());
+        AssertUtil.notNull(productLineDO, "业务需求未关联产品线");
+
+        // 获取对应附件列表
+        List<FileDO> fileDOList = fileComponent.select(bizDemandId, FileTypeEnum.BIZ_DEMAND.getCode());
+        List<FileVO> fileVOList = FileCopier.INSTANCE.transform(fileDOList);
+
+        // 产品需求信息填充
+        productDemandDetailVO.setName(bizDemandDO.getName());
+        productDemandDetailVO.setPriority(bizDemandDO.getPriority());
+        productDemandDetailVO.setPriorityName(PriorityEnum.getTextByCode(bizDemandDO.getPriority()));
+        //产品线
+        productDemandDetailVO.setProductLineVO(ProductLineCopier.INSTANCE.convert(productLineDO));
+        // 负责人
+        productDemandDetailVO.setOwner(bizDemandDO.getReceiveMan());
+        productDemandDetailVO.setOwnerId(bizDemandDO.getReceiveManId());
+        // 描述
+        productDemandDetailVO.setDesc(bizDemandDO.getDesc());
+        // 抄送人
+        productDemandDetailVO.setRecipients(personVOList);
+        // 附件
+        productDemandDetailVO.setFiles(fileVOList);
+        // 标签
+        LabelInCategoryQueryList labelInCategoryQueryList = new LabelInCategoryQueryList();
+        labelInCategoryQueryList.setAuth(true);
+        labelInCategoryQueryList.setContainDeleted(false);
+        labelInCategoryQueryList.setProductLineIds(Collections.singletonList(productLineDO.getId()));
+        labelInCategoryQueryList.setTypes(Collections.singletonList(BizTypeEnum.PRODUCT_DEMAND.getCode()));
+
+        // 获取标签集合
+        Set<Long> validLabelIds = Optional.ofNullable(labelCategoryService.getLabelInCategory(labelInCategoryQueryList))
+                .filter(BaseResult::ifSuccess)
+                .map(BaseResult::getData)
+                .orElse(Collections.emptyList())
+                .stream()
+                .filter(e -> e != null)
+                .map(LabelCategorySimpleVO::getLabelSimples)
+                .filter(list -> list != null && !list.isEmpty())
+                .flatMap(List::stream)
+                .map(LabelSimpleVO::getId)
+                .filter(e -> e != null)
+                .collect(Collectors.toSet()); // 使用Set提高查找效率
+
+        // 获取业务需求已选择的标签
+        BizLabelQueryList labelQueryList = new BizLabelQueryList();
+        labelQueryList.setBizId(bizDemandId);
+        labelQueryList.setType(BizTypeEnum.BIZ_DEMAND.getCode());
+        List<LabelDetailVO> labelDetailVOS = Optional.ofNullable(bizLabelService.getSelectedLabel(labelQueryList))
+                .filter(BaseResult::ifSuccess)
+                .map(BaseResult::getData)
+                .orElse(Collections.emptyList());
+
+        // 过滤出有效的标签
+        List<LabelDetailVO> labelDetails = labelDetailVOS.stream()
+                .filter(label -> validLabelIds.contains(label.getId()))
+                .collect(Collectors.toList());
+
+        productDemandDetailVO.setLabelDetailVOS(labelDetails);
+        return BaseResult.success(productDemandDetailVO);
     }
 
     @Override

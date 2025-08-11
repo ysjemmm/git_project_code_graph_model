@@ -71,4 +71,7 @@ public class ProductDemandDetailVO extends ToString {
 
     @ApiModelProperty("预期排期时间")
     private Date expectScheduleTime;
+
+    @ApiModelProperty("标签集合")
+    private List<LabelDetailVO> labelDetailVOS;
 }

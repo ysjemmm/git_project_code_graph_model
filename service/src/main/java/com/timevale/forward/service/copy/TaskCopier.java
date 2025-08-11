@@ -9,8 +9,14 @@ import com.timevale.forward.facade.api.request.ProjectMilestoneAddReq;
 import com.timevale.forward.facade.api.request.TaskAddReq;
 import com.timevale.forward.facade.api.request.TaskModifyReq;
 import com.timevale.forward.facade.api.request.TaskSimpleAddReq;
-import com.timevale.forward.facade.api.result.*;
+import com.timevale.forward.facade.api.result.HomePageSingleTaskWorkTimeVO;
+import com.timevale.forward.facade.api.result.ProjectBoardTaskVO;
+import com.timevale.forward.facade.api.result.TaskDetailVO;
+import com.timevale.forward.facade.api.result.TaskListVO;
+import com.timevale.forward.facade.api.result.TaskOverdueCountVO;
+import com.timevale.forward.facade.api.result.TaskVO;
 import com.timevale.forward.model.enums.PersonLevelEnum;
+import com.timevale.forward.model.enums.TaskTypeEnum;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
@@ -19,7 +25,8 @@ import java.util.List;
 
 @Mapper(
         imports = {
-                PersonLevelEnum.class
+                PersonLevelEnum.class,
+                TaskTypeEnum.class
         }
 )
 public interface TaskCopier {
@@ -63,6 +70,7 @@ public interface TaskCopier {
      * @param taskAddReq 对象
      * @return TaskDO
      */
+    @Mapping(target = "stage", expression = "java(TaskTypeEnum.getStageCode(taskAddReq.getType()))")
     TaskDO convert(TaskAddReq taskAddReq);
 
     /**
@@ -71,6 +79,7 @@ public interface TaskCopier {
      * @param taskModifyReq 对象
      * @return TaskDO
      */
+    @Mapping(target = "stage", expression = "java(TaskTypeEnum.getStageCode(taskModifyReq.getType()))")
     TaskDO convert(TaskModifyReq taskModifyReq);
 
     /**
@@ -107,6 +116,7 @@ public interface TaskCopier {
      * @param taskSimpleAddReq taskSimpleAddReq
      * @return TaskDO
      */
+    @Mapping(target = "stage", expression = "java(TaskTypeEnum.getStageCode(taskSimpleAddReq.getType()))")
     TaskDO convert(TaskSimpleAddReq taskSimpleAddReq);
 
     /**

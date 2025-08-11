@@ -32,7 +32,6 @@ public class TaskAddReq extends BaseReq {
     private Long productLineId = 0L;
 
     @ApiModelProperty(value = "0需求规划阶段,1研发阶段,2测试阶段")
-    @NotNull(message = "阶段不能为空")
     private Integer stage;
 
     @ApiModelProperty("计划开始时间")
@@ -79,4 +78,8 @@ public class TaskAddReq extends BaseReq {
 
     @ApiModelProperty("是否为里程碑")
     private Boolean milestoneFlag = false;
+
+    @ApiModelProperty(value = "0-其他，1-调研，2-详细设计，3-测试用例设计，4-开发，5-集测开发，6-code review，7-测试，8-线下bug修复，9-发布，10-线上bug修复")
+    @NotNull(message = "任务类型")
+    private Integer type;
 }

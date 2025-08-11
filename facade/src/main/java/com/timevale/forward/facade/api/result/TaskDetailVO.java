@@ -105,4 +105,10 @@ public class TaskDetailVO extends ToString {
 
     @ApiModelProperty("项目状态")
     private Integer projectStatus;
+
+    @ApiModelProperty("任务类型：0-其他，1-调研，2-详细设计，3-测试用例设计，4-开发，5-集测开发，6-code review，7-测试，8-线下bug修复，9-发布，10-线上bug修复")
+    private Integer type;
+
+    @ApiModelProperty(value = "类型")
+    private String typeName;
 }

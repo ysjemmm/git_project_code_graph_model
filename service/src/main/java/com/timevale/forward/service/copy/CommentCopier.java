@@ -2,6 +2,7 @@ package com.timevale.forward.service.copy;
 
 import com.timevale.forward.dal.entity.CommentDO;
 import com.timevale.forward.facade.api.request.CommentAddReq;
+import com.timevale.forward.facade.api.request.CommentModifyReq;
 import com.timevale.forward.facade.api.result.CommentVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
@@ -24,6 +25,14 @@ public interface CommentCopier {
      * @return DO
      */
     CommentDO convert(CommentAddReq commentAddReq);
+
+    /**
+     * 转换
+     *
+     * @param commentModifyReq 评论修改请求
+     * @return DO
+     */
+    CommentDO convert(CommentModifyReq commentModifyReq);
 
     /**
      * 转换
