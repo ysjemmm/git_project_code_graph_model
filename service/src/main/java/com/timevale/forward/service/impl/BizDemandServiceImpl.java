@@ -612,7 +612,6 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 附件
         productDemandDetailVO.setFiles(fileVOList);
         // 标签
-        // 标签
         LabelInCategoryQueryList labelInCategoryQueryList = new LabelInCategoryQueryList();
         labelInCategoryQueryList.setAuth(true);
         labelInCategoryQueryList.setContainDeleted(false);
@@ -625,9 +624,12 @@ public class BizDemandServiceImpl implements BizDemandService {
                 .map(BaseResult::getData)
                 .orElse(Collections.emptyList())
                 .stream()
+                .filter(e -> e != null)
                 .map(LabelCategorySimpleVO::getLabelSimples)
+                .filter(list -> list != null && !list.isEmpty())
                 .flatMap(List::stream)
                 .map(LabelSimpleVO::getId)
+                .filter(e -> e != null)
                 .collect(Collectors.toSet()); // 使用Set提高查找效率
 
         // 获取业务需求已选择的标签
