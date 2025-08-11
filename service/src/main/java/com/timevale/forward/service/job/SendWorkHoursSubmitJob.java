@@ -81,7 +81,14 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
             return ReturnT.SUCCESS;
         }
 
-        String url = EnvEnum.PROD.equals(envUtils.getEnv()) ? "https://forward.esign.cn" : "https://testforward.tsign.cn";
+        String url;
+        if (EnvEnum.PROD.equals(envUtils.getEnv())) {
+            url = "https://forward.esign.cn";
+        } else if (EnvEnum.PRE.equals(envUtils.getEnv())) {
+            url = "https://smlforward.tsign.cn";
+        } else {
+            url = "https://testforward.tsign.cn";
+        }
 
         // 1. 查询开启通知的项目列表
         // 通过项目状态和类别查询项目，并过滤出需要工时通知的项目，将其ID与名称映射为Map
