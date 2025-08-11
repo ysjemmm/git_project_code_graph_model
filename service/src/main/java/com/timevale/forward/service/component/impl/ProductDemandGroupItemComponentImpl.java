@@ -20,15 +20,18 @@ import com.timevale.forward.service.utils.position.PositionUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 /**
  * 产品-分组关系表 组件实现类
@@ -65,6 +68,19 @@ public class ProductDemandGroupItemComponentImpl implements ProductDemandGroupIt
         condition.setName(StringUtil.toLikeStr(condition.getName()));
         condition.setCreateDateStart(DateUtil.getStartOfDay(condition.getCreateDateStart()));
         condition.setCreateDateEnd(DateUtil.getEndOfDay(condition.getCreateDateEnd()));
+        // 排除已废弃，已完成上线
+        if (CollectionUtils.isNotEmpty(condition.getStatus())) {
+            List<Integer> statusList = condition.getStatus().stream()
+                    .filter(e -> !ProductDemandStatusEnum.INVALID.getCode().equals(e) && !ProductDemandStatusEnum.ONLINE.getCode().equals(e))
+                    .collect(Collectors.toList());
+            condition.setStatus(statusList);
+        } else {
+            List<Integer> statusList = Arrays.stream(ProductDemandStatusEnum.values())
+                    .filter(e -> !ProductDemandStatusEnum.INVALID.equals(e) && !ProductDemandStatusEnum.ONLINE.equals(e))
+                    .map(ProductDemandStatusEnum::getCode)
+                    .collect(Collectors.toList());
+            condition.setStatus(statusList);
+        }
         return productDemandGroupItemMapper.listProductDemandBacklog(condition);
     }
 
