@@ -99,8 +99,14 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
             return ReturnT.SUCCESS;
         }
 
-        String url = EnvEnum.PROD.equals(envUtils.getEnv()) ? "https://forward.esign.cn" : "https://testforward.tsign.cn";
-
+        String url;
+        if (EnvEnum.PROD.equals(envUtils.getEnv())) {
+            url = "https://forward.esign.cn";
+        } else if (EnvEnum.PRE.equals(envUtils.getEnv())) {
+            url = "https://smlforward.tsign.cn";
+        } else {
+            url = "https://testforward.tsign.cn";
+        }
         // 获取需要通知的工作小时项目
         List<ProjectDO> byWorkHoursNotifyProjects = projectMapper.getByWorkHoursNotify(
                 PROJECT_STATUSES, ProjectCategoryEnum.PRODUCT_PROJECT.getCode(), true)
