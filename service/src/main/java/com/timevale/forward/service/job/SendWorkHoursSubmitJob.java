@@ -11,6 +11,7 @@ import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.result.TaskVO;
 import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.model.enums.ProjectCategoryEnum;
+import com.timevale.forward.model.enums.ProjectKindEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.model.enums.TaskStatusEnum;
 import com.timevale.forward.service.copy.TaskCopier;
@@ -86,6 +87,7 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
         // 通过项目状态和类别查询项目，并过滤出需要工时通知的项目，将其ID与名称映射为Map
         Map<Long, String> notifyProjectMap = projectMapper.getByWorkHoursNotify(PROJECT_STATUSES, ProjectCategoryEnum.PRODUCT_PROJECT.getCode(), true)
                 .stream()
+                .filter(e -> ProjectKindEnum.PBG_BASE.getCode().equals(e.getKind()))
                 .collect(Collectors.toMap(ProjectDO::getId, ProjectDO::getName, (e1, e2) -> e1));
 
         // 如果没有找到开启工时通知的项目，则记录日志并结束执行

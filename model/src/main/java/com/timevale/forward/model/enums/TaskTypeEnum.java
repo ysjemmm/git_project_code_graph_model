@@ -22,7 +22,9 @@ public enum TaskTypeEnum {
     TEST(7, "测试", ProjectStageEnum.TEST),
     OFFLINE_BUG(8, "线下bug修复", ProjectStageEnum.TEST),
     PUBLISH(9, "发布", ProjectStageEnum.TEST),
-    ONLINE_BUG(10, "线上bug修复", ProjectStageEnum.TEST);
+    ONLINE_BUG(10, "线上bug修复", ProjectStageEnum.TEST),
+    SUPPORT(11, "支撑", ProjectStageEnum.DEV),
+    PRODUCT_DESIGN(12, "产品设计", ProjectStageEnum.DEV);
 
     private final Integer code;
     private final String text;

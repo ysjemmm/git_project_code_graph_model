@@ -15,6 +15,7 @@ import com.timevale.forward.dal.entity.ProjectProductLineBizDomain;
 import com.timevale.forward.dal.entity.WorkHoursRecordDO;
 import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.model.enums.ProjectCategoryEnum;
+import com.timevale.forward.model.enums.ProjectKindEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.integration.ShortLinkClient;
@@ -102,7 +103,9 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
 
         // 获取需要通知的工作小时项目
         List<ProjectDO> byWorkHoursNotifyProjects = projectMapper.getByWorkHoursNotify(
-                PROJECT_STATUSES, ProjectCategoryEnum.PRODUCT_PROJECT.getCode(), true);
+                PROJECT_STATUSES, ProjectCategoryEnum.PRODUCT_PROJECT.getCode(), true)
+                .stream().filter(e -> ProjectKindEnum.PBG_BASE.getCode().equals(e.getKind()))
+                .collect(Collectors.toList());
 
         // 如果没有需要通知的项目，则结束任务
         if (byWorkHoursNotifyProjects.isEmpty()) {
