@@ -8,35 +8,118 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Lists;
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.condition.*;
-import com.timevale.forward.dal.dao.*;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.condition.BizDemandListCondition;
+import com.timevale.forward.dal.condition.CustomDemandListCondition;
+import com.timevale.forward.dal.condition.ProductBizDemandCondition;
+import com.timevale.forward.dal.condition.ProductCustomDemandCondition;
+import com.timevale.forward.dal.condition.ProductDemandListCondition;
+import com.timevale.forward.dal.condition.ProductDemandTrackEventCondition;
+import com.timevale.forward.dal.condition.ProjectListCondition;
+import com.timevale.forward.dal.condition.TrackEventListCondition;
+import com.timevale.forward.dal.dao.BizDemandMapper;
+import com.timevale.forward.dal.dao.BizLabelMapper;
+import com.timevale.forward.dal.dao.CustomDemandMapper;
+import com.timevale.forward.dal.dao.ProductBizDemandMapper;
+import com.timevale.forward.dal.dao.ProductCustomDemandMapper;
+import com.timevale.forward.dal.dao.ProductDemandMapper;
+import com.timevale.forward.dal.dao.ProductDemandTrackEventMapper;
+import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.dao.ProjectProductDemandMapper;
+import com.timevale.forward.dal.dao.TrackEventMapper;
+import com.timevale.forward.dal.entity.BizChangeLogDO;
+import com.timevale.forward.dal.entity.BizDemandDO;
+import com.timevale.forward.dal.entity.BizDemandListDO;
+import com.timevale.forward.dal.entity.BizLabelDO;
+import com.timevale.forward.dal.entity.CustomDemandDO;
+import com.timevale.forward.dal.entity.ProductBizDemandDO;
+import com.timevale.forward.dal.entity.ProductCustomDemandDO;
+import com.timevale.forward.dal.entity.ProductDemandDO;
+import com.timevale.forward.dal.entity.ProductDemandListDO;
+import com.timevale.forward.dal.entity.ProductDemandTrackEventDO;
+import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.entity.ProjectProductDemandDO;
+import com.timevale.forward.dal.entity.TrackEventDO;
 import com.timevale.forward.facade.api.client.ProductDemandService;
-import com.timevale.forward.facade.api.query.*;
-import com.timevale.forward.facade.api.request.*;
-import com.timevale.forward.facade.api.result.*;
-import com.timevale.forward.model.enums.*;
-import com.timevale.forward.service.component.*;
+import com.timevale.forward.facade.api.query.ProductBizDemandQueryList;
+import com.timevale.forward.facade.api.query.ProductCustomDemandQueryList;
+import com.timevale.forward.facade.api.query.ProductDemandLinkBizDemandQueryList;
+import com.timevale.forward.facade.api.query.ProductDemandLinkProjectQueryList;
+import com.timevale.forward.facade.api.query.ProductDemandLinkTrackEventQueryList;
+import com.timevale.forward.facade.api.query.ProductDemandQueryList;
+import com.timevale.forward.facade.api.query.ProductDemandTrackEventQueryList;
+import com.timevale.forward.facade.api.query.ProductLinkCustomDemandQueryList;
+import com.timevale.forward.facade.api.request.BatchTransferReq;
+import com.timevale.forward.facade.api.request.ProductBizDemandLinkReq;
+import com.timevale.forward.facade.api.request.ProductCustomDemandLinkReq;
+import com.timevale.forward.facade.api.request.ProductDemandAddReq;
+import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
+import com.timevale.forward.facade.api.request.ProductDemandTrackEventLinkReq;
+import com.timevale.forward.facade.api.result.BizDemandVO;
+import com.timevale.forward.facade.api.result.CustomDemandVO;
+import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
+import com.timevale.forward.facade.api.result.ProductDemandVO;
+import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
+import com.timevale.forward.facade.api.result.ProjectVO;
+import com.timevale.forward.facade.api.result.QueryResultVO;
+import com.timevale.forward.facade.api.result.TrackEventVO;
+import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
+import com.timevale.forward.model.enums.BizDemandStatusEnum;
+import com.timevale.forward.model.enums.BizTypeEnum;
+import com.timevale.forward.model.enums.ButtonActionEnum;
+import com.timevale.forward.model.enums.EnvEnum;
+import com.timevale.forward.model.enums.FileTypeEnum;
+import com.timevale.forward.model.enums.ForwardFlowStatusEnum;
+import com.timevale.forward.model.enums.LinkOrUnLinkEnum;
+import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.model.enums.PlatformTypeEnum;
+import com.timevale.forward.model.enums.PriorityEnum;
+import com.timevale.forward.model.enums.ProductDemandStatusEnum;
+import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.service.component.BizDemandComponent;
+import com.timevale.forward.service.component.BizLabelComponent;
+import com.timevale.forward.service.component.CustomDemandComponent;
+import com.timevale.forward.service.component.FileComponent;
+import com.timevale.forward.service.component.LabelComponent;
+import com.timevale.forward.service.component.PersonComponent;
+import com.timevale.forward.service.component.ProductBizDemandComponent;
+import com.timevale.forward.service.component.ProductCustomDemandComponent;
+import com.timevale.forward.service.component.ProductDemandComponent;
+import com.timevale.forward.service.component.ProductDemandLogComponent;
+import com.timevale.forward.service.component.ProductDemandTrackEventComponent;
+import com.timevale.forward.service.component.ProjectComponent;
+import com.timevale.forward.service.component.ProjectLogComponent;
+import com.timevale.forward.service.component.ProjectProductDemandComponent;
+import com.timevale.forward.service.component.TaskProductDemandComponent;
+import com.timevale.forward.service.component.TrackEventComponent;
 import com.timevale.forward.service.component.impl.ProductDemandDescFlowComponent;
 import com.timevale.forward.service.constant.CommonConstant;
-import com.timevale.forward.service.copy.*;
+import com.timevale.forward.service.copy.BizDemandCopier;
+import com.timevale.forward.service.copy.CustomDemandCopier;
+import com.timevale.forward.service.copy.ProductDemandCopier;
+import com.timevale.forward.service.copy.ProjectCopier;
+import com.timevale.forward.service.copy.TrackEventCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.ProductDemandBatchTransferMsgEvent;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.duplicate.GroupDuplicateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
-import com.timevale.security.facade.response.BaseInfoResponse;
 import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -131,42 +214,16 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Resource
     private ProjectComponent projectComponent;
 
+    @Resource
+    private GroupDuplicateUtil groupDuplicateUtil;
+
     @Override
     public BaseResult<QueryResultVO<ProductDemandVO>> list(ProductDemandQueryList productDemandQueryList) {
         log.info("产品需求接收参数:{}", productDemandQueryList);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
-        if (AscriptionEnum.CURRENT_USER.name().equals(productDemandQueryList.getAscription())) {
-            condition.getOwnerIds().add(userInfo.getId());
-        } else if (AscriptionEnum.TEAM.name().equals(productDemandQueryList.getAscription())) {
-            List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
-            log.info("我和我的下属:{}", allMyStaffWithSelf);
-            if (!CollectionUtils.isEmpty(productDemandQueryList.getOwnerIds())) {
-                allMyStaffWithSelf.retainAll(productDemandQueryList.getOwnerIds());
-                log.info("我和我的下属,过滤后:{}", allMyStaffWithSelf);
-            }
-            if (CollectionUtils.isEmpty(allMyStaffWithSelf)) {
-                //所选人员不在我的团队中
-                return BaseResult.success(ResultUtil.queryResultEmpty());
-            }
-            condition.setOwnerIds(allMyStaffWithSelf);
-        } else if (AscriptionEnum.DEPARTMENT.name().equals(productDemandQueryList.getAscription())) {
-            List<BaseInfoResponse> baseInfos = innerUserPersonClient.getPersonByAccountNew(Lists.newArrayList(userInfo.getId()));
-
-            String groupId = baseInfos.get(0).getDefaultGroup().getGroupId();
-            List<String> accountIds = innerUserPersonClient.getAllByGroupId(groupId);
-            log.info("用户默认部门id:{},同部门人员:{}", groupId, accountIds);
-            if (!CollectionUtils.isEmpty(productDemandQueryList.getOwnerIds())) {
-                accountIds.retainAll(productDemandQueryList.getOwnerIds());
-                log.info("用户默认部门id:{},过滤后:{}", groupId, accountIds);
-            }
-            if (CollectionUtils.isEmpty(accountIds)) {
-                //所选人员不在我的部门中
-                return BaseResult.success(ResultUtil.queryResultEmpty());
-            }
-            condition.setOwnerIds(accountIds);
-        } else if (AscriptionEnum.COPIER.name().equals(productDemandQueryList.getAscription())) {
-            condition.setCopierId(userInfo.getId());
+        if (groupDuplicateUtil.setOwnerIdByAscription(productDemandQueryList, userInfo, condition, innerUserPersonClient)) {
+            return BaseResult.success(ResultUtil.queryResultEmpty());
         }
 
         //是否打标
@@ -197,22 +254,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
         // 完整查询
         List<ProductDemandListDO> allProductDemandListDO = productDemandComponent.list(ProductDemandCopier.INSTANCE.convert(condition));
-        Map<Long, List<ProductDemandListDO>> bizDemandListDOMap = allProductDemandListDO.stream().collect(Collectors.groupingBy(ProductDemandListDO::getProductLineId));
-        log.info("业务查询产品线分析：{}", bizDemandListDOMap);
-
-        List<ProductLineAnalyseVO> analyseVOList = new ArrayList<>();
-        bizDemandListDOMap.forEach((k, v) -> {
-            ProductLineAnalyseVO analyseVO = new ProductLineAnalyseVO();
-            Optional<ProductDemandListDO> any = v.stream().findAny();
-            any.ifPresent(e -> {
-                analyseVO.setCount(v.size());
-                analyseVO.setProductLineId(e.getProductLineId());
-                analyseVO.setProductLineName(e.getProductLineName());
-                analyseVOList.add(analyseVO);
-            });
-        });
-        //逆序排序
-        analyseVOList.sort((a, b) -> b.getCount().compareTo(a.getCount()));
+        List<ProductLineAnalyseVO> analyseVOList = groupDuplicateUtil.getProductLineAnalyseVOS(allProductDemandListDO);
 
         List<Long> conditionSubProductLineIdList = productDemandQueryList.getSubProductLineIds();
         if (CollectionUtils.isNotEmpty(conditionSubProductLineIdList)) {
@@ -237,33 +279,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         if (CollectionUtils.isEmpty(productDemandVOList)) {
             return BaseResult.success(ResultUtil.queryResultEmpty());
         }
-        List<Long> productDemandIds = productDemandListDO.stream().map(ProductDemandListDO::getId).collect(Collectors.toList());
-
-        Map<Long, List<BizLabelSimpleVO>> bizLabelMap = bizLabelComponent.getBizLabelMap(productDemandIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
-
-        for (ProductDemandVO a : productDemandVOList) {
-            a.setStatusName(ProductDemandStatusEnum.getTextByCode(a.getStatus()));
-            a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
-
-            List<BizLabelSimpleVO> labelSimpleVOList = bizLabelMap.get(a.getId());
-            if (CollectionUtils.isNotEmpty(labelSimpleVOList)) {
-                a.setLabelNames(labelSimpleVOList);
-            }
-
-            String typeName = a.getType().stream()
-                    .map(ProductDemandTypeEnum::getTextByCode)
-                    .collect(Collectors.joining(","));
-            a.setTypeName(typeName);
-        }
-        // 分页数据
-        PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
-        PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
-        pageQueryResult.setResultList(productDemandVOList);
-        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
-
-        QueryResultVO<ProductDemandVO> queryResultVO = new QueryResultVO<>();
-        queryResultVO.setPageQueryResult(pageQueryResult);
-        queryResultVO.setAnalyseVOList(analyseVOList);
+        QueryResultVO<ProductDemandVO> queryResultVO = groupDuplicateUtil.getDemandVOQueryResultVO(productDemandListDO, productDemandVOList, analyseVOList);
 
         return BaseResult.success(queryResultVO);
     }

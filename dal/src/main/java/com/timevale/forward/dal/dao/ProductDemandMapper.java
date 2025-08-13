@@ -1,10 +1,12 @@
 package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.condition.BizDemandLinkProductDemandListCondition;
+import com.timevale.forward.dal.condition.ProductDemandGroupQueryCondition;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.entity.BizDemandDO;
 import com.timevale.forward.dal.entity.BizDemandLinkProductDemandListDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
+import com.timevale.forward.dal.entity.ProductDemandGroupFieldDO;
 import com.timevale.forward.dal.entity.ProductDemandListDO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -140,4 +142,19 @@ public interface ProductDemandMapper {
     @Select("select * from product_demand where product_line_id=#{productLineId} AND is_deleted=false")
     List<ProductDemandDO> getByProductLineId(@Param("productLineId") Long productLineId);
 
+    /**
+     * 查询产品需求分组条数
+     *
+     * @param productDemandGroupCondition 产品需求Id列表
+     * @return list
+     */
+    List<ProductDemandGroupFieldDO> getGroupTree(ProductDemandGroupQueryCondition productDemandGroupCondition);
+
+    /**
+     * 查询产品需求
+     *
+     * @param productDemandGroupCondition 产品需求Id列表
+     * @return list
+     */
+    List<ProductDemandListDO> getGroupList(ProductDemandGroupQueryCondition productDemandGroupCondition);
 }
