@@ -1,7 +1,9 @@
 package com.timevale.forward.service.component;
 
+import com.timevale.forward.dal.condition.ProductDemandGroupQueryCondition;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.entity.ProductDemandDO;
+import com.timevale.forward.dal.entity.ProductDemandGroupFieldDO;
 import com.timevale.forward.dal.entity.ProductDemandListDO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 
@@ -95,4 +97,7 @@ public interface ProductDemandComponent {
 
     void sendDingMsg(Integer oldStatus, Integer newStatus, Long bizDemandId);
 
+    List<ProductDemandGroupFieldDO> getGroupTree(ProductDemandGroupQueryCondition groupCondition);
+
+    List<ProductDemandListDO> getGroupList(ProductDemandGroupQueryCondition groupCondition);
 }
