@@ -109,15 +109,15 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
     }
 
     @Override
-    public BaseResult<List<DemandGroupNodeVO>> getProductDemandsGroupTree(DynamicProductDemandGroupList DynamicProductDemandGroupList) {
-        List<String> groupFields = DynamicProductDemandGroupList.getGroupFields();
+    public BaseResult<List<DemandGroupNodeVO>> getProductDemandsGroupTree(DynamicProductDemandGroupList productDemandGroupList) {
+        List<String> groupFields = productDemandGroupList.getGroupFields();
         if (CollUtil.isEmpty(groupFields)) {
             throw new BaseBizRuntimeException("分组字段不能为空");
         }
 
         // 1) 构建基础查询条件（复用一层分组的参数处理逻辑）
-        ProductDemandQueryList productDemandQueryList = DynamicProductDemandGroupList.getFilters();
-        ProductDemandGroupList parentProductDemandQueryList = DynamicProductDemandGroupList.getParentConditions();
+        ProductDemandQueryList productDemandQueryList = productDemandGroupList.getFilters();
+        ProductDemandGroupList parentProductDemandQueryList = productDemandGroupList.getParentConditions();
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
         ProductDemandGroupCondition parentCondition = ProductDemandCopier.INSTANCE.convert(parentProductDemandQueryList);
@@ -156,7 +156,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
                 .parentCondition(parentCondition)
                 .selectField(selectField)
                 .groupField(groupField)
-                .orderField(DynamicProductDemandGroupList.getOrderField())
+                .orderField(productDemandGroupList.getOrderField())
                 .build();
 
         List<ProductDemandGroupFieldDO> rows = productDemandComponent.getGroupTree(groupCondition);
