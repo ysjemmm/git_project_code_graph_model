@@ -1,6 +1,7 @@
 package com.timevale.forward.service.component.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.timevale.forward.dal.condition.ProductDemandGroupQueryCondition;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
@@ -289,6 +290,22 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
                 );
             }
         }
+    }
+
+    @Override
+    public List<ProductDemandGroupFieldDO> getGroupTree(ProductDemandGroupQueryCondition condition) {
+        condition.getCondition().setName(StringUtil.toLikeStr(condition.getCondition().getName()));
+        condition.getCondition().setCreateDateStart(DateUtil.getStartOfDay(condition.getCondition().getCreateDateStart()));
+        condition.getCondition().setCreateDateEnd(DateUtil.getEndOfDay(condition.getCondition().getCreateDateEnd()));
+        return productDemandMapper.getGroupTree(condition);
+    }
+
+    @Override
+    public List<ProductDemandListDO> getGroupList(ProductDemandGroupQueryCondition condition) {
+        condition.getCondition().setName(StringUtil.toLikeStr(condition.getCondition().getName()));
+        condition.getCondition().setCreateDateStart(DateUtil.getStartOfDay(condition.getCondition().getCreateDateStart()));
+        condition.getCondition().setCreateDateEnd(DateUtil.getEndOfDay(condition.getCondition().getCreateDateEnd()));
+        return productDemandMapper.getGroupList(condition);
     }
 
     @Override
