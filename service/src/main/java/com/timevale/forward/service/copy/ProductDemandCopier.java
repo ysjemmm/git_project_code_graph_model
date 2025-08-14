@@ -2,13 +2,11 @@ package com.timevale.forward.service.copy;
 
 import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson.JSON;
-import com.timevale.forward.dal.condition.ProductDemandGroupCondition;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.dal.entity.ProductDemandGroupItemListDO;
 import com.timevale.forward.dal.entity.ProductDemandListDO;
 import com.timevale.forward.facade.api.query.CustomLinkProductDemandQueryList;
-import com.timevale.forward.facade.api.query.ProductDemandGroupList;
 import com.timevale.forward.facade.api.query.ProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.TaskLinkProductDemandQueryList;
@@ -19,12 +17,10 @@ import com.timevale.forward.facade.api.result.ProductDemandDocumentVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.model.enums.ProductDemandTypeEnum;
 import com.timevale.forward.model.middle.ProductDemandMD;
-import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,9 +29,7 @@ import java.util.stream.Collectors;
                 JSON.class,
                 CollUtil.class,
                 Collectors.class,
-                ProductDemandTypeEnum.class,
-                Arrays.class,
-                StringUtils.class
+                ProductDemandTypeEnum.class
         }
 )
 public interface ProductDemandCopier {
@@ -134,14 +128,4 @@ public interface ProductDemandCopier {
     List<ProductDemandDocumentVO> convertToDocuments(List<ProductDemandDO> productDemands);
 
     ProductDemandListCondition convert(ProductDemandListCondition condition);
-
-    /**
-     * 转换转换DO
-     *
-     * @param queryList 对象
-     * @return ProductDemandGroupCondition
-     */
-    @Mapping(target = "labelCategoryIds", expression = "java(StringUtils.isNotEmpty(queryList.getLabelCategoryIds()) ? Arrays.stream(queryList.getLabelCategoryIds().split(\",\")).map(Long::valueOf).collect(Collectors.toList()) : null)")
-    @Mapping(target = "ownerIds", expression = "java(StringUtils.isNotEmpty(queryList.getOwnerIds()) ? Arrays.asList(queryList.getOwnerIds().split(\",\")) : null)")
-    ProductDemandGroupCondition convert(ProductDemandGroupList queryList);
 }

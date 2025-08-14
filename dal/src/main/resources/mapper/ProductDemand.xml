@@ -2,18 +2,16 @@
 <!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
 <mapper namespace="com.timevale.forward.dal.dao.ProductDemandMapper">
 
-    <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProductDemandDO" useGeneratedKeys="true"
-            keyProperty="id" keyColumn="id">
-        insert into product_demand (name, product_line_id, type, `desc`, status, priority, owner, owner_id,
-                                    expect_schedule_time, create_man_id, create_man)
-        values (#{name}, #{productLineId}, #{type}, #{desc}, #{status}, #{priority}, #{owner}, #{ownerId},
-                #{expectScheduleTime}, #{createManId}, #{createMan})
+    <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProductDemandDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into product_demand (name, product_line_id, type , `desc`,status,priority,owner,owner_id, expect_schedule_time, create_man_id, create_man)
+        values
+        (#{name}, #{productLineId}, #{type}, #{desc},#{status},#{priority},#{owner},#{ownerId}, #{expectScheduleTime}, #{createManId}, #{createMan})
     </insert>
 
     <select id="list" resultType="com.timevale.forward.dal.entity.ProductDemandListDO">
-        select a.id,a.name,a.priority,a.owner,a.owner_id,a.status, a.product_line_id,
-        a.create_man,a.create_man_id,a.create_date,a.modify_date, a.type, a.expect_schedule_time,
-        c.name productLineName ,d.name bizDomainName
+        select  a.id,a.name,a.priority,a.owner,a.owner_id,a.status, a.product_line_id,
+                a.create_man,a.create_man_id,a.create_date,a.modify_date, a.type, a.expect_schedule_time,
+                c.name productLineName ,d.name bizDomainName
         <if test="copierId != null and copierId != ''">
             ,e.user_name copier
         </if>
@@ -34,8 +32,7 @@
                 and a.modify_date &gt;= #{modifyDateStart} and a.modify_date &lt;= #{modifyDateEnd}
             </if>
             <if test="expectScheduleTimeStart != null and expectScheduleTimeEnd != null">
-                and a.expect_schedule_time &gt;= #{expectScheduleTimeStart} and a.expect_schedule_time &lt;=
-                #{expectScheduleTimeEnd}
+                and a.expect_schedule_time &gt;= #{expectScheduleTimeStart} and a.expect_schedule_time &lt;= #{expectScheduleTimeEnd}
             </if>
             <if test="priorities!=null and priorities.size()>0">
                 and a.priority in
@@ -74,7 +71,7 @@
                 </foreach>
             </if>
             <if test="inProductDemandIds!=null and inProductDemandIds.size()>0">
-                and a.id in
+                and a.id  in
                 <foreach collection="inProductDemandIds" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
@@ -88,13 +85,12 @@
             <if test="types!= null and types!='' ">
                 and a.type REGEXP CONCAT('[', #{types},']')
             </if>
-            and a.is_deleted =false
+            and  a.is_deleted =false
         </where>
     </select>
 
     <select id="selectByIdList" resultType="com.timevale.forward.dal.entity.ProductDemandDO">
-        select id, name, product_line_id, type, `desc`, status, priority, owner, is_deleted, create_man_id, create_man,
-        create_date, modify_man_id, modify_man, modify_date, owner_id
+        select id, name, product_line_id, type, `desc`, status, priority, owner, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date, owner_id
         from product_demand
         where
         is_deleted = false
@@ -105,76 +101,39 @@
     </select>
 
     <select id="selectByBizDemandId" resultType="com.timevale.forward.dal.entity.BizDemandLinkProductDemandListDO">
-        select pd.id,
-               pd.name,
-               pd.type,
-               pd.`desc`,
-               pd.status,
-               pd.priority,
-               pd.owner,
-               pd.is_deleted,
-               pd.create_man_id,
-               pd.create_man,
-               pd.create_date,
-               pd.modify_man_id,
-               pd.modify_man,
-               pd.modify_date,
-               pd.owner_id
+        select pd.id, pd.name, pd.type, pd.`desc`, pd.status, pd.priority, pd.owner, pd.is_deleted,
+               pd.create_man_id, pd.create_man, pd.create_date, pd.modify_man_id, pd.modify_man, pd.modify_date, pd.owner_id
         from product_demand pd
-                 left join product_biz_demand pbd on pd.id = pbd.product_demand_id
-        where pbd.biz_demand_id = #{bizDemandId}
-          and pbd.is_deleted = false
+        left join product_biz_demand pbd on pd.id = pbd.product_demand_id
+        where pbd.biz_demand_id = #{bizDemandId} and pbd.is_deleted = false
     </select>
 
     <select id="selectById" resultType="com.timevale.forward.dal.entity.ProductDemandDO">
-        select id,
-               name,
-               product_line_id,
-               type,
-               `desc`,
-               status,
-               priority,
-               owner,
-               is_deleted,
-               create_man_id,
-               create_man,
-               create_date,
-               modify_man_id,
-               modify_man,
-               modify_date,
-               owner_id
+        select id, name, product_line_id, type, `desc`, status, priority, owner, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date, owner_id
         from product_demand
         where id = #{id}
     </select>
 
     <select id="linkProductDemandList" resultType="com.timevale.forward.dal.entity.ProductDemandListDO">
-        SELECT a.id,
-               a.name,
-               a.priority,
-               a.owner,
-               a.status,
-               a.create_man,
-               a.create_date,
-               b.modify_date
-        FROM product_demand a
-                 LEFT JOIN project_product_demand b ON a.id = b.product_demand_id AND b.is_deleted = false
-        WHERE b.project_id = #{projectId}
-        order by modify_date desc, id
+         SELECT a.id,a.name,a.priority,a.owner,a.status,a.create_man,a.create_date,b.modify_date
+         FROM product_demand a
+         LEFT JOIN project_product_demand b ON a.id = b.product_demand_id AND b.is_deleted = false
+         WHERE b.project_id = #{projectId}
+         order by modify_date desc, id
     </select>
 
-    <select id="selectListOfBizDemandLink"
-            resultType="com.timevale.forward.dal.entity.BizDemandLinkProductDemandListDO">
+    <select id="selectListOfBizDemandLink" resultType="com.timevale.forward.dal.entity.BizDemandLinkProductDemandListDO">
         select pd.id, pd.name, pd.status, pd.priority, pd.owner, pd.owner_id,
-        pd.is_deleted, pd.create_man_id, pd.create_man, pd.create_date, pd.modify_man_id, pd.modify_man, pd.modify_date,
-        pl.id productLineId, pl.name productLineName,
-        bd.id bizDomainId, bd.name bizDomainName
+               pd.is_deleted, pd.create_man_id, pd.create_man, pd.create_date, pd.modify_man_id, pd.modify_man, pd.modify_date,
+               pl.id productLineId, pl.name productLineName,
+               bd.id bizDomainId, bd.name bizDomainName
         from product_demand pd
         left join product_line pl on pd.product_line_id = pl.id
         left join biz_domain bd on pl.biz_domain_id = bd.id
         <where>
             and pd.status != -20
             <if test="containIds!=null and containIds.size()>0">
-                and pd.id in
+                and pd.id  in
                 <foreach collection="containIds" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
@@ -261,10 +220,9 @@
     </update>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.ProductDemandDO">
-        select *
+        select  *
         from product_demand a
-        where a.id = #{id}
-          and a.is_deleted = false
+        where a.id = #{id} and a.is_deleted=false
     </select>
 
     <update id="updateByIds">
@@ -284,7 +242,7 @@
     <update id="updateOwner">
         UPDATE product_demand
         SET owner = #{owner},
-        owner_id = #{ownerId}
+            owner_id = #{ownerId}
         WHERE id IN
         <foreach collection="idList" item="item" separator="," open="(" close=")">
             #{item}
@@ -292,311 +250,30 @@
     </update>
 
     <select id="getByName" resultType="com.timevale.forward.dal.entity.ProductDemandDO">
-        select *
+         select *
         from product_demand a
-        where a.name = #{name}
-          and a.is_deleted = false
+        where a.name = #{name} and a.is_deleted=false
     </select>
     <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.ProductDemandDO">
-        select *
-        from product_demand
-        where id in
-              (select product_demand_id
-               from project_product_demand
-               where project_id = #{projectId}
-                 and is_deleted = false)
-          and is_deleted = false
+        select * from product_demand where id in
+                                           (select product_demand_id
+                                                  from project_product_demand
+                                                  where project_id = #{projectId}
+                                                    and is_deleted = false)
+        and is_deleted = false
     </select>
 
     <select id="linkProductDemandInCustomDemand" resultType="com.timevale.forward.dal.entity.ProductDemandListDO">
-        SELECT a.id,
-               a.name,
-               a.priority,
-               a.owner,
-               a.status,
-               a.create_man,
-               a.create_date,
-               b.modify_date
-        FROM product_demand a
-                 JOIN product_custom_demand b ON a.id = b.product_demand_id AND b.is_deleted = false
-        WHERE b.custom_demand_id = #{customDemandId}
+         SELECT a.id,a.name,a.priority,a.owner,a.status,a.create_man,a.create_date,b.modify_date
+         FROM product_demand a
+         JOIN product_custom_demand b ON a.id = b.product_demand_id AND b.is_deleted = false
+         WHERE b.custom_demand_id = #{customDemandId}
     </select>
 
     <select id="getByOwnerId" resultType="com.timevale.forward.dal.entity.ProductDemandDO">
-        select a.id
-             , a.name
-             , a.priority
-             , a.type
-             , a.owner
-             , a.owner_id
-             , a.status
-             , a.create_man
-             , a.create_man_id
-             , a.create_date
-             , a.modify_date
-             , a.product_line_id
-             , `desc`
+         select  a.id,a.name,a.priority,a.type,a.owner,a.owner_id,a.status,a.create_man,a.create_man_id
+         ,a.create_date,a.modify_date, a.product_line_id,`desc`
         from product_demand a
-        where a.owner_id = #{ownerId}
-          and a.is_deleted = false
-        order by a.id desc limit 0,3
-    </select>
-
-    <select id="getGroupTree" resultType="com.timevale.forward.dal.entity.ProductDemandGroupFieldDO">
-        select
-        <if test="selectField!= null and selectField!='' ">
-            ${selectField},
-        </if>
-        count(DISTINCT a.id) as total
-        from product_demand a
-        left join product_line c on a.product_line_id=c.id
-        left join biz_domain d on c.biz_domain_id=d.id
-        left join biz_label e on e.biz_id=a.id and e.type = 11
-        left join label f on f.id=e.label_id
-        <where>
-            <if test="condition != null">
-                <if test="condition.id != null">and a.id = #{condition.id}</if>
-                <if test="condition.name != null and condition.name != ''">and a.name like
-                    concat('%',#{condition.name},'%')
-                </if>
-                <if test="condition.copierId != null and condition.copierId != ''">and e.user_id =
-                    #{condition.copierId}
-                </if>
-                <if test="condition.createDateStart != null and condition.createDateEnd != null">
-                    and a.create_date &gt;= #{condition.createDateStart} and a.create_date &lt;=
-                    #{condition.createDateEnd}
-                </if>
-                <if test="condition.modifyDateStart != null and condition.modifyDateEnd != null">
-                    and a.modify_date &gt;= #{condition.modifyDateStart} and a.modify_date &lt;=
-                    #{condition.modifyDateEnd}
-                </if>
-                <if test="condition.expectScheduleTimeStart != null and condition.expectScheduleTimeEnd != null">
-                    and a.expect_schedule_time &gt;= #{condition.expectScheduleTimeStart} and a.expect_schedule_time
-                    &lt;= #{condition.expectScheduleTimeEnd}
-                </if>
-                <if test="condition.priorities!=null and condition.priorities.size()>0">
-                    and a.priority in
-                    <foreach collection="condition.priorities" item="item" separator="," open="(" close=")">
-                        #{item}
-                    </foreach>
-                </if>
-                <if test="condition.productLineIds!=null and condition.productLineIds.size()>0">
-                    and c.id in
-                    <foreach collection="condition.productLineIds" item="item" separator="," open="(" close=")">
-                        #{item}
-                    </foreach>
-                </if>
-                <if test="condition.bizDomainIds!=null and condition.bizDomainIds.size()>0">
-                    and d.id in
-                    <foreach collection="condition.bizDomainIds" item="item" separator="," open="(" close=")">
-                        #{item}
-                    </foreach>
-                </if>
-                <if test="condition.ownerIds!=null and condition.ownerIds.size()>0">
-                    and a.owner_id in
-                    <foreach collection="condition.ownerIds" item="item" separator="," open="(" close=")">
-                        #{item}
-                    </foreach>
-                </if>
-                <if test="condition.status!=null and condition.status.size()>0">
-                    and a.status in
-                    <foreach collection="condition.status" item="item" separator="," open="(" close=")">
-                        #{item}
-                    </foreach>
-                </if>
-                <if test="condition.filterProductDemandIds!=null and condition.filterProductDemandIds.size()>0">
-                    and a.id not in
-                    <foreach collection="condition.filterProductDemandIds" item="item" separator="," open="(" close=")">
-                        #{item}
-                    </foreach>
-                </if>
-                <if test="condition.inProductDemandIds!=null and condition.inProductDemandIds.size()>0">
-                    and a.id in
-                    <foreach collection="condition.inProductDemandIds" item="item" separator="," open="(" close=")">
-                        #{item}
-                    </foreach>
-                </if>
-                <if test="condition.notInProductDemandIds!=null and condition.notInProductDemandIds.size()>0">
-                    and a.id not in
-                    <foreach collection="condition.notInProductDemandIds" item="item" separator="," open="(" close=")">
-                        #{item}
-                    </foreach>
-                </if>
-                <if test="condition.types!= null and condition.types!='' ">
-                    and a.type REGEXP CONCAT('[', #{condition.types},']')
-                </if>
-                and a.is_deleted =false
-            </if>
-            <if test="parentCondition != null">
-                <if test="parentCondition.expectScheduleTime != null">
-                    and DATE_FORMAT(a.expect_schedule_time, '%Y-%m') = #{parentCondition.expectScheduleTime}
-                </if>
-                <if test="parentCondition.priority!=null">
-                    and a.priority = #{parentCondition.priority}
-                </if>
-                <if test="parentCondition.productLineId!=null">
-                    and c.id = #{parentCondition.productLineId}
-                </if>
-                <if test="parentCondition.bizDomainId!=null">
-                    and d.id = #{parentCondition.bizDomainId}
-                </if>
-                <if test="parentCondition.ownerId!=null">
-                    and a.owner_id = #{parentCondition.ownerId}
-                </if>
-                <if test="parentCondition.status!=null">
-                    and a.status = #{parentCondition.status}
-                </if>
-                <if test="parentCondition.labelCategoryId!=null">
-                    and f.label_category_id = #{parentCondition.labelCategoryId}
-                </if>
-                <if test="parentCondition.type!= null">
-                    and a.type REGEXP CONCAT('[', #{parentCondition.type},']')
-                </if>
-            </if>
-        </where>
-        <if test="groupField!= null and groupField!='' ">
-            group by ${groupField}
-        </if>
-        <if test="orderField!= null and orderField!='' ">
-            order by ${orderField}
-        </if>
-    </select>
-
-    <select id="getGroupList" resultType="com.timevale.forward.dal.entity.ProductDemandListDO">
-        select a.id,a.name,a.priority,a.owner,a.owner_id,a.status, a.product_line_id,
-        a.create_man,a.create_man_id,a.create_date,a.modify_date, a.type, a.expect_schedule_time,
-        c.name productLineName ,d.name bizDomainName
-        <if test="condition.copierId != null and condition.copierId != ''">
-            ,e.user_name copier
-        </if>
-        from product_demand a
-        left join product_line c on a.product_line_id=c.id
-        left join biz_domain d on c.biz_domain_id=d.id
-        <if test="condition.copierId != null and condition.copierId != ''">
-            left join person e on a.id=e.main_id and e.type =20 and e.is_deleted =false
-        </if>
-        <where>
-            <if test="condition != null">
-                <if test="condition.id != null">and a.id = #{condition.id}</if>
-                <if test="condition.name != null and condition.name != ''">and a.name like
-                    concat('%',#{condition.name},'%')
-                </if>
-                <if test="condition.copierId != null and condition.copierId != ''">and e.user_id =
-                    #{condition.copierId}
-                </if>
-                <if test="condition.createDateStart != null and condition.createDateEnd != null">
-                    and a.create_date &gt;= #{condition.createDateStart} and a.create_date &lt;=
-                    #{condition.createDateEnd}
-                </if>
-                <if test="condition.modifyDateStart != null and condition.modifyDateEnd != null">
-                    and a.modify_date &gt;= #{condition.modifyDateStart} and a.modify_date &lt;=
-                    #{condition.modifyDateEnd}
-                </if>
-                <if test="condition.expectScheduleTimeStart != null and condition.expectScheduleTimeEnd != null">
-                    and a.expect_schedule_time &gt;= #{condition.expectScheduleTimeStart} and a.expect_schedule_time
-                    &lt;= #{condition.expectScheduleTimeEnd}
-                </if>
-                <if test="condition.priorities!=null and condition.priorities.size()>0">
-                    and a.priority in
-                    <foreach collection="condition.priorities" item="item" separator="," open="(" close=")">
-                        #{item}
-                    </foreach>
-                </if>
-                <if test="condition.productLineIds!=null and condition.productLineIds.size()>0">
-                    and c.id in
-                    <foreach collection="condition.productLineIds" item="item" separator="," open="(" close=")">
-                        #{item}
-                    </foreach>
-                </if>
-                <if test="condition.bizDomainIds!=null and condition.bizDomainIds.size()>0">
-                    and d.id in
-                    <foreach collection="condition.bizDomainIds" item="item" separator="," open="(" close=")">
-                        #{item}
-                    </foreach>
-                </if>
-                <if test="condition.ownerIds!=null and condition.ownerIds.size()>0">
-                    and a.owner_id in
-                    <foreach collection="condition.ownerIds" item="item" separator="," open="(" close=")">
-                        #{item}
-                    </foreach>
-                </if>
-                <if test="condition.status!=null and condition.status.size()>0">
-                    and a.status in
-                    <foreach collection="condition.status" item="item" separator="," open="(" close=")">
-                        #{item}
-                    </foreach>
-                </if>
-                <if test="condition.filterProductDemandIds!=null and condition.filterProductDemandIds.size()>0">
-                    and a.id not in
-                    <foreach collection="condition.filterProductDemandIds" item="item" separator="," open="(" close=")">
-                        #{item}
-                    </foreach>
-                </if>
-                <if test="condition.inProductDemandIds!=null and condition.inProductDemandIds.size()>0">
-                    and a.id in
-                    <foreach collection="condition.inProductDemandIds" item="item" separator="," open="(" close=")">
-                        #{item}
-                    </foreach>
-                </if>
-                <if test="condition.notInProductDemandIds!=null and condition.notInProductDemandIds.size()>0">
-                    and a.id not in
-                    <foreach collection="condition.notInProductDemandIds" item="item" separator="," open="(" close=")">
-                        #{item}
-                    </foreach>
-                </if>
-                <if test="condition.types!= null and condition.types!='' ">
-                    and a.type REGEXP CONCAT('[', #{condition.types},']')
-                </if>
-                and a.is_deleted =false
-            </if>
-            <if test="parentCondition != null">
-                <if test="parentCondition.expectScheduleTime != null">
-                    and DATE_FORMAT(a.create_date, '%Y-%m') = #{parentCondition.expectScheduleTime}
-                </if>
-                <if test="parentCondition.priority!=null">
-                    and a.priority = #{parentCondition.priority}
-                </if>
-                <if test="parentCondition.productLineId!=null">
-                    and c.id = #{parentCondition.productLineId}
-                </if>
-                <if test="parentCondition.bizDomainId!=null">
-                    and d.id = #{parentCondition.bizDomainId}
-                </if>
-                <if test="parentCondition.ownerId!=null">
-                    and a.owner_id = #{parentCondition.ownerId}
-                </if>
-                <if test="parentCondition.ownerIds!=null and parentCondition.ownerIds.size()>0">
-                    and a.owner_id not in
-                    <foreach collection="parentCondition.ownerIds" item="item" separator="," open="(" close=")">
-                        #{item}
-                    </foreach>
-                </if>
-                <if test="parentCondition.status!=null">
-                    and a.status = #{parentCondition.status}
-                </if>
-                <if test="parentCondition.inProductDemandIds!=null and parentCondition.inProductDemandIds.size()>0">
-                    and a.id in
-                    <foreach collection="parentCondition.inProductDemandIds" item="item" separator="," open="("
-                             close=")">
-                        #{item}
-                    </foreach>
-                </if>
-                <if test="parentCondition.type!= null">
-                    and a.type REGEXP CONCAT('[', #{parentCondition.type},']')
-                </if>
-                <if test="parentCondition.labelCategoryId!=null">
-                    and f.label_category_id = #{parentCondition.labelCategoryId}
-                </if>
-                <if test="parentCondition.labelCategoryIds!=null and parentCondition.labelCategoryIds.size()>0">
-                    and f.label_category_id not in
-                    <foreach collection="parentCondition.labelCategoryIds" item="item" separator="," open="(" close=")">
-                        #{item}
-                    </foreach>
-                </if>
-            </if>
-        </where>
-        <if test="orderField!= null and orderField!='' ">
-            order by ${orderField}
-        </if>
+        where a.owner_id = #{ownerId} and a.is_deleted=false order by a.id  desc limit 0,3
     </select>
 </mapper>
