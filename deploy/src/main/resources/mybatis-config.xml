@@ -130,5 +130,7 @@
         <mapper resource="mapper/WorkHoursRecordMapper.xml" />
         <mapper resource="mapper/ProductDemandGroupMapper.xml"/>
         <mapper resource="mapper/ProductDemandGroupItemMapper.xml"/>
+        <mapper resource="mapper/ViewsMapper.xml"/>
+        <mapper resource="mapper/ViewsUserMapper.xml"/>
     </mappers>
 </configuration>
