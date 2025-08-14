@@ -1,8 +1,11 @@
 package com.timevale.forward.service.component;
 
+import com.timevale.forward.dal.condition.BizDemandGroupQueryCondition;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
+import com.timevale.forward.dal.entity.BizDemandGroupFieldDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
+import com.timevale.forward.facade.api.result.DemandGroupNodeVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.security.facade.response.GroupResponse;
@@ -103,4 +106,6 @@ public interface BizDemandComponent {
     Integer getStatusByProduct(Long bdId);
 
     BizDemandStatusEnum getBizDemandStatusByProjectStatus(Integer projectStatus);
+
+    List<BizDemandGroupFieldDO> groupTree(BizDemandGroupQueryCondition condition);
 }

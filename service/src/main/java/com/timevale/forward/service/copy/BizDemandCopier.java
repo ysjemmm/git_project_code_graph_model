@@ -1,10 +1,12 @@
 package com.timevale.forward.service.copy;
 
+import com.timevale.forward.dal.condition.BizDemandGroupCondition;
 import com.timevale.forward.dal.condition.BizDemandLinkProductDemandListCondition;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.entity.BizDemandDO;
 import com.timevale.forward.dal.entity.BizDemandLinkProductDemandListDO;
 import com.timevale.forward.dal.entity.BizDemandListDO;
+import com.timevale.forward.facade.api.query.BizDemandGroupList;
 import com.timevale.forward.facade.api.query.BizDemandLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.query.PersonQuery;
@@ -12,17 +14,28 @@ import com.timevale.forward.facade.api.query.ProductDemandLinkBizDemandQueryList
 import com.timevale.forward.facade.api.request.BizDemandAddReq;
 import com.timevale.forward.facade.api.request.BizDemandAgreeReq;
 import com.timevale.forward.facade.api.request.BizDemandModifyReq;
-import com.timevale.forward.facade.api.result.*;
-import com.timevale.forward.model.enums.*;
+import com.timevale.forward.facade.api.result.BizDemandDetailVO;
+import com.timevale.forward.facade.api.result.BizDemandLinkProductDemandVO;
+import com.timevale.forward.facade.api.result.BizDemandSimpleVO;
+import com.timevale.forward.facade.api.result.BizDemandStatusVO;
+import com.timevale.forward.facade.api.result.BizDemandVO;
+import com.timevale.forward.model.enums.BizDemandReasonEnum;
+import com.timevale.forward.model.enums.BizDemandStatusEnum;
+import com.timevale.forward.model.enums.CustomerDevTypeEnum;
+import com.timevale.forward.model.enums.PlanReleaseDateEnum;
+import com.timevale.forward.model.enums.PriorityEnum;
+import com.timevale.forward.model.enums.YesOrNoEnum;
 import com.timevale.forward.model.middle.BizDemandMD;
 import com.timevale.forward.model.to.PdLineDomainTO;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,6 +53,9 @@ import java.util.stream.Collectors;
                 PlanReleaseDateEnum.class,
                 CustomerDevTypeEnum.class,
                 PlanReleaseDateEnum.class,
+                Arrays.class,
+                StringUtils.class,
+                Collectors.class
         }
 )
 public interface BizDemandCopier {
@@ -216,6 +232,17 @@ public interface BizDemandCopier {
 
 
     BizDemandListCondition convert(BizDemandListCondition condition);
+
+    /**
+     * 转换转换DO
+     *
+     * @param queryList 对象
+     * @return ProductDemandGroupCondition
+     */
+    @Mapping(target = "labelCategoryIds", expression = "java(StringUtils.isNotEmpty(queryList.getLabelCategoryIds()) ? Arrays.stream(queryList.getLabelCategoryIds().split(\",\")).map(Long::valueOf).collect(Collectors.toList()) : null)")
+    @Mapping(target = "receiveManIds", expression = "java(StringUtils.isNotEmpty(queryList.getReceiveManIds()) ? Arrays.asList(queryList.getReceiveManIds().split(\",\")) : null)")
+    BizDemandGroupCondition convert(BizDemandGroupList queryList);
+
     /**
      * 信息id
      *

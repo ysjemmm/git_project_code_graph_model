@@ -2,8 +2,10 @@ package com.timevale.forward.service.utils.duplicate;
 
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Lists;
+import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.entity.ProductDemandListDO;
+import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandQueryList;
 import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
@@ -17,6 +19,7 @@ import com.timevale.forward.model.enums.ProductDemandTypeEnum;
 import com.timevale.forward.service.component.BizLabelComponent;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.BaseInfoResponse;
@@ -27,9 +30,11 @@ import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -38,6 +43,42 @@ import java.util.stream.Collectors;
 public class GroupDuplicateUtil {
 
     private final BizLabelComponent bizLabelComponent;
+
+    private final InnerUserPersonClient innerUserPersonClient;
+
+    public boolean isResultIsEmpty(BizDemandQueryList bizDemandQueryList, BizDemandListCondition condition) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        // 标志是否有对应数据
+        boolean resultIsEmpty = false;
+
+        // 根据tabs添加不同的效果
+        String ascription = bizDemandQueryList.getAscription();
+        if (AscriptionEnum.CURRENT_USER.toString().equals(ascription)) {
+            condition.setSubmitManIdList(org.assertj.core.util.Lists.newArrayList(userInfo.getId()));
+        } else if (AscriptionEnum.RECEIVE.toString().equals(ascription)) {
+            condition.setReceiveManIdList(org.assertj.core.util.Lists.newArrayList(userInfo.getId()));
+        } else if (AscriptionEnum.COPIER.toString().equals(ascription)) {
+            condition.setCopier(userInfo.getId());
+        } else {
+            List<String> teamMemberIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
+            if (AscriptionEnum.TEAM_SUBMIT.toString().equals(ascription)) {
+                Set<String> createIdSet = new HashSet<>(condition.getSubmitManIdList());
+                if (!createIdSet.isEmpty()) {
+                    teamMemberIdList = teamMemberIdList.stream().filter(createIdSet::contains).collect(Collectors.toList());
+                    resultIsEmpty = teamMemberIdList.isEmpty();
+                }
+                condition.setSubmitManIdList(teamMemberIdList);
+            } else if (AscriptionEnum.TEAM_RECEIVE.toString().equals(ascription)) {
+                Set<String> receiveIdSet = new HashSet<>(condition.getReceiveManIdList());
+                if (!receiveIdSet.isEmpty()) {
+                    teamMemberIdList = teamMemberIdList.stream().filter(receiveIdSet::contains).collect(Collectors.toList());
+                    resultIsEmpty = teamMemberIdList.isEmpty();
+                }
+                condition.setReceiveManIdList(teamMemberIdList);
+            }
+        }
+        return resultIsEmpty;
+    }
 
     public QueryResultVO<ProductDemandVO> getDemandVOQueryResultVO(List<ProductDemandListDO> productDemandListDO, List<ProductDemandVO> productDemandVOList, List<ProductLineAnalyseVO> analyseVOList) {
         List<Long> productDemandIds = productDemandListDO.stream().map(ProductDemandListDO::getId).collect(Collectors.toList());

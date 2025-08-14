@@ -126,6 +126,7 @@ import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateStyle;
 import com.timevale.forward.service.utils.date.DateUtil;
+import com.timevale.forward.service.utils.duplicate.GroupDuplicateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -220,42 +221,16 @@ public class BizDemandServiceImpl implements BizDemandService {
     @Resource
     private BizLabelService bizLabelService;
 
+    @Resource
+    private GroupDuplicateUtil groupDuplicateUtil;
+
     @Override
     public BaseResult<QueryResultVO<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList) {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-
         // 转换查询条件
         BizDemandListCondition condition = BizDemandCopier.INSTANCE.convert(bizDemandQueryList);
 
-        // 标志是否有对应数据
-        boolean resultIsEmpty = false;
-
-        // 根据tabs添加不同的效果
         String ascription = bizDemandQueryList.getAscription();
-        if (AscriptionEnum.CURRENT_USER.toString().equals(ascription)) {
-            condition.setSubmitManIdList(Lists.newArrayList(userInfo.getId()));
-        } else if (AscriptionEnum.RECEIVE.toString().equals(ascription)) {
-            condition.setReceiveManIdList(Lists.newArrayList(userInfo.getId()));
-        } else if (AscriptionEnum.COPIER.toString().equals(ascription)) {
-            condition.setCopier(userInfo.getId());
-        } else {
-            List<String> teamMemberIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
-            if (AscriptionEnum.TEAM_SUBMIT.toString().equals(ascription)) {
-                Set<String> createIdSet = new HashSet<>(condition.getSubmitManIdList());
-                if (!createIdSet.isEmpty()) {
-                    teamMemberIdList = teamMemberIdList.stream().filter(createIdSet::contains).collect(Collectors.toList());
-                    resultIsEmpty = teamMemberIdList.isEmpty();
-                }
-                condition.setSubmitManIdList(teamMemberIdList);
-            } else if (AscriptionEnum.TEAM_RECEIVE.toString().equals(ascription)) {
-                Set<String> receiveIdSet = new HashSet<>(condition.getReceiveManIdList());
-                if (!receiveIdSet.isEmpty()) {
-                    teamMemberIdList = teamMemberIdList.stream().filter(receiveIdSet::contains).collect(Collectors.toList());
-                    resultIsEmpty = teamMemberIdList.isEmpty();
-                }
-                condition.setReceiveManIdList(teamMemberIdList);
-            }
-        }
+        boolean resultIsEmpty = groupDuplicateUtil.isResultIsEmpty(bizDemandQueryList, condition);
         if (resultIsEmpty) {
             return BaseResult.success(ResultUtil.queryResultEmpty());
         }

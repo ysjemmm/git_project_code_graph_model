@@ -5,12 +5,36 @@ import cn.hutool.core.util.ObjectUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Maps;
+import com.timevale.forward.dal.condition.BizDemandGroupQueryCondition;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.condition.BizDemandUpdateCondition;
-import com.timevale.forward.dal.dao.*;
-import com.timevale.forward.dal.entity.*;
-import com.timevale.forward.facade.api.result.*;
-import com.timevale.forward.model.enums.*;
+import com.timevale.forward.dal.dao.BizDemandMapper;
+import com.timevale.forward.dal.dao.BizLabelMapper;
+import com.timevale.forward.dal.dao.ProductBizDemandMapper;
+import com.timevale.forward.dal.dao.ProductDemandMapper;
+import com.timevale.forward.dal.dao.ProjectBizDemandMapper;
+import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.entity.BaseDO;
+import com.timevale.forward.dal.entity.BizDemandDO;
+import com.timevale.forward.dal.entity.BizDemandGroupFieldDO;
+import com.timevale.forward.dal.entity.BizDemandListDO;
+import com.timevale.forward.dal.entity.BizDemandProjectDO;
+import com.timevale.forward.dal.entity.BizLabelDO;
+import com.timevale.forward.dal.entity.ProductBizDemandDO;
+import com.timevale.forward.dal.entity.ProductDemandDO;
+import com.timevale.forward.dal.entity.ProjectBizDemandDO;
+import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.facade.api.result.BizDemandVO;
+import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
+import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
+import com.timevale.forward.facade.api.result.ProjectSimpleVO;
+import com.timevale.forward.facade.api.result.QueryResultVO;
+import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
+import com.timevale.forward.model.enums.BizDemandStatusEnum;
+import com.timevale.forward.model.enums.BizTypeEnum;
+import com.timevale.forward.model.enums.PlanReleaseDateEnum;
+import com.timevale.forward.model.enums.ProductDemandStatusEnum;
+import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.BizDemandLogComponent;
 import com.timevale.forward.service.component.BizLabelComponent;
@@ -37,7 +61,18 @@ import org.assertj.core.util.Sets;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -376,6 +411,40 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         queryResultVO.setAnalyseVOList(analyseVOList);
         queryResultVO.setPageQueryResult(pageQueryResult);
         return queryResultVO;
+    }
+
+    @Override
+    public List<BizDemandGroupFieldDO> groupTree(BizDemandGroupQueryCondition bizDemandGroupQueryCondition) {
+        BizDemandListCondition condition = bizDemandGroupQueryCondition.getCondition();
+        Map<Long, GroupResponse> deptNodeMap;
+        Set<Long> queryDeptIdSet = Sets.newHashSet(condition.getDeptIdList());
+
+        // 如果查询条件有部门id，收集子部门id及所需部门的完整名
+        if (CollUtil.isNotEmpty(queryDeptIdSet)) {
+            deptNodeMap = getGroupListTreeMap(Lists.newArrayList(queryDeptIdSet));
+            // 替换查询部门id条件
+            condition.setDeptIdList(Lists.newArrayList(deptNodeMap.keySet()));
+        }
+
+        //是否打标
+        List<BizLabelDO> bizLabelDOList;
+        if (CollectionUtils.isNotEmpty(condition.getLabelIds())) {
+            bizLabelDOList = bizLabelMapper.getByLabelIdInType(condition.getLabelIds(), BizTypeEnum.BIZ_DEMAND.getCode());
+            List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+            Boolean containLabel = condition.getContainLabel();
+            if (containLabel) {
+                if (CollectionUtils.isEmpty(bizIds)) {
+                    return new ArrayList<>();
+                }
+                condition.setContainIds(bizIds);
+            } else {
+                condition.setExclusiveIds(bizIds);
+            }
+        }
+        // 查询条件对象重新赋值
+        bizDemandGroupQueryCondition.setCondition(condition);
+
+        return bizDemandMapper.getGroupTree(bizDemandGroupQueryCondition);
     }
 
     @Override

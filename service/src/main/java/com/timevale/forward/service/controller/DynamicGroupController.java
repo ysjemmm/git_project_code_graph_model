@@ -1,7 +1,9 @@
 package com.timevale.forward.service.controller;
 
 import com.timevale.forward.facade.api.client.DynamicGroupService;
+import com.timevale.forward.facade.api.query.DynamicBizDemandGroupList;
 import com.timevale.forward.facade.api.query.DynamicProductDemandGroupList;
+import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.DemandGroupNodeVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
@@ -40,9 +42,21 @@ public class DynamicGroupController {
         return ResultUtils.result(dynamicGroupService.getProductDemandsGroupTree(dynamicGroupQueryList));
     }
 
-    @ApiOperation("叶子分组需求")
+    @ApiOperation("产品需求列表")
     @PostMapping("/productDemandList")
     public BusinessResult<QueryResultVO<ProductDemandVO>> getProductDemandList(@RequestBody DynamicProductDemandGroupList dynamicGroupQueryList) {
         return ResultUtils.result(dynamicGroupService.getProductDemandList(dynamicGroupQueryList));
+    }
+
+    @ApiOperation("业务需求分组树")
+    @PostMapping("/bizDemandsGroupTree")
+    public BusinessResult<List<DemandGroupNodeVO>> getBizDemandsGroupTree(@RequestBody DynamicBizDemandGroupList dynamicGroupQueryList) {
+        return ResultUtils.result(dynamicGroupService.getBizDemandsGroupTree(dynamicGroupQueryList));
+    }
+
+    @ApiOperation("业务需求列表")
+    @PostMapping("/bizDemandList")
+    public BusinessResult<QueryResultVO<BizDemandVO>> getBizDemandList(@RequestBody DynamicBizDemandGroupList dynamicGroupQueryList) {
+        return ResultUtils.result(dynamicGroupService.getBizDemandList(dynamicGroupQueryList));
     }
 }

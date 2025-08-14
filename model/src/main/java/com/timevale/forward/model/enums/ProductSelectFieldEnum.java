@@ -8,7 +8,7 @@ import lombok.Getter;
  * @description:
  */
 @Getter
-public enum SelectFieldEnum {
+public enum ProductSelectFieldEnum {
 
     BIZ_DOMAIN("bizDomain","d.id as bizDomainId", "业务域"),
 
@@ -32,14 +32,14 @@ public enum SelectFieldEnum {
 
     final private String fieldChinese;
 
-    SelectFieldEnum(String selectField, String sourceField, String fieldChinese){
+    ProductSelectFieldEnum(String selectField, String sourceField, String fieldChinese){
         this.selectField = selectField;
         this.sourceField = sourceField;
         this.fieldChinese = fieldChinese;
     }
 
     public static String getSourceFieldBySelectField(String selectField){
-        for (SelectFieldEnum e : SelectFieldEnum.values()){
+        for (ProductSelectFieldEnum e : ProductSelectFieldEnum.values()){
             if(e.getSelectField().equals(selectField)){
                 return e.sourceField;
             }
@@ -48,7 +48,7 @@ public enum SelectFieldEnum {
     }
 
     public static String getFieldChineseBySelectField(String selectField){
-        for (SelectFieldEnum e : SelectFieldEnum.values()){
+        for (ProductSelectFieldEnum e : ProductSelectFieldEnum.values()){
             if(e.getSelectField().equals(selectField)){
                 return e.fieldChinese;
             }
@@ -58,9 +58,9 @@ public enum SelectFieldEnum {
 
     // 得到所有的selectFieldsKey
     public static String[] getAllSelectFieldsKey(){
-        String[] selectFields = new String[SelectFieldEnum.values().length];
-        for (int i = 0; i < SelectFieldEnum.values().length; i++) {
-            selectFields[i] = SelectFieldEnum.values()[i].getSelectField();
+        String[] selectFields = new String[ProductSelectFieldEnum.values().length];
+        for (int i = 0; i < ProductSelectFieldEnum.values().length; i++) {
+            selectFields[i] = ProductSelectFieldEnum.values()[i].getSelectField();
         }
         return selectFields;
     }

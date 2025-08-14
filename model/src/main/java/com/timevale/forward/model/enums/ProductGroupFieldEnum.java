@@ -8,15 +8,13 @@ import lombok.Getter;
  * @description:
  */
 @Getter
-public enum GroupFieldEnum {
-    /**
-     * 优先级:0(P0),1(P1),2(P2)
-     */
+public enum ProductGroupFieldEnum {
+
     BIZ_DOMAIN("bizDomain","d.id", "业务域"),
 
     PRODUCT_LINE("productLine","c.id", "产品线"),
 
-    LABEL_CATEGORY("labelCategory","label_category_id", "标签类别"),
+    LABEL_CATEGORY("labelCategory","f.label_category_id", "标签类别"),
 
     TYPE("type","a.type", "产品需求类型"),
 
@@ -34,14 +32,14 @@ public enum GroupFieldEnum {
 
     final private String fieldChinese;
 
-    GroupFieldEnum(String groupField, String sourceField, String fieldChinese){
+    ProductGroupFieldEnum(String groupField, String sourceField, String fieldChinese){
         this.groupField = groupField;
         this.sourceField = sourceField;
         this.fieldChinese = fieldChinese;
     }
 
     public static String getSourceFieldByGroupField(String groupField){
-        for (GroupFieldEnum e : GroupFieldEnum.values()){
+        for (ProductGroupFieldEnum e : ProductGroupFieldEnum.values()){
             if(e.getGroupField().equals(groupField)){
                 return e.sourceField;
             }
@@ -50,7 +48,7 @@ public enum GroupFieldEnum {
     }
 
     public static String getFieldChineseByGroupField(String groupField){
-        for (GroupFieldEnum e : GroupFieldEnum.values()){
+        for (ProductGroupFieldEnum e : ProductGroupFieldEnum.values()){
             if(e.getGroupField().equals(groupField)){
                 return e.fieldChinese;
             }
@@ -60,9 +58,9 @@ public enum GroupFieldEnum {
 
     // 得到所有的groupFieldsKey
     public static String[] getAllGroupFieldsKey(){
-        String[] groupFields = new String[GroupFieldEnum.values().length];
-        for (int i = 0; i < GroupFieldEnum.values().length; i++) {
-            groupFields[i] = GroupFieldEnum.values()[i].getGroupField();
+        String[] groupFields = new String[ProductGroupFieldEnum.values().length];
+        for (int i = 0; i < ProductGroupFieldEnum.values().length; i++) {
+            groupFields[i] = ProductGroupFieldEnum.values()[i].getGroupField();
         }
         return groupFields;
     }
