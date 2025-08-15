@@ -33,6 +33,8 @@ import com.timevale.forward.facade.api.result.WorkHoursRemainVO;
 import com.timevale.forward.facade.api.result.WorkbenchesWorkHoursVO;
 import com.timevale.forward.model.enums.BizTypeEnum;
 import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.model.enums.ProjectCategoryEnum;
+import com.timevale.forward.model.enums.ProjectKindEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.model.enums.TaskStatusEnum;
 import com.timevale.forward.service.component.PersonComponent;
@@ -517,6 +519,20 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             }
         }
 
+        // 1. 查询开启通知的项目列表
+        // 通过项目状态和类别查询项目，并过滤出需要工时通知的项目，将其ID与名称映射为Map
+        Map<Long, String> notifyProjectMap = projectMapper.getByWorkHoursNotify(PROJECT_STATUSES, ProjectCategoryEnum.PRODUCT_PROJECT.getCode(), true)
+                .stream()
+                .filter(e -> ProjectKindEnum.PBG_BASE.getCode().equals(e.getKind()))
+                .collect(Collectors.toMap(ProjectDO::getId, ProjectDO::getName, (e1, e2) -> e1));
+
+        // 如果没有找到开启工时通知的项目任务
+        if (notifyProjectMap.isEmpty()) {
+            return BaseResult.success(new ArrayList<>());
+        }
+        // 将通知项目的ID收集到列表中
+        List<Long> projectIds = new ArrayList<>(notifyProjectMap.keySet());
+
         List<RegisterWorkHoursTaskVO> registerWorkHoursTaskVOS = new ArrayList<>();
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
@@ -529,6 +545,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         String date = localDate.format(DATE_FORMATTER);
         // 查询当前用户进行中的任务
         List<TaskDO> progressTaskList = taskMapper.getProgressTaskList(TaskListCondition.builder()
+                .projectIds(projectIds)
                 .status(TASK_STATUSES)
                 .currentDate(date)
                 .ids(executorTaskIds)
@@ -538,7 +555,6 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             return BaseResult.success(registerWorkHoursTaskVOS);
         }
         // 查询任务对应的项目名称
-        List<Long> projectIds = progressTaskList.stream().map(TaskDO::getProjectId).collect(Collectors.toList());
         Map<Long, String> projectMap = projectMapper.getByIds(projectIds).stream().filter(e -> PROJECT_STATUSES.contains(e.getStatus())).collect(Collectors.toMap(ProjectDO::getId, ProjectDO::getName, (v1, v2) -> v1));
         // 过滤掉无效项目
         List<TaskDO> taskDOList = progressTaskList.stream().filter(taskDO -> projectMap.containsKey(taskDO.getProjectId())).collect(Collectors.toList());
