@@ -13,6 +13,7 @@
             and v.`type` = #{type}
             and vu.`owner_id` = #{ownerId}
         </where>
+        order by vu.`position` desc, id desc
     </select>
 
     <!-- 根据主键id获取视图 -->

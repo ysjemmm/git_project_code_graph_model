@@ -20,15 +20,24 @@ public enum ViewsGroupFieldEnum {
 
     PRODUCT_LINE("productLine","产品线", 0, Lists.newArrayList(ViewsTypeEnum.BIZ_DEMAND, ViewsTypeEnum.PRODUCT_DEMAND)),
 
-    TYPE("type","产品需求类型", 0, Lists.newArrayList(ViewsTypeEnum.BIZ_DEMAND, ViewsTypeEnum.PRODUCT_DEMAND)),
-
-    STATUS("status", "产品需求状态", 0, Lists.newArrayList(ViewsTypeEnum.BIZ_DEMAND, ViewsTypeEnum.PRODUCT_DEMAND)),
-
     PRIORITY("priority", "优先级", 0, Lists.newArrayList(ViewsTypeEnum.BIZ_DEMAND, ViewsTypeEnum.PRODUCT_DEMAND)),
 
-    OWNER("owner","产品需求负责人",0, Lists.newArrayList(ViewsTypeEnum.BIZ_DEMAND, ViewsTypeEnum.PRODUCT_DEMAND)),
+    TYPE("type","产品需求类型", 0, Lists.newArrayList(ViewsTypeEnum.PRODUCT_DEMAND)),
+
+    PRODUCT_DEMAND_STATUS("status", "产品需求状态", 0, Lists.newArrayList(ViewsTypeEnum.PRODUCT_DEMAND)),
+
+    BIZ_DEMAND_STATUS("status", "需求解决状态", 0, Lists.newArrayList(ViewsTypeEnum.BIZ_DEMAND)),
+
+    PRODUCT_DEMAND_OWNER("owner","产品需求负责人",0, Lists.newArrayList(ViewsTypeEnum.PRODUCT_DEMAND)),
+
+    TARGET_CUSTOMER("targetCustomer","目标客户", 0, Lists.newArrayList(ViewsTypeEnum.BIZ_DEMAND)),
+
+    DEMAND_DEPT("targetCustomer","需求部门", 0, Lists.newArrayList(ViewsTypeEnum.BIZ_DEMAND)),
+
+    RECEIVE_MAN("targetCustomer","需求接收人", 0, Lists.newArrayList(ViewsTypeEnum.BIZ_DEMAND)),
 
     LABEL_CATEGORY("labelCategory", "标签类别", 1, Lists.newArrayList(ViewsTypeEnum.BIZ_DEMAND, ViewsTypeEnum.PRODUCT_DEMAND));
+
 
     final private String key;
 
