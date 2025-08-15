@@ -84,4 +84,11 @@ public interface ViewsService {
      */
     BaseResult<List<ViewsGroupVO>> groupConditions(ViewsGroupQuery viewsGroupQuery);
 
+
+    /**
+     * 置顶视图
+     * @param viewsReq 置顶请求
+     * @return 是否成功
+     */
+    BaseResult<Boolean> top(ViewsReq viewsReq);
 } 

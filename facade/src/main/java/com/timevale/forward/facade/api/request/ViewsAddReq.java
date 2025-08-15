@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 /**
  * @author qiyuan
@@ -19,6 +20,7 @@ public class ViewsAddReq extends BaseReq {
 
     @ApiModelProperty(value = "名称", required = true)
     @NotEmpty(message = "名称不能为空")
+    @Size(max = 64,message = "视图名称长度不能超过64字符")
     private String name;
 
     @ApiModelProperty(value = "业务类型：10-业务需求，11-产品需求，12-项目，13-线下bug，14-线上bug", required = true)

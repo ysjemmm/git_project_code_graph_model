@@ -228,7 +228,7 @@ public class ViewsServiceImpl implements ViewsService {
         checkOperationPermission(viewsUser.getOwnerId());
         viewsUser.setHidden(!viewsUser.getHidden());
         viewsUserMapper.update(viewsUser);
-        return null;
+        return BaseResult.success(true);
     }
 
 
@@ -276,6 +276,16 @@ public class ViewsServiceImpl implements ViewsService {
             }
         }
         return BaseResult.success(list);
+    }
+
+    @Override
+    public BaseResult<Boolean> top(ViewsReq viewsReq) {
+        Pair<ViewsDO, ViewsUserDO> viewsPair = getViewsDo(viewsReq.getId());
+        ViewsUserDO viewsUser = viewsPair.getSecond();
+        checkOperationPermission(viewsUser.getOwnerId());
+        viewsUser.setPosition(BigDecimal.valueOf(System.currentTimeMillis()));
+        viewsUserMapper.update(viewsUser);
+        return BaseResult.success(true);
     }
 
     private Pair<ViewsDO, ViewsUserDO> getViewsDo(Long viewsUserId) {

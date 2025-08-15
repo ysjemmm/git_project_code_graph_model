@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.util.List;
 
 /**
@@ -18,5 +19,6 @@ import java.util.List;
 public class ViewsShareReq extends ViewsReq {
     @ApiModelProperty(value = "分享人列表", required = true)
     @NotNull(message = "分享人列表不能为空")
+    @Size(max = 50, message = "一次分享数量不能超过50人")
     private List<PersonAddReq> users;
 }
