@@ -304,6 +304,9 @@ public class ViewsServiceImpl implements ViewsService {
         if (name.contains(CommonConstant.BLANK)) {
             throw new BaseBizRuntimeException("视图名称中请勿包含空格");
         }
+        if (id == null &&  !ViewsTypeEnum.existCode(type)) {
+            throw new BaseBizRuntimeException("非法视图类型");
+        }
         ViewsDO oldViews = viewsMapper.getByTypeAndName(type, name);
         if (oldViews != null && !oldViews.getId().equals(id)) {
             throw new BaseBizRuntimeException("该视图名称已存在,请修改后重试");

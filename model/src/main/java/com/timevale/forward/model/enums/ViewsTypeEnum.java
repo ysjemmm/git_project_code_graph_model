@@ -57,6 +57,10 @@ public enum ViewsTypeEnum {
         return null;
     }
 
+    public static boolean existCode(Integer code) {
+        return getByCode(code) != null;
+    }
+
     public static String getTextByCode(Integer code){
         for (ViewsTypeEnum e : ViewsTypeEnum.values()){
             if(e.code.equals(code)){
