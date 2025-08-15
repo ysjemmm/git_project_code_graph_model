@@ -293,7 +293,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         if (workHoursRecordDO.getProgress() >= 100) {
             TaskDoneReq taskDoneReq = new TaskDoneReq();
             taskDoneReq.setId(taskDO.getId());
-            taskDoneReq.setActualEndDate(new Date(startTime.getTime() + 1));
+            taskDoneReq.setActualEndDate(new Date(startTime.getTime() + 5000L));
             taskService.done(taskDoneReq);
         }
     }
