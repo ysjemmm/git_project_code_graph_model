@@ -2,12 +2,11 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
+import com.timevale.forward.facade.api.query.ViewsGroupQuery;
 import com.timevale.forward.facade.api.query.ViewsQueryList;
-import com.timevale.forward.facade.api.request.ViewsAddReq;
-import com.timevale.forward.facade.api.request.ViewsModifyReq;
-import com.timevale.forward.facade.api.request.ViewsReq;
-import com.timevale.forward.facade.api.request.ViewsShareReq;
-import com.timevale.forward.facade.api.result.ViewsVO;
+import com.timevale.forward.facade.api.request.*;
+import com.timevale.forward.facade.api.result.ViewsGroupVO;
+import com.timevale.forward.facade.api.result.ViewsUserListVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 
 import java.util.List;
@@ -20,7 +19,14 @@ import java.util.List;
 @RestClient(serviceId = MagicValue.FORWARD_RPC_PREFIX)
 public interface ViewsService {
 
-    BaseResult<List<ViewsVO>> list(ViewsQueryList viewsQueryList);
+    BaseResult<List<ViewsUserListVO>> list(ViewsQueryList viewsQueryList);
+
+    /**
+     * 保存视图的分组和筛选条件
+     * @param viewsSaveReq 保存请求
+     * @return 是否成功
+     */
+    BaseResult<Boolean> save(ViewsSaveReq viewsSaveReq);
 
     /**
      * 新增视图
@@ -70,5 +76,12 @@ public interface ViewsService {
      * @return 是否成功
      */
     BaseResult<Boolean> share(ViewsShareReq viewsShareReq);
+
+    /**
+     * 分组条件
+     * @param viewsGroupQuery 分组条件请求
+     * @return 是否成功
+     */
+    BaseResult<List<ViewsGroupVO>> groupConditions(ViewsGroupQuery viewsGroupQuery);
 
 } 

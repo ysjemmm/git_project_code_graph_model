@@ -5,7 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.constraints.NotNull;
+import java.util.List;
 
 /**
  * @author qiyuan
@@ -13,9 +13,11 @@ import javax.validation.constraints.NotNull;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("视图请求")
-public class ViewsReq extends BaseReq {
-    @ApiModelProperty(value = "主键id", required = true)
-    @NotNull(message = "主键id不能为空")
-    private Long id;
+@ApiModel("视图保存请求")
+public class ViewsSaveReq extends ViewsReq {
+    @ApiModelProperty("分组字段")
+    private List<ViewsGroupFieldReq> groupFields;
+
+    @ApiModelProperty("过滤条件")
+    private ViewsFilterReq filterList;
 }

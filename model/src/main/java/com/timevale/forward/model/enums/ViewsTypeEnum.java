@@ -48,6 +48,15 @@ public enum ViewsTypeEnum {
     private final Integer code;
     private final String text;
 
+    public static ViewsTypeEnum getByCode(Integer code){
+        for (ViewsTypeEnum e : ViewsTypeEnum.values()){
+            if(e.code.equals(code)){
+                return e;
+            }
+        }
+        return null;
+    }
+
     public static String getTextByCode(Integer code){
         for (ViewsTypeEnum e : ViewsTypeEnum.values()){
             if(e.code.equals(code)){

@@ -1,7 +1,11 @@
 package com.timevale.forward.dal.dao;
 
+import com.timevale.forward.dal.condition.ViewsListCondition;
 import com.timevale.forward.dal.entity.ViewsUserDO;
+import com.timevale.forward.dal.entity.ViewsUserListDO;
 import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
  * 视图用户Mapper
@@ -10,6 +14,14 @@ import org.apache.ibatis.annotations.Param;
  * @date 2025/08/14 14:42
  */
 public interface ViewsUserMapper {
+
+    /**
+     * 查询d
+     *
+     * @param viewsListCondition 产品需求分组查询条件
+     * @return list
+     */
+    List<ViewsUserListDO> list(ViewsListCondition viewsListCondition);
 
     /**
      * 根据主键id获取视图用户
@@ -27,6 +39,14 @@ public interface ViewsUserMapper {
      * @return 视图用户DO
      */
     ViewsUserDO getByViewIdAndOwnerId(@Param("viewsId") Long viewsId, @Param("ownerId") String ownerId);
+
+    /**
+     * 根据视图id获取视图用户
+     *
+     * @param viewsId 视图id
+     * @return 视图用户DO
+     */
+    List<ViewsUserDO> getByViewId(@Param("viewsId") Long viewsId);
 
     /**
      * 新增视图用户

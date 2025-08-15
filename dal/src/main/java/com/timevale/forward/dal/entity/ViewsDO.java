@@ -35,9 +35,9 @@ public class ViewsDO extends BaseDO {
     private String ownerId;
 
     /**
-     * 排序字段
+     * 分组字段
      */
-    private String sortField;
+    private String groupField;
 
     /**
      * 筛选条件
