@@ -119,6 +119,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -254,7 +255,22 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
         // 完整查询
         List<ProductDemandListDO> allProductDemandListDO = productDemandComponent.list(ProductDemandCopier.INSTANCE.convert(condition));
-        List<ProductLineAnalyseVO> analyseVOList = groupDuplicateUtil.getProductLineAnalyseVOS(allProductDemandListDO);
+        Map<Long, List<ProductDemandListDO>> bizDemandListDOMap = allProductDemandListDO.stream().collect(Collectors.groupingBy(ProductDemandListDO::getProductLineId));
+        log.info("业务查询产品线分析：{}", bizDemandListDOMap);
+
+        List<ProductLineAnalyseVO> analyseVOList = new ArrayList<>();
+        bizDemandListDOMap.forEach((k, v) -> {
+            ProductLineAnalyseVO analyseVO = new ProductLineAnalyseVO();
+            Optional<ProductDemandListDO> any = v.stream().findAny();
+            any.ifPresent(e -> {
+                analyseVO.setCount(v.size());
+                analyseVO.setProductLineId(e.getProductLineId());
+                analyseVO.setProductLineName(e.getProductLineName());
+                analyseVOList.add(analyseVO);
+            });
+        });
+        //逆序排序
+        analyseVOList.sort((a, b) -> b.getCount().compareTo(a.getCount()));
 
         List<Long> conditionSubProductLineIdList = productDemandQueryList.getSubProductLineIds();
         if (CollectionUtils.isNotEmpty(conditionSubProductLineIdList)) {
@@ -274,12 +290,11 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<ProductDemandListDO> productDemandListDO = productDemandComponent.list(condition);
 
-        List<ProductDemandVO> productDemandVOList = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
+        PageQueryResult<ProductDemandVO> pageQueryResult = groupDuplicateUtil.getDemandVOQueryResultVO(productDemandListDO);
 
-        if (CollectionUtils.isEmpty(productDemandVOList)) {
-            return BaseResult.success(ResultUtil.queryResultEmpty());
-        }
-        QueryResultVO<ProductDemandVO> queryResultVO = groupDuplicateUtil.getDemandVOQueryResultVO(productDemandListDO, productDemandVOList, analyseVOList);
+        QueryResultVO<ProductDemandVO> queryResultVO = new QueryResultVO<>();
+        queryResultVO.setPageQueryResult(pageQueryResult);
+        queryResultVO.setAnalyseVOList(analyseVOList);
 
         return BaseResult.success(queryResultVO);
     }

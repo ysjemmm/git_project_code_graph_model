@@ -16,16 +16,16 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("动态分组查询")
-public class DynamicProductDemandGroupList extends QueryBase {
+public class DynamicBizDemandGroupList extends QueryBase {
 
     @ApiModelProperty("分组字段")
     private List<String> groupFields;
 
     @ApiModelProperty("筛选条件")
-    private ProductDemandQueryList filters;
+    private BizDemandQueryList filters;
 
     @ApiModelProperty("分组筛选条件")
-    private ProductDemandGroupList groupFilters;
+    private BizDemandGroupList groupFilters;
 
     @ApiModelProperty("排序字段")
     private String orderField;

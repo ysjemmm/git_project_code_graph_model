@@ -6,20 +6,53 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProductDemandGroupListCondition;
-import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.dao.BizLabelMapper;
+import com.timevale.forward.dal.dao.ProductDemandGroupItemMapper;
+import com.timevale.forward.dal.dao.ProductDemandGroupMapper;
+import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.dao.ProjectProductDemandMapper;
 import com.timevale.forward.dal.dto.ProductDemandMoveDTO;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.entity.BizLabelDO;
+import com.timevale.forward.dal.entity.ProductDemandGroupDO;
+import com.timevale.forward.dal.entity.ProductDemandGroupItemDO;
+import com.timevale.forward.dal.entity.ProductDemandGroupItemListDO;
+import com.timevale.forward.dal.entity.ProductDemandListDO;
+import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.entity.ProjectProductDemandDO;
 import com.timevale.forward.facade.api.client.ProductDemandGroupService;
 import com.timevale.forward.facade.api.query.ProductDemandGroupQueryList;
-import com.timevale.forward.facade.api.request.*;
-import com.timevale.forward.facade.api.result.*;
-import com.timevale.forward.model.enums.*;
-import com.timevale.forward.service.component.*;
+import com.timevale.forward.facade.api.request.ProductDemandGroupAddReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupItemMoveReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupModifyReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupMoveReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupProjectLinkReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupProjectReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupReq;
+import com.timevale.forward.facade.api.request.ProjectProductDemandLinkReq;
+import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
+import com.timevale.forward.facade.api.result.ProductDemandGroupItemVO;
+import com.timevale.forward.facade.api.result.ProductDemandGroupVO;
+import com.timevale.forward.facade.api.result.ProductDemandVO;
+import com.timevale.forward.model.enums.AscriptionEnum;
+import com.timevale.forward.model.enums.BizTypeEnum;
+import com.timevale.forward.model.enums.LinkOrUnLinkEnum;
+import com.timevale.forward.model.enums.PriorityEnum;
+import com.timevale.forward.model.enums.ProductDemandGroupMoveModeEnum;
+import com.timevale.forward.model.enums.ProductDemandStatusEnum;
+import com.timevale.forward.model.enums.ProductDemandTypeEnum;
+import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.service.component.BizLabelComponent;
+import com.timevale.forward.service.component.LabelComponent;
+import com.timevale.forward.service.component.ProductDemandGroupComponent;
+import com.timevale.forward.service.component.ProductDemandGroupItemComponent;
+import com.timevale.forward.service.component.ProductLineComponent;
+import com.timevale.forward.service.component.ProjectProductDemandComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.forward.service.copy.ProductDemandGroupCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.duplicate.GroupDuplicateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.forward.service.utils.position.PositionUtil;
@@ -37,7 +70,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
@@ -79,7 +116,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
     private ProductLineComponent productLineComponent;
 
     @Resource
-    private ProductDemandMapper productDemandMapper;
+    private GroupDuplicateUtil groupDuplicateUtil;
 
     @Resource
     private ProjectMapper projectMapper;
@@ -107,34 +144,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         PageHelper.startPage(productDemandGroupQueryList.getPageNum(), productDemandGroupQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<ProductDemandListDO> productDemandListDO = productDemandGroupItemComponent.listProductDemandBacklog(condition);
 
-        List<ProductDemandVO> productDemandVOList = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
-        if (CollectionUtils.isEmpty(productDemandVOList)) {
-            return BaseResult.success(ResultUtil.pageEmpty());
-        }
-        List<Long> productDemandIds = productDemandListDO.stream().map(ProductDemandListDO::getId).collect(Collectors.toList());
-
-        Map<Long, List<BizLabelSimpleVO>> bizLabelMap = bizLabelComponent.getBizLabelMap(productDemandIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
-
-        for (ProductDemandVO a : productDemandVOList) {
-            a.setStatusName(ProductDemandStatusEnum.getTextByCode(a.getStatus()));
-            a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
-
-            List<BizLabelSimpleVO> labelSimpleVOList = bizLabelMap.get(a.getId());
-            if (CollectionUtils.isNotEmpty(labelSimpleVOList)) {
-                a.setLabelNames(labelSimpleVOList);
-            }
-
-            String typeName = a.getType().stream()
-                    .map(ProductDemandTypeEnum::getTextByCode)
-                    .collect(Collectors.joining(","));
-            a.setTypeName(typeName);
-        }
-
-        // 返回分页数据
-        PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
-        PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
-        pageQueryResult.setResultList(productDemandVOList);
-        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+        PageQueryResult<ProductDemandVO> pageQueryResult = groupDuplicateUtil.getDemandVOQueryResultVO(productDemandListDO);
         return BaseResult.success(pageQueryResult);
     }
 

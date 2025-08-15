@@ -1,9 +1,14 @@
 package com.timevale.forward.dal.dao;
 
+import com.timevale.forward.dal.condition.BizDemandGroupQueryCondition;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.condition.BizDemandUpdateCondition;
+import com.timevale.forward.dal.condition.ProductDemandGroupQueryCondition;
 import com.timevale.forward.dal.entity.BizDemandDO;
+import com.timevale.forward.dal.entity.BizDemandGroupFieldDO;
 import com.timevale.forward.dal.entity.BizDemandListDO;
+import com.timevale.forward.dal.entity.ProductDemandGroupFieldDO;
+import com.timevale.forward.dal.entity.ProductDemandListDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -198,5 +203,21 @@ public interface BizDemandMapper {
 
     @Update("UPDATE biz_demand SET product_line_id = #{productLineId} WHERE id= #{id}")
     void updateProductLineById(@Param("id")Long id, @Param("productLineId")Long productLineId);
+
+    /**
+     * 查询业务需求分组条数
+     *
+     * @param bizDemandGroupQueryCondition 业务需求Id列表
+     * @return list
+     */
+    List<BizDemandGroupFieldDO> getGroupTree(BizDemandGroupQueryCondition bizDemandGroupQueryCondition);
+
+    /**
+     * 查询业务需求
+     *
+     * @param bizDemandGroupQueryCondition 业务需求Id列表
+     * @return list
+     */
+    List<BizDemandListDO> getGroupList(BizDemandGroupQueryCondition bizDemandGroupQueryCondition);
 
 }
