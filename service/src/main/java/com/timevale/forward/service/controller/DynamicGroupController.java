@@ -9,6 +9,7 @@ import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.service.utils.ResultUtils;
 import com.timevale.mandarin.common.result.BusinessResult;
+import com.timevale.mandarin.common.result.PageQueryResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +45,7 @@ public class DynamicGroupController {
 
     @ApiOperation("产品需求列表")
     @PostMapping("/productDemandList")
-    public BusinessResult<QueryResultVO<ProductDemandVO>> getProductDemandList(@RequestBody DynamicProductDemandGroupList dynamicGroupQueryList) {
+    public BusinessResult<PageQueryResult<ProductDemandVO>> getProductDemandList(@RequestBody DynamicProductDemandGroupList dynamicGroupQueryList) {
         return ResultUtils.result(dynamicGroupService.getProductDemandList(dynamicGroupQueryList));
     }
 
@@ -56,7 +57,7 @@ public class DynamicGroupController {
 
     @ApiOperation("业务需求列表")
     @PostMapping("/bizDemandList")
-    public BusinessResult<QueryResultVO<BizDemandVO>> getBizDemandList(@RequestBody DynamicBizDemandGroupList dynamicGroupQueryList) {
+    public BusinessResult<PageQueryResult<BizDemandVO>> getBizDemandList(@RequestBody DynamicBizDemandGroupList dynamicGroupQueryList) {
         return ResultUtils.result(dynamicGroupService.getBizDemandList(dynamicGroupQueryList));
     }
 }

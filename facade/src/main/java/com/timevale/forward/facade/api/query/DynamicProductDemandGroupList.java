@@ -24,8 +24,8 @@ public class DynamicProductDemandGroupList extends QueryBase {
     @ApiModelProperty("筛选条件")
     private ProductDemandQueryList filters;
 
-    @ApiModelProperty("父筛选条件")
-    private ProductDemandGroupList parentConditions;
+    @ApiModelProperty("分组筛选条件")
+    private ProductDemandGroupList groupFilters;
 
     @ApiModelProperty("排序字段")
     private String orderField;

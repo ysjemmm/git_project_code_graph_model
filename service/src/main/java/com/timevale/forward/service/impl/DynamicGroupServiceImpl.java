@@ -29,8 +29,6 @@ import com.timevale.forward.facade.api.query.ProductDemandQueryList;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.DemandGroupNodeVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
-import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
-import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.model.enums.BizDemandGroupFieldEnum;
 import com.timevale.forward.model.enums.BizDemandSelectFieldEnum;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
@@ -53,6 +51,7 @@ import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
+import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -149,7 +148,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
         // 1) 构建基础查询条件（复用一层分组的参数处理逻辑）
         ProductDemandQueryList productDemandQueryList = productDemandGroupList.getFilters();
-        ProductDemandGroupList parentProductDemandQueryList = productDemandGroupList.getParentConditions();
+        ProductDemandGroupList parentProductDemandQueryList = productDemandGroupList.getGroupFilters();
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
         ProductDemandGroupCondition parentCondition = ProductDemandCopier.INSTANCE.convert(parentProductDemandQueryList);
@@ -280,20 +279,20 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
 
     @Override
-    public BaseResult<QueryResultVO<ProductDemandVO>> getProductDemandList(DynamicProductDemandGroupList DynamicProductDemandGroupList) {
-        if (Objects.isNull(DynamicProductDemandGroupList.getParentConditions())) {
+    public BaseResult<PageQueryResult<ProductDemandVO>> getProductDemandList(DynamicProductDemandGroupList DynamicProductDemandGroupList) {
+        if (Objects.isNull(DynamicProductDemandGroupList.getGroupFilters())) {
             throw new BaseBizRuntimeException("父分组查询条件不能为空");
         }
 
         ProductDemandQueryList productDemandQueryList = DynamicProductDemandGroupList.getFilters();
-        ProductDemandGroupList parentProductDemandQueryList = DynamicProductDemandGroupList.getParentConditions();
+        ProductDemandGroupList parentProductDemandQueryList = DynamicProductDemandGroupList.getGroupFilters();
         log.info("产品需求接收参数:{}", DynamicProductDemandGroupList);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
         ProductDemandGroupCondition parentCondition = ProductDemandCopier.INSTANCE.convert(parentProductDemandQueryList);
 
         if (groupDuplicateUtil.setOwnerIdByAscription(productDemandQueryList, userInfo, condition, innerUserPersonClient)) {
-            return BaseResult.success(ResultUtil.queryResultEmpty());
+            return BaseResult.success(ResultUtil.pageEmpty());
         }
 
         //是否打标
@@ -304,7 +303,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
             // 查询包含且类别下没有标签
             if (CollectionUtils.isEmpty(newLabelIds) && Boolean.TRUE.equals(containLabel)) {
-                return BaseResult.success(ResultUtil.queryResultEmpty());
+                return BaseResult.success(ResultUtil.pageEmpty());
             }
 
             // 查询使用这些标签的需求id
@@ -313,28 +312,13 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
             if (Boolean.TRUE.equals(containLabel)) {
                 if (CollectionUtils.isEmpty(bizIds)) {
-                    return BaseResult.success(ResultUtil.queryResultEmpty());
+                    return BaseResult.success(ResultUtil.pageEmpty());
                 }
                 condition.setInProductDemandIds(bizIds);
             } else {
                 condition.setNotInProductDemandIds(bizIds);
             }
 
-        }
-
-        // 完整查询
-        List<ProductDemandListDO> allProductDemandListDO = productDemandComponent.list(ProductDemandCopier.INSTANCE.convert(condition));
-        List<ProductLineAnalyseVO> analyseVOList = groupDuplicateUtil.getProductLineAnalyseVOS(allProductDemandListDO);
-
-        List<Long> conditionSubProductLineIdList = productDemandQueryList.getSubProductLineIds();
-        if (CollectionUtils.isNotEmpty(conditionSubProductLineIdList)) {
-            Set<Long> resultProductLineIdSet = analyseVOList.stream().map(ProductLineAnalyseVO::getProductLineId).collect(Collectors.toSet());
-            List<Long> queryProductLineIdList = conditionSubProductLineIdList.stream().filter(resultProductLineIdSet::contains).collect(Collectors.toList());
-            if (CollectionUtils.isEmpty(queryProductLineIdList)) {
-                return BaseResult.success(ResultUtil.queryResultEmpty());
-            } else {
-                condition.setProductLineIds(queryProductLineIdList);
-            }
         }
 
         //是否打标
@@ -347,7 +331,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
 
             if (CollectionUtils.isEmpty(bizIds)) {
-                return BaseResult.success(ResultUtil.queryResultEmpty());
+                return BaseResult.success(ResultUtil.pageEmpty());
             }
             parentCondition.setInProductDemandIds(bizIds);
         }
@@ -361,14 +345,8 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
         List<ProductDemandListDO> productDemandListDO = productDemandComponent.getGroupList(groupCondition);
 
-        List<ProductDemandVO> productDemandVOList = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
-
-        if (CollectionUtils.isEmpty(productDemandVOList)) {
-            return BaseResult.success(ResultUtil.queryResultEmpty());
-        }
-        QueryResultVO<ProductDemandVO> queryResultVO = groupDuplicateUtil.getDemandVOQueryResultVO(productDemandListDO, productDemandVOList, analyseVOList);
-
-        return BaseResult.success(queryResultVO);
+        PageQueryResult<ProductDemandVO> pageQueryResult = groupDuplicateUtil.getDemandVOQueryResultVO(productDemandListDO);
+        return BaseResult.success(pageQueryResult);
     }
 
     @Override
@@ -380,7 +358,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         }
 
         BizDemandQueryList bizDemandQueryList = bizDemandGroupList.getFilters();
-        BizDemandGroupList parentConditions = bizDemandGroupList.getParentConditions();
+        BizDemandGroupList parentConditions = bizDemandGroupList.getGroupFilters();
         // 转换查询条件
         BizDemandListCondition condition = BizDemandCopier.INSTANCE.convert(bizDemandQueryList);
         BizDemandGroupCondition parentCondition = BizDemandCopier.INSTANCE.convert(parentConditions);
@@ -504,8 +482,44 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
 
     @Override
-    public BaseResult<QueryResultVO<BizDemandVO>> getBizDemandList(DynamicBizDemandGroupList dynamicGroupQueryList) {
-        return null;
+    public BaseResult<PageQueryResult<BizDemandVO>> getBizDemandList(DynamicBizDemandGroupList dynamicGroupQueryList) {
+        BizDemandQueryList bizDemandQueryList = dynamicGroupQueryList.getFilters();
+        BizDemandGroupList parentBizDemandGroupCondition = dynamicGroupQueryList.getGroupFilters();
+        // 转换查询条件
+        BizDemandListCondition condition = BizDemandCopier.INSTANCE.convert(bizDemandQueryList);
+        BizDemandGroupCondition parentCondition = BizDemandCopier.INSTANCE.convert(parentBizDemandGroupCondition);
+
+        String ascription = bizDemandQueryList.getAscription();
+        boolean resultIsEmpty = groupDuplicateUtil.isResultIsEmpty(bizDemandQueryList, condition);
+        if (resultIsEmpty) {
+            return BaseResult.success(ResultUtil.pageEmpty());
+        }
+
+        // 标签
+        if (CollectionUtils.isNotEmpty(bizDemandQueryList.getLabelIds()) || CollectionUtils.isNotEmpty(bizDemandQueryList.getLabelCategoryIds())) {
+            List<Long> labelIds = labelComponent.getLabelIds(bizDemandQueryList.getLabelIds(), bizDemandQueryList.getLabelCategoryIds());
+            if (CollectionUtils.isEmpty(labelIds) && bizDemandQueryList.getContainLabel()) {
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
+            condition.setLabelIds(labelIds);
+        }
+
+        BizDemandGroupQueryCondition groupCondition = BizDemandGroupQueryCondition.builder()
+                .condition(condition)
+                .parentCondition(parentCondition)
+                .groupField(null)
+                .orderField(dynamicGroupQueryList.getOrderField())
+                .build();
+
+        PageQueryResult<BizDemandVO> pageQueryResult = bizDemandComponent.groupList(groupCondition);
+
+        if (bizDemandQueryList.getQuerySource() == 1) {
+            // 交付项目来源查询需要特殊排序
+            List<BizDemandVO> resultList = pageQueryResult.getResultList();
+            groupDuplicateUtil.sortByCreateDate(resultList);
+        }
+
+        return BaseResult.success(pageQueryResult);
     }
 
     private void sortTreeByLabel(List<DemandGroupNodeVO> nodes) {
@@ -613,7 +627,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
                                   Map<String, String> receiveManNameMap,
                                   Map<Long, String> labelNameMap,
                                   Map<String, String> deptNameMap) {
-        // 取各层的值序列（遇到 type 多值拆分）
+        // 取各层的值序列
         List<List<String>> valuesPerLevel = new ArrayList<>();
         for (String gf : groupFields) {
             String v = getBizValueFromRow(gf, row);

@@ -9,6 +9,7 @@ import com.timevale.forward.facade.api.result.DemandGroupNodeVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.mandarin.common.annotation.RestClient;
+import com.timevale.mandarin.common.result.PageQueryResult;
 
 import java.util.List;
 
@@ -32,7 +33,7 @@ public interface DynamicGroupService {
      * @param dynamicGroupQueryList
      * @return
      */
-    BaseResult<QueryResultVO<ProductDemandVO>> getProductDemandList(DynamicProductDemandGroupList dynamicGroupQueryList);
+    BaseResult<PageQueryResult<ProductDemandVO>> getProductDemandList(DynamicProductDemandGroupList dynamicGroupQueryList);
 
     /**
      * 获取业务需求分组树
@@ -46,5 +47,5 @@ public interface DynamicGroupService {
      * @param dynamicGroupQueryList
      * @return
      */
-    BaseResult<QueryResultVO<BizDemandVO>> getBizDemandList(DynamicBizDemandGroupList dynamicGroupQueryList);
+    BaseResult<PageQueryResult<BizDemandVO>> getBizDemandList(DynamicBizDemandGroupList dynamicGroupQueryList);
 }

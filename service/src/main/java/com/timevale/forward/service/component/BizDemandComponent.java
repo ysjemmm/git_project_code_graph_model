@@ -8,6 +8,7 @@ import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.DemandGroupNodeVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
+import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
 
 import java.util.Collection;
@@ -106,6 +107,8 @@ public interface BizDemandComponent {
     Integer getStatusByProduct(Long bdId);
 
     BizDemandStatusEnum getBizDemandStatusByProjectStatus(Integer projectStatus);
+
+    PageQueryResult<BizDemandVO> groupList(BizDemandGroupQueryCondition condition);
 
     List<BizDemandGroupFieldDO> groupTree(BizDemandGroupQueryCondition condition);
 }

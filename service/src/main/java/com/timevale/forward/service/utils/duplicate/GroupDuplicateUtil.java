@@ -7,16 +7,16 @@ import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.entity.ProductDemandListDO;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandQueryList;
+import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
-import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
-import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.model.enums.AscriptionEnum;
 import com.timevale.forward.model.enums.BizTypeEnum;
 import com.timevale.forward.model.enums.PriorityEnum;
 import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.model.enums.ProductDemandTypeEnum;
 import com.timevale.forward.service.component.BizLabelComponent;
+import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -26,10 +26,10 @@ import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +45,14 @@ public class GroupDuplicateUtil {
     private final BizLabelComponent bizLabelComponent;
 
     private final InnerUserPersonClient innerUserPersonClient;
+
+    public void sortByCreateDate(List<BizDemandVO> resultList) {
+        final Date BIG_DATE = new Date(Long.MAX_VALUE);
+        resultList.sort(Comparator.<BizDemandVO, Integer>comparing(x -> x.getProjectId() != null ? 0 : 1)
+                .thenComparing(x -> Optional.ofNullable(x.getProjectCreateDate()).orElse(BIG_DATE))
+                .thenComparing(BizDemandVO::getCreateDate)
+                .reversed());
+    }
 
     public boolean isResultIsEmpty(BizDemandQueryList bizDemandQueryList, BizDemandListCondition condition) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -80,7 +88,12 @@ public class GroupDuplicateUtil {
         return resultIsEmpty;
     }
 
-    public QueryResultVO<ProductDemandVO> getDemandVOQueryResultVO(List<ProductDemandListDO> productDemandListDO, List<ProductDemandVO> productDemandVOList, List<ProductLineAnalyseVO> analyseVOList) {
+    public PageQueryResult<ProductDemandVO> getDemandVOQueryResultVO(List<ProductDemandListDO> productDemandListDO) {
+        List<ProductDemandVO> productDemandVOList = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
+
+        if (CollectionUtils.isEmpty(productDemandVOList)) {
+            return ResultUtil.pageEmpty();
+        }
         List<Long> productDemandIds = productDemandListDO.stream().map(ProductDemandListDO::getId).collect(Collectors.toList());
 
         Map<Long, List<BizLabelSimpleVO>> bizLabelMap = bizLabelComponent.getBizLabelMap(productDemandIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
@@ -105,30 +118,7 @@ public class GroupDuplicateUtil {
         pageQueryResult.setResultList(productDemandVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
 
-        QueryResultVO<ProductDemandVO> queryResultVO = new QueryResultVO<>();
-        queryResultVO.setPageQueryResult(pageQueryResult);
-        queryResultVO.setAnalyseVOList(analyseVOList);
-        return queryResultVO;
-    }
-
-    public List<ProductLineAnalyseVO> getProductLineAnalyseVOS(List<ProductDemandListDO> allProductDemandListDO) {
-        Map<Long, List<ProductDemandListDO>> bizDemandListDOMap = allProductDemandListDO.stream().collect(Collectors.groupingBy(ProductDemandListDO::getProductLineId));
-        log.info("业务查询产品线分析：{}", bizDemandListDOMap);
-
-        List<ProductLineAnalyseVO> analyseVOList = new ArrayList<>();
-        bizDemandListDOMap.forEach((k, v) -> {
-            ProductLineAnalyseVO analyseVO = new ProductLineAnalyseVO();
-            Optional<ProductDemandListDO> any = v.stream().findAny();
-            any.ifPresent(e -> {
-                analyseVO.setCount(v.size());
-                analyseVO.setProductLineId(e.getProductLineId());
-                analyseVO.setProductLineName(e.getProductLineName());
-                analyseVOList.add(analyseVO);
-            });
-        });
-        //逆序排序
-        analyseVOList.sort((a, b) -> b.getCount().compareTo(a.getCount()));
-        return analyseVOList;
+        return pageQueryResult;
     }
 
     public boolean setOwnerIdByAscription(ProductDemandQueryList productDemandQueryList, UserInfo userInfo, ProductDemandListCondition condition, InnerUserPersonClient innerUserPersonClient) {
