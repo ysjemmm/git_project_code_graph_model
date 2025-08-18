@@ -10,6 +10,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -37,6 +38,9 @@ public class ViewsUserListVO extends ToString {
 
     @ApiModelProperty("0-显示，1-隐藏")
     private Boolean hidden;
+
+    @ApiModelProperty("相对位置")
+    private BigDecimal position;
 
     @ApiModelProperty("共享使用者")
     private List<String> shareUsers;

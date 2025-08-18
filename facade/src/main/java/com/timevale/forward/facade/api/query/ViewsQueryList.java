@@ -20,4 +20,7 @@ public class ViewsQueryList extends BaseReq {
 
     @ApiModelProperty("业务类型：10-业务需求，11-产品需求，12-项目，13-线下bug，14-线上bug")
     private Integer type;
+
+    @ApiModelProperty("下拉列表属于设置为true")
+    private Boolean selectForOptions;
 }

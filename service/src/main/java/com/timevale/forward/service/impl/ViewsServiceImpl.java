@@ -84,8 +84,11 @@ public class ViewsServiceImpl implements ViewsService {
         ViewsListCondition viewsListCondition = ViewsCopier.INSTANCE.convert(viewsQueryList);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         viewsListCondition.setOwnerId(userInfo.getId());
+        if (Objects.equals(viewsQueryList.getSelectForOptions(), true)) {
+            viewsListCondition.setHidden(true);
+        }
         List<ViewsUserListDO> viewsUserDOList = viewsUserMapper.list(viewsListCondition);
-        if (Objects.equals(viewsQueryList.getOwnerType(), ViewsUserTypeEnum.MINE.getCode())) {
+        if (Objects.equals(viewsQueryList.getOwnerType(), ViewsUserTypeEnum.MINE.getCode()) && !Objects.equals(viewsQueryList.getSelectForOptions(), true)) {
             // 查询共享使用者
             for (ViewsUserListDO viewsUserListDO : viewsUserDOList) {
                 List<ViewsUserDO> viewsUserDOS = viewsUserMapper.getByViewId(viewsUserListDO.getViewsId());

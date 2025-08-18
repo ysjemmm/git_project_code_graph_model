@@ -15,4 +15,6 @@ public class ViewsListCondition {
     private Integer type;
 
     private String ownerId;
+
+    private Boolean hidden;
 }

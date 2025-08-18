@@ -4,7 +4,7 @@
 
     <!-- 根据主键id获取视图 -->
     <select id="list" resultType="com.timevale.forward.dal.entity.ViewsUserListDO">
-        select vu.`id`, vu.views_id, v.name, v.filter_condition, v.group_field, v.owner_id, v.owner, vu.`hidden`, v.`type` as views_type
+        select vu.`id`, vu.views_id, v.name, v.filter_condition, v.group_field, v.owner_id, v.owner, vu.`hidden`, vu.`position`, v.`type` as views_type
         from views_user vu left join views v on v.id = vu.views_id
         <where>
             vu.is_deleted = 0
@@ -12,6 +12,7 @@
             and vu.`type` = #{ownerType}
             and v.`type` = #{type}
             and vu.`owner_id` = #{ownerId}
+            <if test="hidden != null"> and hidden = #{hidden}</if>
         </where>
         order by vu.`position` desc, id desc
     </select>

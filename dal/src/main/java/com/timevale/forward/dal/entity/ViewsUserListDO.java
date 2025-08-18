@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -29,6 +30,11 @@ public class ViewsUserListDO extends BaseDO {
      * 0-显示，1-隐藏
      */
     private Boolean hidden;
+
+    /**
+     * 相对位置
+     */
+    private BigDecimal position;
 
     /**
      * 负责人
