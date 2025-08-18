@@ -309,6 +309,14 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
     }
 
     @Override
+    public List<ProductDemandGroupFieldDO> getSimpleGroupList(ProductDemandGroupQueryCondition condition) {
+        condition.getCondition().setName(StringUtil.toLikeStr(condition.getCondition().getName()));
+        condition.getCondition().setCreateDateStart(DateUtil.getStartOfDay(condition.getCondition().getCreateDateStart()));
+        condition.getCondition().setCreateDateEnd(DateUtil.getEndOfDay(condition.getCondition().getCreateDateEnd()));
+        return productDemandMapper.getSimpleGroupList(condition);
+    }
+
+    @Override
     public void updateDemandStatusWhenUnlink(Long demandId, Long productDemandId, boolean bizDemand) {
         if (bizDemand) {
             List<ProductBizDemandDO> demandDOList = productBizDemandMapper.getByBdId(demandId);

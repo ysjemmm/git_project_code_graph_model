@@ -48,7 +48,7 @@ public class ProductDemandGroupCondition extends QueryBase {
     /**
      *  负责人集合
      */
-    private List<String> ownerIds;
+    private List<String> notInOwnerIds;
 
     /**
      * 排期时间
@@ -56,14 +56,19 @@ public class ProductDemandGroupCondition extends QueryBase {
     private Date expectScheduleTime;
 
     /**
-     * 标签类别
+     * 标签
      */
-    private Long labelCategoryId;
+    private List<Long> labelIds;
 
     /**
      * 标签类别集合
      */
     private List<Long> labelCategoryIds;
+
+    /**
+     * 标签类别集合
+     */
+    private List<Long> notInLabelIds;
 
     /**
      * 需要包含的产品需求

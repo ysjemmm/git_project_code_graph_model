@@ -51,6 +51,8 @@ public interface ProductDemandComponent {
      */
     void updateDemandStatusAsProductStatusChange(List<Long> productDemandIds,boolean invalid);
 
+    List<ProductDemandGroupFieldDO> getSimpleGroupList(ProductDemandGroupQueryCondition condition);
+
     /**
      *
      * @param demandId demandId

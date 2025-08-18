@@ -14,7 +14,7 @@ public enum ProductGroupFieldEnum {
 
     PRODUCT_LINE("productLine","c.id", "产品线"),
 
-    LABEL_CATEGORY("labelCategory","f.label_category_id", "标签类别"),
+    LABEL("label","e.label_id", "标签类别"),
 
     TYPE("type","a.type", "产品需求类型"),
 

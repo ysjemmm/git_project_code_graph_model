@@ -25,7 +25,7 @@ public class ProductDemandGroupFieldDO extends BaseDO {
     /**
      * 标签类别id
      */
-    private Long labelCategoryId;
+    private Long labelId;
 
     /**
      * 类型

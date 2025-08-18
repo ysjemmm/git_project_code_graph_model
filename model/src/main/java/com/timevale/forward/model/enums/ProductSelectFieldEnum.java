@@ -14,7 +14,7 @@ public enum ProductSelectFieldEnum {
 
     PRODUCT_LINE("productLine","c.id as productLineId", "产品线"),
 
-    LABEL_CATEGORY("labelCategory","f.label_category_id as labelCategoryId", "标签类别"),
+    LABEL("label","e.label_id as labelId", "标签"),
 
     TYPE("type","a.type as type", "产品需求类型"),
 

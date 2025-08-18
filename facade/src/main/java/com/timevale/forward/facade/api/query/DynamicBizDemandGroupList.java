@@ -19,7 +19,7 @@ import java.util.List;
 public class DynamicBizDemandGroupList extends QueryBase {
 
     @ApiModelProperty("分组字段")
-    private List<String> groupFields;
+    private List<ViewsGroupQueryList> groupFields;
 
     @ApiModelProperty("筛选条件")
     private BizDemandQueryList filters;

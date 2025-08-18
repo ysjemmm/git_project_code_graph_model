@@ -25,6 +25,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,7 +36,8 @@ import java.util.stream.Collectors;
                 Collectors.class,
                 ProductDemandTypeEnum.class,
                 Arrays.class,
-                StringUtils.class
+                StringUtils.class,
+                Collections.class
         }
 )
 public interface ProductDemandCopier {
@@ -141,7 +143,7 @@ public interface ProductDemandCopier {
      * @param queryList 对象
      * @return ProductDemandGroupCondition
      */
-    @Mapping(target = "labelCategoryIds", expression = "java(StringUtils.isNotEmpty(queryList.getLabelCategoryIds()) ? Arrays.stream(queryList.getLabelCategoryIds().split(\",\")).map(Long::valueOf).collect(Collectors.toList()) : null)")
-    @Mapping(target = "ownerIds", expression = "java(StringUtils.isNotEmpty(queryList.getOwnerIds()) ? Arrays.asList(queryList.getOwnerIds().split(\",\")) : null)")
+    @Mapping(target = "notInLabelIds", expression = "java(StringUtils.isNotEmpty(queryList.getNotInLabelIds()) ? Arrays.stream(queryList.getNotInLabelIds().split(\",\")).map(Long::valueOf).collect(Collectors.toList()) : null)")
+    @Mapping(target = "notInOwnerIds", expression = "java(StringUtils.isNotEmpty(queryList.getNotInOwnerIds()) ? Arrays.asList(queryList.getNotInOwnerIds().split(\",\")) : null)")
     ProductDemandGroupCondition convert(ProductDemandGroupList queryList);
 }

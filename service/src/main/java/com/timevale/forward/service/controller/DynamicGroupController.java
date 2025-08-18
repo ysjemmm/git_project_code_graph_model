@@ -6,7 +6,6 @@ import com.timevale.forward.facade.api.query.DynamicProductDemandGroupList;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.DemandGroupNodeVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
-import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.service.utils.ResultUtils;
 import com.timevale.mandarin.common.result.BusinessResult;
 import com.timevale.mandarin.common.result.PageQueryResult;

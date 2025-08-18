@@ -8,14 +8,15 @@ import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.condition.ProductDemandGroupCondition;
 import com.timevale.forward.dal.condition.ProductDemandGroupQueryCondition;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
+import com.timevale.forward.dal.condition.ProductGroupCondition;
 import com.timevale.forward.dal.dao.BizDomainMapper;
 import com.timevale.forward.dal.dao.BizLabelMapper;
-import com.timevale.forward.dal.dao.LabelCategoryMapper;
+import com.timevale.forward.dal.dao.LabelMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.entity.BizDemandGroupFieldDO;
 import com.timevale.forward.dal.entity.BizDomainDO;
 import com.timevale.forward.dal.entity.BizLabelDO;
-import com.timevale.forward.dal.entity.LabelCategoryDO;
+import com.timevale.forward.dal.entity.LabelDO;
 import com.timevale.forward.dal.entity.ProductDemandGroupFieldDO;
 import com.timevale.forward.dal.entity.ProductDemandListDO;
 import com.timevale.forward.dal.entity.ProductLineDO;
@@ -26,6 +27,7 @@ import com.timevale.forward.facade.api.query.DynamicBizDemandGroupList;
 import com.timevale.forward.facade.api.query.DynamicProductDemandGroupList;
 import com.timevale.forward.facade.api.query.ProductDemandGroupList;
 import com.timevale.forward.facade.api.query.ProductDemandQueryList;
+import com.timevale.forward.facade.api.query.ViewsGroupQueryList;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.DemandGroupNodeVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
@@ -65,12 +67,14 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -91,6 +95,9 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
     private LabelComponent labelComponent;
 
     @Resource
+    private LabelMapper labelMapper;
+
+    @Resource
     private BizLabelMapper bizLabelMapper;
 
     @Resource
@@ -98,9 +105,6 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
     @Resource
     private ProductLineMapper productLineMapper;
-
-    @Resource
-    private LabelCategoryMapper labelCategoryMapper;
 
     @Resource
     private ProductDemandComponent productDemandComponent;
@@ -115,12 +119,16 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
     private static final Map<String, String> BIZ_GROUP_FIELD_MAP = new HashMap<>();
 
+    private static final Map<String, Function<ProductDemandGroupFieldDO, Object>> FUNCTION_FIELD_MAP = new HashMap<>();
+
+    private static final Map<String, String> QUERY_OTHER_FIELD_MAP = new HashMap<>();
+
     private static final String OTHER = "其他";
 
     static {
         PRODUCT_GROUP_FIELD_MAP.put(ProductGroupFieldEnum.BIZ_DOMAIN.getGroupField(), "bizDomainId");
         PRODUCT_GROUP_FIELD_MAP.put(ProductGroupFieldEnum.PRODUCT_LINE.getGroupField(), "productLineId");
-        PRODUCT_GROUP_FIELD_MAP.put(ProductGroupFieldEnum.LABEL_CATEGORY.getGroupField(), "labelCategoryId");
+        PRODUCT_GROUP_FIELD_MAP.put(ProductGroupFieldEnum.LABEL.getGroupField(), "labelId");
         PRODUCT_GROUP_FIELD_MAP.put(ProductGroupFieldEnum.TYPE.getGroupField(), "type");
         PRODUCT_GROUP_FIELD_MAP.put(ProductGroupFieldEnum.STATUS.getGroupField(), "status");
         PRODUCT_GROUP_FIELD_MAP.put(ProductGroupFieldEnum.PRIORITY.getGroupField(), "priority");
@@ -139,19 +147,34 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         BIZ_GROUP_FIELD_MAP.put(BizDemandGroupFieldEnum.RECEIVE_MAN.getGroupField(), "receiveManId");
     }
 
+    static {
+        FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.BIZ_DOMAIN.getGroupField(), ProductDemandGroupFieldDO::getBizDomainId);
+        FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.PRODUCT_LINE.getGroupField(), ProductDemandGroupFieldDO::getProductLineId);
+        FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.LABEL.getGroupField(), ProductDemandGroupFieldDO::getLabelId);
+        FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.TYPE.getGroupField(), ProductDemandGroupFieldDO::getType);
+        FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.STATUS.getGroupField(), ProductDemandGroupFieldDO::getStatus);
+        FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.PRIORITY.getGroupField(), ProductDemandGroupFieldDO::getPriority);
+        FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.EXPECT_SCHEDULE_TIME.getGroupField(), ProductDemandGroupFieldDO::getExpectScheduleTime);
+        FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.OWNER.getGroupField(), ProductDemandGroupFieldDO::getOwnerId);
+    }
+
+    static {
+        QUERY_OTHER_FIELD_MAP.put("labelId", "notInLabelIds");
+        QUERY_OTHER_FIELD_MAP.put("ownerId", "notInOwnerIds");
+    }
+
     @Override
     public BaseResult<List<DemandGroupNodeVO>> getProductDemandsGroupTree(DynamicProductDemandGroupList productDemandGroupList) {
-        List<String> groupFields = productDemandGroupList.getGroupFields();
+        List<ViewsGroupQueryList> groupFields = productDemandGroupList.getGroupFields();
         if (CollUtil.isEmpty(groupFields)) {
             throw new BaseBizRuntimeException("分组字段不能为空");
         }
 
         // 1) 构建基础查询条件（复用一层分组的参数处理逻辑）
         ProductDemandQueryList productDemandQueryList = productDemandGroupList.getFilters();
-        ProductDemandGroupList parentProductDemandQueryList = productDemandGroupList.getGroupFilters();
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
-        ProductDemandGroupCondition parentCondition = ProductDemandCopier.INSTANCE.convert(parentProductDemandQueryList);
+        ProductDemandGroupCondition parentCondition = ProductDemandGroupCondition.builder().build();
 
         if (groupDuplicateUtil.setOwnerIdByAscription(productDemandQueryList, userInfo, condition, innerUserPersonClient)) {
             return BaseResult.success(new ArrayList<>());
@@ -178,9 +201,84 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             }
         }
 
+        // 3) 名称字典一次性查询
+        Map<Long, String> bizDomainNameMap = Collections.emptyMap();
+        Map<Long, String> productLineNameMap = Collections.emptyMap();
+        Map<String, String> ownerNameMap = Collections.emptyMap();
+        Map<Long, String> labelNameMap = Collections.emptyMap();
+
+        long count = groupFields.stream().filter(groupField -> groupField.getType() == 1).count();
+        if (count > 1) {
+            List<Long> labelCategoryId = groupFields.stream()
+                    .filter(groupField -> groupField.getType() == 1)
+                    .map(groupField -> Long.valueOf(groupField.getKey()))
+                    .collect(Collectors.toList());
+            parentCondition.setLabelCategoryIds(labelCategoryId);
+            ProductDemandGroupQueryCondition groupCondition = ProductDemandGroupQueryCondition.builder()
+                    .condition(condition)
+                    .parentCondition(parentCondition)
+                    .orderField(productDemandGroupList.getOrderField())
+                    .build();
+            List<ProductDemandGroupFieldDO> simpleGroupList = productDemandComponent.getSimpleGroupList(groupCondition);
+            if (CollUtil.isEmpty(simpleGroupList)) {
+                return BaseResult.success(new ArrayList<>());
+            }
+
+            List<String> groupFieldKeys = groupFields.stream().map(ViewsGroupQueryList::getKey).collect(Collectors.toList());
+
+            if (groupFieldKeys.contains(ProductGroupFieldEnum.BIZ_DOMAIN.getGroupField())) {
+                Set<Long> ids = extractUniqueIds(simpleGroupList, ProductDemandGroupFieldDO::getBizDomainId);
+                if (CollectionUtils.isNotEmpty(ids)) {
+                    bizDomainNameMap = bizDomainMapper.getByIds(ids).stream().collect(Collectors.toMap(BizDomainDO::getId, BizDomainDO::getName, (a, b) -> b));
+                }
+            }
+            if (groupFieldKeys.contains(ProductGroupFieldEnum.PRODUCT_LINE.getGroupField())) {
+                Set<Long> productLineIds = extractUniqueIds(simpleGroupList, ProductDemandGroupFieldDO::getProductLineId);
+                if (CollectionUtils.isNotEmpty(productLineIds)) {
+                    productLineNameMap = productLineMapper.getByIds(productLineIds).stream().collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName, (a, b) -> b));
+                }
+            }
+            if (groupFieldKeys.contains(ProductGroupFieldEnum.OWNER.getGroupField())) {
+                ownerNameMap = getPersonMap(ownerNameMap, simpleGroupList.stream().map(ProductDemandGroupFieldDO::getOwnerId));
+            }
+
+            // 定义分组条件
+            List<LabelDO> byCategoryIds = labelMapper.getByCategoryIds(labelCategoryId, false);
+            // 根据不同的标签类别，得到以分组id为key,不同的标签Map集合的Map集合，key为标签id，value为标签名称
+            Map<Long, Map<Long, String>> labelMaps = byCategoryIds.stream()
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.groupingBy(LabelDO::getLabelCategoryId,
+                            Collectors.toMap(LabelDO::getId, LabelDO::getName, (a, b) -> b)));
+
+            List<ProductGroupCondition> conditions = new ArrayList<>(5);
+
+            for (int i = 0; i < groupFields.size(); i++) {
+                if (groupFields.get(i).getType() == 1) {
+                    conditions.add(new ProductGroupCondition(ProductGroupFieldEnum.LABEL.getGroupField() + i, ProductDemandGroupFieldDO::getLabelId,
+                            labelMaps.get(Long.valueOf(groupFields.get(i).getKey()))));
+                } else {
+                    conditions.add(new ProductGroupCondition(groupFields.get(i).getKey(), FUNCTION_FIELD_MAP.get(groupFields.get(i).getKey()), null));
+                }
+            }
+            Map<String, Object> groupResult = group(simpleGroupList, conditions);
+            // 转换方法1：基础转换
+            List<DemandGroupNodeVO> treeNodes = transformToTree(groupResult, 0, conditions, bizDomainNameMap, productLineNameMap, ownerNameMap);
+
+            // 排序（各层按 label 升序）
+            sortTreeByLabel(treeNodes);
+            return BaseResult.success(treeNodes);
+        } else {
+            for (ViewsGroupQueryList groupField : groupFields) {
+                if (groupField.getType() == 1) {
+                    parentCondition.setLabelCategoryIds(Collections.singletonList(Long.valueOf(groupField.getKey())));
+                    groupField.setKey(ProductGroupFieldEnum.LABEL.getGroupField());
+                }
+            }
+        }
         // 2) 组织一次性聚合 SQL 的 selectField 与 groupField
         String selectField = buildSelectField(groupFields);
         String groupField = buildGroupField(groupFields);
+        List<String> groupFieldKeys = groupFields.stream().map(ViewsGroupQueryList::getKey).collect(Collectors.toList());
 
         ProductDemandGroupQueryCondition groupCondition = ProductDemandGroupQueryCondition.builder()
                 .condition(condition)
@@ -195,29 +293,23 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             return BaseResult.success(Collections.emptyList());
         }
 
-        // 3) 名称字典一次性查询
-        Map<Long, String> bizDomainNameMap = Collections.emptyMap();
-        Map<Long, String> productLineNameMap = Collections.emptyMap();
-        Map<String, String> ownerNameMap = Collections.emptyMap();
-        Map<Long, String> labelNameMap = Collections.emptyMap();
-
-        if (groupFields.contains(ProductGroupFieldEnum.BIZ_DOMAIN.getGroupField())) {
+        if (groupFieldKeys.contains(ProductGroupFieldEnum.BIZ_DOMAIN.getGroupField())) {
             Set<Long> ids = extractUniqueIds(rows, ProductDemandGroupFieldDO::getBizDomainId);
             if (CollectionUtils.isNotEmpty(ids)) {
                 bizDomainNameMap = bizDomainMapper.getByIds(ids).stream().collect(Collectors.toMap(BizDomainDO::getId, BizDomainDO::getName, (a, b) -> b));
             }
         }
-        if (groupFields.contains(ProductGroupFieldEnum.PRODUCT_LINE.getGroupField())) {
+        if (groupFieldKeys.contains(ProductGroupFieldEnum.PRODUCT_LINE.getGroupField())) {
             Set<Long> productLineIds = extractUniqueIds(rows, ProductDemandGroupFieldDO::getProductLineId);
             if (CollectionUtils.isNotEmpty(productLineIds)) {
                 productLineNameMap = productLineMapper.getByIds(productLineIds).stream().collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName, (a, b) -> b));
             }
         }
-        if (groupFields.contains(ProductGroupFieldEnum.OWNER.getGroupField())) {
+        if (groupFieldKeys.contains(ProductGroupFieldEnum.OWNER.getGroupField())) {
             ownerNameMap = getPersonMap(ownerNameMap, rows.stream().map(ProductDemandGroupFieldDO::getOwnerId));
         }
-        if (groupFields.contains(ProductGroupFieldEnum.LABEL_CATEGORY.getGroupField())) {
-            labelNameMap = getLabelCategoryMap(labelNameMap, rows.stream().map(ProductDemandGroupFieldDO::getLabelCategoryId));
+        if (groupFieldKeys.contains(ProductGroupFieldEnum.LABEL.getGroupField())) {
+            labelNameMap = getLabelMap(labelNameMap, rows.stream().map(ProductDemandGroupFieldDO::getLabelId));
         }
 
         // 4) 构建树（一次性结果 → 树），并处理 type 维度的多值拆分
@@ -233,17 +325,17 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
         // 先构建 prefixTotals（不拆分 type）
         for (ProductDemandGroupFieldDO row : rows) {
-            for (int level = 0; level < groupFields.size(); level++) {
-                String prefixKey = buildPrefixKey(groupFields, row, level);
+            for (int level = 0; level < groupFieldKeys.size(); level++) {
+                String prefixKey = buildPrefixKey(groupFieldKeys, row, level);
                 prefixTotals.get(level).merge(prefixKey, Optional.ofNullable(row.getTotal()).orElse(0L), Long::sum);
             }
         }
 
-        int typeIndex = groupFields.indexOf(ProductGroupFieldEnum.TYPE.getGroupField());
+        int typeIndex = groupFieldKeys.indexOf(ProductGroupFieldEnum.TYPE.getGroupField());
 
         // 构建节点（对 type 维度进行拆分）
         for (ProductDemandGroupFieldDO row : rows) {
-            buildNodesForRow(groupFields, row, roots, levelNodeMap,
+            buildNodesForRow(groupFieldKeys, row, roots, levelNodeMap,
                     bizDomainNameMap, productLineNameMap, ownerNameMap, labelNameMap);
         }
 
@@ -253,7 +345,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
         // 若包含 type 维度，则对 type 上层的节点用 prefixTotals 进行去重修正（避免被子层的多值重复计数放大）
         if (typeIndex >= 0) {
-            applyPrefixTotalsCorrection(roots, groupFields, prefixTotals, typeIndex);
+            applyPrefixTotalsCorrection(roots, groupFieldKeys, prefixTotals, typeIndex);
         }
 
         // 排序（各层按 label 升序）
@@ -263,11 +355,143 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
     }
 
     /**
+     * 执行多级分组
+     *
+     * @param data
+     * @param conditions
+     * @return
+     */
+    public Map<String, Object> group(List<ProductDemandGroupFieldDO> data,
+                                     List<ProductGroupCondition> conditions) {
+        // 构建动态Collector链
+        Collector<ProductDemandGroupFieldDO, ?, Map<String, Object>> collector =
+                buildCollectorChain(conditions, 0);
+
+        // 执行分组
+        return data.stream().collect(collector);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Collector<ProductDemandGroupFieldDO, ?, Map<String, Object>> buildCollectorChain(
+            List<ProductGroupCondition> conditions, int index) {
+
+        if (index >= conditions.size()) {
+            // 终止条件：返回计数Collector，包装成Map
+            return Collector.of(
+                    HashMap::new,
+                    (map, item) -> map.put("total", (Long) map.getOrDefault("total", 0L) + 1L),
+                    (map1, map2) -> {
+                        map1.put("total", (Long) map1.getOrDefault("total", 0L) +
+                                (Long) map2.getOrDefault("total", 0L));
+                        return map1;
+                    },
+                    Collector.Characteristics.IDENTITY_FINISH
+            );
+        }
+
+        ProductGroupCondition condition = conditions.get(index);
+        Function<ProductDemandGroupFieldDO, String> extractor = item -> {
+            Object rawValue = condition.getFieldExtractor().apply(item);
+            return condition.getValueMapping() != null
+                    ? condition.getValueMapping().getOrDefault(rawValue, OTHER)
+                    : String.valueOf(rawValue);
+        };
+
+        // 递归构建下一级分组器
+        Collector<ProductDemandGroupFieldDO, ?, Map<String, Object>> nextCollector =
+                buildCollectorChain(conditions, index + 1);
+
+        // 使用显式类型声明解决类型推断问题
+        Collector<ProductDemandGroupFieldDO, ?, Map<String, Map<String, Object>>> groupingCollector =
+                Collectors.groupingBy(
+                        extractor,
+                        LinkedHashMap::new,
+                        (Collector<ProductDemandGroupFieldDO, ?, Map<String, Object>>) nextCollector
+                );
+
+        // 添加类型转换确保最终返回类型一致
+        return (Collector<ProductDemandGroupFieldDO, ?, Map<String, Object>>) (Collector<?, ?, ?>) groupingCollector;
+    }
+
+    /**
+     * 将嵌套Map结构的分组结果转换为树形结构
+     *
+     * @param mapResult
+     * @param currentLevel
+     * @return 返回结果
+     */
+    public List<DemandGroupNodeVO> transformToTree(Map<String, Object> mapResult, int currentLevel, List<ProductGroupCondition> conditions,
+                                                   Map<Long, String> bizDomainNameMap,
+                                                   Map<Long, String> productLineNameMap,
+                                                   Map<String, String> ownerNameMap) {
+        List<DemandGroupNodeVO> nodes = new ArrayList<>();
+        // 递归结束条件
+        if (currentLevel >= conditions.size()) {
+            return nodes;
+        }
+        ProductGroupCondition productGroupCondition = conditions.get(currentLevel);
+        for (Map.Entry<String, Object> entry : mapResult.entrySet()) {
+            String field = productGroupCondition.getFieldName();
+            String fieldValue = entry.getKey();
+            String label = entry.getKey();
+            if (field.startsWith(ProductGroupFieldEnum.LABEL.getGroupField())) {
+                field = ProductGroupFieldEnum.LABEL.getGroupField();
+                // 找到以entry.getKey()为值的label
+                if (productGroupCondition.getValueMapping() != null) {
+                    Map<String, Long> flipMap = flipMap(productGroupCondition.getValueMapping());
+                    fieldValue = flipMap.get(label) != null ? String.valueOf(flipMap.get(label)) : OTHER;
+                }
+            }
+            if (ProductGroupFieldEnum.BIZ_DOMAIN.getGroupField().equals(field)) {
+                label = bizDomainNameMap.get(Long.parseLong(fieldValue));
+            }
+            if (ProductGroupFieldEnum.PRODUCT_LINE.getGroupField().equals(field)) {
+                label = productLineNameMap.get(Long.parseLong(fieldValue));
+            }
+            if (ProductGroupFieldEnum.OWNER.getGroupField().equals(field)) {
+                label = ownerNameMap.get(fieldValue);
+            }
+            Object value = entry.getValue();
+
+            DemandGroupNodeVO node = DemandGroupNodeVO.builder().field(PRODUCT_GROUP_FIELD_MAP.get(field)).label(label).fieldValue(fieldValue).total(0L).build();
+
+            if (value instanceof Map) {
+                Map<String, Object> valueMap = (Map<String, Object>) value;
+                // 检查是否是叶子节点（包含total键）
+                if (valueMap.containsKey("total")) {
+                    // 叶子节点（直接设置count）
+                    Object totalValue = valueMap.get("total");
+                    node.setTotal(totalValue instanceof Number ? ((Number) totalValue).longValue() : 0L);
+                } else {
+                    // 递归处理子层级
+                    List<DemandGroupNodeVO> childNodes = transformToTree(valueMap, currentLevel + 1, conditions, bizDomainNameMap, productLineNameMap, ownerNameMap);
+                    node.setChildren(childNodes);
+                    // 计算当前节点count（子节点count之和）
+                    node.setTotal(childNodes.stream().mapToLong(DemandGroupNodeVO::getTotal).sum());
+                }
+            }
+            nodes.add(node);
+        }
+        return nodes;
+    }
+
+    public static <K, V> Map<V, K> flipMap(Map<K, V> originalMap) {
+        return originalMap.entrySet()
+                .stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getValue,
+                        Map.Entry::getKey,
+                        // 处理重复value的情况
+                        (existing, replacement) -> existing
+                ));
+    }
+
+    /**
      * 提取去重 ID 集合的通用方法
      *
-     * @param rows 数据列表
+     * @param rows   数据列表
      * @param mapper 从对象中提取 ID 的函数
-     * @param <T> 数据对象类型
+     * @param <T>    数据对象类型
      * @return 去重后的 ID 集合
      */
     private <T> Set<Long> extractUniqueIds(List<T> rows, Function<T, Long> mapper) {
@@ -286,6 +510,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
         ProductDemandQueryList productDemandQueryList = DynamicProductDemandGroupList.getFilters();
         ProductDemandGroupList parentProductDemandQueryList = DynamicProductDemandGroupList.getGroupFilters();
+        List<ViewsGroupQueryList> groupFields = DynamicProductDemandGroupList.getGroupFields();
         log.info("产品需求接收参数:{}", DynamicProductDemandGroupList);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
@@ -321,19 +546,37 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
         }
 
-        //是否打标
-        Long labelCategoryId = parentCondition.getLabelCategoryId();
-        if (Objects.nonNull(labelCategoryId)) {
-            List<Long> newLabelIds = labelComponent.getLabelIds(null, productDemandQueryList.getLabelCategoryIds());
+        // 获取标签类别Id
+        List<Long> labelCategoryIds = groupFields.stream().filter(field -> field.getType() == 1).map(field -> Long.valueOf(field.getKey())).collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(labelCategoryIds)) {
+            List<Long> productDemandIds = new ArrayList<>();
+            //查询等于标签id的需求
+            List<Long> labelIds = parentCondition.getLabelIds();
+            if (CollUtil.isNotEmpty(labelIds)) {
+                List<Long> newLabelIds = labelComponent.getLabelIds(labelIds, labelCategoryIds);
+                // 查询使用这些标签的需求id
+                List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
+                List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
 
-            // 查询使用这些标签的需求id
-            List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
-            List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
-
-            if (CollectionUtils.isEmpty(bizIds)) {
-                return BaseResult.success(ResultUtil.pageEmpty());
+                if (CollectionUtils.isEmpty(bizIds)) {
+                    return BaseResult.success(ResultUtil.pageEmpty());
+                }
+                productDemandIds.addAll(bizIds);
             }
-            parentCondition.setInProductDemandIds(bizIds);
+
+            //查询不等于标签id的需求
+            List<Long> notInLabelIds = parentCondition.getNotInLabelIds();
+            if (CollUtil.isNotEmpty(notInLabelIds)) {
+                List<Long> ids = labelMapper.getByCategoryIds(labelCategoryIds, false).stream().map(LabelDO::getId).collect(Collectors.toList());
+                ids.removeAll(notInLabelIds);
+                // 查询使用这些标签的需求id
+                List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByLabelIdInType(ids, BizTypeEnum.PRODUCT_DEMAND.getCode());
+                List<Long> notInBizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+                if (CollUtil.isNotEmpty(notInBizIds)) {
+                    productDemandIds.addAll(notInBizIds);
+                }
+            }
+            parentCondition.setInProductDemandIds(productDemandIds);
         }
 
         ProductDemandGroupQueryCondition groupCondition = ProductDemandGroupQueryCondition.builder()
@@ -352,7 +595,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
     @Override
     public BaseResult<List<DemandGroupNodeVO>> getBizDemandsGroupTree(DynamicBizDemandGroupList bizDemandGroupList) {
 
-        List<String> groupFields = bizDemandGroupList.getGroupFields();
+        List<ViewsGroupQueryList> groupFields = bizDemandGroupList.getGroupFields();
         if (CollUtil.isEmpty(groupFields)) {
             throw new BaseBizRuntimeException("分组字段不能为空");
         }
@@ -378,8 +621,19 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         }
 
         // 2) 组织一次性聚合 SQL 的 selectField 与 groupField
-        String selectField = buildBizSelectField(groupFields);
-        String groupField = buildBizGroupField(groupFields);
+        List<String> bizGroupFieldKeys = new ArrayList<>(5);
+
+        for (ViewsGroupQueryList groupField : groupFields) {
+            if (groupField.getType() == 1) {
+
+            } else {
+                bizGroupFieldKeys.add(groupField.getKey());
+            }
+        }
+
+
+        String selectField = buildBizSelectField(bizGroupFieldKeys);
+        String groupField = buildBizGroupField(bizGroupFieldKeys);
 
         BizDemandGroupQueryCondition groupCondition = BizDemandGroupQueryCondition.builder()
                 .condition(condition)
@@ -403,25 +657,25 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         Map<Long, String> labelNameMap = Collections.emptyMap();
 
 
-        if (groupFields.contains(BizDemandGroupFieldEnum.BIZ_DOMAIN.getGroupField())) {
+        if (bizGroupFieldKeys.contains(BizDemandGroupFieldEnum.BIZ_DOMAIN.getGroupField())) {
             Set<Long> ids = extractUniqueIds(rows, BizDemandGroupFieldDO::getBizDomainId);
             if (CollectionUtils.isNotEmpty(ids)) {
                 bizDomainNameMap = bizDomainMapper.getByIds(ids).stream().collect(Collectors.toMap(BizDomainDO::getId, BizDomainDO::getName, (a, b) -> b));
             }
         }
-        if (groupFields.contains(BizDemandGroupFieldEnum.PRODUCT_LINE.getGroupField())) {
+        if (bizGroupFieldKeys.contains(BizDemandGroupFieldEnum.PRODUCT_LINE.getGroupField())) {
             Set<Long> productLineIds = extractUniqueIds(rows, BizDemandGroupFieldDO::getProductLineId);
             if (CollectionUtils.isNotEmpty(productLineIds)) {
                 productLineNameMap = productLineMapper.getByIds(productLineIds).stream().collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName, (a, b) -> b));
             }
         }
-        if (groupFields.contains(BizDemandGroupFieldEnum.RECEIVE_MAN.getGroupField())) {
+        if (bizGroupFieldKeys.contains(BizDemandGroupFieldEnum.RECEIVE_MAN.getGroupField())) {
             receiveManNameMap = getPersonMap(receiveManNameMap, rows.stream().map(BizDemandGroupFieldDO::getReceiveManId));
         }
-        if (groupFields.contains(BizDemandGroupFieldEnum.LABEL_CATEGORY.getGroupField())) {
-            labelNameMap = getLabelCategoryMap(labelNameMap, rows.stream().map(BizDemandGroupFieldDO::getLabelCategoryId));
+        if (bizGroupFieldKeys.contains(BizDemandGroupFieldEnum.LABEL_CATEGORY.getGroupField())) {
+            labelNameMap = getLabelMap(labelNameMap, rows.stream().map(BizDemandGroupFieldDO::getLabelCategoryId));
         }
-        if (groupFields.contains(BizDemandGroupFieldEnum.DEMAND_DEPT.getGroupField())) {
+        if (bizGroupFieldKeys.contains(BizDemandGroupFieldEnum.DEMAND_DEPT.getGroupField())) {
             Set<Long> deptIds = rows.stream().map(BizDemandGroupFieldDO::getDeptId).collect(Collectors.toSet());
             if (CollectionUtils.isNotEmpty(deptIds)) {
                 Map<Long, GroupResponse> groupListTreeMap = bizDemandComponent.getGroupListTreeMap(deptIds);
@@ -443,7 +697,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
         // 构建节点
         for (BizDemandGroupFieldDO row : rows) {
-            buildBizNodesForRow(groupFields, row, roots, levelNodeMap,
+            buildBizNodesForRow(bizGroupFieldKeys, row, roots, levelNodeMap,
                     bizDomainNameMap, productLineNameMap, receiveManNameMap, labelNameMap, deptNameMap);
         }
 
@@ -457,10 +711,10 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         return BaseResult.success(roots);
     }
 
-    private Map<Long, String> getLabelCategoryMap(Map<Long, String> labelNameMap, Stream<Long> longStream) {
+    private Map<Long, String> getLabelMap(Map<Long, String> labelNameMap, Stream<Long> longStream) {
         List<Long> ids = longStream.filter(Objects::nonNull).collect(Collectors.toList());
         if (CollectionUtils.isNotEmpty(ids)) {
-            labelNameMap = labelCategoryMapper.get(ids).stream().collect(Collectors.toMap(LabelCategoryDO::getId, LabelCategoryDO::getName, (a, b) -> b));
+            labelNameMap = labelMapper.getByIds(ids).stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (a, b) -> b));
         }
         return labelNameMap;
     }
@@ -489,7 +743,6 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         BizDemandListCondition condition = BizDemandCopier.INSTANCE.convert(bizDemandQueryList);
         BizDemandGroupCondition parentCondition = BizDemandCopier.INSTANCE.convert(parentBizDemandGroupCondition);
 
-        String ascription = bizDemandQueryList.getAscription();
         boolean resultIsEmpty = groupDuplicateUtil.isResultIsEmpty(bizDemandQueryList, condition);
         if (resultIsEmpty) {
             return BaseResult.success(ResultUtil.pageEmpty());
@@ -530,8 +783,8 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         String values = nodes.stream().filter(n -> !OTHER.equals(n.getLabel())).map(DemandGroupNodeVO::getFieldValue).collect(Collectors.joining(","));
         for (DemandGroupNodeVO node : nodes) {
             if (OTHER.equals(node.getLabel())) {
-                node.setFieldValue(values);
-                node.setField(node.getField() + "s");
+                node.setFieldValue(StringUtils.isNotBlank(values) ? values : "-1");
+                node.setField(QUERY_OTHER_FIELD_MAP.get(node.getField()));
             }
         }
         nodes.sort(Comparator.comparing(DemandGroupNodeVO::getLabel, Comparator.nullsLast(String::compareTo)));
@@ -619,14 +872,14 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
     }
 
     private void buildBizNodesForRow(List<String> groupFields,
-                                  BizDemandGroupFieldDO row,
-                                  List<DemandGroupNodeVO> roots,
-                                  Map<String, DemandGroupNodeVO> levelNodeMap,
-                                  Map<Long, String> bizDomainNameMap,
-                                  Map<Long, String> productLineNameMap,
-                                  Map<String, String> receiveManNameMap,
-                                  Map<Long, String> labelNameMap,
-                                  Map<String, String> deptNameMap) {
+                                     BizDemandGroupFieldDO row,
+                                     List<DemandGroupNodeVO> roots,
+                                     Map<String, DemandGroupNodeVO> levelNodeMap,
+                                     Map<Long, String> bizDomainNameMap,
+                                     Map<Long, String> productLineNameMap,
+                                     Map<String, String> receiveManNameMap,
+                                     Map<Long, String> labelNameMap,
+                                     Map<String, String> deptNameMap) {
         // 取各层的值序列
         List<List<String>> valuesPerLevel = new ArrayList<>();
         for (String gf : groupFields) {
@@ -767,8 +1020,8 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         if (ProductGroupFieldEnum.TYPE.getGroupField().equals(groupField)) {
             return StringUtils.defaultString(row.getType(), "");
         }
-        if (ProductGroupFieldEnum.LABEL_CATEGORY.getGroupField().equals(groupField)) {
-            return row.getLabelCategoryId() == null ? "" : String.valueOf(row.getLabelCategoryId());
+        if (ProductGroupFieldEnum.LABEL.getGroupField().equals(groupField)) {
+            return row.getLabelId() == null ? "" : String.valueOf(row.getLabelId());
         }
         return "";
     }
@@ -802,11 +1055,11 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
     }
 
     private String buildProductLabelForValue(String groupField,
-                                      String value,
-                                      Map<Long, String> bizDomainNameMap,
-                                      Map<Long, String> productLineNameMap,
-                                      Map<String, String> ownerNameMap,
-                                      Map<Long, String> labelNameMap) {
+                                             String value,
+                                             Map<Long, String> bizDomainNameMap,
+                                             Map<Long, String> productLineNameMap,
+                                             Map<String, String> ownerNameMap,
+                                             Map<Long, String> labelNameMap) {
         if (ProductGroupFieldEnum.BIZ_DOMAIN.getGroupField().equals(groupField)) {
             if (StringUtils.isBlank(value)) return OTHER;
             return bizDomainNameMap.getOrDefault(Long.parseLong(value), OTHER);
@@ -834,7 +1087,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             if (StringUtils.isBlank(value)) return OTHER;
             return StringUtils.defaultIfBlank(ProductDemandTypeEnum.getTextByCode(Integer.parseInt(value)), OTHER);
         }
-        if (ProductGroupFieldEnum.LABEL_CATEGORY.getGroupField().equals(groupField)) {
+        if (ProductGroupFieldEnum.LABEL.getGroupField().equals(groupField)) {
             if (StringUtils.isBlank(value)) return OTHER;
             return labelNameMap.getOrDefault(Long.parseLong(value), OTHER);
         }
@@ -842,12 +1095,12 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
     }
 
     private String buildBizLabelForValue(String groupField,
-                                      String value,
-                                      Map<Long, String> bizDomainNameMap,
-                                      Map<Long, String> productLineNameMap,
-                                      Map<String, String> ownerNameMap,
-                                      Map<Long, String> labelNameMap,
-                                      Map<String, String> deptNameMap) {
+                                         String value,
+                                         Map<Long, String> bizDomainNameMap,
+                                         Map<Long, String> productLineNameMap,
+                                         Map<String, String> ownerNameMap,
+                                         Map<Long, String> labelNameMap,
+                                         Map<String, String> deptNameMap) {
         if (BizDemandGroupFieldEnum.BIZ_DOMAIN.getGroupField().equals(groupField)) {
             if (StringUtils.isBlank(value)) return OTHER;
             return bizDomainNameMap.getOrDefault(Long.parseLong(value), OTHER);
@@ -896,17 +1149,18 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
                 .collect(Collectors.toList());
     }
 
-    private String buildSelectField(List<String> groupFields) {
+    private String buildSelectField(List<ViewsGroupQueryList> groupFields) {
         return groupFields.stream()
+                .map(ViewsGroupQueryList::getKey)
                 .map(ProductSelectFieldEnum::getSourceFieldBySelectField)
                 .filter(StringUtils::isNotBlank)
                 .collect(Collectors.joining(","));
     }
 
-    private String buildGroupField(List<String> groupFields) {
+    private String buildGroupField(List<ViewsGroupQueryList> groupFields) {
         List<String> parts = new ArrayList<>();
-        for (String gf : groupFields) {
-            parts.add(ProductGroupFieldEnum.getSourceFieldByGroupField(gf));
+        for (ViewsGroupQueryList gq : groupFields) {
+            parts.add(ProductGroupFieldEnum.getSourceFieldByGroupField(gq.getKey()));
         }
         return String.join(",", parts);
     }

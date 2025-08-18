@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author xingyun
@@ -36,16 +37,16 @@ public class ProductDemandGroupList extends QueryBase {
     private String ownerId;
 
     @ApiModelProperty("其他负责人")
-    private String ownerIds = "";
+    private String notInOwnerIds;
 
     @ApiModelProperty("排期时间")
     private Date expectScheduleTime;
 
-    @ApiModelProperty("选中为标签类别时填写,类别id")
-    private Long labelCategoryId;
+    @ApiModelProperty("标签ids")
+    private List<Long> labelIds;
 
-    @ApiModelProperty("其他类别ids")
-    private String labelCategoryIds = "";
+    @ApiModelProperty("其他标签ids")
+    private String notInLabelIds;
 
     @ApiModelProperty("产品需求类型")
     private Integer type;

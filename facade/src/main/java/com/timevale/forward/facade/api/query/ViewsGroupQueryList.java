@@ -1,0 +1,33 @@
+package com.timevale.forward.facade.api.query;
+
+import com.timevale.mandarin.common.result.ToString;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+/**
+ * 视图分组条件VO
+ * @author qiyuan
+ * @date 2025/07/14 15:00
+ */
+@EqualsAndHashCode(callSuper = true)
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@ApiModel("视图分组条件")
+public class ViewsGroupQueryList extends ToString {
+
+    @ApiModelProperty("字段key")
+    private String key;
+
+    @ApiModelProperty("字段类型 0：基础字段，1：标签分类")
+    private Integer type;
+
+    @ApiModelProperty("字段名称")
+    private String name;
+}
