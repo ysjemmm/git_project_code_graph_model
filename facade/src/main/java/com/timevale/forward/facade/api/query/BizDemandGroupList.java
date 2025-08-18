@@ -6,6 +6,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.List;
+
 /**
  * @author xingyun
  * @date 2021-12-13 13:58
@@ -34,16 +36,16 @@ public class BizDemandGroupList extends QueryBase {
     private String receiveManId;
 
     @ApiModelProperty("其他需求接收人")
-    private String receiveManIds;
+    private String notInReceiveManIds;
 
     @ApiModelProperty("需求部门")
     private Long deptId;
 
-    @ApiModelProperty("选中为标签类别时填写,类别id")
-    private Long labelCategoryId;
+    @ApiModelProperty("标签ids")
+    private List<Long> labelIds;
 
-    @ApiModelProperty("其他类别ids")
-    private String labelCategoryIds;
+    @ApiModelProperty("其他标签ids")
+    private String notInLabelIds;
 
     @ApiModelProperty("目标客户")
     private String targetCustomer;

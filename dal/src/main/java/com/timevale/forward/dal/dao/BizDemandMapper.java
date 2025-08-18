@@ -220,4 +220,5 @@ public interface BizDemandMapper {
      */
     List<BizDemandListDO> getGroupList(BizDemandGroupQueryCondition bizDemandGroupQueryCondition);
 
+    List<BizDemandGroupFieldDO> getSimpleGroupList(BizDemandGroupQueryCondition groupQueryCondition);
 }

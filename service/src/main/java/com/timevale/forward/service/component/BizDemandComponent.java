@@ -4,6 +4,7 @@ import com.timevale.forward.dal.condition.BizDemandGroupQueryCondition;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.entity.BizDemandGroupFieldDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
+import com.timevale.forward.dal.entity.ProductDemandGroupFieldDO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.DemandGroupNodeVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
@@ -111,4 +112,6 @@ public interface BizDemandComponent {
     PageQueryResult<BizDemandVO> groupList(BizDemandGroupQueryCondition condition);
 
     List<BizDemandGroupFieldDO> groupTree(BizDemandGroupQueryCondition condition);
+
+    List<BizDemandGroupFieldDO> getSimpleGroupList(BizDemandGroupQueryCondition groupCondition);
 }

@@ -28,11 +28,18 @@ public class BizDemandGroupCondition extends QueryBase {
 
     private String receiveManId;
 
-    private List<String> receiveManIds;
+    private List<String> notInReceiveManIds;
 
     private Long deptId;
 
-    private Long labelCategoryId;
+    private List<Long> labelIds;
+
+    private List<Long> notInLabelIds;
+
+    /**
+     *包含的id
+     */
+    private List<Long> containIds;
 
     private List<Long> labelCategoryIds;
 
