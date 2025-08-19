@@ -134,4 +134,7 @@ public class BizDemandAddReq extends BaseReq {
     @ApiModelProperty("卡单说明")
     @Length(max = 500, message = "卡单说明不能超过500字")
     private String stuckOrderInstructions;
+
+    @ApiModelProperty("客户等级")
+    private String customerGrade;
 }
