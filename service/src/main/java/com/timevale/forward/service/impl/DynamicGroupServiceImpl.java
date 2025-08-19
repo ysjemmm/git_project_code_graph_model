@@ -458,30 +458,29 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
             if (value instanceof Map) {
                 Map<String, Object> valueMap = (Map<String, Object>) value;
-                Map<String, Object> processedSubMap = new LinkedHashMap<>();
 
+                // 先递归处理所有子项
+                Map<String, Object> processedSubMap = new LinkedHashMap<>();
                 for (Map.Entry<String, Object> subEntry : valueMap.entrySet()) {
                     String subKey = subEntry.getKey();
                     Object subValue = subEntry.getValue();
 
-                    // 检查是否是 {其他={total=X}} 结构
                     if (subValue instanceof Map) {
-                        Map<String, Object> subValueMap = (Map<String, Object>) subValue;
-
-                        // 检查是否是 {其他={total=X}} 结构
-                        if (isOtherWithSingleTotal(subValueMap)) {
-                            Map<String, Object> otherMap = (Map<String, Object>) subValueMap.get(OTHER);
-                            processedSubMap.put(subKey, otherMap);
-                            continue;
-                        }
-
                         // 递归处理子Map
-                        processedSubMap.put(subKey, optimizeSingleOtherGroups(subValueMap));
+                        processedSubMap.put(subKey, optimizeSingleOtherGroups((Map<String, Object>) subValue));
                     } else {
                         processedSubMap.put(subKey, subValue);
                     }
                 }
-                result.put(key, processedSubMap);
+
+                // 检查处理后的Map是否符合 {其他={total=X}} 结构
+                if (isOtherWithSingleTotal(processedSubMap)) {
+                    // 将 {其他={total=X}} 替换为 {total=X}
+                    Map<String, Object> otherMap = (Map<String, Object>) processedSubMap.get(OTHER);
+                    result.put(key, otherMap);
+                } else {
+                    result.put(key, processedSubMap);
+                }
             } else {
                 result.put(key, value);
             }
