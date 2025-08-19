@@ -16,6 +16,6 @@ public class ProductGroupCondition {
     // 字段提取函数
     private Function<ProductDemandGroupFieldDO, Object> fieldExtractor;
 
-    // 值到分组的映射（可选）
+    // 值到分组的映射
     private Map<Long, String> valueMapping;
 }
