@@ -3,7 +3,6 @@ package com.timevale.forward.facade.api.result;
 import com.timevale.mandarin.common.result.ToString;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -16,7 +15,6 @@ import java.util.List;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-@Builder
 @ApiModel("需求分组节点")
 public class DemandGroupNodeVO extends ToString {
 

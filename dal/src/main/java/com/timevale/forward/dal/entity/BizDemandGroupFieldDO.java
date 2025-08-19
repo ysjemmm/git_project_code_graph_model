@@ -24,13 +24,11 @@ public class BizDemandGroupFieldDO extends BaseDO {
 
     private String receiveManId;
 
-    private String receiveManIds;
-
     private Long deptId;
 
-    private Long labelCategoryId;
+    private Long labelId;
 
-    private String labelCategoryIds;
+    private Long labelCategoryId;
 
     private String targetCustomer;
 

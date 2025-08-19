@@ -326,6 +326,25 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         return resultVO.getPageQueryResult();
     }
 
+    @Override
+    public List<BizDemandGroupFieldDO> getSimpleGroupList(BizDemandGroupQueryCondition groupQueryCondition) {
+        BizDemandListCondition condition = groupQueryCondition.getCondition();
+        Map<Long, GroupResponse> deptNodeMap = new HashMap<>();
+        Set<Long> queryDeptIdSet = Sets.newHashSet(condition.getDeptIdList());
+
+        // 处理公共查询逻辑
+        if (!handleCommonQueryLogic(condition, queryDeptIdSet, deptNodeMap)) {
+            return new ArrayList<>();
+        }
+
+        // 重新设置条件
+        groupQueryCondition.setCondition(condition);
+
+        List<BizDemandGroupFieldDO> bizDemandListDOList = bizDemandMapper.getSimpleGroupList(groupQueryCondition);
+
+        return bizDemandListDOList;
+    }
+
     private QueryResultVO<BizDemandVO> getBizDemandVOQueryResultVO(List<BizDemandListDO> bizDemandListDOList, Set<Long> queryDeptIdSet, Map<Long, GroupResponse> deptNodeMap, List<ProductLineAnalyseVO> analyseVOList) {
         List<Long> customerDevBizDemandIds = bizDemandListDOList.stream()
                 .filter(BizDemandListDO::getCustomerDevDemand)

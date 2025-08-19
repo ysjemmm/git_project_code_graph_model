@@ -239,8 +239,8 @@ public interface BizDemandCopier {
      * @param queryList 对象
      * @return ProductDemandGroupCondition
      */
-    @Mapping(target = "labelCategoryIds", expression = "java(StringUtils.isNotEmpty(queryList.getLabelCategoryIds()) ? Arrays.stream(queryList.getLabelCategoryIds().split(\",\")).map(Long::valueOf).collect(Collectors.toList()) : null)")
-    @Mapping(target = "receiveManIds", expression = "java(StringUtils.isNotEmpty(queryList.getReceiveManIds()) ? Arrays.asList(queryList.getReceiveManIds().split(\",\")) : null)")
+    @Mapping(target = "notInLabelIds", expression = "java(StringUtils.isNotEmpty(queryList.getNotInLabelIds()) ? Arrays.stream(queryList.getNotInLabelIds().split(\",\")).map(Long::valueOf).collect(Collectors.toList()) : null)")
+    @Mapping(target = "notInReceiveManIds", expression = "java(StringUtils.isNotEmpty(queryList.getNotInReceiveManIds()) ? Arrays.asList(queryList.getNotInReceiveManIds().split(\",\")) : null)")
     BizDemandGroupCondition convert(BizDemandGroupList queryList);
 
     /**

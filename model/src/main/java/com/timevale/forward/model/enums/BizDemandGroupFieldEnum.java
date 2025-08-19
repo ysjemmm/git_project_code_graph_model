@@ -14,7 +14,7 @@ public enum BizDemandGroupFieldEnum {
 
     PRODUCT_LINE("productLine","bd.product_line_id", "产品线"),
 
-    LABEL_CATEGORY("labelCategory","f.label_category_id", "标签类别"),
+    LABEL("label","e.label_id", "标签类别"),
 
     STATUS("status","bd.status", "需求解决状态"),
 
