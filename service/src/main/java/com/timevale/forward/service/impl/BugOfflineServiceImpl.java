@@ -186,6 +186,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             e.setBelongName(BugBelongEnum.getTextByCode(e.getBelong()));
             e.setReasonName(BugReasonEnum.getTextByCode(e.getReason()));
             e.setPriorityName(PriorityEnum.getTextChineseByCode(e.getPriority()));
+            e.setSeverityName(PriorityEnum.getTextByCode(e.getSeverity()));
             e.setUnHandleReasonName(BugUnHandleReasonEnum.getTextByCode(e.getUnHandleReason()));
 
             List<BizLabelSimpleVO> labelSimpleVOList = bizLabelMap.get(e.getId());
@@ -1054,6 +1055,10 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         //给线下bug的优先级赋值
         String priorityName = BugPriorityEnum.getTextByCode(bugOfflineDO.getPriority());
         bugOfflineDetailVO.setPriorityName(priorityName);
+
+        //给线下bug的优先级赋值
+        String severityName = PriorityEnum.getTextByCode(bugOfflineDO.getSeverity());
+        bugOfflineDetailVO.setSeverityName(severityName);
 
         //给线下bug的来源赋值
         String sourceName = BugSourceEnum.getTextByCode(bugOfflineDO.getSource());

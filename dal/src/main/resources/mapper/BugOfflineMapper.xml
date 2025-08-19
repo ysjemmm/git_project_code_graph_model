@@ -4,9 +4,9 @@
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into bug_offline(project_id, product_line_id, name, status, operator, operator_id,last_operator,last_operator_id, proposer, proposer_id,
-                                priority, env, reason, source, belong, frequency, `desc`, open_count, origin, create_man_id, create_man)
+                                priority, severity, severity, env, reason, source, belong, frequency, `desc`, open_count, origin, create_man_id, create_man)
         values (#{projectId}, #{productLineId}, #{name}, #{status}, #{operator}, #{operatorId},#{lastOperator}, #{lastOperatorId}, #{proposer}, #{proposerId},
-                #{priority}, #{env}, #{reason}, #{source}, #{belong}, #{frequency}, #{desc}, #{openCount},#{origin}, #{createManId}, #{createMan})
+                #{priority}, #{severity}, #{env}, #{reason}, #{source}, #{belong}, #{frequency}, #{desc}, #{openCount},#{origin}, #{createManId}, #{createMan})
     </insert>
 
     <update id="update">
@@ -44,6 +44,9 @@
             </if>
             <if test="priority != null">
                 priority = #{priority},
+            </if>
+            <if test="severity != null">
+                severity = #{severity},
             </if>
             <if test="env != null">
                 env = #{env},
@@ -105,7 +108,7 @@
     </select>
 
     <select id="selectByCondition" resultType="com.timevale.forward.dal.entity.BugOfflineListDO">
-        select bo.id, bo.status, bo.operator, bo.operator_id, bo.proposer, bo.proposer_id, bo.priority, bo.env,
+        select bo.id, bo.status, bo.operator, bo.operator_id, bo.proposer, bo.proposer_id, bo.priority, bo.severity, bo.env,
         bo.reason, bo.source, bo.belong,
         bo.return_count, bo.unhandle_reason, bo.open_count, bo.expect_solve_date,
         bo.create_date, bo.modify_date,
@@ -172,6 +175,12 @@
             <if test="priorities != null and priorities.size() > 0">
                 and bo.priority in
                 <foreach collection="priorities" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="severities != null and severities.size() > 0">
+                and bo.severity in
+                <foreach collection="severities" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
@@ -263,7 +272,7 @@
 
     <select id="selectByMembers" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
         select id, project_id, product_line_id, name, status, last_operator, last_operator_id, operator, operator_id,
-        proposer, proposer_id, priority, env, reason, source, belong, frequency, `desc`, open_count, return_count,
+        proposer, proposer_id, priority, severity, env, reason, source, belong, frequency, `desc`, open_count, return_count,
         delay_handle_reason, unhandle_reason, is_deleted, create_man_id, create_man, create_date, modify_man_id,
         modify_man, modify_date
         from bug_offline
@@ -285,7 +294,7 @@
 
     <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
         select id, project_id, product_line_id, name, status, last_operator, last_operator_id, operator, operator_id,
-               proposer, proposer_id, priority, env, reason, source, belong, frequency, `desc`, open_count, return_count,
+               proposer, proposer_id, priority, severity, env, reason, source, belong, frequency, `desc`, open_count, return_count,
                delay_handle_reason, unhandle_reason, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
         from bug_offline
         where project_id = #{projectId}

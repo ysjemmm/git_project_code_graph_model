@@ -60,6 +60,12 @@ public class BugOnlineDetailVO extends ToString {
     @ApiModelProperty("bug优先级")
     private String priorityName;
 
+    @ApiModelProperty("紧急程度: 0P0,10P1,20P2,30P3")
+    private Integer severity;
+
+    @ApiModelProperty("紧急程度")
+    private String severityName;
+
     @ApiModelProperty("bug原因")
     private Integer reason;
 

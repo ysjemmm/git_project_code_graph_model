@@ -68,6 +68,11 @@ public class BugOnlineDO extends BaseDO {
     private Integer priority;
 
     /**
+     * 紧急程度: 0P0,10P1,20P2,30P3
+     */
+    private Integer severity;
+
+    /**
      * 是否复现：0是，1否
      */
     private Integer recurrent;
