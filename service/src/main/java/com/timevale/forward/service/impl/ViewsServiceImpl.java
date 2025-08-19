@@ -85,7 +85,7 @@ public class ViewsServiceImpl implements ViewsService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         viewsListCondition.setOwnerId(userInfo.getId());
         if (Objects.equals(viewsQueryList.getSelectForOptions(), true)) {
-            viewsListCondition.setHidden(true);
+            viewsListCondition.setHidden(false);
         }
         List<ViewsUserListDO> viewsUserDOList = viewsUserMapper.list(viewsListCondition);
         if (Objects.equals(viewsQueryList.getOwnerType(), ViewsUserTypeEnum.MINE.getCode()) && !Objects.equals(viewsQueryList.getSelectForOptions(), true)) {
