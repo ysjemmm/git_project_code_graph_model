@@ -277,7 +277,12 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
                     conditions.add(new ProductGroupCondition(groupFields.get(i).getKey(), FUNCTION_FIELD_MAP.get(groupFields.get(i).getKey()), null));
                 }
             }
-            Map<String, Object> groupResult = group(simpleGroupList, conditions);
+            // 若包含 type 维度，则进行多值拆分
+            List<ProductDemandGroupFieldDO> dataForGrouping = groupFieldKeys.contains(ProductGroupFieldEnum.TYPE.getGroupField())
+                    ? expandTypeMultiValues(simpleGroupList)
+                    : simpleGroupList;
+
+            Map<String, Object> groupResult = group(dataForGrouping, conditions);
 
             // 转换方法
             List<DemandGroupNodeVO> treeNodes = transformToTree(groupResult, 0, conditions, bizDomainNameMap, productLineNameMap, ownerNameMap);
@@ -389,6 +394,43 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
         // 如果需要对结果进行后处理，可以在这里添加
         return optimizeSingleOtherGroups(result);
+    }
+
+    /**
+     * 对 type 维度进行多值拆分。后端 SQL 聚合时 type 可能以字符串形式返回（如 "[0,1]" 或 "0,1"），
+     * 这里在进入分组逻辑前进行行级展开，使每个 type 值各自参与分组统计。
+     */
+    private List<ProductDemandGroupFieldDO> expandTypeMultiValues(List<ProductDemandGroupFieldDO> rows) {
+        if (CollectionUtils.isEmpty(rows)) {
+            return rows;
+        }
+        List<ProductDemandGroupFieldDO> expanded = new ArrayList<>(rows.size());
+        for (ProductDemandGroupFieldDO row : rows) {
+            List<String> codes = parseTypeCodes(row.getType());
+            if (CollectionUtils.isEmpty(codes)) {
+                expanded.add(row);
+                continue;
+            }
+            if (codes.size() == 1) {
+                row.setType(codes.get(0));
+                expanded.add(row);
+                continue;
+            }
+            for (String code : codes) {
+                ProductDemandGroupFieldDO copy = new ProductDemandGroupFieldDO();
+                copy.setBizDomainId(row.getBizDomainId());
+                copy.setProductLineId(row.getProductLineId());
+                copy.setLabelId(row.getLabelId());
+                copy.setType(code);
+                copy.setStatus(row.getStatus());
+                copy.setPriority(row.getPriority());
+                copy.setExpectScheduleTime(row.getExpectScheduleTime());
+                copy.setOwnerId(row.getOwnerId());
+                copy.setTotal(row.getTotal());
+                expanded.add(copy);
+            }
+        }
+        return expanded;
     }
 
     public Map<String, Object> bizDemandGroup(List<BizDemandGroupFieldDO> data,
@@ -579,6 +621,18 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             if (ProductGroupFieldEnum.OWNER.getGroupField().equals(field)) {
                 label = ownerNameMap.get(fieldValue);
             }
+            if (ProductGroupFieldEnum.STATUS.getGroupField().equals(field)) {
+                label = ProductDemandStatusEnum.getTextByCode(Integer.parseInt(fieldValue));
+            }
+            if (ProductGroupFieldEnum.PRIORITY.getGroupField().equals(field)) {
+                label = PriorityEnum.getTextByCode(Integer.parseInt(fieldValue));
+            }
+            if (ProductGroupFieldEnum.EXPECT_SCHEDULE_TIME.getGroupField().equals(field)) {
+                label = StringUtils.isBlank(fieldValue) ? OTHER : fieldValue;
+            }
+            if (ProductGroupFieldEnum.TYPE.getGroupField().equals(field)) {
+                label = StringUtils.defaultIfBlank(ProductDemandTypeEnum.getTextByCode(Integer.parseInt(fieldValue)), OTHER);
+            }
             Object value = entry.getValue();
 
             DemandGroupNodeVO node = new DemandGroupNodeVO();
@@ -643,6 +697,15 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             }
             if (BizDemandGroupFieldEnum.DEMAND_DEPT.getGroupField().equals(field)) {
                 label = deptNameMap.get(fieldValue);
+            }
+            if (BizDemandGroupFieldEnum.STATUS.getGroupField().equals(field)) {
+                label = BizDemandStatusEnum.getTextByCode(Integer.parseInt(fieldValue));
+            }
+            if (BizDemandGroupFieldEnum.PRIORITY.getGroupField().equals(field)) {
+                label = PriorityEnum.getTextByCode(Integer.parseInt(fieldValue));
+            }
+            if (BizDemandGroupFieldEnum.TARGET_CUSTOMER.getGroupField().equals(field)) {
+                label = StringUtils.isBlank(fieldValue) ? OTHER : fieldValue;
             }
             Object value = entry.getValue();
 
