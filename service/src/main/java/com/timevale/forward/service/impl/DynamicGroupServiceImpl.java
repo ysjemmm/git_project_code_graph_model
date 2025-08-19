@@ -529,7 +529,11 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             }
             Object value = entry.getValue();
 
-            DemandGroupNodeVO node = DemandGroupNodeVO.builder().field(PRODUCT_GROUP_FIELD_MAP.get(field)).label(label).fieldValue(fieldValue).total(0L).build();
+            DemandGroupNodeVO node = new DemandGroupNodeVO();
+            node.setField(PRODUCT_GROUP_FIELD_MAP.get(field));
+            node.setFieldValue(fieldValue);
+            node.setLabel(label);
+            node.setTotal(0L);
 
             if (value instanceof Map) {
                 Map<String, Object> valueMap = (Map<String, Object>) value;
@@ -600,7 +604,11 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             }
             Object value = entry.getValue();
 
-            DemandGroupNodeVO node = DemandGroupNodeVO.builder().field(PRODUCT_GROUP_FIELD_MAP.get(field)).label(label).fieldValue(fieldValue).total(0L).build();
+            DemandGroupNodeVO node = new DemandGroupNodeVO();
+            node.setField(PRODUCT_GROUP_FIELD_MAP.get(field));
+            node.setLabel(label);
+            node.setFieldValue(fieldValue);
+            node.setTotal(0L);
 
             if (value instanceof Map) {
                 Map<String, Object> valueMap = (Map<String, Object>) value;
@@ -1176,13 +1184,12 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
                     label = buildProductLabelForValue(gf, value, bizDomainNameMap, productLineNameMap, ownerNameMap, labelNameMap);
                     field = PRODUCT_GROUP_FIELD_MAP.get(gf);
                 }
-                node = DemandGroupNodeVO.builder()
-                        .field(field)
-                        .fieldValue(value)
-                        .label(label)
-                        .total(0L)
-                        .children(new ArrayList<>())
-                        .build();
+                node = new DemandGroupNodeVO();
+                node.setField(field);
+                node.setFieldValue(value);
+                node.setLabel(label);
+                node.setTotal(0L);
+                node.setChildren(new ArrayList<>());
                 levelNodeMap.put(pathKey, node);
                 if (level == 0) {
                     roots.add(node);
