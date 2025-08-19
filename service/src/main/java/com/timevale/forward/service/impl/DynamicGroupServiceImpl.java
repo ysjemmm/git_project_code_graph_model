@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import com.github.pagehelper.PageHelper;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandGroupCondition;
 import com.timevale.forward.dal.condition.BizDemandGroupQueryCondition;
@@ -44,6 +45,7 @@ import com.timevale.forward.model.enums.ProductSelectFieldEnum;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.LabelComponent;
 import com.timevale.forward.service.component.ProductDemandComponent;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
@@ -233,7 +235,6 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             ProductDemandGroupQueryCondition groupCondition = ProductDemandGroupQueryCondition.builder()
                     .condition(condition)
                     .parentCondition(parentCondition)
-                    .orderField(dynamicGroupQueryList.getOrderField())
                     .build();
             List<ProductDemandGroupFieldDO> simpleGroupList = productDemandComponent.getSimpleGroupList(groupCondition);
             if (CollUtil.isEmpty(simpleGroupList)) {
@@ -303,7 +304,6 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
                 .parentCondition(parentCondition)
                 .selectField(selectField)
                 .groupField(groupField)
-                .orderField(dynamicGroupQueryList.getOrderField())
                 .build();
 
         List<ProductDemandGroupFieldDO> rows = productDemandComponent.getGroupTree(groupCondition);
@@ -752,12 +752,12 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             }
             parentCondition.setInProductDemandIds(productDemandIds);
         }
+        // 分页查询
+        PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
 
         ProductDemandGroupQueryCondition groupCondition = ProductDemandGroupQueryCondition.builder()
                 .condition(condition)
                 .parentCondition(parentCondition)
-                .groupField(null)
-                .orderField(dynamicGroupQueryList.getOrderField())
                 .build();
 
         List<ProductDemandListDO> productDemandListDO = productDemandComponent.getGroupList(groupCondition);
@@ -810,7 +810,6 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             BizDemandGroupQueryCondition groupCondition = BizDemandGroupQueryCondition.builder()
                     .condition(condition)
                     .parentCondition(parentCondition)
-                    .orderField(dynamicGroupQueryList.getOrderField())
                     .build();
             List<BizDemandGroupFieldDO> simpleGroupList = bizDemandComponent.getSimpleGroupList(groupCondition);
             if (CollUtil.isEmpty(simpleGroupList)) {
@@ -894,7 +893,6 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
                 .parentCondition(parentCondition)
                 .selectField(selectField)
                 .groupField(groupField)
-                .orderField(dynamicGroupQueryList.getOrderField())
                 .build();
 
         List<BizDemandGroupFieldDO> rows = bizDemandComponent.groupTree(groupCondition);
@@ -1041,7 +1039,6 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
                 .condition(condition)
                 .parentCondition(parentCondition)
                 .groupField(null)
-                .orderField(dynamicGroupQueryList.getOrderField())
                 .build();
 
         PageQueryResult<BizDemandVO> pageQueryResult = bizDemandComponent.groupList(groupCondition);

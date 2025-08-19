@@ -317,7 +317,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         groupQueryCondition.setCondition(condition);
 
         // 开始分页,查询并转换
-        String collation = sqlOrderComponent.build(groupQueryCondition.getOrderField(), condition.getOrderCollation());
+        String collation = sqlOrderComponent.build(condition.getOrderFiled(), condition.getOrderCollation());
         PageHelper.startPage(condition.getPageNum(), condition.getPageSize(), collation);
         List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.getGroupList(groupQueryCondition);
 
