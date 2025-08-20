@@ -45,6 +45,9 @@ public class BugOfflineQueryList extends QueryBase {
     @ApiModelProperty("bug优先级")
     private List<Integer> priorities;
 
+    @ApiModelProperty("严重程度")
+    private List<Integer> severities;
+
     @ApiModelProperty("bug环境")
     private List<Integer> envs;
 
