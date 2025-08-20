@@ -38,7 +38,7 @@
             <if test="srExpertId != null">sr_expert_id,</if>
             <if test="affectCustomerOrder != null">affect_customer_order,</if>
             <if test="stuckOrderInstructions  != null">stuck_order_instructions,</if>
-            <if test="customerGrade  != null">customer_grade,</if>
+            <if test="customerGrade != null">customer_grade,</if>
         </trim>
         VALUES
         <trim prefix="(" suffix=")" suffixOverrides=",">
@@ -75,6 +75,7 @@
             <if test="srExpertId != null">#{srExpertId},</if>
             <if test="affectCustomerOrder != null">#{affectCustomerOrder},</if>
             <if test="stuckOrderInstructions != null">#{stuckOrderInstructions},</if>
+            <if test="customerGrade != null">#{customerGrade},</if>
         </trim>
     </insert>
 
