@@ -338,8 +338,18 @@ public class TaskServiceImpl implements TaskService {
     private void checkTimeRange(List<TaskDO> taskDOS, ProjectDO projectDO) {
         // 校验任务时间范围需要在项目时间内
         for (TaskDO taskDO : taskDOS) {
-            AssertUtil.checkState(projectDO.getPlanStartDate().compareTo(taskDO.getPlanStartDate()) <= 0, "任务计划开始时间不在项目时间范围内，请修改");
-            AssertUtil.checkState(projectDO.getPlanEndDate().compareTo(taskDO.getPlanEndDate()) >= 0, "任务计划结束时间不在项目时间范围内，请修改");
+            // 只比较日期部分，忽略时间
+            Date projectStartDate = DateUtil.parseToDate(DateUtil.getDate(projectDO.getPlanStartDate()), DateFormatConst.DATE_FORMAT);
+            Date projectEndDate = DateUtil.parseToDate(DateUtil.getDate(projectDO.getPlanEndDate()), DateFormatConst.DATE_FORMAT);
+            Date taskStartDate = DateUtil.parseToDate(DateUtil.getDate(taskDO.getPlanStartDate()), DateFormatConst.DATE_FORMAT);
+            Date taskEndDate = DateUtil.parseToDate(DateUtil.getDate(taskDO.getPlanEndDate()), DateFormatConst.DATE_FORMAT);
+
+            // 任务开始日期应晚于或等于项目开始日期
+            AssertUtil.checkState(projectStartDate.compareTo(taskStartDate) <= 0, "任务计划开始时间不在项目时间范围内，请修改");
+            // 任务结束日期应早于或等于项目结束日期
+            AssertUtil.checkState(projectEndDate.compareTo(taskEndDate) >= 0, "任务计划结束时间不在项目时间范围内，请修改");
+            // 任务开始日期不应晚于任务结束日期
+            AssertUtil.checkState(taskStartDate.compareTo(taskEndDate) <= 0, "任务计划开始时间不能晚于计划结束时间");
         }
     }
 

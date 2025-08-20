@@ -27,6 +27,9 @@ public class CommentVO extends ToString {
     @ApiModelProperty("创建人")
     private String createMan;
 
+    @ApiModelProperty("创建人Id")
+    private String createManId;
+
     @ApiModelProperty("创建时间")
     private Date createDate;
 
