@@ -4,7 +4,7 @@
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into bug_offline(project_id, product_line_id, name, status, operator, operator_id,last_operator,last_operator_id, proposer, proposer_id,
-                                priority, severity, severity, env, reason, source, belong, frequency, `desc`, open_count, origin, create_man_id, create_man)
+                                priority, severity, env, reason, source, belong, frequency, `desc`, open_count, origin, create_man_id, create_man)
         values (#{projectId}, #{productLineId}, #{name}, #{status}, #{operator}, #{operatorId},#{lastOperator}, #{lastOperatorId}, #{proposer}, #{proposerId},
                 #{priority}, #{severity}, #{env}, #{reason}, #{source}, #{belong}, #{frequency}, #{desc}, #{openCount},#{origin}, #{createManId}, #{createMan})
     </insert>
