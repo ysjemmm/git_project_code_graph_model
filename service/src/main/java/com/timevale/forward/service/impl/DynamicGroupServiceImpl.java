@@ -809,34 +809,17 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         // 获取标签类别Id
         List<Long> labelCategoryIds = groupFields.stream().filter(field -> field.getType() == 1).map(field -> Long.valueOf(field.getKey())).collect(Collectors.toList());
         if (CollUtil.isNotEmpty(labelCategoryIds)) {
-            List<Long> productDemandIds = new ArrayList<>();
             //查询等于标签id的需求
-            List<Long> labelIds = parentCondition.getLabelIds();
-            if (CollUtil.isNotEmpty(labelIds)) {
-                List<Long> newLabelIds = labelComponent.getLabelIds(labelIds, labelCategoryIds);
-                // 查询使用这些标签的需求id
-                List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
-                List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+            List<Long> newLabelIds = getNewLabelIds(parentCondition.getLabelIds(), labelCategoryIds, parentCondition.getNotInLabelIds());
+            // 查询使用这些标签的需求id
+            List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
+            List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
 
-                if (CollectionUtils.isEmpty(bizIds)) {
-                    return BaseResult.success(ResultUtil.pageEmpty());
-                }
-                productDemandIds.addAll(bizIds);
+            if (CollectionUtils.isEmpty(bizIds)) {
+                return BaseResult.success(ResultUtil.pageEmpty());
             }
 
-            //查询不等于标签id的需求
-            List<Long> notInLabelIds = parentCondition.getNotInLabelIds();
-            if (CollUtil.isNotEmpty(notInLabelIds)) {
-                List<Long> ids = labelMapper.getByCategoryIds(labelCategoryIds, false).stream().map(LabelDO::getId).collect(Collectors.toList());
-                ids.removeAll(notInLabelIds);
-                // 查询使用这些标签的需求id
-                List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByLabelIdInType(ids, BizTypeEnum.PRODUCT_DEMAND.getCode());
-                List<Long> notInBizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
-                if (CollUtil.isNotEmpty(notInBizIds)) {
-                    productDemandIds.addAll(notInBizIds);
-                }
-            }
-            parentCondition.setInProductDemandIds(productDemandIds);
+            parentCondition.setInProductDemandIds(bizIds);
         }
         // 分页查询
         PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
@@ -1093,34 +1076,16 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         // 获取标签类别Id
         List<Long> labelCategoryIds = groupFields.stream().filter(field -> field.getType() == 1).map(field -> Long.valueOf(field.getKey())).collect(Collectors.toList());
         if (CollUtil.isNotEmpty(labelCategoryIds)) {
-            List<Long> bizDemandIds = new ArrayList<>();
-            //查询等于标签id的需求
-            List<Long> labelIds = parentCondition.getLabelIds();
-            if (CollUtil.isNotEmpty(labelIds)) {
-                List<Long> newLabelIds = labelComponent.getLabelIds(labelIds, labelCategoryIds);
-                // 查询使用这些标签的需求id
-                List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.BIZ_DEMAND.getCode());
-                List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+            List<Long> newLabelIds = getNewLabelIds(parentCondition.getLabelIds(), labelCategoryIds, parentCondition.getNotInLabelIds());
+            // 查询使用这些标签的需求id
+            List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.BIZ_DEMAND.getCode());
+            List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
 
-                if (CollectionUtils.isEmpty(bizIds)) {
-                    return BaseResult.success(ResultUtil.pageEmpty());
-                }
-                bizDemandIds.addAll(bizIds);
+            if (CollectionUtils.isEmpty(bizIds)) {
+                return BaseResult.success(ResultUtil.pageEmpty());
             }
 
-            //查询不等于标签id的需求
-            List<Long> notInLabelIds = parentCondition.getNotInLabelIds();
-            if (CollUtil.isNotEmpty(notInLabelIds)) {
-                List<Long> ids = labelMapper.getByCategoryIds(labelCategoryIds, false).stream().map(LabelDO::getId).collect(Collectors.toList());
-                ids.removeAll(notInLabelIds);
-                // 查询使用这些标签的需求id
-                List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByLabelIdInType(ids, BizTypeEnum.BIZ_DEMAND.getCode());
-                List<Long> notInBizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
-                if (CollUtil.isNotEmpty(notInBizIds)) {
-                    bizDemandIds.addAll(notInBizIds);
-                }
-            }
-            parentCondition.setContainIds(bizDemandIds);
+            parentCondition.setContainIds(bizIds);
         }
 
         BizDemandGroupQueryCondition groupCondition = BizDemandGroupQueryCondition.builder()
@@ -1138,6 +1103,23 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         }
 
         return BaseResult.success(pageQueryResult);
+    }
+
+    private List<Long> getNewLabelIds(List<Long> labelIds, List<Long> labelCategoryIds, List<Long> notInLabelIds) {
+        //查询等于标签id的需求
+        List<Long> newLabelIds = new ArrayList<>();
+        if (CollUtil.isNotEmpty(labelIds)) {
+            newLabelIds = labelComponent.getLabelIds(labelIds, labelCategoryIds);
+        }
+
+        //查询不等于标签id的需求
+        List<Long> newNotInLabelIds = new ArrayList<>();
+        if (CollUtil.isNotEmpty(notInLabelIds)) {
+            newNotInLabelIds = labelMapper.getByCategoryIds(labelCategoryIds, false).stream().map(LabelDO::getId).collect(Collectors.toList());
+            newNotInLabelIds.removeAll(notInLabelIds);
+        }
+        newLabelIds.retainAll(newNotInLabelIds);
+        return newLabelIds;
     }
 
     private void sortTreeByLabel(List<DemandGroupNodeVO> nodes) {
