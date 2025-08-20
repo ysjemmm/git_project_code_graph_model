@@ -56,6 +56,11 @@ public class BugOnlineListCondition {
     private List<Integer> priorities;
 
     /**
+     * 严重程度
+     */
+    private List<Integer> severities;
+
+    /**
      * 子优先级列表
      */
     private List<Integer> subPriorities;
