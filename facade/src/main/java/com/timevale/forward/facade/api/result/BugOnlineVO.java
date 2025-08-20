@@ -39,9 +39,6 @@ public class BugOnlineVO extends ToString {
     @ApiModelProperty("bug优先级")
     private String priorityName;
 
-    @ApiModelProperty("严重程度")
-    private String severityName;
-
     @ApiModelProperty("提出人")
     private String proposer;
 

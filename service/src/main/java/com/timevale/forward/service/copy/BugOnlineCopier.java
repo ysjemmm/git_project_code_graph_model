@@ -10,20 +10,7 @@ import com.timevale.forward.facade.api.request.BugOnlinePriorityGetReq;
 import com.timevale.forward.facade.api.result.BugOnlineDetailVO;
 import com.timevale.forward.facade.api.result.BugOnlineSimpleVO;
 import com.timevale.forward.facade.api.result.BugOnlineVO;
-import com.timevale.forward.model.enums.BugOnlineBeloneEnum;
-import com.timevale.forward.model.enums.BugOnlineCategoryEnum;
-import com.timevale.forward.model.enums.BugOnlineEnvEnum;
-import com.timevale.forward.model.enums.BugOnlineGenerationStageEnum;
-import com.timevale.forward.model.enums.BugOnlinePriorityEnum;
-import com.timevale.forward.model.enums.BugOnlineReasonEnum;
-import com.timevale.forward.model.enums.BugOnlineReasonStageEnum;
-import com.timevale.forward.model.enums.BugOnlineRecurrentEnum;
-import com.timevale.forward.model.enums.BugOnlineSourceEnum;
-import com.timevale.forward.model.enums.BugOnlineStatusEnum;
-import com.timevale.forward.model.enums.CustomerCountEnum;
-import com.timevale.forward.model.enums.PriorityEnum;
-import com.timevale.forward.model.enums.ProblemOccurredTimeEnum;
-import com.timevale.forward.model.enums.UserCountEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.BugOnlineMD;
 import com.timevale.forward.service.utils.date.DateUtil;
 import org.mapstruct.Mapper;
@@ -52,8 +39,7 @@ import java.util.List;
                 CustomerCountEnum.class,
                 UserCountEnum.class,
                 ProblemOccurredTimeEnum.class,
-                BugOnlineGenerationStageEnum.class,
-                PriorityEnum.class
+                BugOnlineGenerationStageEnum.class
         }
 )
 public interface BugOnlineCopier {
@@ -71,7 +57,6 @@ public interface BugOnlineCopier {
     @Mapping(target = "belongName", expression = "java(BugOnlineBeloneEnum.getTextByCode(bugDO.getBelong()))")
     @Mapping(target = "categoryName", expression = "java(BugOnlineCategoryEnum.getTextByCode(bugDO.getCategory()))")
     @Mapping(target = "priorityName", expression = "java(BugOnlinePriorityEnum.getTextByCode(bugDO.getPriority()))")
-    @Mapping(target = "severityName", expression = "java(PriorityEnum.getTextByCode(bugDO.getSeverity()))")
     @Mapping(target = "recurrentName", expression = "java(BugOnlineRecurrentEnum.getTextByCode(bugDO.getRecurrent()))")
     @Mapping(target = "reasonName", expression = "java(BugOnlineReasonEnum.getTextByCode(bugDO.getReason()))")
     @Mapping(target = "reasonStageName", expression = "java(BugOnlineReasonStageEnum.getTextByCode(bugDO.getReasonStage()))")
@@ -96,7 +81,6 @@ public interface BugOnlineCopier {
     @Mapping(target = "belongName", expression = "java(BugOnlineBeloneEnum.getTextByCode(listDO.getBelong()))")
     @Mapping(target = "categoryName", expression = "java(BugOnlineCategoryEnum.getTextByCode(listDO.getCategory()))")
     @Mapping(target = "priorityName", expression = "java(BugOnlinePriorityEnum.getTextByCode(listDO.getPriority()))")
-    @Mapping(target = "severityName", expression = "java(PriorityEnum.getTextByCode(listDO.getSeverity()))")
     @Mapping(target = "reasonName", expression = "java(BugOnlineReasonEnum.getTextByCode(listDO.getReason()))")
     @Mapping(target = "reasonStageName", expression = "java(BugOnlineReasonStageEnum.getTextByCode(listDO.getReasonStage()))")
     @Mapping(target = "dismissCauseName", expression = "java(BugOnlineReasonEnum.getTextByCode(listDO.getDismissCause()))")

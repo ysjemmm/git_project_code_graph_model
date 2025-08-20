@@ -70,12 +70,6 @@
                     #{item}
                 </foreach>
             </if>
-            <if test="severities != null and severities.size() > 0">
-                and bo.severity in
-                <foreach collection="severities" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
             <if test="envs != null and envs.size() > 0">
                 and bo.env in
                 <foreach collection="envs" item="item" separator="," open="(" close=")">
@@ -210,7 +204,6 @@
                 <if test="env != null"> env,</if>
                 <if test="belong != null"> belong,</if>
                 <if test="priority != null"> priority,</if>
-                <if test="severity != null"> severity,</if>
                 <if test="recurrent != null"> recurrent,</if>
                 <if test="reason != null"> reason,</if>
                 <if test="expectDate != null"> expect_date,</if>
@@ -250,7 +243,6 @@
                 <if test="env!=null">#{env},</if>
                 <if test="belong!=null">#{belong},</if>
                 <if test="priority!=null">#{priority},</if>
-                <if test="severity!=null">#{severity},</if>
                 <if test="recurrent!=null">#{recurrent},</if>
                 <if test="reason!=null">#{reason},</if>
                 <if test="expectDate!=null">#{expectDate},</if>

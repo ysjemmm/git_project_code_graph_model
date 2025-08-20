@@ -29,11 +29,6 @@ public class BugOnlineListDO extends BaseDO {
     private Integer priority;
 
     /**
-     * 紧急程度: 0P0,10P1,20P2,30P3
-     */
-    private Integer severity;
-
-    /**
      * bug提出人
      */
     private String proposer;
