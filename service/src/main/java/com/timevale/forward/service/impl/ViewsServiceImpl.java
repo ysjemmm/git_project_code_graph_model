@@ -118,7 +118,7 @@ public class ViewsServiceImpl implements ViewsService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         viewsUserListVO.setGroupFields(JSON.parseArray(viewsDO.getGroupField(), ViewsGroupFieldReq.class));
-        viewsUserListVO.setFilterConditions(convertFilterConditions(viewsDO.getType(), viewsDO.getFilterCondition()));
+        viewsUserListVO.setFilters(convertFilterConditions(viewsDO.getType(), viewsDO.getFilterCondition()));
         viewsUserListVO.setShareUsers(convertShareUsers(viewsDO.getId(), userInfo.getId()));
 
         return BaseResult.success(viewsUserListVO);
@@ -143,7 +143,7 @@ public class ViewsServiceImpl implements ViewsService {
         for (ViewsUserListDO viewsUserListDO : viewsUserDOList) {
             ViewsUserListVO viewsUserListVO = ViewsCopier.INSTANCE.convert(viewsUserListDO);
             viewsUserListVO.setGroupFields(JSON.parseArray(viewsUserListDO.getGroupField(), ViewsGroupFieldReq.class));
-            viewsUserListVO.setFilterConditions(convertFilterConditions(viewsUserListDO.getViewsType(), viewsUserListDO.getFilterCondition()));
+            viewsUserListVO.setFilters(convertFilterConditions(viewsUserListDO.getViewsType(), viewsUserListDO.getFilterCondition()));
             viewsUserVOList.add(viewsUserListVO);
         }
         return BaseResult.success(viewsUserVOList);
@@ -157,7 +157,7 @@ public class ViewsServiceImpl implements ViewsService {
         ViewsDO viewsDO = new ViewsDO();
         viewsDO.setId(views.getId());
         viewsDO.setGroupField(CollectionUtils.isEmpty(viewsSaveReq.getGroupFields()) ? "" : JSON.toJSONString(viewsSaveReq.getGroupFields(), valueFilter));
-        viewsDO.setFilterCondition(viewsSaveReq.getFilterList() == null ? "" : JSON.toJSONString(viewsSaveReq.getFilterList(), valueFilter));
+        viewsDO.setFilterCondition(viewsSaveReq.getFilters() == null ? "" : JSON.toJSONString(viewsSaveReq.getFilters(), valueFilter));
         viewsMapper.update(viewsDO);
         return BaseResult.success(true);
     }

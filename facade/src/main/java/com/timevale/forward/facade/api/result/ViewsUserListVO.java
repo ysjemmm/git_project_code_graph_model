@@ -52,7 +52,7 @@ public class ViewsUserListVO extends ToString {
     private List<ViewsGroupFieldReq> groupFields;
 
     @ApiModelProperty("筛选条件")
-    private ViewsFilterReq filterConditions;
+    private ViewsFilterReq filters;
 
 
 } 
