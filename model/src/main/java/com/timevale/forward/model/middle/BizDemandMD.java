@@ -77,7 +77,4 @@ public class BizDemandMD extends BaseMD {
     @FieldCompare(fieldName = "卡单说明")
     private String stuckOrderInstructions;
 
-    @FieldCompare(fieldName = "客户等级")
-    private String customerGrade;
-
 }
