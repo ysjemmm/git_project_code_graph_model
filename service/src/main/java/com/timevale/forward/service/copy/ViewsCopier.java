@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson.JSON;
 import com.timevale.forward.dal.condition.ViewsListCondition;
 import com.timevale.forward.dal.entity.ViewsDO;
+import com.timevale.forward.dal.entity.ViewsUserDO;
 import com.timevale.forward.dal.entity.ViewsUserListDO;
 import com.timevale.forward.facade.api.query.ViewsQueryList;
 import com.timevale.forward.facade.api.request.ViewsAddReq;
@@ -69,5 +70,21 @@ public interface ViewsCopier {
      * @return ViewsListCondition
      */
     ViewsListCondition convert(ViewsQueryList viewsQueryList);
+
+
+    /**
+     * DO转VO
+     * @param viewsDO viewsDO对象
+     * @param viewsUserDO viewsUserDO对象
+     * @return VO对象
+     */
+    @Mapping(source = "viewsUserDO.id", target = "id")
+    @Mapping(source = "viewsDO.id", target = "viewsId")
+    @Mapping(source = "viewsDO.name", target = "name")
+    @Mapping(source = "viewsDO.owner", target = "owner")
+    @Mapping(source = "viewsDO.ownerId", target = "ownerId")
+    @Mapping(source = "viewsUserDO.hidden", target = "hidden")
+    @Mapping(source = "viewsUserDO.position", target = "position")
+    ViewsUserListVO convert(ViewsDO viewsDO, ViewsUserDO viewsUserDO);
 
 } 

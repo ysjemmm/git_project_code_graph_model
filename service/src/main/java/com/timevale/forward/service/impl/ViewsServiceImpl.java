@@ -79,6 +79,51 @@ public class ViewsServiceImpl implements ViewsService {
         return value;  // 其他情况正常返回
     };
 
+    private ViewsFilterReq convertFilterConditions(Integer viewType , String filterCondition) {
+        ViewsFilterReq viewsFilterReq = null;
+        ViewsTypeEnum viewsTypeEnum = ViewsTypeEnum.getByCode(viewType);
+        if (viewsTypeEnum != null) {
+            switch (viewsTypeEnum) {
+                case BIZ_DEMAND:
+                    viewsFilterReq = JSON.parseObject(filterCondition, ViewsBizDemandReq.class);
+                    break;
+                case PRODUCT_DEMAND:
+                    viewsFilterReq = JSON.parseObject(filterCondition, ViewsProductDemandReq.class);
+                    break;
+            }
+        }
+        return viewsFilterReq;
+    }
+
+    private List<String> convertShareUsers(Long viewId, String userId) {
+        List<ViewsUserDO> viewsUserDOS = viewsUserMapper.getByViewId(viewId);
+        return Optional.ofNullable(viewsUserDOS)
+                .orElseGet(Collections::emptyList)
+                .stream()
+                .filter(Objects::nonNull)  // 过滤掉 null 的 ViewsUserDO
+                .filter(e -> {
+                    String ownerId = e.getOwnerId();
+                    return ownerId != null && !Objects.equals(ownerId, userId);
+                })
+                .map(ViewsUserDO::getOwner)  // 确保 ownerId 不为 null
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public BaseResult<ViewsUserListVO> getViews(Long id) {
+        Pair<ViewsDO, ViewsUserDO> viewsPair = getViewsDo(id);
+        ViewsDO viewsDO = viewsPair.getFirst();
+        ViewsUserDO viewsUserDO = viewsPair.getSecond();
+        ViewsUserListVO viewsUserListVO = ViewsCopier.INSTANCE.convert(viewsDO, viewsUserDO);
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+        viewsUserListVO.setGroupFields(JSON.parseArray(viewsDO.getGroupField(), ViewsGroupFieldReq.class));
+        viewsUserListVO.setFilterConditions(convertFilterConditions(viewsDO.getType(), viewsDO.getFilterCondition()));
+        viewsUserListVO.setShareUsers(convertShareUsers(viewsDO.getId(), userInfo.getId()));
+
+        return BaseResult.success(viewsUserListVO);
+    }
+
     @Override
     public BaseResult<List<ViewsUserListVO>> list(ViewsQueryList viewsQueryList) {
         ViewsListCondition viewsListCondition = ViewsCopier.INSTANCE.convert(viewsQueryList);
@@ -91,35 +136,14 @@ public class ViewsServiceImpl implements ViewsService {
         if (Objects.equals(viewsQueryList.getOwnerType(), ViewsUserTypeEnum.MINE.getCode()) && !Objects.equals(viewsQueryList.getSelectForOptions(), true)) {
             // 查询共享使用者
             for (ViewsUserListDO viewsUserListDO : viewsUserDOList) {
-                List<ViewsUserDO> viewsUserDOS = viewsUserMapper.getByViewId(viewsUserListDO.getViewsId());
-                List<String> shareUsers = Optional.ofNullable(viewsUserDOS)
-                        .orElseGet(Collections::emptyList)
-                        .stream()
-                        .filter(Objects::nonNull)  // 过滤掉 null 的 ViewsUserDO
-                        .filter(e -> {
-                            String ownerId = e.getOwnerId();
-                            return ownerId != null && !Objects.equals(ownerId, userInfo.getId());
-                        })
-                        .map(ViewsUserDO::getOwner)  // 确保 ownerId 不为 null
-                        .collect(Collectors.toList());
-                viewsUserListDO.setShareUsers(shareUsers);
+                viewsUserListDO.setShareUsers(convertShareUsers(viewsUserListDO.getViewsId(), userInfo.getId()));
             }
         }
         List<ViewsUserListVO> viewsUserVOList = new ArrayList<>();
         for (ViewsUserListDO viewsUserListDO : viewsUserDOList) {
             ViewsUserListVO viewsUserListVO = ViewsCopier.INSTANCE.convert(viewsUserListDO);
             viewsUserListVO.setGroupFields(JSON.parseArray(viewsUserListDO.getGroupField(), ViewsGroupFieldReq.class));
-            ViewsTypeEnum viewsTypeEnum = ViewsTypeEnum.getByCode(viewsUserListDO.getViewsType());
-            if (viewsTypeEnum != null) {
-                switch (viewsTypeEnum) {
-                    case BIZ_DEMAND:
-                        viewsUserListVO.setFilterConditions(JSON.parseObject(viewsUserListDO.getFilterCondition(), ViewsBizDemandReq.class));
-                        break;
-                    case PRODUCT_DEMAND:
-                        viewsUserListVO.setFilterConditions(JSON.parseObject(viewsUserListDO.getFilterCondition(), ViewsProductDemandReq.class));
-                        break;
-                }
-            }
+            viewsUserListVO.setFilterConditions(convertFilterConditions(viewsUserListDO.getViewsType(), viewsUserListDO.getFilterCondition()));
             viewsUserVOList.add(viewsUserListVO);
         }
         return BaseResult.success(viewsUserVOList);

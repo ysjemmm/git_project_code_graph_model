@@ -19,6 +19,8 @@ import java.util.List;
 @RestClient(serviceId = MagicValue.FORWARD_RPC_PREFIX)
 public interface ViewsService {
 
+    BaseResult<ViewsUserListVO> getViews(Long id);
+
     BaseResult<List<ViewsUserListVO>> list(ViewsQueryList viewsQueryList);
 
     /**
