@@ -32,6 +32,10 @@ public class BugOfflineAddReq extends BaseReq {
     @NotNull(message = "优先级不能为空")
     private Integer priority;
 
+    @ApiModelProperty(value = "严重程度:0阻塞,10严重,20一般,30轻微")
+    @NotNull(message = "严重程度不能为空")
+    private Integer severity;
+
     @ApiModelProperty(value = "0预演bug,1测试阶段bug,2历史版本bug,3自动化脚本执行发现bug")
     @NotNull(message = "bug来源不能为空")
     private Integer source;

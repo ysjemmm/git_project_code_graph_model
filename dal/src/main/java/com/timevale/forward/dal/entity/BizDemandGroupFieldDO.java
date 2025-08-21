@@ -28,6 +28,31 @@ public class BizDemandGroupFieldDO extends BaseDO {
 
     private Long labelId;
 
+    /**
+     * 标签类别id1
+     */
+    private Long labelId1;
+
+    /**
+     * 标签类别id2
+     */
+    private Long labelId2;
+
+    /**
+     * 标签类别id3
+     */
+    private Long labelId3;
+
+    /**
+     * 标签类别id4
+     */
+    private Long labelId4;
+
+    /**
+     * 标签类别id5
+     */
+    private Long labelId5;
+
     private Long labelCategoryId;
 
     private String targetCustomer;

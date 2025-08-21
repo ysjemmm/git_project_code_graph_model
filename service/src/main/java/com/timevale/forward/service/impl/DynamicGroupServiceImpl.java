@@ -135,6 +135,12 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         PRODUCT_GROUP_FIELD_MAP.put(ProductGroupFieldEnum.BIZ_DOMAIN.getGroupField(), "bizDomainId");
         PRODUCT_GROUP_FIELD_MAP.put(ProductGroupFieldEnum.PRODUCT_LINE.getGroupField(), "productLineId");
         PRODUCT_GROUP_FIELD_MAP.put(ProductGroupFieldEnum.LABEL.getGroupField(), "labelId");
+        PRODUCT_GROUP_FIELD_MAP.put(ProductGroupFieldEnum.LABEL.getGroupField() + "0", "labelId");
+        PRODUCT_GROUP_FIELD_MAP.put(ProductGroupFieldEnum.LABEL.getGroupField() + "1", "labelId1");
+        PRODUCT_GROUP_FIELD_MAP.put(ProductGroupFieldEnum.LABEL.getGroupField() + "2", "labelId2");
+        PRODUCT_GROUP_FIELD_MAP.put(ProductGroupFieldEnum.LABEL.getGroupField() + "3", "labelId3");
+        PRODUCT_GROUP_FIELD_MAP.put(ProductGroupFieldEnum.LABEL.getGroupField() + "4", "labelId4");
+        PRODUCT_GROUP_FIELD_MAP.put(ProductGroupFieldEnum.LABEL.getGroupField() + "5", "labelId5");
         PRODUCT_GROUP_FIELD_MAP.put(ProductGroupFieldEnum.TYPE.getGroupField(), "type");
         PRODUCT_GROUP_FIELD_MAP.put(ProductGroupFieldEnum.STATUS.getGroupField(), "status");
         PRODUCT_GROUP_FIELD_MAP.put(ProductGroupFieldEnum.PRIORITY.getGroupField(), "priority");
@@ -145,7 +151,12 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
     static {
         BIZ_GROUP_FIELD_MAP.put(BizDemandGroupFieldEnum.BIZ_DOMAIN.getGroupField(), "bizDomainId");
         BIZ_GROUP_FIELD_MAP.put(BizDemandGroupFieldEnum.PRODUCT_LINE.getGroupField(), "productLineId");
-        BIZ_GROUP_FIELD_MAP.put(BizDemandGroupFieldEnum.LABEL.getGroupField(), "labelId");
+        BIZ_GROUP_FIELD_MAP.put(BizDemandGroupFieldEnum.LABEL.getGroupField() + "0", "labelId");
+        BIZ_GROUP_FIELD_MAP.put(BizDemandGroupFieldEnum.LABEL.getGroupField() + "1", "labelId1");
+        BIZ_GROUP_FIELD_MAP.put(BizDemandGroupFieldEnum.LABEL.getGroupField() + "2", "labelId2");
+        BIZ_GROUP_FIELD_MAP.put(BizDemandGroupFieldEnum.LABEL.getGroupField() + "3", "labelId3");
+        BIZ_GROUP_FIELD_MAP.put(BizDemandGroupFieldEnum.LABEL.getGroupField() + "4", "labelId4");
+        BIZ_GROUP_FIELD_MAP.put(BizDemandGroupFieldEnum.LABEL.getGroupField() + "5", "labelId5");
         BIZ_GROUP_FIELD_MAP.put(BizDemandGroupFieldEnum.TARGET_CUSTOMER.getGroupField(), "targetCustomer");
         BIZ_GROUP_FIELD_MAP.put(BizDemandGroupFieldEnum.STATUS.getGroupField(), "status");
         BIZ_GROUP_FIELD_MAP.put(BizDemandGroupFieldEnum.PRIORITY.getGroupField(), "priority");
@@ -157,6 +168,12 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.BIZ_DOMAIN.getGroupField(), ProductDemandGroupFieldDO::getBizDomainId);
         FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.PRODUCT_LINE.getGroupField(), ProductDemandGroupFieldDO::getProductLineId);
         FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.LABEL.getGroupField(), ProductDemandGroupFieldDO::getLabelId);
+        FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.LABEL.getGroupField() + "0", ProductDemandGroupFieldDO::getLabelId);
+        FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.LABEL.getGroupField() + "1", ProductDemandGroupFieldDO::getLabelId1);
+        FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.LABEL.getGroupField() + "2", ProductDemandGroupFieldDO::getLabelId2);
+        FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.LABEL.getGroupField() + "3", ProductDemandGroupFieldDO::getLabelId3);
+        FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.LABEL.getGroupField() + "4", ProductDemandGroupFieldDO::getLabelId4);
+        FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.LABEL.getGroupField() + "5", ProductDemandGroupFieldDO::getLabelId5);
         FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.TYPE.getGroupField(), ProductDemandGroupFieldDO::getType);
         FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.STATUS.getGroupField(), ProductDemandGroupFieldDO::getStatus);
         FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.PRIORITY.getGroupField(), ProductDemandGroupFieldDO::getPriority);
@@ -168,6 +185,12 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         BIZ_FUNCTION_FIELD_MAP.put(BizDemandGroupFieldEnum.BIZ_DOMAIN.getGroupField(), BizDemandGroupFieldDO::getBizDomainId);
         BIZ_FUNCTION_FIELD_MAP.put(BizDemandGroupFieldEnum.PRODUCT_LINE.getGroupField(), BizDemandGroupFieldDO::getProductLineId);
         BIZ_FUNCTION_FIELD_MAP.put(BizDemandGroupFieldEnum.LABEL.getGroupField(), BizDemandGroupFieldDO::getLabelId);
+        BIZ_FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.LABEL.getGroupField() + "0", BizDemandGroupFieldDO::getLabelId);
+        BIZ_FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.LABEL.getGroupField() + "1", BizDemandGroupFieldDO::getLabelId1);
+        BIZ_FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.LABEL.getGroupField() + "2", BizDemandGroupFieldDO::getLabelId2);
+        BIZ_FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.LABEL.getGroupField() + "3", BizDemandGroupFieldDO::getLabelId3);
+        BIZ_FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.LABEL.getGroupField() + "4", BizDemandGroupFieldDO::getLabelId4);
+        BIZ_FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.LABEL.getGroupField() + "5", BizDemandGroupFieldDO::getLabelId5);
         BIZ_FUNCTION_FIELD_MAP.put(BizDemandGroupFieldEnum.TARGET_CUSTOMER.getGroupField(), BizDemandGroupFieldDO::getTargetCustomer);
         BIZ_FUNCTION_FIELD_MAP.put(BizDemandGroupFieldEnum.STATUS.getGroupField(), BizDemandGroupFieldDO::getStatus);
         BIZ_FUNCTION_FIELD_MAP.put(BizDemandGroupFieldEnum.PRIORITY.getGroupField(), BizDemandGroupFieldDO::getPriority);
@@ -259,6 +282,10 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
                 ownerNameMap = getPersonMap(ownerNameMap, simpleGroupList.stream().map(ProductDemandGroupFieldDO::getOwnerId));
             }
 
+            if (groupFields.stream().anyMatch(e -> e.getType() == 1)) {
+                labelNameMap = getLabelMap(labelNameMap, simpleGroupList.stream().map(ProductDemandGroupFieldDO::getLabelId));
+            }
+
             // 定义分组条件
             List<LabelDO> byCategoryIds = labelMapper.getByCategoryIds(labelCategoryId, false);
             // 根据不同的标签类别，得到以分组id为key,不同的标签Map集合的Map集合，key为标签id，value为标签名称
@@ -269,12 +296,21 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
             List<ProductGroupCondition> conditions = new ArrayList<>(5);
 
-            for (int i = 0; i < groupFields.size(); i++) {
-                if (groupFields.get(i).getType() == 1) {
-                    conditions.add(new ProductGroupCondition(ProductGroupFieldEnum.LABEL.getGroupField() + i, ProductDemandGroupFieldDO::getLabelId,
-                            labelMaps.get(Long.valueOf(groupFields.get(i).getKey()))));
+            // 记录标签字段的索引
+            int labelFieldIndex = 1;
+
+            for (ViewsGroupQueryList groupField : groupFields) {
+                if (groupField.getType() == 1) {
+                    // 标签类别层：使用对应的 label1-label5 字段提取函数
+                    String fieldName = ProductGroupFieldEnum.LABEL.getGroupField() + labelFieldIndex;
+                    Function<ProductDemandGroupFieldDO, Object> labelExtractor = FUNCTION_FIELD_MAP.get(fieldName);
+                    conditions.add(new ProductGroupCondition(
+                            fieldName,
+                            labelExtractor
+                    ));
+                    labelFieldIndex++;
                 } else {
-                    conditions.add(new ProductGroupCondition(groupFields.get(i).getKey(), FUNCTION_FIELD_MAP.get(groupFields.get(i).getKey()), null));
+                    conditions.add(new ProductGroupCondition(groupField.getKey(), FUNCTION_FIELD_MAP.get(groupField.getKey())));
                 }
             }
             // 若包含 type 维度，则进行多值拆分
@@ -282,10 +318,13 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
                     ? expandTypeMultiValues(simpleGroupList)
                     : simpleGroupList;
 
+            // 根据分组条件重新组装数据，填充 label1-label5 字段
+            dataForGrouping = populateLabelFields(dataForGrouping, groupFields, labelMaps);
+
             Map<String, Object> groupResult = group(dataForGrouping, conditions);
 
             // 转换方法
-            List<DemandGroupNodeVO> treeNodes = transformToTree(groupResult, 0, conditions, bizDomainNameMap, productLineNameMap, ownerNameMap);
+            List<DemandGroupNodeVO> treeNodes = transformToTree(groupResult, 0, conditions, bizDomainNameMap, productLineNameMap, ownerNameMap, labelNameMap);
 
             // 排序（各层按 label 升序）
             sortTreeByLabel(treeNodes);
@@ -330,7 +369,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         if (groupFieldKeys.contains(ProductGroupFieldEnum.OWNER.getGroupField())) {
             ownerNameMap = getPersonMap(ownerNameMap, rows.stream().map(ProductDemandGroupFieldDO::getOwnerId));
         }
-        if (groupFieldKeys.contains(ProductGroupFieldEnum.LABEL.getGroupField())) {
+        if (groupFields.stream().anyMatch(e -> e.getType() == 1)) {
             labelNameMap = getLabelMap(labelNameMap, rows.stream().map(ProductDemandGroupFieldDO::getLabelId));
         }
 
@@ -417,16 +456,8 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
                 continue;
             }
             for (String code : codes) {
-                ProductDemandGroupFieldDO copy = new ProductDemandGroupFieldDO();
-                copy.setBizDomainId(row.getBizDomainId());
-                copy.setProductLineId(row.getProductLineId());
-                copy.setLabelId(row.getLabelId());
+                ProductDemandGroupFieldDO copy = copyRow(row);
                 copy.setType(code);
-                copy.setStatus(row.getStatus());
-                copy.setPriority(row.getPriority());
-                copy.setExpectScheduleTime(row.getExpectScheduleTime());
-                copy.setOwnerId(row.getOwnerId());
-                copy.setTotal(row.getTotal());
                 expanded.add(copy);
             }
         }
@@ -434,7 +465,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
     }
 
     public Map<String, Object> bizDemandGroup(List<BizDemandGroupFieldDO> data,
-                                     List<BizGroupCondition> conditions) {
+                                              List<BizGroupCondition> conditions) {
         // 构建动态Collector链
         Collector<BizDemandGroupFieldDO, ?, Map<String, Object>> collector =
                 buildBizDemandCollectorChain(conditions, 0);
@@ -449,7 +480,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             List<ProductGroupCondition> conditions, int index) {
 
         if (index >= conditions.size()) {
-            // 终止条件：返回计数Collector，包装成Map
+            // 终止条件：返回计数Collector
             return Collector.of(
                     HashMap::new,
                     (map, item) -> map.put("total", (Long) map.getOrDefault("total", 0L) + 1L),
@@ -463,35 +494,41 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         }
 
         ProductGroupCondition condition = conditions.get(index);
+        // 直接使用字段提取函数获取值
         Function<ProductDemandGroupFieldDO, String> extractor = item -> {
             Object rawValue = condition.getFieldExtractor().apply(item);
-            return condition.getValueMapping() != null
-                    ? condition.getValueMapping().getOrDefault(rawValue, OTHER)
-                    : String.valueOf(rawValue);
+            // 直接转换为字符串，空值处理为"其他"
+            return rawValue == null ? OTHER : String.valueOf(rawValue);
         };
 
         // 递归构建下一级分组器
         Collector<ProductDemandGroupFieldDO, ?, Map<String, Object>> nextCollector =
                 buildCollectorChain(conditions, index + 1);
 
-        // 使用显式类型声明解决类型推断问题
+        // 构建分组收集器
         Collector<ProductDemandGroupFieldDO, ?, Map<String, Map<String, Object>>> groupingCollector =
                 Collectors.groupingBy(
                         extractor,
+                        // 保持顺序
                         LinkedHashMap::new,
                         (Collector<ProductDemandGroupFieldDO, ?, Map<String, Object>>) nextCollector
                 );
 
-        // 添加类型转换确保最终返回类型一致
         return (Collector<ProductDemandGroupFieldDO, ?, Map<String, Object>>) (Collector<?, ?, ?>) groupingCollector;
     }
 
     /**
      * 优化只包含"其他"子分组的节点结构，将只包含"其他"的嵌套结构扁平化
+     *
      * @param groupedMap 分组结果
      * @return 优化后的结果
      */
     private Map<String, Object> optimizeSingleOtherGroups(Map<String, Object> groupedMap) {
+        // 首先检查整个Map是否是 {其他={total=X}} 结构
+        if (isOtherWithSingleTotal(groupedMap)) {
+            return (Map<String, Object>) groupedMap.get(OTHER);
+        }
+
         Map<String, Object> result = new LinkedHashMap<>();
 
         for (Map.Entry<String, Object> entry : groupedMap.entrySet()) {
@@ -499,34 +536,20 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             Object value = entry.getValue();
 
             if (value instanceof Map) {
-                Map<String, Object> valueMap = (Map<String, Object>) value;
+                // 递归处理子Map
+                Map<String, Object> processedValue = optimizeSingleOtherGroups((Map<String, Object>) value);
 
-                // 先递归处理所有子项
-                Map<String, Object> processedSubMap = new LinkedHashMap<>();
-                for (Map.Entry<String, Object> subEntry : valueMap.entrySet()) {
-                    String subKey = subEntry.getKey();
-                    Object subValue = subEntry.getValue();
-
-                    if (subValue instanceof Map) {
-                        // 递归处理子Map
-                        processedSubMap.put(subKey, optimizeSingleOtherGroups((Map<String, Object>) subValue));
-                    } else {
-                        processedSubMap.put(subKey, subValue);
-                    }
-                }
-
-                // 检查处理后的Map是否符合 {其他={total=X}} 结构
-                if (isOtherWithSingleTotal(processedSubMap)) {
-                    // 将 {其他={total=X}} 替换为 {total=X}
-                    Map<String, Object> otherMap = (Map<String, Object>) processedSubMap.get(OTHER);
-                    result.put(key, otherMap);
+                // 检查处理后的子Map是否是 {其他={total=X}} 结构
+                if (isOtherWithSingleTotal(processedValue)) {
+                    result.put(key, processedValue.get(OTHER));
                 } else {
-                    result.put(key, processedSubMap);
+                    result.put(key, processedValue);
                 }
             } else {
                 result.put(key, value);
             }
         }
+
         return result;
     }
 
@@ -560,11 +583,11 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         }
 
         BizGroupCondition condition = conditions.get(index);
+        // 直接使用字段提取函数获取值
         Function<BizDemandGroupFieldDO, String> extractor = item -> {
             Object rawValue = condition.getFieldExtractor().apply(item);
-            return condition.getValueMapping() != null
-                    ? condition.getValueMapping().getOrDefault(rawValue, OTHER)
-                    : String.valueOf(rawValue);
+            // 直接转换为字符串，空值处理为"其他"
+            return rawValue == null ? OTHER : String.valueOf(rawValue);
         };
 
         // 递归构建下一级分组器
@@ -593,7 +616,8 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
     public List<DemandGroupNodeVO> transformToTree(Map<String, Object> mapResult, int currentLevel, List<ProductGroupCondition> conditions,
                                                    Map<Long, String> bizDomainNameMap,
                                                    Map<Long, String> productLineNameMap,
-                                                   Map<String, String> ownerNameMap) {
+                                                   Map<String, String> ownerNameMap,
+                                                   Map<Long, String> labelNameMap) {
         List<DemandGroupNodeVO> nodes = new ArrayList<>();
         // 递归结束条件
         if (currentLevel >= conditions.size()) {
@@ -606,11 +630,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             String label = entry.getKey();
             if (field.startsWith(ProductGroupFieldEnum.LABEL.getGroupField())) {
                 field = ProductGroupFieldEnum.LABEL.getGroupField();
-                // 找到以entry.getKey()为值的label
-                if (productGroupCondition.getValueMapping() != null) {
-                    Map<String, Long> flipMap = flipMap(productGroupCondition.getValueMapping());
-                    fieldValue = flipMap.get(label) != null ? String.valueOf(flipMap.get(label)) : OTHER;
-                }
+                label = OTHER.equals(fieldValue) ? OTHER : labelNameMap.get(Long.parseLong(fieldValue));
             }
             if (ProductGroupFieldEnum.BIZ_DOMAIN.getGroupField().equals(field)) {
                 label = bizDomainNameMap.get(Long.parseLong(fieldValue));
@@ -650,7 +670,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
                     node.setTotal(totalValue instanceof Number ? ((Number) totalValue).longValue() : 0L);
                 } else {
                     // 递归处理子层级
-                    List<DemandGroupNodeVO> childNodes = transformToTree(valueMap, currentLevel + 1, conditions, bizDomainNameMap, productLineNameMap, ownerNameMap);
+                    List<DemandGroupNodeVO> childNodes = transformToTree(valueMap, currentLevel + 1, conditions, bizDomainNameMap, productLineNameMap, ownerNameMap, labelNameMap);
                     node.setChildren(childNodes);
                     // 计算当前节点count（子节点count之和）
                     node.setTotal(childNodes.stream().mapToLong(DemandGroupNodeVO::getTotal).sum());
@@ -667,7 +687,8 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
                                                             Map<Long, String> bizDomainNameMap,
                                                             Map<Long, String> productLineNameMap,
                                                             Map<String, String> deptNameMap,
-                                                            Map<String, String> receiveManNameMap) {
+                                                            Map<String, String> receiveManNameMap,
+                                                            Map<Long, String> labelNameMap) {
         List<DemandGroupNodeVO> nodes = new ArrayList<>();
         // 递归结束条件
         if (currentLevel >= conditions.size()) {
@@ -680,11 +701,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             String label = entry.getKey();
             if (field.startsWith(BizDemandGroupFieldEnum.LABEL.getGroupField())) {
                 field = BizDemandGroupFieldEnum.LABEL.getGroupField();
-                // 找到以entry.getKey()为值的label
-                if (bizGroupCondition.getValueMapping() != null) {
-                    Map<String, Long> flipMap = flipMap(bizGroupCondition.getValueMapping());
-                    fieldValue = flipMap.get(label) != null ? String.valueOf(flipMap.get(label)) : OTHER;
-                }
+                label = OTHER.equals(fieldValue) ? OTHER : labelNameMap.get(Long.parseLong(fieldValue));
             }
             if (BizDemandGroupFieldEnum.BIZ_DOMAIN.getGroupField().equals(field)) {
                 label = bizDomainNameMap.get(Long.parseLong(fieldValue));
@@ -724,7 +741,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
                     node.setTotal(totalValue instanceof Number ? ((Number) totalValue).longValue() : 0L);
                 } else {
                     // 递归处理子层级
-                    List<DemandGroupNodeVO> childNodes = bizDemandTransformToTree(valueMap, currentLevel + 1, conditions, bizDomainNameMap, productLineNameMap, deptNameMap, receiveManNameMap);
+                    List<DemandGroupNodeVO> childNodes = bizDemandTransformToTree(valueMap, currentLevel + 1, conditions, bizDomainNameMap, productLineNameMap, deptNameMap, receiveManNameMap, labelNameMap);
                     node.setChildren(childNodes);
                     // 计算当前节点count（子节点count之和）
                     node.setTotal(childNodes.stream().mapToLong(DemandGroupNodeVO::getTotal).sum());
@@ -733,17 +750,6 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             nodes.add(node);
         }
         return nodes;
-    }
-
-    public static <K, V> Map<V, K> flipMap(Map<K, V> originalMap) {
-        return originalMap.entrySet()
-                .stream()
-                .collect(Collectors.toMap(
-                        Map.Entry::getValue,
-                        Map.Entry::getKey,
-                        // 处理重复value的情况
-                        (existing, replacement) -> existing
-                ));
     }
 
     /**
@@ -809,11 +815,18 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         // 获取标签类别Id
         List<Long> labelCategoryIds = groupFields.stream().filter(field -> field.getType() == 1).map(field -> Long.valueOf(field.getKey())).collect(Collectors.toList());
         if (CollUtil.isNotEmpty(labelCategoryIds)) {
+            List<Long> labelIds = parentCondition.getLabelIds();
             //查询等于标签id的需求
-            List<Long> newLabelIds = getNewLabelIds(parentCondition.getLabelIds(), labelCategoryIds, parentCondition.getNotInLabelIds());
+            List<Long> newLabelIds = getNewLabelIds(labelIds, labelCategoryIds, parentCondition.getNotInLabelIds());
             // 查询使用这些标签的需求id
             List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
-            List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+            List<Long> bizIds;
+            if (CollUtil.isNotEmpty(labelIds)) {
+                // 取出bizLabelDOList中包含labelIds中所有标签id的bizId
+                bizIds = getBizIdsContainingAllLabels(bizLabelDOList, labelIds);
+            } else {
+                bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+            }
 
             if (CollectionUtils.isEmpty(bizIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
@@ -835,6 +848,28 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         return BaseResult.success(pageQueryResult);
     }
 
+    /**
+     * 取出bizLabelDOList中包含labelIds中所有标签id的bizId
+     */
+    private List<Long> getBizIdsContainingAllLabels(List<BizLabelDO> bizLabelDOList, List<Long> labelIds) {
+        if (CollectionUtils.isEmpty(bizLabelDOList) || CollectionUtils.isEmpty(labelIds)) {
+            return Collections.emptyList();
+        }
+
+        return bizLabelDOList.stream()
+                .collect(Collectors.groupingBy(BizLabelDO::getBizId))
+                .entrySet()
+                .stream()
+                .filter(entry -> {
+                    Set<Long> labelIdsForBiz = entry.getValue().stream()
+                            .map(BizLabelDO::getLabelId)
+                            .collect(Collectors.toSet());
+                    return labelIdsForBiz.containsAll(labelIds);
+                })
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+    }
+
     @Override
     public BaseResult<List<DemandGroupNodeVO>> getBizDemandsGroupTree(DynamicBizDemandGroupList dynamicGroupQueryList) {
 
@@ -854,8 +889,10 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         }
 
         // 标签
-        if (CollectionUtils.isNotEmpty(bizDemandQueryList.getLabelIds()) || CollectionUtils.isNotEmpty(bizDemandQueryList.getLabelCategoryIds())) {
-            List<Long> labelIds = labelComponent.getLabelIds(bizDemandQueryList.getLabelIds(), bizDemandQueryList.getLabelCategoryIds());
+        List<Long> queryListLabelIds = bizDemandQueryList.getLabelIds();
+        List<Long> listLabelCategoryIds = bizDemandQueryList.getLabelCategoryIds();
+        if (CollectionUtils.isNotEmpty(queryListLabelIds) || CollectionUtils.isNotEmpty(listLabelCategoryIds)) {
+            List<Long> labelIds = labelComponent.getLabelIds(queryListLabelIds, listLabelCategoryIds);
             if (CollectionUtils.isEmpty(labelIds) && bizDemandQueryList.getContainLabel()) {
                 return BaseResult.success(new ArrayList<>());
             }
@@ -903,19 +940,10 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
                 receiveManNameMap = getPersonMap(receiveManNameMap, simpleGroupList.stream().map(BizDemandGroupFieldDO::getReceiveManId));
             }
 
-            if (bizGroupFieldKeys.contains(BizDemandGroupFieldEnum.DEMAND_DEPT.getGroupField())) {
-                Set<Long> deptIds = simpleGroupList.stream().map(BizDemandGroupFieldDO::getDeptId).collect(Collectors.toSet());
-                if (CollectionUtils.isNotEmpty(deptIds)) {
-                    Map<Long, GroupResponse> groupListTreeMap = bizDemandComponent.getGroupListTreeMap(deptIds);
-                    Map<String, String> map = new HashMap<>();
-                    Collection<GroupResponse> deptValues = groupListTreeMap.values();
-                    if (CollectionUtils.isNotEmpty(deptValues)) {
-                        for (GroupResponse r : deptValues) {
-                            map.put(r.getGroupId(), r.getGroupName());
-                        }
-                    }
-                    deptNameMap = map;
-                }
+            deptNameMap = getDemandDeptMap(deptNameMap, simpleGroupList, bizGroupFieldKeys);
+
+            if (groupFields.stream().anyMatch(e -> e.getType() == 1)) {
+                labelNameMap = getLabelMap(labelNameMap, simpleGroupList.stream().map(BizDemandGroupFieldDO::getLabelId));
             }
 
             // 定义分组条件
@@ -928,17 +956,30 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
             List<BizGroupCondition> conditions = new ArrayList<>(5);
 
+            // 记录标签字段的索引
+            int labelFieldIndex = 1;
+
             for (int i = 0; i < groupFields.size(); i++) {
                 if (groupFields.get(i).getType() == 1) {
-                    conditions.add(new BizGroupCondition(BizDemandGroupFieldEnum.LABEL.getGroupField() + i, BizDemandGroupFieldDO::getLabelId,
-                            labelMaps.get(Long.valueOf(groupFields.get(i).getKey()))));
+                    // 标签类别层：使用对应的 label1-label5 字段提取函数
+                    String fieldName = ProductGroupFieldEnum.LABEL.getGroupField() + labelFieldIndex;
+                    Function<BizDemandGroupFieldDO, Object> labelExtractor = BIZ_FUNCTION_FIELD_MAP.get(fieldName);
+                    conditions.add(new BizGroupCondition(
+                            fieldName,
+                            labelExtractor
+                    ));
+                    labelFieldIndex++;
                 } else {
-                    conditions.add(new BizGroupCondition(groupFields.get(i).getKey(), BIZ_FUNCTION_FIELD_MAP.get(groupFields.get(i).getKey()), null));
+                    conditions.add(new BizGroupCondition(groupFields.get(i).getKey(), BIZ_FUNCTION_FIELD_MAP.get(groupFields.get(i).getKey())));
                 }
             }
-            Map<String, Object> groupResult = bizDemandGroup(simpleGroupList, conditions);
+
+            // 根据分组条件重新组装数据，填充 label1-label5 字段
+            List<BizDemandGroupFieldDO> dataForGrouping = populateBizLabelFields(simpleGroupList, groupFields, labelMaps);
+
+            Map<String, Object> groupResult = bizDemandGroup(dataForGrouping, conditions);
             // 转换方法1：基础转换
-            List<DemandGroupNodeVO> treeNodes = bizDemandTransformToTree(groupResult, 0, conditions, bizDomainNameMap, productLineNameMap, deptNameMap, receiveManNameMap);
+            List<DemandGroupNodeVO> treeNodes = bizDemandTransformToTree(groupResult, 0, conditions, bizDomainNameMap, productLineNameMap, deptNameMap, receiveManNameMap, labelNameMap);
 
             // 排序（各层按 label 升序）
             sortTreeByLabel(treeNodes);
@@ -985,23 +1026,10 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         if (bizGroupFieldKeys.contains(BizDemandGroupFieldEnum.RECEIVE_MAN.getGroupField())) {
             receiveManNameMap = getPersonMap(receiveManNameMap, rows.stream().map(BizDemandGroupFieldDO::getReceiveManId));
         }
-        if (bizGroupFieldKeys.contains(ProductGroupFieldEnum.LABEL.getGroupField())) {
+        if (groupFields.stream().anyMatch(e -> e.getType() == 1)) {
             labelNameMap = getLabelMap(labelNameMap, rows.stream().map(BizDemandGroupFieldDO::getLabelId));
         }
-        if (bizGroupFieldKeys.contains(BizDemandGroupFieldEnum.DEMAND_DEPT.getGroupField())) {
-            Set<Long> deptIds = rows.stream().map(BizDemandGroupFieldDO::getDeptId).collect(Collectors.toSet());
-            if (CollectionUtils.isNotEmpty(deptIds)) {
-                Map<Long, GroupResponse> groupListTreeMap = bizDemandComponent.getGroupListTreeMap(deptIds);
-                Map<String, String> map = new HashMap<>();
-                Collection<GroupResponse> deptValues = groupListTreeMap.values();
-                if (CollectionUtils.isNotEmpty(deptValues)) {
-                    for (GroupResponse r : deptValues) {
-                        map.put(r.getGroupId(), r.getGroupName());
-                    }
-                }
-                deptNameMap = map;
-            }
-        }
+        deptNameMap = getDemandDeptMap(deptNameMap, rows, bizGroupFieldKeys);
 
         // 4) 构建树（一次性结果 → 树），并处理 type 维度的多值拆分
         List<DemandGroupNodeVO> roots = new ArrayList<>();
@@ -1022,6 +1050,24 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         sortTreeByLabel(roots);
 
         return BaseResult.success(roots);
+    }
+
+    private Map<String, String> getDemandDeptMap(Map<String, String> deptNameMap, List<BizDemandGroupFieldDO> simpleGroupList, List<String> bizGroupFieldKeys) {
+        if (bizGroupFieldKeys.contains(BizDemandGroupFieldEnum.DEMAND_DEPT.getGroupField())) {
+            Set<Long> deptIds = simpleGroupList.stream().map(BizDemandGroupFieldDO::getDeptId).collect(Collectors.toSet());
+            if (CollectionUtils.isNotEmpty(deptIds)) {
+                Map<Long, GroupResponse> groupListTreeMap = bizDemandComponent.getGroupListTreeMap(deptIds);
+                Map<String, String> map = new HashMap<>();
+                Collection<GroupResponse> deptValues = groupListTreeMap.values();
+                if (CollectionUtils.isNotEmpty(deptValues)) {
+                    for (GroupResponse r : deptValues) {
+                        map.put(r.getGroupId(), r.getGroupName());
+                    }
+                }
+                deptNameMap = map;
+            }
+        }
+        return deptNameMap;
     }
 
     private Map<Long, String> getLabelMap(Map<Long, String> labelNameMap, Stream<Long> longStream) {
@@ -1109,16 +1155,16 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         //查询等于标签id的需求
         List<Long> newLabelIds = new ArrayList<>();
         if (CollUtil.isNotEmpty(labelIds)) {
-            newLabelIds = labelComponent.getLabelIds(labelIds, labelCategoryIds);
+            newLabelIds = labelComponent.getLabelIds(labelIds, null);
         }
 
         //查询不等于标签id的需求
-        List<Long> newNotInLabelIds = new ArrayList<>();
+        List<Long> newNotInLabelIds;
         if (CollUtil.isNotEmpty(notInLabelIds)) {
             newNotInLabelIds = labelMapper.getByCategoryIds(labelCategoryIds, false).stream().map(LabelDO::getId).collect(Collectors.toList());
             newNotInLabelIds.removeAll(notInLabelIds);
+            newLabelIds.retainAll(newNotInLabelIds);
         }
-        newLabelIds.retainAll(newNotInLabelIds);
         return newLabelIds;
     }
 
@@ -1369,7 +1415,40 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         if (ProductGroupFieldEnum.LABEL.getGroupField().equals(groupField)) {
             return row.getLabelId() == null ? "" : String.valueOf(row.getLabelId());
         }
+        // 处理 label1-label5 字段
+        if (groupField.startsWith(ProductGroupFieldEnum.LABEL.getGroupField())) {
+            String suffix = groupField.substring(ProductGroupFieldEnum.LABEL.getGroupField().length());
+            try {
+                int index = Integer.parseInt(suffix);
+                Long labelId = getLabelFieldValue(row, index);
+                return labelId == null ? "" : String.valueOf(labelId);
+            } catch (NumberFormatException e) {
+                return "";
+            }
+        }
         return "";
+    }
+
+    /**
+     * 获取指定位置的 label 字段值
+     */
+    private Long getLabelFieldValue(ProductDemandGroupFieldDO row, int position) {
+        switch (position) {
+            case 0:
+                return row.getLabelId();
+            case 1:
+                return row.getLabelId1();
+            case 2:
+                return row.getLabelId2();
+            case 3:
+                return row.getLabelId3();
+            case 4:
+                return row.getLabelId4();
+            case 5:
+                return row.getLabelId5();
+            default:
+                return null;
+        }
     }
 
     private String getBizValueFromRow(String groupField, BizDemandGroupFieldDO row) {
@@ -1434,6 +1513,11 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             return StringUtils.defaultIfBlank(ProductDemandTypeEnum.getTextByCode(Integer.parseInt(value)), OTHER);
         }
         if (ProductGroupFieldEnum.LABEL.getGroupField().equals(groupField)) {
+            if (StringUtils.isBlank(value)) return OTHER;
+            return labelNameMap.getOrDefault(Long.parseLong(value), OTHER);
+        }
+        // 处理 label1-label5 字段
+        if (groupField.startsWith(ProductGroupFieldEnum.LABEL.getGroupField())) {
             if (StringUtils.isBlank(value)) return OTHER;
             return labelNameMap.getOrDefault(Long.parseLong(value), OTHER);
         }
@@ -1525,5 +1609,312 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             parts.add(BizDemandGroupFieldEnum.getSourceFieldByGroupField(gq.getKey()));
         }
         return String.join(",", parts);
+    }
+
+    /**
+     * 根据分组条件重新组装数据，填充 label1-label5 字段
+     */
+    private List<ProductDemandGroupFieldDO> populateLabelFields(
+            List<ProductDemandGroupFieldDO> data,
+            List<ViewsGroupQueryList> groupFields,
+            Map<Long, Map<Long, String>> labelMaps) {
+
+        // 找出所有标签类别分组字段
+        List<Long> labelCategoryIds = new ArrayList<>();
+        for (ViewsGroupQueryList groupField : groupFields) {
+            if (groupField.getType() == 1) {
+                labelCategoryIds.add(Long.valueOf(groupField.getKey()));
+            }
+        }
+
+        if (labelCategoryIds.isEmpty()) {
+            return data; // 没有标签类别分组，直接返回
+        }
+
+        // 按照唯一标识符对数据进行分组，避免重复
+        Map<String, ProductDemandGroupFieldDO> groupedData = new LinkedHashMap<>();
+
+        for (ProductDemandGroupFieldDO row : data) {
+            // 构建唯一键，基于非标签字段
+            String uniqueKey = buildUniqueKey(row);
+
+            ProductDemandGroupFieldDO existingRow = groupedData.get(uniqueKey);
+            if (existingRow == null) {
+                // 为每个标签类别填充对应的 label 字段
+                ProductDemandGroupFieldDO newRow = copyRow(row);
+
+                // 清空所有 label 字段
+                newRow.setLabelId1(null);
+                newRow.setLabelId2(null);
+                newRow.setLabelId3(null);
+                newRow.setLabelId4(null);
+                newRow.setLabelId5(null);
+
+                // 根据原始 labelId 和标签类别映射，填充对应的 label 字段
+                Long originalLabelId = row.getLabelId();
+                if (originalLabelId != null) {
+                    for (int i = 0; i < labelCategoryIds.size() && i < 5; i++) {
+                        Long categoryId = labelCategoryIds.get(i);
+                        Map<Long, String> categoryLabels = labelMaps.get(categoryId);
+
+                        if (categoryLabels != null && categoryLabels.containsKey(originalLabelId)) {
+                            // 这个 labelId 属于当前类别，填充到对应的 label 字段
+                            setLabelField(newRow, i + 1, originalLabelId);
+                        }
+                    }
+                }
+
+                groupedData.put(uniqueKey, newRow);
+            } else {
+                // 合并标签信息
+                Long originalLabelId = row.getLabelId();
+                if (originalLabelId != null) {
+                    for (int i = 0; i < labelCategoryIds.size() && i < 5; i++) {
+                        Long categoryId = labelCategoryIds.get(i);
+                        Map<Long, String> categoryLabels = labelMaps.get(categoryId);
+
+                        if (categoryLabels != null && categoryLabels.containsKey(originalLabelId) && getLabelField(existingRow, i + 1) == null) {
+                            // 设置对应的 label 字段，如果还没有设置的话
+                            setLabelField(existingRow, i + 1, originalLabelId);
+                        }
+                    }
+                }
+            }
+        }
+
+        return new ArrayList<>(groupedData.values());
+    }
+
+    private List<BizDemandGroupFieldDO> populateBizLabelFields(
+            List<BizDemandGroupFieldDO> data,
+            List<ViewsGroupQueryList> groupFields,
+            Map<Long, Map<Long, String>> labelMaps) {
+
+        // 找出所有标签类别分组字段
+        List<Long> labelCategoryIds = new ArrayList<>();
+        for (ViewsGroupQueryList groupField : groupFields) {
+            if (groupField.getType() == 1) {
+                labelCategoryIds.add(Long.valueOf(groupField.getKey()));
+            }
+        }
+
+        if (labelCategoryIds.isEmpty()) {
+            return data; // 没有标签类别分组，直接返回
+        }
+
+        // 按照唯一标识符对数据进行分组，避免重复
+        Map<String, BizDemandGroupFieldDO> groupedData = new LinkedHashMap<>();
+
+        for (BizDemandGroupFieldDO row : data) {
+            // 构建唯一键，基于非标签字段
+            String uniqueKey = buildBizUniqueKey(row);
+
+            BizDemandGroupFieldDO existingRow = groupedData.get(uniqueKey);
+            if (existingRow == null) {
+                // 为每个标签类别填充对应的 label 字段
+                BizDemandGroupFieldDO newRow = copyBizRow(row);
+
+                // 清空所有 label 字段
+                newRow.setLabelId1(null);
+                newRow.setLabelId2(null);
+                newRow.setLabelId3(null);
+                newRow.setLabelId4(null);
+                newRow.setLabelId5(null);
+
+                // 根据原始 labelId 和标签类别映射，填充对应的 label 字段
+                Long originalLabelId = row.getLabelId();
+                if (originalLabelId != null) {
+                    for (int i = 0; i < labelCategoryIds.size() && i < 5; i++) {
+                        Long categoryId = labelCategoryIds.get(i);
+                        Map<Long, String> categoryLabels = labelMaps.get(categoryId);
+
+                        if (categoryLabels != null && categoryLabels.containsKey(originalLabelId)) {
+                            // 这个 labelId 属于当前类别，填充到对应的 label 字段
+                            setBizLabelField(newRow, i + 1, originalLabelId);
+                        }
+                    }
+                }
+
+                groupedData.put(uniqueKey, newRow);
+            } else {
+                // 合并标签信息
+                Long originalLabelId = row.getLabelId();
+                if (originalLabelId != null) {
+                    for (int i = 0; i < labelCategoryIds.size() && i < 5; i++) {
+                        Long categoryId = labelCategoryIds.get(i);
+                        Map<Long, String> categoryLabels = labelMaps.get(categoryId);
+
+                        if (categoryLabels != null && categoryLabels.containsKey(originalLabelId)) {
+                            // 设置对应的 label 字段，如果还没有设置的话
+                            if (getBizLabelField(existingRow, i + 1) == null) {
+                                setBizLabelField(existingRow, i + 1, originalLabelId);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return new ArrayList<>(groupedData.values());
+    }
+
+    /**
+     * 构建行数据的唯一键，基于非标签字段
+     */
+    private String buildUniqueKey(ProductDemandGroupFieldDO row) {
+        String sb = row.getBizDomainId() + "|" +
+                row.getProductLineId() + "|" +
+                row.getType() + "|" +
+                row.getStatus() + "|" +
+                row.getPriority() + "|" +
+                row.getExpectScheduleTime() + "|" +
+                row.getOwnerId();
+        return sb;
+    }
+
+    /**
+     * 构建行数据的唯一键，基于非标签字段
+     */
+    private String buildBizUniqueKey(BizDemandGroupFieldDO row) {
+        String sb = row.getBizDomainId() + "|" +
+                row.getProductLineId() + "|" +
+                row.getDeptId() + "|" +
+                row.getStatus() + "|" +
+                row.getPriority() + "|" +
+                row.getTargetCustomer() + "|" +
+                row.getReceiveManId();
+        return sb;
+    }
+
+    /**
+     * 获取指定位置的 label 字段值
+     */
+    private Long getLabelField(ProductDemandGroupFieldDO row, int position) {
+        switch (position) {
+            case 1:
+                return row.getLabelId1();
+            case 2:
+                return row.getLabelId2();
+            case 3:
+                return row.getLabelId3();
+            case 4:
+                return row.getLabelId4();
+            case 5:
+                return row.getLabelId5();
+            default:
+                return null;
+        }
+    }
+
+    /**
+     * 获取指定位置的 label 字段值
+     */
+    private Long getBizLabelField(BizDemandGroupFieldDO row, int position) {
+        switch (position) {
+            case 1:
+                return row.getLabelId1();
+            case 2:
+                return row.getLabelId2();
+            case 3:
+                return row.getLabelId3();
+            case 4:
+                return row.getLabelId4();
+            case 5:
+                return row.getLabelId5();
+            default:
+                return null;
+        }
+    }
+
+    /**
+     * 设置指定位置的 label 字段
+     */
+    private void setLabelField(ProductDemandGroupFieldDO row, int position, Long labelId) {
+        switch (position) {
+            case 1:
+                row.setLabelId1(labelId);
+                break;
+            case 2:
+                row.setLabelId2(labelId);
+                break;
+            case 3:
+                row.setLabelId3(labelId);
+                break;
+            case 4:
+                row.setLabelId4(labelId);
+                break;
+            case 5:
+                row.setLabelId5(labelId);
+                break;
+        }
+    }
+
+    /**
+     * 设置指定位置的 label 字段
+     */
+    private void setBizLabelField(BizDemandGroupFieldDO row, int position, Long labelId) {
+        switch (position) {
+            case 1:
+                row.setLabelId1(labelId);
+                break;
+            case 2:
+                row.setLabelId2(labelId);
+                break;
+            case 3:
+                row.setLabelId3(labelId);
+                break;
+            case 4:
+                row.setLabelId4(labelId);
+                break;
+            case 5:
+                row.setLabelId5(labelId);
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + position);
+        }
+    }
+
+    /**
+     * 复制行数据
+     */
+    private ProductDemandGroupFieldDO copyRow(ProductDemandGroupFieldDO row) {
+        ProductDemandGroupFieldDO copy = new ProductDemandGroupFieldDO();
+        copy.setBizDomainId(row.getBizDomainId());
+        copy.setProductLineId(row.getProductLineId());
+        copy.setLabelId(row.getLabelId());
+        copy.setLabelId1(row.getLabelId1());
+        copy.setLabelId2(row.getLabelId2());
+        copy.setLabelId3(row.getLabelId3());
+        copy.setLabelId4(row.getLabelId4());
+        copy.setLabelId5(row.getLabelId5());
+        copy.setType(row.getType());
+        copy.setStatus(row.getStatus());
+        copy.setPriority(row.getPriority());
+        copy.setExpectScheduleTime(row.getExpectScheduleTime());
+        copy.setOwnerId(row.getOwnerId());
+        copy.setTotal(row.getTotal());
+        return copy;
+    }
+
+    /**
+     * 复制行数据
+     */
+    private BizDemandGroupFieldDO copyBizRow(BizDemandGroupFieldDO row) {
+        BizDemandGroupFieldDO copy = new BizDemandGroupFieldDO();
+        copy.setBizDomainId(row.getBizDomainId());
+        copy.setProductLineId(row.getProductLineId());
+        copy.setLabelId(row.getLabelId());
+        copy.setLabelId1(row.getLabelId1());
+        copy.setLabelId2(row.getLabelId2());
+        copy.setLabelId3(row.getLabelId3());
+        copy.setLabelId4(row.getLabelId4());
+        copy.setLabelId5(row.getLabelId5());
+        copy.setTargetCustomer(row.getTargetCustomer());
+        copy.setStatus(row.getStatus());
+        copy.setPriority(row.getPriority());
+        copy.setDeptId(row.getDeptId());
+        copy.setReceiveManId(row.getReceiveManId());
+        copy.setTotal(row.getTotal());
+        return copy;
     }
 }
