@@ -13,6 +13,11 @@ import lombok.EqualsAndHashCode;
 public class ProductDemandGroupFieldDO extends BaseDO {
 
     /**
+     * 需求id
+     */
+    private Long id;
+
+    /**
      * 业务域id
      */
     private Long bizDomainId;
@@ -26,6 +31,31 @@ public class ProductDemandGroupFieldDO extends BaseDO {
      * 标签类别id
      */
     private Long labelId;
+
+    /**
+     * 标签类别id1
+     */
+    private Long labelId1;
+
+    /**
+     * 标签类别id2
+     */
+    private Long labelId2;
+
+    /**
+     * 标签类别id3
+     */
+    private Long labelId3;
+
+    /**
+     * 标签类别id4
+     */
+    private Long labelId4;
+
+    /**
+     * 标签类别id5
+     */
+    private Long labelId5;
 
     /**
      * 类型
