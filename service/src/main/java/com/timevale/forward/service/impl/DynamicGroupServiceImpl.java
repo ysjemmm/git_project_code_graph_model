@@ -816,16 +816,38 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         List<Long> labelCategoryIds = groupFields.stream().filter(field -> field.getType() == 1).map(field -> Long.valueOf(field.getKey())).collect(Collectors.toList());
         if (CollUtil.isNotEmpty(labelCategoryIds)) {
             List<Long> labelIds = parentCondition.getLabelIds();
+            List<Long> notInLabelIds = parentCondition.getNotInLabelIds();
             //查询等于标签id的需求
             List<Long> newLabelIds = getNewLabelIds(labelIds, labelCategoryIds, parentCondition.getNotInLabelIds());
             // 查询使用这些标签的需求id
             List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
+            List<Long> ids = bizLabelDOList.stream().map(BizLabelDO::getBizId).distinct().collect(Collectors.toList());
             List<Long> bizIds;
-            if (CollUtil.isNotEmpty(labelIds)) {
+            if (CollUtil.isNotEmpty(labelIds) && CollUtil.isNotEmpty(notInLabelIds)) {
+                bizLabelDOList.addAll(bizLabelMapper.getByLabelIdInType(notInLabelIds, BizTypeEnum.PRODUCT_DEMAND.getCode()));
+                // 获取包含labelIds且但不包含notInLabelIds的bizId
+                bizIds = bizLabelDOList.stream()
+                        .collect(Collectors.groupingBy(BizLabelDO::getBizId))
+                        .entrySet()
+                        .stream()
+                        .filter(entry -> {
+                            Set<Long> labelIdsForBiz = entry.getValue().stream()
+                                    .map(BizLabelDO::getLabelId)
+                                    .collect(Collectors.toSet());
+
+                            // 检查是否包含所有labelIds且不包含任何notInLabelIds
+                            return labelIdsForBiz.containsAll(labelIds) &&
+                                    Collections.disjoint(labelIdsForBiz, notInLabelIds);
+                        })
+                        .map(Map.Entry::getKey)
+                        // 确保结果只包含原先bizIds中的元素
+                        .filter(ids::contains)
+                        .collect(Collectors.toList());
+            } else if (CollUtil.isNotEmpty(labelIds)) {
                 // 取出bizLabelDOList中包含labelIds中所有标签id的bizId
                 bizIds = getBizIdsContainingAllLabels(bizLabelDOList, labelIds);
             } else {
-                bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+                bizIds = ids;
             }
 
             if (CollectionUtils.isEmpty(bizIds)) {
