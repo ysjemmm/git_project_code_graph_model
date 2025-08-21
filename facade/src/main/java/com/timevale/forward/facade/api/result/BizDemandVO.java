@@ -148,4 +148,7 @@ public class BizDemandVO extends ToString {
 
     @ApiModelProperty("项目基础信息")
     private List<ProjectSimpleVO> projectBaseList;
+
+    @ApiModelProperty("客户等级")
+    private String customerGrade;
 }

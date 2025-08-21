@@ -189,6 +189,11 @@ public class BizDemandListCondition{
     private Boolean affectCustomerOrder;
 
     /**
+     * 客户等级
+     */
+    private String customerGrade;
+
+    /**
      * 卡单说明
      */
     @WildcardEscape
