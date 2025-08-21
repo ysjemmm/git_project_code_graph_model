@@ -108,6 +108,7 @@ import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.copy.ProductLineCopier;
 import com.timevale.forward.service.copy.ProjectCopier;
+import com.timevale.forward.service.integration.crm.CrmClient;
 import com.timevale.forward.service.integration.dock.CrmProjectClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.BizDemandApprovedMsgEvent;
@@ -223,6 +224,9 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Resource
     private GroupDuplicateUtil groupDuplicateUtil;
+
+    @Resource
+    private CrmClient crmClient;
 
     @Override
     public BaseResult<QueryResultVO<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList) {
@@ -416,6 +420,10 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
         if (StringUtils.isNotBlank(bizDemandAddReq.getBizId())) {
             outBizDealComponent.checkBizIdExistence(bizDemandAddReq.getBizId());
+        }
+        if (StrUtil.isEmpty(bizDemandAddReq.getCustomerGrade()) && StrUtil.isNotEmpty(bizDemandAddReq.getTargetCustomer())) {
+            String postGrade = crmClient.getPostGrade(bizDemandAddReq.getTargetCustomer());
+            bizDemandAddReq.setCustomerGrade(postGrade);
         }
 
         // 新增业务需求
@@ -642,6 +650,12 @@ public class BizDemandServiceImpl implements BizDemandService {
         BizDemandDO checkUniqueName = bizDemandMapper.selectByName(bizDemandModifyReq.getName());
         if (checkUniqueName != null && !checkUniqueName.getId().equals(bizDemandModifyReq.getId())) {
             throw new BaseBizRuntimeException("该业务需求名称已存在,请修改后重试");
+        }
+
+        // 如果有客户名称但是没有客户等级则尝试填入
+        if (StrUtil.isNotEmpty(bizDemandModifyReq.getTargetCustomer()) && StrUtil.isEmpty(bizDemandModifyReq.getCustomerGrade())) {
+            Optional.ofNullable(crmClient.getPostGrade(bizDemandModifyReq.getTargetCustomer()))
+                    .ifPresent(bizDemandModifyReq::setCustomerGrade);
         }
 
         BizDemandDO newBizDemandDO = BizDemandCopier.INSTANCE.convert(bizDemandModifyReq);
