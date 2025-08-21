@@ -38,6 +38,7 @@
             <if test="srExpertId != null">sr_expert_id,</if>
             <if test="affectCustomerOrder != null">affect_customer_order,</if>
             <if test="stuckOrderInstructions  != null">stuck_order_instructions,</if>
+            <if test="customerGrade != null">customer_grade,</if>
         </trim>
         VALUES
         <trim prefix="(" suffix=")" suffixOverrides=",">
@@ -74,6 +75,7 @@
             <if test="srExpertId != null">#{srExpertId},</if>
             <if test="affectCustomerOrder != null">#{affectCustomerOrder},</if>
             <if test="stuckOrderInstructions != null">#{stuckOrderInstructions},</if>
+            <if test="customerGrade != null">#{customerGrade},</if>
         </trim>
     </insert>
 
@@ -167,6 +169,9 @@
             <if test="stuckOrderInstructions != null">
                stuck_order_instructions = #{stuckOrderInstructions},
             </if>
+            <if test="customerGrade != null">
+                customer_grade = #{customerGrade},
+            </if>
             <if test="true">
                 modify_man_id = #{modifyManId},
                 modify_man = #{modifyMan},
@@ -215,6 +220,7 @@
             sr_expert_id = #{srExpertId},
             affect_customer_order = #{affectCustomerOrder},
             stuck_order_instructions = #{stuckOrderInstructions},
+            customer_grade = #{customerGrade},
         </set>
         where id = #{id}
     </update>
@@ -363,6 +369,9 @@
             </if>
             <if test="stuckOrderInstructions != null and stuckOrderInstructions != ''">
                 and bd.stuck_order_instructions like concat('%', #{stuckOrderInstructions}, '%')
+            </if>
+            <if test="customerGrade != null">
+                and bd.customer_grade = #{customerGrade}
             </if>
             and bd.is_deleted = false
         </where>
@@ -687,6 +696,9 @@
                 <if test="condition.stuckOrderInstructions != null and condition.stuckOrderInstructions != ''">
                     and bd.stuck_order_instructions like concat('%', #{condition.stuckOrderInstructions}, '%')
                 </if>
+                <if test="condition.customerGrade != null">
+                    and bd.customer_grade = #{condition.customerGrade}
+                </if>
                 and bd.is_deleted = false
             </if>
             <if test="parentCondition != null">
@@ -855,6 +867,9 @@
                 </if>
                 <if test="condition.stuckOrderInstructions != null and condition.stuckOrderInstructions != ''">
                     and bd.stuck_order_instructions like concat('%', #{condition.stuckOrderInstructions}, '%')
+                </if>
+                <if test="condition.customerGrade != null">
+                    and bd.customer_grade = #{condition.customerGrade}
                 </if>
                 and bd.is_deleted = false
             </if>
@@ -1031,6 +1046,9 @@
                 </if>
                 <if test="condition.stuckOrderInstructions != null and condition.stuckOrderInstructions != ''">
                     and bd.stuck_order_instructions like concat('%', #{condition.stuckOrderInstructions}, '%')
+                </if>
+                <if test="condition.customerGrade != null">
+                    and bd.customer_grade = #{condition.customerGrade}
                 </if>
                 and bd.is_deleted = false
             </if>

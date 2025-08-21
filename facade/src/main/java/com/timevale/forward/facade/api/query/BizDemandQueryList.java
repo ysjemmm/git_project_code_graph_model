@@ -114,4 +114,7 @@ public class BizDemandQueryList extends QueryBase {
 
     @ApiModelProperty("卡单说明")
     private String stuckOrderInstructions;
+
+    @ApiModelProperty("客户等级")
+    private String customerGrade;
 }

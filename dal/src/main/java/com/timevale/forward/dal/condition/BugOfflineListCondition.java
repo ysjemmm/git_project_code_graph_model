@@ -56,6 +56,11 @@ public class BugOfflineListCondition {
     private List<Integer> priorities;
 
     /**
+     * 严重程度
+     */
+    private List<Integer> severities;
+
+    /**
      * bug环境
      */
     private List<Integer> envs;

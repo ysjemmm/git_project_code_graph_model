@@ -158,5 +158,10 @@ public class BizDemandListDO extends BaseDO {
      * 卡单说明
      */
     private String stuckOrderInstructions;
+
+    /**
+     * 客户等级
+     */
+    private String customerGrade;
 }
 

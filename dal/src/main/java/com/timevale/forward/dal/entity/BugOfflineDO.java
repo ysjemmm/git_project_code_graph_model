@@ -68,6 +68,11 @@ public class BugOfflineDO extends BaseDO {
     private Integer priority;
 
     /**
+     * 紧急程度: 0P0,10P1,20P2,30P3
+     */
+    private Integer severity;
+
+    /**
      * bug环境
      */
     private Integer env;

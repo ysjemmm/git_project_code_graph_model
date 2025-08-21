@@ -186,4 +186,7 @@ public class BizDemandDetailVO extends ToString {
 
     @ApiModelProperty("卡单说明")
     private String stuckOrderInstructions;
+
+    @ApiModelProperty("客户等级")
+    private String customerGrade;
 }

@@ -43,6 +43,12 @@ public class BugOfflineVO extends ToString {
     @ApiModelProperty(value = "优先级:0紧急,10高,20中,30低")
     private Integer priority;
 
+    @ApiModelProperty(value = "紧急程度: 0P0,10P1,20P2,30P3")
+    private Integer severity;
+
+    @ApiModelProperty(value = "紧急程度-描述")
+    private String severityName;
+
     @ApiModelProperty(value = "优先级-描述")
     private String priorityName;
 
