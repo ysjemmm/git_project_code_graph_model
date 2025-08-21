@@ -815,11 +815,18 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         // 获取标签类别Id
         List<Long> labelCategoryIds = groupFields.stream().filter(field -> field.getType() == 1).map(field -> Long.valueOf(field.getKey())).collect(Collectors.toList());
         if (CollUtil.isNotEmpty(labelCategoryIds)) {
+            List<Long> labelIds = parentCondition.getLabelIds();
             //查询等于标签id的需求
-            List<Long> newLabelIds = getNewLabelIds(parentCondition.getLabelIds(), labelCategoryIds, parentCondition.getNotInLabelIds());
+            List<Long> newLabelIds = getNewLabelIds(labelIds, labelCategoryIds, parentCondition.getNotInLabelIds());
             // 查询使用这些标签的需求id
             List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
-            List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+            List<Long> bizIds;
+            if (CollUtil.isNotEmpty(labelIds)) {
+                // 取出bizLabelDOList中包含labelIds中所有标签id的bizId
+                bizIds = getBizIdsContainingAllLabels(bizLabelDOList, labelIds);
+            } else {
+                bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+            }
 
             if (CollectionUtils.isEmpty(bizIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
@@ -839,6 +846,28 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
         PageQueryResult<ProductDemandVO> pageQueryResult = groupDuplicateUtil.getDemandVOQueryResultVO(productDemandListDO);
         return BaseResult.success(pageQueryResult);
+    }
+
+    /**
+     * 取出bizLabelDOList中包含labelIds中所有标签id的bizId
+     */
+    private List<Long> getBizIdsContainingAllLabels(List<BizLabelDO> bizLabelDOList, List<Long> labelIds) {
+        if (CollectionUtils.isEmpty(bizLabelDOList) || CollectionUtils.isEmpty(labelIds)) {
+            return Collections.emptyList();
+        }
+
+        return bizLabelDOList.stream()
+                .collect(Collectors.groupingBy(BizLabelDO::getBizId))
+                .entrySet()
+                .stream()
+                .filter(entry -> {
+                    Set<Long> labelIdsForBiz = entry.getValue().stream()
+                            .map(BizLabelDO::getLabelId)
+                            .collect(Collectors.toSet());
+                    return labelIdsForBiz.containsAll(labelIds);
+                })
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -1126,16 +1155,16 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         //查询等于标签id的需求
         List<Long> newLabelIds = new ArrayList<>();
         if (CollUtil.isNotEmpty(labelIds)) {
-            newLabelIds = labelComponent.getLabelIds(labelIds, labelCategoryIds);
+            newLabelIds = labelComponent.getLabelIds(labelIds, null);
         }
 
         //查询不等于标签id的需求
-        List<Long> newNotInLabelIds = new ArrayList<>();
+        List<Long> newNotInLabelIds;
         if (CollUtil.isNotEmpty(notInLabelIds)) {
             newNotInLabelIds = labelMapper.getByCategoryIds(labelCategoryIds, false).stream().map(LabelDO::getId).collect(Collectors.toList());
             newNotInLabelIds.removeAll(notInLabelIds);
+            newLabelIds.retainAll(newNotInLabelIds);
         }
-        newLabelIds.retainAll(newNotInLabelIds);
         return newLabelIds;
     }
 
