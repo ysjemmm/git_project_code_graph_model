@@ -19,5 +19,5 @@ public class ViewsSaveReq extends ViewsReq {
     private List<ViewsGroupFieldReq> groupFields;
 
     @ApiModelProperty("过滤条件")
-    private ViewsFilterReq filterList;
+    private ViewsFilterReq filters;
 }
