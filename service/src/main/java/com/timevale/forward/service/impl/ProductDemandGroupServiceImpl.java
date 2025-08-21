@@ -236,6 +236,30 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
                 a.getProductDemand().setTypeName(typeName);
             }
             productDemandGroupVO.setProductDemandGroupItems(productDemandGroupItemVOList);
+
+            // 初始化
+            BigDecimal totalUedTime = BigDecimal.ZERO;
+            BigDecimal totalBackTime = BigDecimal.ZERO;
+            BigDecimal totalFrontTime = BigDecimal.ZERO;
+            BigDecimal totalQaTime = BigDecimal.ZERO;
+            BigDecimal totalTotalTime = BigDecimal.ZERO;
+            BigDecimal totalTransferTime = BigDecimal.ZERO;
+
+            for (ProductDemandGroupItemVO item : productDemandGroupItemVOList) {
+                totalUedTime = totalUedTime.add(item.getUedTime() != null ? item.getUedTime() : BigDecimal.ZERO);
+                totalBackTime = totalBackTime.add(item.getBackTime() != null ? item.getBackTime() : BigDecimal.ZERO);
+                totalFrontTime = totalFrontTime.add(item.getFrontTime() != null ? item.getFrontTime() : BigDecimal.ZERO);
+                totalQaTime = totalQaTime.add(item.getQaTime() != null ? item.getQaTime() : BigDecimal.ZERO);
+                totalTotalTime = totalTotalTime.add(item.getTotalTime() != null ? item.getTotalTime() : BigDecimal.ZERO);
+                totalTransferTime = totalTransferTime.add(item.getTransferTime() != null ? item.getTransferTime() : BigDecimal.ZERO);
+            }
+
+            productDemandGroupVO.setTotalUedTime(totalUedTime);
+            productDemandGroupVO.setTotalBackTime(totalBackTime);
+            productDemandGroupVO.setTotalFrontTime(totalFrontTime);
+            productDemandGroupVO.setTotalQaTime(totalQaTime);
+            productDemandGroupVO.setTotalTransferTime(totalTransferTime);
+            productDemandGroupVO.setTotalTotalTime(totalTotalTime);
         }
         // 返回分页数据
         PageInfo<ProductDemandGroupDO> pageInfo = new PageInfo<>(productDemandGroupListDO);
@@ -255,6 +279,12 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
             productDemandGroupItemVO.setPosition(productDemandGroupItemListDO.getPosition());
             productDemandGroupItemVO.setVersion(productDemandGroupItemListDO.getVersion());
             productDemandGroupItemVO.setProductDemand(ProductDemandCopier.INSTANCE.convert(productDemandGroupItemListDO));
+            productDemandGroupItemVO.setUedTime(productDemandGroupItemListDO.getUedTime());
+            productDemandGroupItemVO.setBackTime(productDemandGroupItemListDO.getBackTime());
+            productDemandGroupItemVO.setFrontTime(productDemandGroupItemListDO.getFrontTime());
+            productDemandGroupItemVO.setQaTime(productDemandGroupItemListDO.getQaTime());
+            productDemandGroupItemVO.setTransferTime(productDemandGroupItemListDO.getTransferTime());
+            productDemandGroupItemVO.setTotalTime(productDemandGroupItemListDO.getTotalTime());
             productDemandGroupItemVOList.add(productDemandGroupItemVO);
         }
         return productDemandGroupItemVOList;

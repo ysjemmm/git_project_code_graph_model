@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -74,4 +75,22 @@ public class ProductDemandDetailVO extends ToString {
 
     @ApiModelProperty("标签集合")
     private List<LabelDetailVO> labelDetailVOS;
+
+    @ApiModelProperty("UED资源评估（人天）")
+    private BigDecimal uedTime;
+
+    @ApiModelProperty("后端资源评估（人天）")
+    private BigDecimal backTime;
+
+    @ApiModelProperty("前端资源评估（人天）")
+    private BigDecimal frontTime;
+
+    @ApiModelProperty("测试资源评估（人天）")
+    private BigDecimal qaTime;
+
+    @ApiModelProperty("功能迁移评估（人天）")
+    private BigDecimal transferTime;
+
+    @ApiModelProperty("总资源评估（人天）")
+    private BigDecimal totalTime;
 }

@@ -5,15 +5,16 @@
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProductDemandDO" useGeneratedKeys="true"
             keyProperty="id" keyColumn="id">
         insert into product_demand (name, product_line_id, type, `desc`, status, priority, owner, owner_id,
-                                    expect_schedule_time, create_man_id, create_man)
+                                    expect_schedule_time, create_man_id, create_man, ued_time, transfer_time, back_time, front_time, qa_time, total_time)
         values (#{name}, #{productLineId}, #{type}, #{desc}, #{status}, #{priority}, #{owner}, #{ownerId},
-                #{expectScheduleTime}, #{createManId}, #{createMan})
+                #{expectScheduleTime}, #{createManId}, #{createMan}, #{uedTime}, #{transferTime}, #{backTime}, #{frontTime}, #{qaTime}, #{totalTime})
     </insert>
 
     <select id="list" resultType="com.timevale.forward.dal.entity.ProductDemandListDO">
         select a.id,a.name,a.priority,a.owner,a.owner_id,a.status, a.product_line_id,
         a.create_man,a.create_man_id,a.create_date,a.modify_date, a.type, a.expect_schedule_time,
-        c.name productLineName ,d.name bizDomainName
+        c.name productLineName ,d.name bizDomainName, a.ued_time, a.transfer_time, a.back_time,
+        a.front_time, a.qa_time, a.total_time
         <if test="copierId != null and copierId != ''">
             ,e.user_name copier
         </if>
@@ -142,7 +143,13 @@
                modify_man_id,
                modify_man,
                modify_date,
-               owner_id
+               owner_id,
+               ued_time,
+               transfer_time,
+               back_time,
+               front_time,
+               qa_time,
+               total_time
         from product_demand
         where id = #{id}
     </select>
@@ -254,6 +261,12 @@
             <if test="expectScheduleTime != null">expect_schedule_time = #{expectScheduleTime},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+            <if test="uedTime != null">ued_time = #{uedTime},</if>
+            <if test="frontTime != null">front_time = #{frontTime},</if>
+            <if test="backTime != null">back_time = #{backTime},</if>
+            <if test="qaTime != null">qa_time = #{qaTime},</if>
+            <if test="transferTime != null">transfer_time = #{transferTime},</if>
+            <if test="totalTime != null">total_time = #{totalTime},</if>
         </set>
         <where>
             id = #{id} and is_deleted=false
@@ -468,7 +481,8 @@
     <select id="getGroupList" resultType="com.timevale.forward.dal.entity.ProductDemandListDO">
         select a.id,a.name,a.priority,a.owner,a.owner_id,a.status, a.product_line_id,
         a.create_man,a.create_man_id,a.create_date,a.modify_date, a.type, a.expect_schedule_time,
-        c.name productLineName ,d.name bizDomainName
+        c.name productLineName ,d.name bizDomainName, a.ued_time, a.transfer_time, a.back_time,
+        a.front_time, a.qa_time, a.total_time
         <if test="condition.copierId != null and condition.copierId != ''">
             ,e.user_name copier
         </if>

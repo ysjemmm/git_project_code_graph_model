@@ -78,4 +78,22 @@ public class ProductDemandGroupVO extends ToString {
 
     @ApiModelProperty("产品需求分组需求列表")
     private List<ProductDemandGroupItemVO> productDemandGroupItems;
+
+    @ApiModelProperty("UED资源评估（人天）")
+    private BigDecimal totalUedTime;
+
+    @ApiModelProperty("后端资源评估（人天）")
+    private BigDecimal totalBackTime;
+
+    @ApiModelProperty("前端资源评估（人天）")
+    private BigDecimal totalFrontTime;
+
+    @ApiModelProperty("测试资源评估（人天）")
+    private BigDecimal totalQaTime;
+
+    @ApiModelProperty("功能迁移评估（人天）")
+    private BigDecimal totalTransferTime;
+
+    @ApiModelProperty("总资源评估（人天）")
+    private BigDecimal totalTotalTime;
 } 
