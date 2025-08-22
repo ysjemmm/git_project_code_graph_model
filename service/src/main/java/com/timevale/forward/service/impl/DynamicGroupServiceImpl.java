@@ -366,14 +366,17 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
         List<ProductDemandGroupFieldDO> rows = productDemandComponent.getGroupTree(groupCondition);
 
-        // 查询不在标签类别的需求数
-        parentCondition.setNotInLabelCategoryIds(parentCondition.getLabelCategoryIds());
-        parentCondition.setLabelCategoryIds(null);
-        ProductDemandGroupQueryCondition groupCountCondition = ProductDemandGroupQueryCondition.builder()
-                .condition(condition)
-                .parentCondition(parentCondition)
-                .build();
-        Long simpleGroupCount = productDemandComponent.getSimpleGroupCount(groupCountCondition);
+        Long simpleGroupCount = 0L;
+        if (count > 0) {
+            // 查询不在标签类别的需求数
+            parentCondition.setNotInLabelCategoryIds(parentCondition.getLabelCategoryIds());
+            parentCondition.setLabelCategoryIds(null);
+            ProductDemandGroupQueryCondition groupCountCondition = ProductDemandGroupQueryCondition.builder()
+                    .condition(condition)
+                    .parentCondition(parentCondition)
+                    .build();
+            simpleGroupCount = productDemandComponent.getSimpleGroupCount(groupCountCondition);
+        }
         if (CollectionUtils.isEmpty(rows)) {
             return BaseResult.success(Collections.emptyList());
         }
@@ -435,14 +438,15 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
         // 排序（各层按 label 升序）
         sortTreeByLabel(roots);
-
-        addNotInLabelCategoryDemandGroupNode(labelMaps, simpleGroupCount, roots);
+        if (count > 0) {
+            addNotInLabelCategoryDemandGroupNode(labelMaps, simpleGroupCount, roots);
+        }
         return BaseResult.success(roots);
     }
 
     private void addNotInLabelCategoryDemandGroupNode(Map<Long, Map<Long, String>> labelMaps, Long simpleGroupCount, List<DemandGroupNodeVO> roots) {
         DemandGroupNodeVO labelDemandGroupNodeVO = new DemandGroupNodeVO();
-        labelDemandGroupNodeVO.setLabel("无所属标签");
+        labelDemandGroupNodeVO.setLabel("其他标签组");
         labelDemandGroupNodeVO.setField("notInLabelIds");
         // 从labelMaps中拿到所有标签ids
         labelDemandGroupNodeVO.setFieldValue(getAllLabelIdsFromMaps(labelMaps));
@@ -1081,14 +1085,17 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
         List<BizDemandGroupFieldDO> rows = bizDemandComponent.groupTree(groupCondition);
 
-        // 查询不在标签类别的需求数
-        parentCondition.setNotInLabelCategoryIds(parentCondition.getLabelCategoryIds());
-        parentCondition.setLabelCategoryIds(null);
-        BizDemandGroupQueryCondition groupCountCondition = BizDemandGroupQueryCondition.builder()
-                .condition(condition)
-                .parentCondition(parentCondition)
-                .build();
-        Long simpleGroupCount = bizDemandComponent.getSimpleGroupCount(groupCountCondition);
+        Long simpleGroupCount = 0L;
+        if (count > 0) {
+            // 查询不在标签类别的需求数
+            parentCondition.setNotInLabelCategoryIds(parentCondition.getLabelCategoryIds());
+            parentCondition.setLabelCategoryIds(null);
+            BizDemandGroupQueryCondition groupCountCondition = BizDemandGroupQueryCondition.builder()
+                    .condition(condition)
+                    .parentCondition(parentCondition)
+                    .build();
+            simpleGroupCount = bizDemandComponent.getSimpleGroupCount(groupCountCondition);
+        }
 
         if (CollectionUtils.isEmpty(rows)) {
             return BaseResult.success(Collections.emptyList());
@@ -1132,7 +1139,9 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         // 排序（各层按 label 升序）
         sortTreeByLabel(roots);
 
-        addNotInLabelCategoryDemandGroupNode(labelMaps, simpleGroupCount, roots);
+        if (count > 0) {
+            addNotInLabelCategoryDemandGroupNode(labelMaps, simpleGroupCount, roots);
+        }
         return BaseResult.success(roots);
     }
 
