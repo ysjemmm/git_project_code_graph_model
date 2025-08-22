@@ -281,8 +281,8 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
                     .parentCondition(parentCondition)
                     .build();
             Long simpleGroupCount = productDemandComponent.getSimpleGroupCount(groupCountCondition);
-            if (CollUtil.isEmpty(simpleGroupList)) {
-                return BaseResult.success(new ArrayList<>());
+            if (CollectionUtils.isEmpty(simpleGroupList)) {
+                simpleGroupList.add(new ProductDemandGroupFieldDO());
             }
 
             List<String> groupFieldKeys = groupFields.stream().map(ViewsGroupQueryList::getKey).collect(Collectors.toList());
@@ -372,7 +372,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             simpleGroupCount = productDemandComponent.getSimpleGroupCount(groupCountCondition);
         }
         if (CollectionUtils.isEmpty(rows)) {
-            return BaseResult.success(Collections.emptyList());
+            rows.add(new ProductDemandGroupFieldDO());
         }
 
         if (groupFieldKeys.contains(ProductGroupFieldEnum.BIZ_DOMAIN.getGroupField())) {
@@ -1307,7 +1307,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             Long simpleGroupCount = bizDemandComponent.getSimpleGroupCount(groupCountCondition);
 
             if (CollUtil.isEmpty(simpleGroupList)) {
-                return BaseResult.success(new ArrayList<>());
+                simpleGroupList.add(new BizDemandGroupFieldDO());
             }
 
             List<String> bizGroupFieldKeys = groupFields.stream().map(ViewsGroupQueryList::getKey).collect(Collectors.toList());
@@ -1395,8 +1395,8 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             simpleGroupCount = bizDemandComponent.getSimpleGroupCount(groupCountCondition);
         }
 
-        if (CollectionUtils.isEmpty(rows)) {
-            return BaseResult.success(Collections.emptyList());
+        if (CollUtil.isEmpty(rows)) {
+            rows.add(new BizDemandGroupFieldDO());
         }
 
         if (bizGroupFieldKeys.contains(BizDemandGroupFieldEnum.BIZ_DOMAIN.getGroupField())) {
