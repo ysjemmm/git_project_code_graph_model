@@ -88,7 +88,7 @@ public class ProductDemandGroupComponentImpl implements ProductDemandGroupCompon
     }
 
     @Override
-    public ProductDemandGroupDO getByProjectId(Long projectId) {
+    public List<ProductDemandGroupDO> getByProjectId(Long projectId) {
         return productDemandGroupMapper.getByProjectId(projectId);
     }
 

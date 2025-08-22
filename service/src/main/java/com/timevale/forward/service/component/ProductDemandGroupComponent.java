@@ -41,7 +41,7 @@ public interface ProductDemandGroupComponent {
      */
     boolean existProject(Long projectId);
 
-    ProductDemandGroupDO getByProjectId(Long projectId);
+    List<ProductDemandGroupDO> getByProjectId(Long projectId);
 
     /**
      * 取消关联项目

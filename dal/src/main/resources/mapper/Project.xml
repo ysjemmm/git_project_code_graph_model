@@ -382,11 +382,11 @@
             </if>
             <if test="isAcceptance != null">and is_acceptance = #{isAcceptance}</if>
             <if test="workHoursNotify != null">and work_hours_notify = #{workHoursNotify}</if>
-            <if test="unLinkGroup != null and unLinkGroup == true">
-                and not exists (
-                select 1 from product_demand_group pdg
-                where pdg.project_id = project.id and pdg.is_deleted = false)
-            </if>
+<!--            <if test="unLinkGroup != null and unLinkGroup == true">-->
+<!--                and not exists (-->
+<!--                select 1 from product_demand_group pdg-->
+<!--                where pdg.project_id = project.id and pdg.is_deleted = false)-->
+<!--            </if>-->
             and is_deleted =false
         </where>
     </select>

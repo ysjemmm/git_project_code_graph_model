@@ -512,8 +512,8 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
                     ProjectStatusEnum.SUSPEND.getCode(), ProjectStatusEnum.CONCLUSION.getCode(), ProjectStatusEnum.CANCELLATION.getCode());
             AssertUtil.checkState(!nonSupportStatuses.contains(projectDO.getStatus()),
                     String.format("项目状态为%s,不能关联分组", ProjectStatusEnum.getTextByCode(projectDO.getStatus())));
-            boolean existProject = productDemandGroupComponent.existProject(projectId);
-            AssertUtil.checkState(!existProject, "当前项目已经被关联，不能重复关联");
+//            boolean existProject = productDemandGroupComponent.existProject(projectId);
+//            AssertUtil.checkState(!existProject, "当前项目已经被关联，不能重复关联");
 
             // 更新分组的项目
             val newProductDemandGroupDO = new ProductDemandGroupDO().setProjectId(projectId);
