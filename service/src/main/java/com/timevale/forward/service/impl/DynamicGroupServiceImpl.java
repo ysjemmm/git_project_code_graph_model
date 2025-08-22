@@ -1597,12 +1597,17 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         }
         // 处理其他
         String values = nodes.stream().filter(n -> !OTHER.equals(n.getLabel())).map(DemandGroupNodeVO::getFieldValue).collect(Collectors.joining(","));
+        List<DemandGroupNodeVO> removeNodes = new ArrayList<>();
         for (DemandGroupNodeVO node : nodes) {
             if (OTHER.equals(node.getLabel())) {
                 node.setFieldValue(StringUtils.isNotBlank(values) ? values : "-1");
                 node.setField(QUERY_OTHER_FIELD_MAP.get(node.getField()));
             }
+            if (StringUtils.isBlank(node.getFieldValue())) {
+                removeNodes.add(node);
+            }
         }
+        nodes.removeAll(removeNodes);
         nodes.sort(Comparator.comparing(DemandGroupNodeVO::getLabel, Comparator.nullsLast(String::compareTo)));
         for (DemandGroupNodeVO n : nodes) {
             sortTreeByLabel(n.getChildren());
@@ -2269,19 +2274,19 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
                                              Map<String, String> ownerNameMap,
                                              Map<Long, String> labelNameMap) {
         if (ProductGroupFieldEnum.BIZ_DOMAIN.getGroupField().equals(groupField)) {
-            if (StringUtils.isBlank(value)) return OTHER;
+            if (StringUtils.isBlank(value)) return null;
             return bizDomainNameMap.getOrDefault(Long.parseLong(value), OTHER);
         }
         if (ProductGroupFieldEnum.PRODUCT_LINE.getGroupField().equals(groupField)) {
-            if (StringUtils.isBlank(value)) return OTHER;
+            if (StringUtils.isBlank(value)) return null;
             return productLineNameMap.getOrDefault(Long.parseLong(value), OTHER);
         }
         if (ProductGroupFieldEnum.STATUS.getGroupField().equals(groupField)) {
-            if (StringUtils.isBlank(value)) return OTHER;
+            if (StringUtils.isBlank(value)) return null;
             return ProductDemandStatusEnum.getTextByCode(Integer.parseInt(value));
         }
         if (ProductGroupFieldEnum.PRIORITY.getGroupField().equals(groupField)) {
-            if (StringUtils.isBlank(value)) return OTHER;
+            if (StringUtils.isBlank(value)) return null;
             return PriorityEnum.getTextByCode(Integer.parseInt(value));
         }
         if (ProductGroupFieldEnum.EXPECT_SCHEDULE_TIME.getGroupField().equals(groupField)) {
@@ -2292,7 +2297,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             return ownerNameMap.getOrDefault(value, OTHER);
         }
         if (ProductGroupFieldEnum.TYPE.getGroupField().equals(groupField)) {
-            if (StringUtils.isBlank(value)) return OTHER;
+            if (StringUtils.isBlank(value)) return null;
             return StringUtils.defaultIfBlank(ProductDemandTypeEnum.getTextByCode(Integer.parseInt(value)), OTHER);
         }
         if (ProductGroupFieldEnum.LABEL.getGroupField().equals(groupField)) {
@@ -2315,19 +2320,19 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
                                          Map<Long, String> labelNameMap,
                                          Map<String, String> deptNameMap) {
         if (BizDemandGroupFieldEnum.BIZ_DOMAIN.getGroupField().equals(groupField)) {
-            if (StringUtils.isBlank(value)) return OTHER;
+            if (StringUtils.isBlank(value)) return null;
             return bizDomainNameMap.getOrDefault(Long.parseLong(value), OTHER);
         }
         if (BizDemandGroupFieldEnum.PRODUCT_LINE.getGroupField().equals(groupField)) {
-            if (StringUtils.isBlank(value)) return OTHER;
+            if (StringUtils.isBlank(value)) return null;
             return productLineNameMap.getOrDefault(Long.parseLong(value), OTHER);
         }
         if (BizDemandGroupFieldEnum.STATUS.getGroupField().equals(groupField)) {
-            if (StringUtils.isBlank(value)) return OTHER;
+            if (StringUtils.isBlank(value)) return null;
             return BizDemandStatusEnum.getTextByCode(Integer.parseInt(value));
         }
         if (BizDemandGroupFieldEnum.PRIORITY.getGroupField().equals(groupField)) {
-            if (StringUtils.isBlank(value)) return OTHER;
+            if (StringUtils.isBlank(value)) return null;
             return PriorityEnum.getTextByCode(Integer.parseInt(value));
         }
         if (BizDemandGroupFieldEnum.TARGET_CUSTOMER.getGroupField().equals(groupField)) {
