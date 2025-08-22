@@ -14,7 +14,7 @@ public enum BizDemandSelectFieldEnum {
 
     PRODUCT_LINE("productLine","bd.product_line_id as productLineId", "产品线"),
 
-    LABEL_CATEGORY("labelCategory","f.label_category_id as labelCategoryId", "标签类别"),
+    LABEL("label","e.label_id as labelId", "标签"),
 
     TARGET_CUSTOMER("targetCustomer","bd.target_customer as targetCustomer", "需求接收人"),
 

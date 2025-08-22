@@ -114,4 +114,6 @@ public interface BizDemandComponent {
     List<BizDemandGroupFieldDO> groupTree(BizDemandGroupQueryCondition condition);
 
     List<BizDemandGroupFieldDO> getSimpleGroupList(BizDemandGroupQueryCondition groupCondition);
+
+    Long getSimpleGroupCount(BizDemandGroupQueryCondition groupCountCondition);
 }

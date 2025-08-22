@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -66,4 +67,22 @@ public class ProductDemandAddReq extends BaseReq {
 
     @ApiModelProperty("预期排期时间")
     private Date expectScheduleTime;
+
+    @ApiModelProperty("UED资源评估（人天）")
+    private BigDecimal uedTime;
+
+    @ApiModelProperty("后端资源评估（人天）")
+    private BigDecimal backTime;
+
+    @ApiModelProperty("前端资源评估（人天）")
+    private BigDecimal frontTime;
+
+    @ApiModelProperty("测试资源评估（人天）")
+    private BigDecimal qaTime;
+
+    @ApiModelProperty("总资源评估（人天）")
+    private BigDecimal totalTime;
+
+    @ApiModelProperty("功能迁移评估（人天）")
+    private BigDecimal transferTime;
 }

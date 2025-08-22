@@ -3,6 +3,7 @@ package com.timevale.forward.dal.entity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 /**
@@ -51,5 +52,35 @@ public class ProductDemandDO extends BaseDO {
      * 预期排期时间
      */
     private Date expectScheduleTime;
+
+    /**
+     * UED资源评估（人天）
+     */
+    private BigDecimal uedTime;
+
+    /**
+     * 后端资源评估（人天）
+     */
+    private BigDecimal backTime;
+
+    /**
+     * 前端资源评估（人天）
+     */
+    private BigDecimal frontTime;
+
+    /**
+     * 测试资源评估（人天）
+     */
+    private BigDecimal qaTime;
+
+    /**
+     * 功能迁移评估（人天）
+     */
+    private BigDecimal transferTime;
+
+    /**
+     * 总资源评估（人天）
+     */
+    private BigDecimal totalTime;
 
 }

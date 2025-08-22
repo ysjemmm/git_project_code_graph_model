@@ -720,8 +720,11 @@
                 <if test="parentCondition.status!=null">
                     and bd.status = #{parentCondition.status}
                 </if>
-                <if test="parentCondition.labelCategoryId!=null">
-                    and f.label_category_id = #{parentCondition.labelCategoryId}
+                <if test="parentCondition.labelCategoryIds!=null and parentCondition.labelCategoryIds.size()>0">
+                    and f.label_category_id in
+                    <foreach collection="parentCondition.labelCategoryIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
                 </if>
                 <if test="parentCondition.deptId!= null">
                     and bd.dept_id = #{parentCondition.deptId}
@@ -915,7 +918,7 @@
     </select>
 
     <select id="getSimpleGroupList" resultType="com.timevale.forward.dal.entity.BizDemandGroupFieldDO">
-        select bd.status, bd.priority, pl.id productLineId, b.id bizDomainId, bd.target_customer, bd.dept_id, bd.receive_man_id,
+        select bd.id, bd.status, bd.priority, pl.id productLineId, b.id bizDomainId, bd.target_customer, bd.dept_id, bd.receive_man_id,
         e.label_id, f.label_category_id
         from biz_demand bd
         left join product_line pl on pl.id = bd.product_line_id
@@ -1083,6 +1086,181 @@
             </if>
             <if test="orderField!= null and orderField!='' ">
                 order by ${orderField}
+            </if>
+        </where>
+    </select>
+
+    <select id="getSimpleGroupCount" resultType="java.lang.Long">
+        select count(distinct bd.id) as total
+        from biz_demand bd
+        left join product_line pl on pl.id = bd.product_line_id
+        left join biz_domain b on pl.biz_domain_id = b.id
+        left join biz_label e on e.biz_id=bd.id and e.type = 10 and e.is_deleted = false
+        left join label f on f.id = e.label_id and f.is_deleted = false
+        <where>
+            <if test="condition != null">
+                <if test="condition.id!=null">
+                    and bd.id = #{condition.id}
+                </if>
+                <if test="condition.containIds!=null and condition.containIds.size()>0">
+                    and bd.id in
+                    <foreach collection="condition.containIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.exclusiveIds!=null and condition.exclusiveIds.size()>0">
+                    and bd.id not in
+                    <foreach collection="condition.exclusiveIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.name!=null and condition.name!='' ">
+                    and bd.name like concat('%',#{condition.name},'%')
+                </if>
+                <if test="condition.desc!=null and condition.desc!='' ">
+                    and bd.`desc` like concat('%',#{condition.desc},'%')
+                </if>
+                <if test="condition.targetCustomer!=null and condition.targetCustomer!='' ">
+                    and bd.target_customer like concat('%',#{condition.targetCustomer},'%')
+                </if>
+                <if test="condition.priorityList!=null and condition.priorityList.size()>0">
+                    and bd.priority in
+                    <foreach collection="condition.priorityList" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.bizDomainIdList!=null and condition.bizDomainIdList.size()>0">
+                    and pl.biz_domain_id in
+                    <foreach collection="condition.bizDomainIdList" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.productLineIdList!=null and condition.productLineIdList.size()>0">
+                    and bd.product_line_id in
+                    <foreach collection="condition.productLineIdList" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.planReleaseDateList!=null and condition.planReleaseDateList.size()>0">
+                    and bd.plan_release_date in
+                    <foreach collection="condition.planReleaseDateList" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.statusList!=null and condition.statusList.size()>0">
+                    and bd.status in
+                    <foreach collection="condition.statusList" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.submitManIdList!=null and condition.submitManIdList.size()>0">
+                    and bd.submit_man_id in
+                    <foreach collection="condition.submitManIdList" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.receiveManIdList!=null and condition.receiveManIdList.size()>0">
+                    and bd.receive_man_id in
+                    <foreach collection="condition.receiveManIdList" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.deptIdList!=null and condition.deptIdList.size()>0">
+                    and bd.dept_id in
+                    <foreach collection="condition.deptIdList" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.bizDemandIds!=null and condition.bizDemandIds.size()>0">
+                    and bd.id not in
+                    <foreach collection="condition.bizDemandIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.copier!=null and condition.copier!='' ">
+                    and bd.id IN (
+                    SELECT p.main_id
+                    FROM person p
+                    WHERE p.user_id = #{condition.copier}
+                    AND p.type = 30
+                    AND p.is_deleted = false
+                    )
+                </if>
+                <if test="condition.createDateStart!=null and condition.createDateEnd!=null">
+                    and bd.create_date &gt;= #{condition.createDateStart}
+                    and bd.create_date &lt;= #{condition.createDateEnd}
+                </if>
+                <if test="condition.projectEndDateStart != null and condition.projectEndDateEnd != null">
+                    and bd.project_end_date is not null
+                    and bd.project_end_date &gt;= #{condition.projectEndDateStart}
+                    and bd.project_end_date &lt;= #{condition.projectEndDateEnd}
+                </if>
+                <if test="condition.sourceId != null and condition.sourceId != ''">
+                    and bd.source_id = #{sourceId}
+                </if>
+                <if test="condition.customerDevDemand != null">
+                    and bd.customer_dev_demand = #{condition.customerDevDemand}
+                </if>
+                <if test="condition.hopeReleaseDayStart != null">
+                    and bd.hope_release_day >= date(#{condition.hopeReleaseDayStart})
+                </if>
+                <if test="condition.hopeReleaseDayEnd != null">
+                    and bd.hope_release_day &lt;= date(#{condition.hopeReleaseDayEnd})
+                </if>
+                <if test="condition.productSolution != null and condition.productSolution != ''">
+                    and bd.product_solution like concat('%', #{condition.productSolution}, '%')
+                </if>
+                <if test="condition.srExpertIds != null and condition.srExpertIds.size() > 0">
+                    AND bd.sr_expert_id IN
+                    <foreach collection="condition.srExpertIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.affectCustomerOrder != null">
+                    and bd.affect_customer_order = #{condition.affectCustomerOrder}
+                </if>
+                <if test="condition.stuckOrderInstructions != null and condition.stuckOrderInstructions != ''">
+                    and bd.stuck_order_instructions like concat('%', #{condition.stuckOrderInstructions}, '%')
+                </if>
+                <if test="condition.customerGrade != null">
+                    and bd.customer_grade = #{condition.customerGrade}
+                </if>
+                and bd.is_deleted = false
+            </if>
+            <if test="parentCondition != null">
+                <if test="parentCondition.targetCustomer != null">
+                    and bd.target_customer like concat('%',#{targetCustomer},'%')
+                </if>
+                <if test="parentCondition.priority!=null">
+                    and bd.priority = #{parentCondition.priority}
+                </if>
+                <if test="parentCondition.productLineId!=null">
+                    and bd.product_line_id = #{parentCondition.productLineId}
+                </if>
+                <if test="parentCondition.bizDomainId!=null">
+                    and pl.biz_domain_id = #{parentCondition.bizDomainId}
+                </if>
+                <if test="parentCondition.receiveManId!=null">
+                    and bd.receive_man_id = #{parentCondition.receiveManId}
+                </if>
+                <if test="parentCondition.status!=null">
+                    and bd.status = #{parentCondition.status}
+                </if>
+                <if test="parentCondition.labelCategoryIds!=null and parentCondition.labelCategoryIds.size()>0">
+                    and f.label_category_id in
+                    <foreach collection="parentCondition.labelCategoryIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="parentCondition.notInLabelCategoryIds!=null and parentCondition.notInLabelCategoryIds.size()>0">
+                    and f.label_category_id not in
+                    <foreach collection="parentCondition.notInLabelCategoryIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="parentCondition.deptId!= null">
+                    and bd.dept_id = #{parentCondition.deptId}
+                </if>
             </if>
         </where>
     </select>

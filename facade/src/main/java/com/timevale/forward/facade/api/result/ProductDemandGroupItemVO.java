@@ -32,4 +32,22 @@ public class ProductDemandGroupItemVO extends ToString {
     private Long version;
     @ApiModelProperty("产品需求")
     private ProductDemandVO productDemand;
+
+    @ApiModelProperty("UED资源评估（人天）")
+    private BigDecimal uedTime;
+
+    @ApiModelProperty("后端资源评估（人天）")
+    private BigDecimal backTime;
+
+    @ApiModelProperty("前端资源评估（人天）")
+    private BigDecimal frontTime;
+
+    @ApiModelProperty("测试资源评估（人天）")
+    private BigDecimal qaTime;
+
+    @ApiModelProperty("功能迁移评估（人天）")
+    private BigDecimal transferTime;
+
+    @ApiModelProperty("总资源评估（人天）")
+    private BigDecimal totalTime;
 }
