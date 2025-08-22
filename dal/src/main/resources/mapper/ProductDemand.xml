@@ -740,4 +740,142 @@
             order by ${orderField}
         </if>
     </select>
+
+    <select id="getSimpleGroupCount" resultType="long">
+        select count(distinct a.id) as total
+        from product_demand a
+        left join product_line c on a.product_line_id=c.id
+        left join biz_domain d on c.biz_domain_id=d.id
+        left join biz_label e on e.biz_id=a.id and e.type = 11 and e.is_deleted = false
+        left join label f on f.id = e.label_id and f.is_deleted = false
+        <if test="condition.copierId != null and condition.copierId != ''">
+            left join person e on a.id=e.main_id and e.type =20 and e.is_deleted =false
+        </if>
+        <where>
+            <if test="condition != null">
+                <if test="condition.id != null">and a.id = #{condition.id}</if>
+                <if test="condition.name != null and condition.name != ''">and a.name like
+                    concat('%',#{condition.name},'%')
+                </if>
+                <if test="condition.copierId != null and condition.copierId != ''">and e.user_id =
+                    #{condition.copierId}
+                </if>
+                <if test="condition.createDateStart != null and condition.createDateEnd != null">
+                    and a.create_date &gt;= #{condition.createDateStart} and a.create_date &lt;=
+                    #{condition.createDateEnd}
+                </if>
+                <if test="condition.modifyDateStart != null and condition.modifyDateEnd != null">
+                    and a.modify_date &gt;= #{condition.modifyDateStart} and a.modify_date &lt;=
+                    #{condition.modifyDateEnd}
+                </if>
+                <if test="condition.expectScheduleTimeStart != null and condition.expectScheduleTimeEnd != null">
+                    and a.expect_schedule_time &gt;= #{condition.expectScheduleTimeStart} and a.expect_schedule_time
+                    &lt;= #{condition.expectScheduleTimeEnd}
+                </if>
+                <if test="condition.priorities!=null and condition.priorities.size()>0">
+                    and a.priority in
+                    <foreach collection="condition.priorities" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.productLineIds!=null and condition.productLineIds.size()>0">
+                    and c.id in
+                    <foreach collection="condition.productLineIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.bizDomainIds!=null and condition.bizDomainIds.size()>0">
+                    and d.id in
+                    <foreach collection="condition.bizDomainIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.ownerIds!=null and condition.ownerIds.size()>0">
+                    and a.owner_id in
+                    <foreach collection="condition.ownerIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.status!=null and condition.status.size()>0">
+                    and a.status in
+                    <foreach collection="condition.status" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.filterProductDemandIds!=null and condition.filterProductDemandIds.size()>0">
+                    and a.id not in
+                    <foreach collection="condition.filterProductDemandIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.inProductDemandIds!=null and condition.inProductDemandIds.size()>0">
+                    and a.id in
+                    <foreach collection="condition.inProductDemandIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.notInProductDemandIds!=null and condition.notInProductDemandIds.size()>0">
+                    and a.id not in
+                    <foreach collection="condition.notInProductDemandIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.types!= null and condition.types!='' ">
+                    and a.type REGEXP CONCAT('[', #{condition.types},']')
+                </if>
+                and a.is_deleted =false
+            </if>
+            <if test="parentCondition != null">
+                <if test="parentCondition.expectScheduleTime != null">
+                    and DATE_FORMAT(a.create_date, '%Y-%m') = #{parentCondition.expectScheduleTime}
+                </if>
+                <if test="parentCondition.priority!=null">
+                    and a.priority = #{parentCondition.priority}
+                </if>
+                <if test="parentCondition.productLineId!=null">
+                    and c.id = #{parentCondition.productLineId}
+                </if>
+                <if test="parentCondition.bizDomainId!=null">
+                    and d.id = #{parentCondition.bizDomainId}
+                </if>
+                <if test="parentCondition.ownerId!=null">
+                    and a.owner_id = #{parentCondition.ownerId}
+                </if>
+                <if test="parentCondition.ownerIds!=null and parentCondition.ownerIds.size()>0">
+                    and a.owner_id not in
+                    <foreach collection="parentCondition.ownerIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="parentCondition.status!=null">
+                    and a.status = #{parentCondition.status}
+                </if>
+                <if test="parentCondition.inProductDemandIds!=null and parentCondition.inProductDemandIds.size()>0">
+                    and a.id in
+                    <foreach collection="parentCondition.inProductDemandIds" item="item" separator="," open="("
+                             close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="parentCondition.type!= null">
+                    and a.type REGEXP CONCAT('[', #{parentCondition.type},']')
+                </if>
+                <if test="parentCondition.labelCategoryIds!=null and parentCondition.labelCategoryIds.size()>0">
+                    and f.label_category_id in
+                    <foreach collection="parentCondition.labelCategoryIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="parentCondition.notInLabelCategoryIds!=null and parentCondition.notInLabelCategoryIds.size()>0">
+                    and f.label_category_id not in
+                    <foreach collection="parentCondition.notInLabelCategoryIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            </if>
+        </where>
+        <if test="orderField!= null and orderField!='' ">
+            order by ${orderField}
+        </if>
+    </select>
 </mapper>

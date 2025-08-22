@@ -53,6 +53,8 @@ public interface ProductDemandComponent {
 
     List<ProductDemandGroupFieldDO> getSimpleGroupList(ProductDemandGroupQueryCondition condition);
 
+    Long getSimpleGroupCount(ProductDemandGroupQueryCondition condition);
+
     /**
      *
      * @param demandId demandId

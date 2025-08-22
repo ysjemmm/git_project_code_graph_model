@@ -345,6 +345,23 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         return bizDemandListDOList;
     }
 
+    @Override
+    public Long getSimpleGroupCount(BizDemandGroupQueryCondition groupCountCondition) {
+        BizDemandListCondition condition = groupCountCondition.getCondition();
+        Map<Long, GroupResponse> deptNodeMap = new HashMap<>();
+        Set<Long> queryDeptIdSet = Sets.newHashSet(condition.getDeptIdList());
+
+        // 处理公共查询逻辑
+        if (!handleCommonQueryLogic(condition, queryDeptIdSet, deptNodeMap)) {
+            return 0L;
+        }
+
+        // 重新设置条件
+        groupCountCondition.setCondition(condition);
+
+        return bizDemandMapper.getSimpleGroupCount(groupCountCondition);
+    }
+
     private QueryResultVO<BizDemandVO> getBizDemandVOQueryResultVO(List<BizDemandListDO> bizDemandListDOList, Set<Long> queryDeptIdSet, Map<Long, GroupResponse> deptNodeMap, List<ProductLineAnalyseVO> analyseVOList) {
         List<Long> customerDevBizDemandIds = bizDemandListDOList.stream()
                 .filter(BizDemandListDO::getCustomerDevDemand)

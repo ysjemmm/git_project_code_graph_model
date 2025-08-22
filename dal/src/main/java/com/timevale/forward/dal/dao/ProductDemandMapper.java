@@ -159,4 +159,6 @@ public interface ProductDemandMapper {
     List<ProductDemandListDO> getGroupList(ProductDemandGroupQueryCondition productDemandGroupCondition);
 
     List<ProductDemandGroupFieldDO> getSimpleGroupList(ProductDemandGroupQueryCondition condition);
+
+    Long getSimpleGroupCount(ProductDemandGroupQueryCondition condition);
 }
