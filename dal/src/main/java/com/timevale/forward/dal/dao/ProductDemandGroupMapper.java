@@ -123,7 +123,7 @@ public interface ProductDemandGroupMapper {
      * @param projectId 项目id
      * @return 产品需求分组DO
      */
-    ProductDemandGroupDO getByProjectId(@Param("projectId") Long projectId);
+    List<ProductDemandGroupDO> getByProjectId(@Param("projectId") Long projectId);
 
     /**
      * 取消关联项目

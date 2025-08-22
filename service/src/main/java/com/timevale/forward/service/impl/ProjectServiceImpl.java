@@ -1173,45 +1173,50 @@ public class ProjectServiceImpl implements ProjectService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<ProductDemandStatusVO> linkOrUnLinkProductDemand(ProjectProductDemandLinkReq productDemandLinkReq) {
         log.info("关联or取消关联接收参数:{}", productDemandLinkReq);
-        projectProductDemandComponent.linkOrUnLinkProductDemand(productDemandLinkReq);
-        // 需求关联或取消关联产品需求分组
-        ProductDemandGroupDO projectGroupDO = productDemandGroupComponent.getByProjectId(productDemandLinkReq.getProjectId());
-        if (projectGroupDO != null && CollectionUtils.isNotEmpty(productDemandLinkReq.getProductDemandIds())) {
-            for (Long productDemandId : productDemandLinkReq.getProductDemandIds()) {
-                ProductDemandGroupItemMoveReq productDemandGroupItemMoveReq = new ProductDemandGroupItemMoveReq();
-                if (LinkOrUnLinkEnum.LINK.getCode().equals(productDemandLinkReq.getType())) {
-                    // 如果当前需求已被规划
-                    ProductDemandGroupItemDO productDemandGroupItemDO = productDemandGroupItemComponent.getByDemandId(productDemandId);
-                    if (productDemandGroupItemDO != null) {
-                        // 如果规划的分组和当前项目分组不是同一个业务域不能操作
-                        ProductDemandGroupDO demandGroup = productDemandGroupComponent.getById(productDemandGroupItemDO.getProductDemandGroupId());
-                        if (demandGroup != null && !Objects.equals(demandGroup.getBizDomainId(), projectGroupDO.getBizDomainId())) {
-                            BizDomainDO bizDomainDO = bizDomainMapper.selectById(demandGroup.getBizDomainId());
-                            ProductDemandGroupDO productDemandGroupDO = productDemandGroupComponent.getById(demandGroup.getId());
-                            throw new BaseBizRuntimeException(String.format("需求【%d】已被规划到其他业务域【%s】的分组【%s】中，不能关联",
-                                    productDemandId, bizDomainDO.getName(), productDemandGroupDO.getName()));
-                        }
-                        productDemandGroupItemMoveReq.setMode(ProductDemandGroupMoveModeEnum.FOLLOW.getCode());
-                        productDemandGroupItemMoveReq.setId(productDemandGroupItemDO.getId());
-                    } else {
-                        productDemandGroupItemMoveReq.setMode(ProductDemandGroupMoveModeEnum.MOVE_IN.getCode());
-                        productDemandGroupItemMoveReq.setId(productDemandId);
-                    }
-                    productDemandGroupItemMoveReq.setTargetGroupId(projectGroupDO.getId());
-                    productDemandGroupItemMoveReq.setBizDomainId(projectGroupDO.getBizDomainId());
-                    productDemandGroupItemComponent.moveProductDemand(productDemandGroupItemMoveReq);
-                } else {
-                    ProductDemandGroupItemDO productDemandGroupItemDO = productDemandGroupItemComponent.getByGroupIdAndDemandId(projectGroupDO.getId(), productDemandId);
-                    if (productDemandGroupItemDO != null) {
-                        productDemandGroupItemMoveReq.setMode(ProductDemandGroupMoveModeEnum.MOVE_OUT.getCode());
-                        productDemandGroupItemMoveReq.setBizDomainId(projectGroupDO.getBizDomainId());
-                        productDemandGroupItemMoveReq.setTargetGroupId(projectGroupDO.getId());
-                        productDemandGroupItemMoveReq.setId(productDemandGroupItemDO.getId());
-                        productDemandGroupItemComponent.moveProductDemand(productDemandGroupItemMoveReq);
-                    }
-                }
-            }
+        List<ProductDemandGroupDO> projectGroupDOS = productDemandGroupComponent.getByProjectId(productDemandLinkReq.getProjectId());
+        if (projectGroupDOS != null && !projectGroupDOS.isEmpty()) {
+            String groupNames = projectGroupDOS.stream().map(ProductDemandGroupDO::getName).collect(Collectors.joining(","));
+            throw new BaseBizRuntimeException(String.format("项目已经绑定了规则分组【%s】，请到规划分组里操作", groupNames));
         }
+        projectProductDemandComponent.linkOrUnLinkProductDemand(productDemandLinkReq);
+        // 需求关联或取消关联产品需求分组，这里先注释, 上面提示取规划分组里操作了
+//        ProductDemandGroupDO projectGroupDO = projectGroupDOS.get(0);
+//        if (projectGroupDO != null && CollectionUtils.isNotEmpty(productDemandLinkReq.getProductDemandIds())) {
+//            for (Long productDemandId : productDemandLinkReq.getProductDemandIds()) {
+//                ProductDemandGroupItemMoveReq productDemandGroupItemMoveReq = new ProductDemandGroupItemMoveReq();
+//                if (LinkOrUnLinkEnum.LINK.getCode().equals(productDemandLinkReq.getType())) {
+//                    // 如果当前需求已被规划
+//                    ProductDemandGroupItemDO productDemandGroupItemDO = productDemandGroupItemComponent.getByDemandId(productDemandId);
+//                    if (productDemandGroupItemDO != null) {
+//                        // 如果规划的分组和当前项目分组不是同一个业务域不能操作
+//                        ProductDemandGroupDO demandGroup = productDemandGroupComponent.getById(productDemandGroupItemDO.getProductDemandGroupId());
+//                        if (demandGroup != null && !Objects.equals(demandGroup.getBizDomainId(), projectGroupDO.getBizDomainId())) {
+//                            BizDomainDO bizDomainDO = bizDomainMapper.selectById(demandGroup.getBizDomainId());
+//                            ProductDemandGroupDO productDemandGroupDO = productDemandGroupComponent.getById(demandGroup.getId());
+//                            throw new BaseBizRuntimeException(String.format("需求【%d】已被规划到其他业务域【%s】的分组【%s】中，不能关联",
+//                                    productDemandId, bizDomainDO.getName(), productDemandGroupDO.getName()));
+//                        }
+//                        productDemandGroupItemMoveReq.setMode(ProductDemandGroupMoveModeEnum.FOLLOW.getCode());
+//                        productDemandGroupItemMoveReq.setId(productDemandGroupItemDO.getId());
+//                    } else {
+//                        productDemandGroupItemMoveReq.setMode(ProductDemandGroupMoveModeEnum.MOVE_IN.getCode());
+//                        productDemandGroupItemMoveReq.setId(productDemandId);
+//                    }
+//                    productDemandGroupItemMoveReq.setTargetGroupId(projectGroupDO.getId());
+//                    productDemandGroupItemMoveReq.setBizDomainId(projectGroupDO.getBizDomainId());
+//                    productDemandGroupItemComponent.moveProductDemand(productDemandGroupItemMoveReq);
+//                } else {
+//                    ProductDemandGroupItemDO productDemandGroupItemDO = productDemandGroupItemComponent.getByGroupIdAndDemandId(projectGroupDO.getId(), productDemandId);
+//                    if (productDemandGroupItemDO != null) {
+//                        productDemandGroupItemMoveReq.setMode(ProductDemandGroupMoveModeEnum.MOVE_OUT.getCode());
+//                        productDemandGroupItemMoveReq.setBizDomainId(projectGroupDO.getBizDomainId());
+//                        productDemandGroupItemMoveReq.setTargetGroupId(projectGroupDO.getId());
+//                        productDemandGroupItemMoveReq.setId(productDemandGroupItemDO.getId());
+//                        productDemandGroupItemComponent.moveProductDemand(productDemandGroupItemMoveReq);
+//                    }
+//                }
+//            }
+//        }
 
         //产品需求和项目关联或删除时,需要给前端刷新产品需求状态
         List<Long> productDemandIds = productDemandLinkReq.getProductDemandIds();
