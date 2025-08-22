@@ -720,8 +720,11 @@
                 <if test="parentCondition.status!=null">
                     and bd.status = #{parentCondition.status}
                 </if>
-                <if test="parentCondition.labelCategoryId!=null">
-                    and f.label_category_id = #{parentCondition.labelCategoryId}
+                <if test="parentCondition.labelCategoryIds!=null and parentCondition.labelCategoryIds.size()>0">
+                    and f.label_category_id in
+                    <foreach collection="parentCondition.labelCategoryIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
                 </if>
                 <if test="parentCondition.deptId!= null">
                     and bd.dept_id = #{parentCondition.deptId}

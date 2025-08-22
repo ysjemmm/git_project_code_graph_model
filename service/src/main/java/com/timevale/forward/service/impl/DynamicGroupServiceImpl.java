@@ -151,6 +151,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
     static {
         BIZ_GROUP_FIELD_MAP.put(BizDemandGroupFieldEnum.BIZ_DOMAIN.getGroupField(), "bizDomainId");
         BIZ_GROUP_FIELD_MAP.put(BizDemandGroupFieldEnum.PRODUCT_LINE.getGroupField(), "productLineId");
+        BIZ_GROUP_FIELD_MAP.put(BizDemandGroupFieldEnum.LABEL.getGroupField(), "labelId");
         BIZ_GROUP_FIELD_MAP.put(BizDemandGroupFieldEnum.LABEL.getGroupField() + "0", "labelId");
         BIZ_GROUP_FIELD_MAP.put(BizDemandGroupFieldEnum.LABEL.getGroupField() + "1", "labelId1");
         BIZ_GROUP_FIELD_MAP.put(BizDemandGroupFieldEnum.LABEL.getGroupField() + "2", "labelId2");
@@ -265,7 +266,6 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
                             Collectors.toMap(LabelDO::getId, LabelDO::getName, (a, b) -> b)));
         }
         if (count > 1) {
-
             parentCondition.setLabelCategoryIds(labelCategoryId);
             ProductDemandGroupQueryCondition groupCondition = ProductDemandGroupQueryCondition.builder()
                     .condition(condition)
@@ -288,16 +288,10 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             List<String> groupFieldKeys = groupFields.stream().map(ViewsGroupQueryList::getKey).collect(Collectors.toList());
 
             if (groupFieldKeys.contains(ProductGroupFieldEnum.BIZ_DOMAIN.getGroupField())) {
-                Set<Long> ids = extractUniqueIds(simpleGroupList, ProductDemandGroupFieldDO::getBizDomainId);
-                if (CollectionUtils.isNotEmpty(ids)) {
-                    bizDomainNameMap = bizDomainMapper.getByIds(ids).stream().collect(Collectors.toMap(BizDomainDO::getId, BizDomainDO::getName, (a, b) -> b));
-                }
+                bizDomainNameMap = bizDomainMapper.selectAllBizDomain().stream().collect(Collectors.toMap(BizDomainDO::getId, BizDomainDO::getName, (a, b) -> b));
             }
             if (groupFieldKeys.contains(ProductGroupFieldEnum.PRODUCT_LINE.getGroupField())) {
-                Set<Long> productLineIds = extractUniqueIds(simpleGroupList, ProductDemandGroupFieldDO::getProductLineId);
-                if (CollectionUtils.isNotEmpty(productLineIds)) {
-                    productLineNameMap = productLineMapper.getByIds(productLineIds).stream().collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName, (a, b) -> b));
-                }
+                productLineNameMap = productLineMapper.selectAllProductLine().stream().collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName, (a, b) -> b));
             }
             if (groupFieldKeys.contains(ProductGroupFieldEnum.OWNER.getGroupField())) {
                 ownerNameMap = getPersonMap(ownerNameMap, simpleGroupList.stream().map(ProductDemandGroupFieldDO::getOwnerId));
@@ -382,16 +376,10 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         }
 
         if (groupFieldKeys.contains(ProductGroupFieldEnum.BIZ_DOMAIN.getGroupField())) {
-            Set<Long> ids = extractUniqueIds(rows, ProductDemandGroupFieldDO::getBizDomainId);
-            if (CollectionUtils.isNotEmpty(ids)) {
-                bizDomainNameMap = bizDomainMapper.getByIds(ids).stream().collect(Collectors.toMap(BizDomainDO::getId, BizDomainDO::getName, (a, b) -> b));
-            }
+            bizDomainNameMap = bizDomainMapper.selectAllBizDomain().stream().collect(Collectors.toMap(BizDomainDO::getId, BizDomainDO::getName, (a, b) -> b));
         }
         if (groupFieldKeys.contains(ProductGroupFieldEnum.PRODUCT_LINE.getGroupField())) {
-            Set<Long> productLineIds = extractUniqueIds(rows, ProductDemandGroupFieldDO::getProductLineId);
-            if (CollectionUtils.isNotEmpty(productLineIds)) {
-                productLineNameMap = productLineMapper.getByIds(productLineIds).stream().collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName, (a, b) -> b));
-            }
+            productLineNameMap = productLineMapper.selectAllProductLine().stream().collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName, (a, b) -> b));
         }
         if (groupFieldKeys.contains(ProductGroupFieldEnum.OWNER.getGroupField())) {
             ownerNameMap = getPersonMap(ownerNameMap, rows.stream().map(ProductDemandGroupFieldDO::getOwnerId));
@@ -442,6 +430,315 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             addNotInLabelCategoryDemandGroupNode(labelMaps, simpleGroupCount, roots);
         }
         return BaseResult.success(roots);
+    }
+
+    // 在这个位置实现填充所有分组业务域和产品线的方法
+    private void fillAllGroupNodes(Map<String, Object> mapResult,
+                                   List<DemandGroupNodeVO> nodes,
+                                   int currentLevel,
+                                   List<ProductGroupCondition> conditions,
+                                   Map<Long, String> bizDomainNameMap,
+                                   Map<Long, String> productLineNameMap) {
+        // 如果当前层级是业务域分组
+        ProductGroupCondition condition = conditions.get(currentLevel);
+        String field = condition.getFieldName();
+
+        if (ProductGroupFieldEnum.BIZ_DOMAIN.getGroupField().equals(field)) {
+            // 遍历所有业务域，确保每个都出现在结果中
+            for (Map.Entry<Long, String> entry : bizDomainNameMap.entrySet()) {
+                String bizDomainIdStr = String.valueOf(entry.getKey());
+                String bizDomainName = entry.getValue();
+
+                // 检查该业务域是否已存在于结果中
+                if (!mapResult.containsKey(bizDomainIdStr)) {
+                    // 如果不存在，创建一个空的节点，total为0
+                    DemandGroupNodeVO node = new DemandGroupNodeVO();
+                    node.setField(PRODUCT_GROUP_FIELD_MAP.get(field));
+                    node.setFieldValue(bizDomainIdStr);
+                    node.setLabel(bizDomainName);
+                    node.setTotal(0L);
+
+                    // 递归创建子节点
+                    if (currentLevel + 1 < conditions.size()) {
+                        Map<String, Object> emptyChildMap = new HashMap<>();
+                        List<DemandGroupNodeVO> childNodes = transformToTree(emptyChildMap, currentLevel + 1, conditions,
+                                bizDomainNameMap, productLineNameMap, new HashMap<>(), new HashMap<>());
+                        node.setChildren(childNodes);
+                    }
+
+                    nodes.add(node);
+                } else {
+                    // 如果存在，确保其子节点也完整
+                    ensureChildrenComplete(nodes, bizDomainIdStr, currentLevel, conditions,
+                            bizDomainNameMap, productLineNameMap);
+                }
+            }
+        } else if (ProductGroupFieldEnum.PRODUCT_LINE.getGroupField().equals(field)) {
+            // 遍历所有产品线，确保每个都出现在结果中
+            for (Map.Entry<Long, String> entry : productLineNameMap.entrySet()) {
+                String productLineIdStr = String.valueOf(entry.getKey());
+                String productLineName = entry.getValue();
+
+                // 检查该产品线是否已存在于结果中
+                if (!mapResult.containsKey(productLineIdStr)) {
+                    // 如果不存在，创建一个空的节点，total为0
+                    DemandGroupNodeVO node = new DemandGroupNodeVO();
+                    node.setField(PRODUCT_GROUP_FIELD_MAP.get(field));
+                    node.setFieldValue(productLineIdStr);
+                    node.setLabel(productLineName);
+                    node.setTotal(0L);
+
+                    // 递归创建子节点
+                    if (currentLevel + 1 < conditions.size()) {
+                        Map<String, Object> emptyChildMap = new HashMap<>();
+                        List<DemandGroupNodeVO> childNodes = transformToTree(emptyChildMap, currentLevel + 1, conditions,
+                                bizDomainNameMap, productLineNameMap, new HashMap<>(), new HashMap<>());
+                        node.setChildren(childNodes);
+                    }
+
+                    nodes.add(node);
+                } else {
+                    // 如果存在，确保其子节点也完整
+                    ensureChildrenComplete(nodes, productLineIdStr, currentLevel, conditions,
+                            bizDomainNameMap, productLineNameMap);
+                }
+            }
+        } else if (ProductGroupFieldEnum.PRIORITY.getGroupField().equals(field)) {
+            // 遍历所有优先级，确保每个都出现在结果中
+            for (PriorityEnum priority : PriorityEnum.values()) {
+                String priorityCode = String.valueOf(priority.getCode());
+                if (!mapResult.containsKey(priorityCode)) {
+                    DemandGroupNodeVO node = new DemandGroupNodeVO();
+                    node.setField(PRODUCT_GROUP_FIELD_MAP.get(field));
+                    node.setFieldValue(priorityCode);
+                    node.setLabel(priority.getText());
+                    node.setTotal(0L);
+
+                    // 递归创建子节点
+                    if (currentLevel + 1 < conditions.size()) {
+                        Map<String, Object> emptyChildMap = new HashMap<>();
+                        List<DemandGroupNodeVO> childNodes = transformToTree(emptyChildMap, currentLevel + 1, conditions,
+                                bizDomainNameMap, productLineNameMap, new HashMap<>(), new HashMap<>());
+                        node.setChildren(childNodes);
+                    }
+
+                    nodes.add(node);
+                } else {
+                    ensureChildrenComplete(nodes, priorityCode, currentLevel, conditions,
+                            bizDomainNameMap, productLineNameMap);
+                }
+            }
+        } else if (ProductGroupFieldEnum.TYPE.getGroupField().equals(field)) {
+            // 遍历所有类型，确保每个都出现在结果中
+            for (ProductDemandTypeEnum type : ProductDemandTypeEnum.values()) {
+                String typeCode = String.valueOf(type.getCode());
+                if (!mapResult.containsKey(typeCode)) {
+                    DemandGroupNodeVO node = new DemandGroupNodeVO();
+                    node.setField(PRODUCT_GROUP_FIELD_MAP.get(field));
+                    node.setFieldValue(typeCode);
+                    node.setLabel(type.getText());
+                    node.setTotal(0L);
+
+                    // 递归创建子节点
+                    if (currentLevel + 1 < conditions.size()) {
+                        Map<String, Object> emptyChildMap = new HashMap<>();
+                        List<DemandGroupNodeVO> childNodes = transformToTree(emptyChildMap, currentLevel + 1, conditions,
+                                bizDomainNameMap, productLineNameMap, new HashMap<>(), new HashMap<>());
+                        node.setChildren(childNodes);
+                    }
+
+                    nodes.add(node);
+                } else {
+                    ensureChildrenComplete(nodes, typeCode, currentLevel, conditions,
+                            bizDomainNameMap, productLineNameMap);
+                }
+            }
+        } else if (ProductGroupFieldEnum.STATUS.getGroupField().equals(field)) {
+            // 遍历所有状态，确保每个都出现在结果中
+            for (ProductDemandStatusEnum status : ProductDemandStatusEnum.values()) {
+                String statusCode = String.valueOf(status.getCode());
+                if (!mapResult.containsKey(statusCode)) {
+                    DemandGroupNodeVO node = new DemandGroupNodeVO();
+                    node.setField(PRODUCT_GROUP_FIELD_MAP.get(field));
+                    node.setFieldValue(statusCode);
+                    node.setLabel(status.getText());
+                    node.setTotal(0L);
+
+                    // 递归创建子节点
+                    if (currentLevel + 1 < conditions.size()) {
+                        Map<String, Object> emptyChildMap = new HashMap<>();
+                        List<DemandGroupNodeVO> childNodes = transformToTree(emptyChildMap, currentLevel + 1, conditions,
+                                bizDomainNameMap, productLineNameMap, null, null);
+                        node.setChildren(childNodes);
+                    }
+
+                    nodes.add(node);
+                } else {
+                    ensureChildrenComplete(nodes, statusCode, currentLevel, conditions,
+                            bizDomainNameMap, productLineNameMap);
+                }
+            }
+        }
+    }
+
+    // 确保现有节点的子节点完整
+    private void ensureChildrenComplete(List<DemandGroupNodeVO> nodes, String fieldValue, int currentLevel,
+                                        List<ProductGroupCondition> conditions,
+                                        Map<Long, String> bizDomainNameMap,
+                                        Map<Long, String> productLineNameMap) {
+        for (DemandGroupNodeVO node : nodes) {
+            if (fieldValue.equals(node.getFieldValue()) &&
+                    (node.getChildren() == null || node.getChildren().isEmpty()) &&
+                    currentLevel + 1 < conditions.size()) {
+
+                Map<String, Object> emptyChildMap = new HashMap<>();
+                List<DemandGroupNodeVO> childNodes = transformToTree(emptyChildMap, currentLevel + 1, conditions,
+                        bizDomainNameMap, productLineNameMap, null, null);
+                node.setChildren(childNodes);
+            }
+        }
+    }
+
+    // 在这个位置实现填充所有分组业务域和产品线的方法
+    private void fillBizAllGroupNodes(Map<String, Object> mapResult,
+                                      List<DemandGroupNodeVO> nodes,
+                                      int currentLevel,
+                                      List<BizGroupCondition> conditions,
+                                      Map<Long, String> bizDomainNameMap,
+                                      Map<Long, String> productLineNameMap) {
+        // 如果当前层级是业务域分组
+        BizGroupCondition condition = conditions.get(currentLevel);
+        String field = condition.getFieldName();
+
+        if (BizDemandGroupFieldEnum.BIZ_DOMAIN.getGroupField().equals(field)) {
+            // 遍历所有业务域，确保每个都出现在结果中
+            for (Map.Entry<Long, String> entry : bizDomainNameMap.entrySet()) {
+                String bizDomainIdStr = String.valueOf(entry.getKey());
+                String bizDomainName = entry.getValue();
+
+                // 检查该业务域是否已存在于结果中
+                if (!mapResult.containsKey(bizDomainIdStr)) {
+                    // 如果不存在，创建一个空的节点，total为0
+                    DemandGroupNodeVO node = new DemandGroupNodeVO();
+                    node.setField(BIZ_GROUP_FIELD_MAP.get(field));
+                    node.setFieldValue(bizDomainIdStr);
+                    node.setLabel(bizDomainName);
+                    node.setTotal(0L);
+
+                    // 递归创建子节点
+                    if (currentLevel + 1 < conditions.size()) {
+                        Map<String, Object> emptyChildMap = new HashMap<>();
+                        List<DemandGroupNodeVO> childNodes = bizDemandTransformToTree(emptyChildMap, currentLevel + 1, conditions,
+                                bizDomainNameMap, productLineNameMap, new HashMap<>(), new HashMap<>(), new HashMap<>());
+                        node.setChildren(childNodes);
+                    }
+
+                    nodes.add(node);
+                } else {
+                    // 如果存在，确保其子节点也完整
+                    ensureBizChildrenComplete(nodes, bizDomainIdStr, currentLevel, conditions,
+                            bizDomainNameMap, productLineNameMap);
+                }
+            }
+        } else if (BizDemandGroupFieldEnum.PRODUCT_LINE.getGroupField().equals(field)) {
+            // 遍历所有产品线，确保每个都出现在结果中
+            for (Map.Entry<Long, String> entry : productLineNameMap.entrySet()) {
+                String productLineIdStr = String.valueOf(entry.getKey());
+                String productLineName = entry.getValue();
+
+                // 检查该产品线是否已存在于结果中
+                if (!mapResult.containsKey(productLineIdStr)) {
+                    // 如果不存在，创建一个空的节点，total为0
+                    DemandGroupNodeVO node = new DemandGroupNodeVO();
+                    node.setField(BIZ_GROUP_FIELD_MAP.get(field));
+                    node.setFieldValue(productLineIdStr);
+                    node.setLabel(productLineName);
+                    node.setTotal(0L);
+
+                    // 递归创建子节点
+                    if (currentLevel + 1 < conditions.size()) {
+                        Map<String, Object> emptyChildMap = new HashMap<>();
+                        List<DemandGroupNodeVO> childNodes = bizDemandTransformToTree(emptyChildMap, currentLevel + 1, conditions,
+                                bizDomainNameMap, productLineNameMap, null, null, null);
+                        node.setChildren(childNodes);
+                    }
+
+                    nodes.add(node);
+                } else {
+                    // 如果存在，确保其子节点也完整
+                    ensureBizChildrenComplete(nodes, productLineIdStr, currentLevel, conditions,
+                            bizDomainNameMap, productLineNameMap);
+                }
+            }
+        } else if (BizDemandGroupFieldEnum.PRIORITY.getGroupField().equals(field)) {
+            // 遍历所有优先级，确保每个都出现在结果中
+            for (PriorityEnum priority : PriorityEnum.values()) {
+                String priorityCode = String.valueOf(priority.getCode());
+                if (!mapResult.containsKey(priorityCode)) {
+                    DemandGroupNodeVO node = new DemandGroupNodeVO();
+                    node.setField(BIZ_GROUP_FIELD_MAP.get(field));
+                    node.setFieldValue(priorityCode);
+                    node.setLabel(priority.getText());
+                    node.setTotal(0L);
+
+                    // 递归创建子节点
+                    if (currentLevel + 1 < conditions.size()) {
+                        Map<String, Object> emptyChildMap = new HashMap<>();
+                        List<DemandGroupNodeVO> childNodes = bizDemandTransformToTree(emptyChildMap, currentLevel + 1, conditions,
+                                bizDomainNameMap, productLineNameMap, null, null, null);
+                        node.setChildren(childNodes);
+                    }
+
+                    nodes.add(node);
+                } else {
+                    ensureBizChildrenComplete(nodes, priorityCode, currentLevel, conditions,
+                            bizDomainNameMap, productLineNameMap);
+                }
+            }
+        } else if (BizDemandGroupFieldEnum.STATUS.getGroupField().equals(field)) {
+            // 遍历所有状态，确保每个都出现在结果中
+            for (ProductDemandStatusEnum status : ProductDemandStatusEnum.values()) {
+                String statusCode = String.valueOf(status.getCode());
+                if (!mapResult.containsKey(statusCode)) {
+                    DemandGroupNodeVO node = new DemandGroupNodeVO();
+                    node.setField(BIZ_GROUP_FIELD_MAP.get(field));
+                    node.setFieldValue(statusCode);
+                    node.setLabel(status.getText());
+                    node.setTotal(0L);
+
+                    // 递归创建子节点
+                    if (currentLevel + 1 < conditions.size()) {
+                        Map<String, Object> emptyChildMap = new HashMap<>();
+                        List<DemandGroupNodeVO> childNodes = bizDemandTransformToTree(emptyChildMap, currentLevel + 1, conditions,
+                                bizDomainNameMap, productLineNameMap, null, null, null);
+                        node.setChildren(childNodes);
+                    }
+
+                    nodes.add(node);
+                } else {
+                    ensureBizChildrenComplete(nodes, statusCode, currentLevel, conditions,
+                            bizDomainNameMap, productLineNameMap);
+                }
+            }
+        }
+    }
+
+    // 确保现有节点的子节点完整
+    private void ensureBizChildrenComplete(List<DemandGroupNodeVO> nodes, String fieldValue, int currentLevel,
+                                           List<BizGroupCondition> conditions,
+                                           Map<Long, String> bizDomainNameMap,
+                                           Map<Long, String> productLineNameMap) {
+        for (DemandGroupNodeVO node : nodes) {
+            if (fieldValue.equals(node.getFieldValue()) &&
+                    (node.getChildren() == null || node.getChildren().isEmpty()) &&
+                    currentLevel + 1 < conditions.size()) {
+
+                Map<String, Object> emptyChildMap = new HashMap<>();
+                List<DemandGroupNodeVO> childNodes = bizDemandTransformToTree(emptyChildMap, currentLevel + 1, conditions,
+                        bizDomainNameMap, productLineNameMap, null, null, null);
+                node.setChildren(childNodes);
+            }
+        }
     }
 
     private void addNotInLabelCategoryDemandGroupNode(Map<Long, Map<Long, String>> labelMaps, Long simpleGroupCount, List<DemandGroupNodeVO> roots) {
@@ -732,6 +1029,10 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             }
             nodes.add(node);
         }
+
+        // 填充缺失的业务域和产品线节点
+        fillAllGroupNodes(mapResult, nodes, currentLevel, conditions, bizDomainNameMap, productLineNameMap);
+
         return nodes;
     }
 
@@ -803,6 +1104,9 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             }
             nodes.add(node);
         }
+
+        // 填充缺失的业务域和产品线节点
+        fillBizAllGroupNodes(mapResult, nodes, currentLevel, conditions, bizDomainNameMap, productLineNameMap);
         return nodes;
     }
 
@@ -1009,16 +1313,10 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             List<String> bizGroupFieldKeys = groupFields.stream().map(ViewsGroupQueryList::getKey).collect(Collectors.toList());
 
             if (bizGroupFieldKeys.contains(BizDemandGroupFieldEnum.BIZ_DOMAIN.getGroupField())) {
-                Set<Long> ids = extractUniqueIds(simpleGroupList, BizDemandGroupFieldDO::getBizDomainId);
-                if (CollectionUtils.isNotEmpty(ids)) {
-                    bizDomainNameMap = bizDomainMapper.getByIds(ids).stream().collect(Collectors.toMap(BizDomainDO::getId, BizDomainDO::getName, (a, b) -> b));
-                }
+                bizDomainNameMap = bizDomainMapper.selectAllBizDomain().stream().collect(Collectors.toMap(BizDomainDO::getId, BizDomainDO::getName, (a, b) -> b));
             }
             if (bizGroupFieldKeys.contains(BizDemandGroupFieldEnum.PRODUCT_LINE.getGroupField())) {
-                Set<Long> productLineIds = extractUniqueIds(simpleGroupList, BizDemandGroupFieldDO::getProductLineId);
-                if (CollectionUtils.isNotEmpty(productLineIds)) {
-                    productLineNameMap = productLineMapper.getByIds(productLineIds).stream().collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName, (a, b) -> b));
-                }
+                productLineNameMap = productLineMapper.selectAllProductLine().stream().collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName, (a, b) -> b));
             }
             if (bizGroupFieldKeys.contains(BizDemandGroupFieldEnum.RECEIVE_MAN.getGroupField())) {
                 receiveManNameMap = getPersonMap(receiveManNameMap, simpleGroupList.stream().map(BizDemandGroupFieldDO::getReceiveManId));
@@ -1102,16 +1400,10 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         }
 
         if (bizGroupFieldKeys.contains(BizDemandGroupFieldEnum.BIZ_DOMAIN.getGroupField())) {
-            Set<Long> ids = extractUniqueIds(rows, BizDemandGroupFieldDO::getBizDomainId);
-            if (CollectionUtils.isNotEmpty(ids)) {
-                bizDomainNameMap = bizDomainMapper.getByIds(ids).stream().collect(Collectors.toMap(BizDomainDO::getId, BizDomainDO::getName, (a, b) -> b));
-            }
+            bizDomainNameMap = bizDomainMapper.selectAllBizDomain().stream().collect(Collectors.toMap(BizDomainDO::getId, BizDomainDO::getName, (a, b) -> b));
         }
         if (bizGroupFieldKeys.contains(BizDemandGroupFieldEnum.PRODUCT_LINE.getGroupField())) {
-            Set<Long> productLineIds = extractUniqueIds(rows, BizDemandGroupFieldDO::getProductLineId);
-            if (CollectionUtils.isNotEmpty(productLineIds)) {
-                productLineNameMap = productLineMapper.getByIds(productLineIds).stream().collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName, (a, b) -> b));
-            }
+            productLineNameMap = productLineMapper.selectAllProductLine().stream().collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName, (a, b) -> b));
         }
         if (bizGroupFieldKeys.contains(BizDemandGroupFieldEnum.RECEIVE_MAN.getGroupField())) {
             receiveManNameMap = getPersonMap(receiveManNameMap, rows.stream().map(BizDemandGroupFieldDO::getReceiveManId));
@@ -1393,6 +1685,363 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         // 递归笛卡尔展开
         addNodeRecursive(BizTypeEnum.PRODUCT_DEMAND.getCode(), 0, groupFields, valuesPerLevel, roots, levelNodeMap,
                 bizDomainNameMap, productLineNameMap, ownerNameMap, labelNameMap, null, row.getTotal());
+
+        // 在节点构建完成后，对根节点进行完整填充
+        fillMissingGroupNodes(roots, groupFields, bizDomainNameMap, productLineNameMap);
+    }
+
+    // 新增方法：填充缺失的分组节点
+    private void fillMissingGroupNodes(List<DemandGroupNodeVO> roots,
+                                       List<String> groupFields,
+                                       Map<Long, String> bizDomainNameMap,
+                                       Map<Long, String> productLineNameMap) {
+        if (CollectionUtils.isEmpty(groupFields) || CollectionUtils.isEmpty(roots)) {
+            return;
+        }
+
+        String firstGroupField = groupFields.get(0);
+
+        // 创建现有的值集合
+        Set<String> existingValues = roots.stream()
+                .map(DemandGroupNodeVO::getFieldValue)
+                .collect(Collectors.toSet());
+
+        // 根据第一层分组字段类型填充缺失节点
+        if (ProductGroupFieldEnum.BIZ_DOMAIN.getGroupField().equals(firstGroupField)) {
+            for (Map.Entry<Long, String> entry : bizDomainNameMap.entrySet()) {
+                String bizDomainId = String.valueOf(entry.getKey());
+                if (!existingValues.contains(bizDomainId)) {
+                    DemandGroupNodeVO node = new DemandGroupNodeVO();
+                    node.setField(PRODUCT_GROUP_FIELD_MAP.get(firstGroupField));
+                    node.setFieldValue(bizDomainId);
+                    node.setLabel(entry.getValue());
+                    node.setTotal(0L);
+                    // 为子级创建空节点结构
+                    createEmptyChildNodes(node, groupFields, 1, bizDomainNameMap, productLineNameMap);
+                    roots.add(node);
+                }
+            }
+        } else if (ProductGroupFieldEnum.PRODUCT_LINE.getGroupField().equals(firstGroupField)) {
+            for (Map.Entry<Long, String> entry : productLineNameMap.entrySet()) {
+                String productLineId = String.valueOf(entry.getKey());
+                if (!existingValues.contains(productLineId)) {
+                    DemandGroupNodeVO node = new DemandGroupNodeVO();
+                    node.setField(PRODUCT_GROUP_FIELD_MAP.get(firstGroupField));
+                    node.setFieldValue(productLineId);
+                    node.setLabel(entry.getValue());
+                    node.setTotal(0L);
+                    // 为子级创建空节点结构
+                    createEmptyChildNodes(node, groupFields, 1, bizDomainNameMap, productLineNameMap);
+                    roots.add(node);
+                }
+            }
+        } else if (ProductGroupFieldEnum.PRIORITY.getGroupField().equals(firstGroupField)) {
+            for (PriorityEnum priority : PriorityEnum.values()) {
+                String priorityCodeStr = String.valueOf(priority.getCode());
+                if (!existingValues.contains(priorityCodeStr)) {
+                    DemandGroupNodeVO node = new DemandGroupNodeVO();
+                    node.setField(PRODUCT_GROUP_FIELD_MAP.get(firstGroupField));
+                    node.setFieldValue(priorityCodeStr);
+                    node.setLabel(priority.getText());
+                    node.setTotal(0L);
+                    // 为子级创建空节点结构
+                    createEmptyChildNodes(node, groupFields, 1, bizDomainNameMap, productLineNameMap);
+                    roots.add(node);
+                }
+            }
+        } else if (ProductGroupFieldEnum.STATUS.getGroupField().equals(firstGroupField)) {
+            for (ProductDemandStatusEnum status : ProductDemandStatusEnum.values()) {
+                String statusCodeStr = String.valueOf(status.getCode());
+                if (!existingValues.contains(statusCodeStr)) {
+                    DemandGroupNodeVO node = new DemandGroupNodeVO();
+                    node.setField(PRODUCT_GROUP_FIELD_MAP.get(firstGroupField));
+                    node.setFieldValue(statusCodeStr);
+                    node.setLabel(status.getText());
+                    node.setTotal(0L);
+                    // 为子级创建空节点结构
+                    createEmptyChildNodes(node, groupFields, 1, bizDomainNameMap, productLineNameMap);
+                    roots.add(node);
+                }
+            }
+        } else if (ProductGroupFieldEnum.TYPE.getGroupField().equals(firstGroupField)) {
+            for (ProductDemandStatusEnum type : ProductDemandStatusEnum.values()) {
+                String typeCodeStr = String.valueOf(type.getCode());
+                if (!existingValues.contains(typeCodeStr)) {
+                    DemandGroupNodeVO node = new DemandGroupNodeVO();
+                    node.setField(PRODUCT_GROUP_FIELD_MAP.get(firstGroupField));
+                    node.setFieldValue(typeCodeStr);
+                    node.setLabel(type.getText());
+                    node.setTotal(0L);
+                    // 为子级创建空节点结构
+                    createEmptyChildNodes(node, groupFields, 1, bizDomainNameMap, productLineNameMap);
+                    roots.add(node);
+                }
+            }
+        }
+
+        // 对现有节点也确保子级结构完整
+        for (DemandGroupNodeVO node : roots) {
+            ensureChildNodesComplete(node, groupFields, 1, bizDomainNameMap, productLineNameMap);
+        }
+    }
+
+    private void fillBizMissingGroupNodes(List<DemandGroupNodeVO> roots,
+                                       List<String> groupFields,
+                                       Map<Long, String> bizDomainNameMap,
+                                       Map<Long, String> productLineNameMap) {
+        if (CollectionUtils.isEmpty(groupFields) || CollectionUtils.isEmpty(roots)) {
+            return;
+        }
+
+        String firstGroupField = groupFields.get(0);
+
+        // 创建现有的值集合
+        Set<String> existingValues = roots.stream()
+                .map(DemandGroupNodeVO::getFieldValue)
+                .collect(Collectors.toSet());
+
+        // 根据第一层分组字段类型填充缺失节点
+        if (BizDemandGroupFieldEnum.BIZ_DOMAIN.getGroupField().equals(firstGroupField)) {
+            for (Map.Entry<Long, String> entry : bizDomainNameMap.entrySet()) {
+                String bizDomainId = String.valueOf(entry.getKey());
+                if (!existingValues.contains(bizDomainId)) {
+                    DemandGroupNodeVO node = new DemandGroupNodeVO();
+                    node.setField(BIZ_GROUP_FIELD_MAP.get(firstGroupField));
+                    node.setFieldValue(bizDomainId);
+                    node.setLabel(entry.getValue());
+                    node.setTotal(0L);
+                    // 为子级创建空节点结构
+                    createBizEmptyChildNodes(node, groupFields, 1, bizDomainNameMap, productLineNameMap);
+                    roots.add(node);
+                }
+            }
+        } else if (BizDemandGroupFieldEnum.PRODUCT_LINE.getGroupField().equals(firstGroupField)) {
+            for (Map.Entry<Long, String> entry : productLineNameMap.entrySet()) {
+                String productLineId = String.valueOf(entry.getKey());
+                if (!existingValues.contains(productLineId)) {
+                    DemandGroupNodeVO node = new DemandGroupNodeVO();
+                    node.setField(BIZ_GROUP_FIELD_MAP.get(firstGroupField));
+                    node.setFieldValue(productLineId);
+                    node.setLabel(entry.getValue());
+                    node.setTotal(0L);
+                    // 为子级创建空节点结构
+                    createBizEmptyChildNodes(node, groupFields, 1, bizDomainNameMap, productLineNameMap);
+                    roots.add(node);
+                }
+            }
+        } else if (BizDemandGroupFieldEnum.PRIORITY.getGroupField().equals(firstGroupField)) {
+            for (PriorityEnum priority : PriorityEnum.values()) {
+                String priorityCodeStr = String.valueOf(priority.getCode());
+                if (!existingValues.contains(priorityCodeStr)) {
+                    DemandGroupNodeVO node = new DemandGroupNodeVO();
+                    node.setField(BIZ_GROUP_FIELD_MAP.get(firstGroupField));
+                    node.setFieldValue(priorityCodeStr);
+                    node.setLabel(priority.getText());
+                    node.setTotal(0L);
+                    // 为子级创建空节点结构
+                    createBizEmptyChildNodes(node, groupFields, 1, bizDomainNameMap, productLineNameMap);
+                    roots.add(node);
+                }
+            }
+        } else if (BizDemandGroupFieldEnum.STATUS.getGroupField().equals(firstGroupField)) {
+            for (BizDemandStatusEnum status : BizDemandStatusEnum.values()) {
+                String statusCodeStr = String.valueOf(status.getCode());
+                if (!existingValues.contains(statusCodeStr)) {
+                    DemandGroupNodeVO node = new DemandGroupNodeVO();
+                    node.setField(BIZ_GROUP_FIELD_MAP.get(firstGroupField));
+                    node.setFieldValue(statusCodeStr);
+                    node.setLabel(status.getText());
+                    node.setTotal(0L);
+                    // 为子级创建空节点结构
+                    createBizEmptyChildNodes(node, groupFields, 1, bizDomainNameMap, productLineNameMap);
+                    roots.add(node);
+                }
+            }
+        }
+
+        // 对现有节点也确保子级结构完整
+        for (DemandGroupNodeVO node : roots) {
+            ensureBizChildNodesComplete(node, groupFields, 1, bizDomainNameMap, productLineNameMap);
+        }
+    }
+
+    // 创建空的子节点结构
+    private void createEmptyChildNodes(DemandGroupNodeVO parent,
+                                       List<String> groupFields,
+                                       int level,
+                                       Map<Long, String> bizDomainNameMap,
+                                       Map<Long, String> productLineNameMap) {
+        if (level >= groupFields.size()) {
+            return;
+        }
+
+        // 创建一层空的子节点
+        List<DemandGroupNodeVO> children = new ArrayList<>();
+        String groupField = groupFields.get(level);
+
+        // 根据分组字段类型创建相应的空节点
+        if (ProductGroupFieldEnum.BIZ_DOMAIN.getGroupField().equals(groupField)) {
+            for (Map.Entry<Long, String> entry : bizDomainNameMap.entrySet()) {
+                DemandGroupNodeVO child = new DemandGroupNodeVO();
+                child.setField(PRODUCT_GROUP_FIELD_MAP.get(groupField));
+                child.setFieldValue(String.valueOf(entry.getKey()));
+                child.setLabel(entry.getValue());
+                child.setTotal(0L);
+                children.add(child);
+                // 递归创建更深层的子节点
+                createEmptyChildNodes(child, groupFields, level + 1, bizDomainNameMap, productLineNameMap);
+            }
+        } else if (ProductGroupFieldEnum.PRODUCT_LINE.getGroupField().equals(groupField)) {
+            for (Map.Entry<Long, String> entry : productLineNameMap.entrySet()) {
+                DemandGroupNodeVO child = new DemandGroupNodeVO();
+                child.setField(PRODUCT_GROUP_FIELD_MAP.get(groupField));
+                child.setFieldValue(String.valueOf(entry.getKey()));
+                child.setLabel(entry.getValue());
+                child.setTotal(0L);
+                children.add(child);
+                // 递归创建更深层的子节点
+                createEmptyChildNodes(child, groupFields, level + 1, bizDomainNameMap, productLineNameMap);
+            }
+        } else if (ProductGroupFieldEnum.PRIORITY.getGroupField().equals(groupField)) {
+            for (PriorityEnum priority : PriorityEnum.values()) {
+                DemandGroupNodeVO child = new DemandGroupNodeVO();
+                child.setField(PRODUCT_GROUP_FIELD_MAP.get(groupField));
+                child.setFieldValue(String.valueOf(priority.getCode()));
+                child.setLabel(priority.getText());
+                child.setTotal(0L);
+                children.add(child);
+                // 递归创建更深层的子节点
+                createEmptyChildNodes(child, groupFields, level + 1, bizDomainNameMap, productLineNameMap);
+            }
+        } else if (ProductGroupFieldEnum.STATUS.getGroupField().equals(groupField)) {
+            for (ProductDemandStatusEnum status : ProductDemandStatusEnum.values()) {
+                DemandGroupNodeVO child = new DemandGroupNodeVO();
+                child.setField(PRODUCT_GROUP_FIELD_MAP.get(groupField));
+                child.setFieldValue(String.valueOf(status.getCode()));
+                child.setLabel(status.getText());
+                child.setTotal(0L);
+                children.add(child);
+                // 递归创建更深层的子节点
+                createEmptyChildNodes(child, groupFields, level + 1, bizDomainNameMap, productLineNameMap);
+            }
+        } else if (ProductGroupFieldEnum.TYPE.getGroupField().equals(groupField)) {
+            for (ProductDemandTypeEnum type : ProductDemandTypeEnum.values()) {
+                DemandGroupNodeVO child = new DemandGroupNodeVO();
+                child.setField(PRODUCT_GROUP_FIELD_MAP.get(groupField));
+                child.setFieldValue(String.valueOf(type.getCode()));
+                child.setLabel(type.getText());
+                child.setTotal(0L);
+                children.add(child);
+                // 递归创建更深层的子节点
+                createEmptyChildNodes(child, groupFields, level + 1, bizDomainNameMap, productLineNameMap);
+            }
+        }
+
+        parent.setChildren(children);
+    }
+
+    private void createBizEmptyChildNodes(DemandGroupNodeVO parent,
+                                       List<String> groupFields,
+                                       int level,
+                                       Map<Long, String> bizDomainNameMap,
+                                       Map<Long, String> productLineNameMap) {
+        if (level >= groupFields.size()) {
+            return;
+        }
+
+        // 创建一层空的子节点
+        List<DemandGroupNodeVO> children = new ArrayList<>();
+        String groupField = groupFields.get(level);
+
+        // 根据分组字段类型创建相应的空节点
+        if (BizDemandGroupFieldEnum.BIZ_DOMAIN.getGroupField().equals(groupField)) {
+            for (Map.Entry<Long, String> entry : bizDomainNameMap.entrySet()) {
+                DemandGroupNodeVO child = new DemandGroupNodeVO();
+                child.setField(BIZ_GROUP_FIELD_MAP.get(groupField));
+                child.setFieldValue(String.valueOf(entry.getKey()));
+                child.setLabel(entry.getValue());
+                child.setTotal(0L);
+                children.add(child);
+                // 递归创建更深层的子节点
+                createBizEmptyChildNodes(child, groupFields, level + 1, bizDomainNameMap, productLineNameMap);
+            }
+        } else if (BizDemandGroupFieldEnum.PRODUCT_LINE.getGroupField().equals(groupField)) {
+            for (Map.Entry<Long, String> entry : productLineNameMap.entrySet()) {
+                DemandGroupNodeVO child = new DemandGroupNodeVO();
+                child.setField(BIZ_GROUP_FIELD_MAP.get(groupField));
+                child.setFieldValue(String.valueOf(entry.getKey()));
+                child.setLabel(entry.getValue());
+                child.setTotal(0L);
+                children.add(child);
+                // 递归创建更深层的子节点
+                createBizEmptyChildNodes(child, groupFields, level + 1, bizDomainNameMap, productLineNameMap);
+            }
+        } else if (BizDemandGroupFieldEnum.PRIORITY.getGroupField().equals(groupField)) {
+            for (PriorityEnum priority : PriorityEnum.values()) {
+                DemandGroupNodeVO child = new DemandGroupNodeVO();
+                child.setField(BIZ_GROUP_FIELD_MAP.get(groupField));
+                child.setFieldValue(String.valueOf(priority.getCode()));
+                child.setLabel(priority.getText());
+                child.setTotal(0L);
+                children.add(child);
+                // 递归创建更深层的子节点
+                createBizEmptyChildNodes(child, groupFields, level + 1, bizDomainNameMap, productLineNameMap);
+            }
+        } else if (BizDemandGroupFieldEnum.STATUS.getGroupField().equals(groupField)) {
+            for (BizDemandStatusEnum status : BizDemandStatusEnum.values()) {
+                DemandGroupNodeVO child = new DemandGroupNodeVO();
+                child.setField(BIZ_GROUP_FIELD_MAP.get(groupField));
+                child.setFieldValue(String.valueOf(status.getCode()));
+                child.setLabel(status.getText());
+                child.setTotal(0L);
+                children.add(child);
+                // 递归创建更深层的子节点
+                createBizEmptyChildNodes(child, groupFields, level + 1, bizDomainNameMap, productLineNameMap);
+            }
+        }
+
+        parent.setChildren(children);
+    }
+
+    // 确保现有节点的子级结构完整
+    private void ensureChildNodesComplete(DemandGroupNodeVO node,
+                                          List<String> groupFields,
+                                          int level,
+                                          Map<Long, String> bizDomainNameMap,
+                                          Map<Long, String> productLineNameMap) {
+        if (level >= groupFields.size()) {
+            return;
+        }
+
+        // 如果节点没有子节点，则创建空的子节点结构
+        if (node.getChildren() == null || node.getChildren().isEmpty()) {
+            createEmptyChildNodes(node, groupFields, level, bizDomainNameMap, productLineNameMap);
+        } else {
+            // 递归处理子节点
+            for (DemandGroupNodeVO child : node.getChildren()) {
+                ensureChildNodesComplete(child, groupFields, level + 1, bizDomainNameMap, productLineNameMap);
+            }
+        }
+    }
+
+    private void ensureBizChildNodesComplete(DemandGroupNodeVO node,
+                                          List<String> groupFields,
+                                          int level,
+                                          Map<Long, String> bizDomainNameMap,
+                                          Map<Long, String> productLineNameMap) {
+        if (level >= groupFields.size()) {
+            return;
+        }
+
+        // 如果节点没有子节点，则创建空的子节点结构
+        if (node.getChildren() == null || node.getChildren().isEmpty()) {
+            createBizEmptyChildNodes(node, groupFields, level, bizDomainNameMap, productLineNameMap);
+        } else {
+            // 递归处理子节点
+            for (DemandGroupNodeVO child : node.getChildren()) {
+                ensureBizChildNodesComplete(child, groupFields, level + 1, bizDomainNameMap, productLineNameMap);
+            }
+        }
     }
 
     private void buildBizNodesForRow(List<String> groupFields,
@@ -1415,6 +2064,9 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         // 递归笛卡尔展开
         addNodeRecursive(BizTypeEnum.BIZ_DEMAND.getCode(), 0, groupFields, valuesPerLevel, roots, levelNodeMap,
                 bizDomainNameMap, productLineNameMap, receiveManNameMap, labelNameMap, deptNameMap, row.getTotal());
+
+        // 在节点构建完成后，对根节点进行完整填充
+        fillBizMissingGroupNodes(roots, groupFields, bizDomainNameMap, productLineNameMap);
     }
 
     private void addNodeRecursive(Integer bizType,
