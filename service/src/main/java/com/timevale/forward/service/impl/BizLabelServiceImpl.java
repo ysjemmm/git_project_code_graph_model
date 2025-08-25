@@ -126,6 +126,56 @@ public class BizLabelServiceImpl implements BizLabelService {
         return BaseResult.success(true);
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> batchUpdateLabels(BizLabelAddListReq req) {
+        List<Long> labelIdList = req.getLabelIdList();
+        if (CollectionUtils.isEmpty(labelIdList)) {
+            return BaseResult.success(true);
+        }
+
+        log.info("batchMarkOrUnMark, req:{}", req);
+
+        List<LabelDO> labelDOList = labelMapper.getByIds(labelIdList);
+        if (labelDOList.size() < labelIdList.size()) {
+            throw new BaseBizRuntimeException("存在已被删除的标签，请刷新后重试");
+        }
+
+        List<BizLabelDO> list = bizLabelMapper.list(req.getBizId(), req.getType());
+
+        // 要删除的标签集合
+        List<Long> deleteIds = list.stream().filter(bizLabelDO -> !labelIdList.contains(bizLabelDO.getLabelId())).map(BizLabelDO::getLabelId).collect(Collectors.toList());
+        List<Long> addIds = labelIdList.stream().filter(labelId -> list.stream().noneMatch(bizLabelDO -> bizLabelDO.getLabelId().equals(labelId))).collect(Collectors.toList());
+        if (CollectionUtils.isNotEmpty(deleteIds)) {
+            for (Long deleteId : deleteIds) {
+                BizLabelAddReq bizLabelAddReq = new BizLabelAddReq();
+                bizLabelAddReq.setAdd(false);
+                bizLabelAddReq.setBizId(req.getBizId());
+                bizLabelAddReq.setType(req.getType());
+                bizLabelAddReq.setLabelId(deleteId);
+                markOrUnMark(bizLabelAddReq);
+            }
+        }
+
+        if (CollectionUtils.isEmpty(addIds)) {
+            return BaseResult.success(true);
+        }
+
+        if (addIds.size() > MAX_COUNT) {
+            throw new BaseBizRuntimeException("添加的标签数量不能超过20");
+        }
+
+        List<BizLabelDO> bizLabelDOList = convert2BizLabelDOList(req);
+
+        List<BizLabelDO> dos = bizLabelDOList.stream().filter(bizLabelDO -> addIds.contains(bizLabelDO.getLabelId())).collect(Collectors.toList());
+
+        bizLabelMapper.batchInsert(dos);
+
+        bizLabelComponent.addLog(req.getBizId(), addIds, req.getType(), true);
+
+        return BaseResult.success(true);
+    }
+
     private List<BizLabelDO> convert2BizLabelDOList(BizLabelAddListReq req) {
         AccountInfo accountInfo = SessionLocalUtil.getUserSession();
         List<BizLabelDO> bizLabelDOList = Lists.newArrayList();

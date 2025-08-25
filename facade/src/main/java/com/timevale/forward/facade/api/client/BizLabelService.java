@@ -7,6 +7,7 @@ import com.timevale.forward.facade.api.request.BizLabelAddListReq;
 import com.timevale.forward.facade.api.request.BizLabelAddReq;
 import com.timevale.forward.facade.api.result.LabelDetailVO;
 import com.timevale.mandarin.common.annotation.RestClient;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -33,6 +34,9 @@ public interface BizLabelService {
      * @return
      */
     BaseResult<Boolean> batchAddLabels(BizLabelAddListReq req);
+
+    @Transactional(rollbackFor = Exception.class)
+    BaseResult<Boolean> batchUpdateLabels(BizLabelAddListReq req);
 
     /**
      * 已选中标签id
