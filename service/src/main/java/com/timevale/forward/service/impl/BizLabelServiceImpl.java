@@ -4,8 +4,10 @@ import com.timevale.crm.sdk.common.entity.AccountInfo;
 import com.timevale.crm.sdk.common.utils.SessionLocalUtil;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.BizLabelMapper;
+import com.timevale.forward.dal.dao.LabelCategoryMapper;
 import com.timevale.forward.dal.dao.LabelMapper;
 import com.timevale.forward.dal.entity.BizLabelDO;
+import com.timevale.forward.dal.entity.LabelCategoryDO;
 import com.timevale.forward.dal.entity.LabelDO;
 import com.timevale.forward.facade.api.client.BizLabelService;
 import com.timevale.forward.facade.api.query.BizLabelQueryList;
@@ -24,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -43,6 +46,9 @@ public class BizLabelServiceImpl implements BizLabelService {
 
     @Resource
     private LabelMapper labelMapper;
+
+    @Resource
+    private LabelCategoryMapper labelCategoryMapper;
 
     private static final int MAX_COUNT = 20;
 
@@ -148,10 +154,14 @@ public class BizLabelServiceImpl implements BizLabelService {
             return BaseResult.success(Lists.emptyList());
         }
         List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
+        Map<Long, String> labelCategoryMap = labelCategoryMapper.get(labelDOList.stream().map(LabelDO::getLabelCategoryId).collect(Collectors.toList()))
+                .stream().collect(Collectors.toMap(LabelCategoryDO::getId, LabelCategoryDO::getName));
         List<LabelDetailVO> bizLabelDOList = labelDOList.stream().map(a -> {
             LabelDetailVO labelDetailVO = new LabelDetailVO();
             labelDetailVO.setId(a.getId());
             labelDetailVO.setName(a.getName());
+            labelDetailVO.setCategoryId(a.getLabelCategoryId());
+            labelDetailVO.setCategoryName(labelCategoryMap.getOrDefault(a.getLabelCategoryId(), ""));
             return labelDetailVO;
         }).collect(Collectors.toList());
         return BaseResult.success(bizLabelDOList);
