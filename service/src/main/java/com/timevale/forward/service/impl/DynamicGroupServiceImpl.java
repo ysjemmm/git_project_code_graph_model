@@ -2167,13 +2167,10 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         }
 
         // 如果节点没有子节点，则创建空的子节点结构
-        if (node.getChildren() == null || node.getChildren().isEmpty()) {
-            createEmptyChildNodes(node, groupFields, level, bizDomainNameMap, productLineNameMap, enumMap);
-        } else {
-            // 递归处理子节点
-            for (DemandGroupNodeVO child : node.getChildren()) {
-                ensureChildNodesComplete(child, groupFields, level + 1, bizDomainNameMap, productLineNameMap, enumMap);
-            }
+        createEmptyChildNodes(node, groupFields, level, bizDomainNameMap, productLineNameMap, enumMap);
+        // 递归处理子节点
+        for (DemandGroupNodeVO child : node.getChildren()) {
+            ensureChildNodesComplete(child, groupFields, level + 1, bizDomainNameMap, productLineNameMap, enumMap);
         }
     }
 
@@ -2188,13 +2185,10 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         }
 
         // 如果节点没有子节点，则创建空的子节点结构
-        if (node.getChildren() == null || node.getChildren().isEmpty()) {
-            createBizEmptyChildNodes(node, groupFields, level, bizDomainNameMap, productLineNameMap, enumMap);
-        } else {
-            // 递归处理子节点
-            for (DemandGroupNodeVO child : node.getChildren()) {
-                ensureBizChildNodesComplete(child, groupFields, level + 1, bizDomainNameMap, productLineNameMap, enumMap);
-            }
+        createBizEmptyChildNodes(node, groupFields, level, bizDomainNameMap, productLineNameMap, enumMap);
+        // 递归处理子节点
+        for (DemandGroupNodeVO child : node.getChildren()) {
+            ensureBizChildNodesComplete(child, groupFields, level + 1, bizDomainNameMap, productLineNameMap, enumMap);
         }
     }
 
