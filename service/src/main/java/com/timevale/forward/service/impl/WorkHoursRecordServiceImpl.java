@@ -58,12 +58,14 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -582,6 +584,8 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         ZoneId zoneId = ZoneId.of("Asia/Shanghai");
         LocalDate today = LocalDate.now(zoneId);
         LocalDate yesterday = today.minusDays(1);
+        // 上一个周五
+        LocalDate lastFriday = today.with(TemporalAdjusters.previous(DayOfWeek.FRIDAY));
 
         // 4. 构建工时记录时间映射
         Map<Long, LocalDate> recordDateMap = hoursRecordDOList.stream()
@@ -600,7 +604,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
                     // 计算总工时、今日、昨日工时
                     BigDecimal[] hours = memberRecords.stream()
                             .collect(
-                                    () -> new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO},
+                                    () -> new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO},
                                     (acc, workHoursRecordDO) -> {
                                         LocalDate recordDate = recordDateMap.get(workHoursRecordDO.getId());
                                         BigDecimal workHours = workHoursRecordDO.getWorkHours();
@@ -610,21 +614,19 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
                                             acc[1] = acc[1].add(workHours);
                                         } else if (recordDate.equals(yesterday)) {
                                             acc[2] = acc[2].add(workHours);
+                                        } else if (recordDate.equals(lastFriday)) {
+                                            acc[3] = acc[3].add(workHours);
                                         }
                                     },
                                     (a, b) -> {
                                         a[0] = a[0].add(b[0]);
                                         a[1] = a[1].add(b[1]);
                                         a[2] = a[2].add(b[2]);
+                                        a[3] = a[3].add(b[3]);
                                     }
                             );
 
-                    WorkbenchesWorkHoursVO workHoursVO = new WorkbenchesWorkHoursVO();
-                    workHoursVO.setTeamMemberId(member.getUserId());
-                    workHoursVO.setTeamMemberName(member.getUserName());
-                    workHoursVO.setTotalHours(hours[0]);
-                    workHoursVO.setTodayHours(hours[1]);
-                    workHoursVO.setYesterdayHours(hours[2]);
+                    WorkbenchesWorkHoursVO workHoursVO = getWorkbenchesWorkHoursVO(member, hours, today);
 
                     return workHoursVO;
                 })
@@ -656,6 +658,18 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         pageQueryResult.setTotalPages((int) Math.ceil((double) total / pageSize));
 
         return BaseResult.success(pageQueryResult);
+    }
+
+    private WorkbenchesWorkHoursVO getWorkbenchesWorkHoursVO(PersonDO member, BigDecimal[] hours, LocalDate today) {
+        WorkbenchesWorkHoursVO workHoursVO = new WorkbenchesWorkHoursVO();
+        workHoursVO.setTeamMemberId(member.getUserId());
+        workHoursVO.setTeamMemberName(member.getUserName());
+        workHoursVO.setTotalHours(hours[0]);
+        workHoursVO.setTodayHours(hours[1]);
+        workHoursVO.setYesterdayHours(hours[2]);
+        workHoursVO.setFridayHours(hours[3]);
+        workHoursVO.setIsMonday(today.getDayOfWeek() == DayOfWeek.MONDAY);
+        return workHoursVO;
     }
 
     private Comparator<WorkbenchesWorkHoursVO> buildComparator(String collation) {

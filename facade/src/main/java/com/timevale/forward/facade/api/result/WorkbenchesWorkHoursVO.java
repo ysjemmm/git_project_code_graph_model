@@ -24,6 +24,12 @@ public class WorkbenchesWorkHoursVO extends ToString {
     @ApiModelProperty("成员名称")
     private String teamMemberName;
 
+    @ApiModelProperty("是否周一")
+    private Boolean isMonday;
+
+    @ApiModelProperty("周五投入工时")
+    private BigDecimal fridayHours;
+
     @ApiModelProperty("昨日投入工时")
     private BigDecimal yesterdayHours;
 
