@@ -417,7 +417,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
         // 5) 计算合计：
         // 先为叶子节点赋值（叶子已经在构建时累加 total），然后从底向上汇总。
-        computeTotalsBottomUp(roots);
+        computeTotalsBottomUp(roots, groupFieldKeys, bizDomainNameMap, productLineNameMap);
 
         // 若包含 type 维度，则对 type 上层的节点用 prefixTotals 进行去重修正（避免被子层的多值重复计数放大）
         if (typeIndex >= 0) {
@@ -1426,7 +1426,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
         // 5) 计算合计：
         // 先为叶子节点赋值（叶子已经在构建时累加 total），然后从底向上汇总。
-        computeTotalsBottomUp(roots);
+        computeBizTotalsBottomUp(roots, bizGroupFieldKeys, bizDomainNameMap, productLineNameMap);
 
         // 排序（各层按 label 升序）
         sortTreeByLabel(roots);
@@ -1648,13 +1648,38 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         }
     }
 
-    private void computeTotalsBottomUp(List<DemandGroupNodeVO> nodes) {
+    private void computeTotalsBottomUp(List<DemandGroupNodeVO> nodes, List<String> groupFields, Map<Long, String> bizDomainNameMap,
+                                       Map<Long, String> productLineNameMap) {
         if (CollectionUtils.isEmpty(nodes)) {
             return;
         }
+
+        // 在节点构建完成后，对根节点进行完整填充
+        fillMissingGroupNodes(nodes, groupFields, bizDomainNameMap, productLineNameMap);
+
         for (DemandGroupNodeVO node : nodes) {
             if (CollectionUtils.isNotEmpty(node.getChildren())) {
-                computeTotalsBottomUp(node.getChildren());
+                computeTotalsBottomUp(node.getChildren(), groupFields, bizDomainNameMap, productLineNameMap);
+                long sum = node.getChildren().stream().map(DemandGroupNodeVO::getTotal).filter(Objects::nonNull).mapToLong(Long::longValue).sum();
+                node.setTotal(sum);
+            } else if (node.getTotal() == null) {
+                node.setTotal(0L);
+            }
+        }
+    }
+
+    private void computeBizTotalsBottomUp(List<DemandGroupNodeVO> nodes, List<String> groupFields, Map<Long, String> bizDomainNameMap,
+                                          Map<Long, String> productLineNameMap) {
+        if (CollectionUtils.isEmpty(nodes)) {
+            return;
+        }
+
+        // 在节点构建完成后，对根节点进行完整填充
+        fillBizMissingGroupNodes(nodes, groupFields, bizDomainNameMap, productLineNameMap);
+
+        for (DemandGroupNodeVO node : nodes) {
+            if (CollectionUtils.isNotEmpty(node.getChildren())) {
+                computeBizTotalsBottomUp(node.getChildren(), groupFields, bizDomainNameMap, productLineNameMap);
                 long sum = node.getChildren().stream().map(DemandGroupNodeVO::getTotal).filter(Objects::nonNull).mapToLong(Long::longValue).sum();
                 node.setTotal(sum);
             } else if (node.getTotal() == null) {
@@ -1690,9 +1715,6 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         // 递归笛卡尔展开
         addNodeRecursive(BizTypeEnum.PRODUCT_DEMAND.getCode(), 0, groupFields, valuesPerLevel, roots, levelNodeMap,
                 bizDomainNameMap, productLineNameMap, ownerNameMap, labelNameMap, null, row.getTotal());
-
-        // 在节点构建完成后，对根节点进行完整填充
-        fillMissingGroupNodes(roots, groupFields, bizDomainNameMap, productLineNameMap);
     }
 
     // 新增方法：填充缺失的分组节点
@@ -1769,7 +1791,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
                 }
             }
         } else if (ProductGroupFieldEnum.TYPE.getGroupField().equals(firstGroupField)) {
-            for (ProductDemandStatusEnum type : ProductDemandStatusEnum.values()) {
+            for (ProductDemandTypeEnum type : ProductDemandTypeEnum.values()) {
                 String typeCodeStr = String.valueOf(type.getCode());
                 if (!existingValues.contains(typeCodeStr)) {
                     DemandGroupNodeVO node = new DemandGroupNodeVO();
