@@ -2030,65 +2030,87 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         List<DemandGroupNodeVO> children = new ArrayList<>();
         String groupField = groupFields.get(level);
 
+        List<DemandGroupNodeVO> parentChildren = parent.getChildren();
+        Map<String, Long> longMap = Optional.ofNullable(parentChildren)
+                .orElse(Collections.emptyList())
+                .stream()
+                .collect(Collectors.toMap(
+                        DemandGroupNodeVO::getFieldValue,
+                        DemandGroupNodeVO::getTotal,
+                        (existing, replacement) -> existing
+                ));
+
         // 根据分组字段类型创建相应的空节点
         if (ProductGroupFieldEnum.BIZ_DOMAIN.getGroupField().equals(groupField)) {
             for (Map.Entry<Long, String> entry : bizDomainNameMap.entrySet()) {
-                DemandGroupNodeVO child = new DemandGroupNodeVO();
-                child.setField(PRODUCT_GROUP_FIELD_MAP.get(groupField));
-                child.setFieldValue(String.valueOf(entry.getKey()));
-                child.setLabel(entry.getValue());
-                child.setTotal(0L);
-                children.add(child);
+                DemandGroupNodeVO child = getChild(PRODUCT_GROUP_FIELD_MAP, entry, groupField, longMap, children);
                 // 递归创建更深层的子节点
                 createEmptyChildNodes(child, groupFields, level + 1, bizDomainNameMap, productLineNameMap, enumMap);
             }
         } else if (ProductGroupFieldEnum.PRODUCT_LINE.getGroupField().equals(groupField)) {
             for (Map.Entry<Long, String> entry : productLineNameMap.entrySet()) {
-                DemandGroupNodeVO child = new DemandGroupNodeVO();
-                child.setField(PRODUCT_GROUP_FIELD_MAP.get(groupField));
-                child.setFieldValue(String.valueOf(entry.getKey()));
-                child.setLabel(entry.getValue());
-                child.setTotal(0L);
-                children.add(child);
+                DemandGroupNodeVO child = getChild(PRODUCT_GROUP_FIELD_MAP, entry, groupField, longMap, children);
                 // 递归创建更深层的子节点
                 createEmptyChildNodes(child, groupFields, level + 1, bizDomainNameMap, productLineNameMap, enumMap);
             }
         } else if (ProductGroupFieldEnum.PRIORITY.getGroupField().equals(groupField)) {
             enumMap.get(ProductGroupFieldEnum.PRIORITY.getGroupField()).forEach((priorityCode, priorityText) -> {
-                DemandGroupNodeVO child = new DemandGroupNodeVO();
-                child.setField(PRODUCT_GROUP_FIELD_MAP.get(groupField));
-                child.setFieldValue(priorityCode);
-                child.setLabel(priorityText);
-                child.setTotal(0L);
-                children.add(child);
+                DemandGroupNodeVO child = getEnumChild(PRODUCT_GROUP_FIELD_MAP, priorityCode, priorityText, groupField, longMap, children);
                 // 递归创建更深层的子节点
                 createEmptyChildNodes(child, groupFields, level + 1, bizDomainNameMap, productLineNameMap, enumMap);
             });
         } else if (ProductGroupFieldEnum.STATUS.getGroupField().equals(groupField)) {
             enumMap.get(ProductGroupFieldEnum.STATUS.getGroupField()).forEach((statusCode, statusText) -> {
-                DemandGroupNodeVO child = new DemandGroupNodeVO();
-                child.setField(PRODUCT_GROUP_FIELD_MAP.get(groupField));
-                child.setFieldValue(statusCode);
-                child.setLabel(statusText);
-                child.setTotal(0L);
-                children.add(child);
+                DemandGroupNodeVO child = getEnumChild(PRODUCT_GROUP_FIELD_MAP, statusCode, statusText, groupField, longMap, children);
                 // 递归创建更深层的子节点
                 createEmptyChildNodes(child, groupFields, level + 1, bizDomainNameMap, productLineNameMap, enumMap);
             });
         } else if (ProductGroupFieldEnum.TYPE.getGroupField().equals(groupField)) {
             enumMap.get(ProductGroupFieldEnum.TYPE.getGroupField()).forEach((typeCode, typeText) -> {
-                DemandGroupNodeVO child = new DemandGroupNodeVO();
-                child.setField(PRODUCT_GROUP_FIELD_MAP.get(groupField));
-                child.setFieldValue(typeCode);
-                child.setLabel(typeText);
-                child.setTotal(0L);
-                children.add(child);
+                DemandGroupNodeVO child = getEnumChild(PRODUCT_GROUP_FIELD_MAP, typeCode, typeText, groupField, longMap, children);
                 // 递归创建更深层的子节点
                 createEmptyChildNodes(child, groupFields, level + 1, bizDomainNameMap, productLineNameMap, enumMap);
             });
         }
 
         parent.setChildren(children);
+    }
+
+    private DemandGroupNodeVO getEnumChild(Map<String, String> fieldMap,
+                                           String code,
+                                           String text,
+                                           String groupField, Map<String, Long> longMap,
+                                           List<DemandGroupNodeVO> children) {
+        DemandGroupNodeVO child = new DemandGroupNodeVO();
+        child.setField(fieldMap.get(groupField));
+        child.setFieldValue(code);
+        child.setLabel(text);
+        if (longMap.containsKey(code)) {
+            child.setTotal(longMap.getOrDefault(code, 0L));
+        } else {
+            child.setTotal(0L);
+        }
+        children.add(child);
+        return child;
+    }
+
+    private DemandGroupNodeVO getChild(Map<String, String> fieldMap,
+                                       Map.Entry<Long, String> entry,
+                                       String groupField,
+                                       Map<String, Long> longMap,
+                                       List<DemandGroupNodeVO> children) {
+        DemandGroupNodeVO child = new DemandGroupNodeVO();
+        child.setField(fieldMap.get(groupField));
+        String valueOf = String.valueOf(entry.getKey());
+        child.setFieldValue(valueOf);
+        child.setLabel(entry.getValue());
+        if (longMap.containsKey(valueOf)) {
+            child.setTotal(longMap.getOrDefault(valueOf, 0L));
+        } else {
+            child.setTotal(0L);
+        }
+        children.add(child);
+        return child;
     }
 
     private void createBizEmptyChildNodes(DemandGroupNodeVO parent,
@@ -2105,48 +2127,38 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         List<DemandGroupNodeVO> children = new ArrayList<>();
         String groupField = groupFields.get(level);
 
+        List<DemandGroupNodeVO> parentChildren = parent.getChildren();
+        Map<String, Long> longMap = Optional.ofNullable(parentChildren)
+                .orElse(Collections.emptyList())
+                .stream()
+                .collect(Collectors.toMap(
+                        DemandGroupNodeVO::getFieldValue,
+                        DemandGroupNodeVO::getTotal,
+                        (existing, replacement) -> existing
+                ));
+
         // 根据分组字段类型创建相应的空节点
         if (BizDemandGroupFieldEnum.BIZ_DOMAIN.getGroupField().equals(groupField)) {
             for (Map.Entry<Long, String> entry : bizDomainNameMap.entrySet()) {
-                DemandGroupNodeVO child = new DemandGroupNodeVO();
-                child.setField(BIZ_GROUP_FIELD_MAP.get(groupField));
-                child.setFieldValue(String.valueOf(entry.getKey()));
-                child.setLabel(entry.getValue());
-                child.setTotal(0L);
-                children.add(child);
+                DemandGroupNodeVO child = getChild(BIZ_GROUP_FIELD_MAP, entry, groupField, longMap, children);
                 // 递归创建更深层的子节点
                 createBizEmptyChildNodes(child, groupFields, level + 1, bizDomainNameMap, productLineNameMap, enumMap);
             }
         } else if (BizDemandGroupFieldEnum.PRODUCT_LINE.getGroupField().equals(groupField)) {
             for (Map.Entry<Long, String> entry : productLineNameMap.entrySet()) {
-                DemandGroupNodeVO child = new DemandGroupNodeVO();
-                child.setField(BIZ_GROUP_FIELD_MAP.get(groupField));
-                child.setFieldValue(String.valueOf(entry.getKey()));
-                child.setLabel(entry.getValue());
-                child.setTotal(0L);
-                children.add(child);
+                DemandGroupNodeVO child = getChild(BIZ_GROUP_FIELD_MAP, entry, groupField, longMap, children);
                 // 递归创建更深层的子节点
                 createBizEmptyChildNodes(child, groupFields, level + 1, bizDomainNameMap, productLineNameMap, enumMap);
             }
         } else if (BizDemandGroupFieldEnum.PRIORITY.getGroupField().equals(groupField)) {
             enumMap.get(BizDemandGroupFieldEnum.PRIORITY.getGroupField()).forEach((priorityCode, priorityText) -> {
-                DemandGroupNodeVO child = new DemandGroupNodeVO();
-                child.setField(BIZ_GROUP_FIELD_MAP.get(groupField));
-                child.setFieldValue(String.valueOf(priorityCode));
-                child.setLabel(priorityText);
-                child.setTotal(0L);
-                children.add(child);
+                DemandGroupNodeVO child = getEnumChild(BIZ_GROUP_FIELD_MAP, priorityCode, priorityText, groupField, longMap, children);
                 // 递归创建更深层的子节点
                 createBizEmptyChildNodes(child, groupFields, level + 1, bizDomainNameMap, productLineNameMap, enumMap);
             });
         } else if (BizDemandGroupFieldEnum.STATUS.getGroupField().equals(groupField)) {
             enumMap.get(BizDemandGroupFieldEnum.STATUS.getGroupField()).forEach((statusCode, statusText) -> {
-                DemandGroupNodeVO child = new DemandGroupNodeVO();
-                child.setField(BIZ_GROUP_FIELD_MAP.get(groupField));
-                child.setFieldValue(String.valueOf(statusCode));
-                child.setLabel(statusText);
-                child.setTotal(0L);
-                children.add(child);
+                DemandGroupNodeVO child = getEnumChild(BIZ_GROUP_FIELD_MAP, statusCode, statusText, groupField, longMap, children);
                 // 递归创建更深层的子节点
                 createBizEmptyChildNodes(child, groupFields, level + 1, bizDomainNameMap, productLineNameMap, enumMap);
             });
