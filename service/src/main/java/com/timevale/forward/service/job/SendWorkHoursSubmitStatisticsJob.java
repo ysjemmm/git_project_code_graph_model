@@ -271,7 +271,7 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
             }
 
             // 构建并发送消息
-            String urlStr = url + "/projectManagement/edit?id=" + proId + "&type=check";
+            String urlStr = url + "/projectManagement/edit?id=" + proId + "&type=check&tabActive=7";
             String dateStr = latestWorkday.format(DATE_FORMATTER);
             // 生成短链接
             String shortUrl = shortLinkClient.getShortUrl(urlStr).getShortlink();
