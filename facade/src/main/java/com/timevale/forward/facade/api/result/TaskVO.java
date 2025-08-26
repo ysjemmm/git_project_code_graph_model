@@ -8,7 +8,9 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author: xingyun
@@ -113,4 +115,11 @@ public class TaskVO extends ToString {
 
     @ApiModelProperty("任务所属类型")
     private String typeName;
+
+    @ApiModelProperty("任务计划耗时")
+    private BigDecimal planUseTime;
+
+    @ApiModelProperty("产品需求集合")
+    private List<ProductDemandVO> productDemandList;
+
 }

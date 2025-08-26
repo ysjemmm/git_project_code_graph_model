@@ -13,6 +13,7 @@ import com.timevale.forward.facade.api.result.TaskListVO;
 import com.timevale.forward.facade.api.result.TaskVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
@@ -132,6 +133,9 @@ public interface TaskService {
      * @return 数量
      */
     BaseResult<Boolean> batchAdd(TaskBatchAddReq taskBatchAddReq);
+
+    @Transactional(rollbackFor = Exception.class)
+    BaseResult<Boolean> batchUpdate(TaskBatchUpdateReq taskBatchUpdateReq);
 
     /**
      *

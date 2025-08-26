@@ -36,6 +36,12 @@ public interface TaskProductDemandMapper {
     List<ProductDemandListDO> linkProductDemandList(@Param("taskId") Long taskId);
 
     /**
+     * @param taskIds 查询条件
+     * @return 项目产品需求清单
+     */
+    List<ProductDemandListDO> linkProductDemandListByTaskIds(@Param("taskIds") List<Long> taskIds);
+
+    /**
      * 新增项目-产品需求
      *
      * @param taskProductDemandUpdateDO 新增产品需求-任务

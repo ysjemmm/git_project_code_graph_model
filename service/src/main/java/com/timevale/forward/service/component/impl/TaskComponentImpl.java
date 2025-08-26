@@ -8,12 +8,15 @@ import com.timevale.forward.dal.dao.PersonMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.TaskMapper;
+import com.timevale.forward.dal.dao.TaskProductDemandMapper;
 import com.timevale.forward.dal.dao.TaskTimeMapper;
 import com.timevale.forward.dal.entity.PersonDO;
+import com.timevale.forward.dal.entity.ProductDemandListDO;
 import com.timevale.forward.dal.entity.ProductLineDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.dal.entity.TaskStatusUpdateDO;
+import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.TaskVO;
 import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.model.enums.ProjectStageEnum;
@@ -26,6 +29,7 @@ import com.timevale.forward.service.component.TaskProductDemandComponent;
 import com.timevale.forward.service.component.TaskTimeComponent;
 import com.timevale.forward.service.component.UserComponent;
 import com.timevale.forward.service.constant.CommonConstant;
+import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.forward.service.copy.TaskCopier;
 import com.timevale.forward.service.integration.erp.DingWorkRecordClient;
 import com.timevale.forward.service.integration.erp.model.CreateTodoTaskMsg;
@@ -89,6 +93,9 @@ public class TaskComponentImpl implements TaskComponent {
     @Resource
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
+    @Resource
+    private TaskProductDemandMapper taskProductDemandMapper;
+
     public static final String TITLE = "您收到了一条任务：%s";
 
     @Override
@@ -141,6 +148,13 @@ public class TaskComponentImpl implements TaskComponent {
         //4.当前登陆人是否为PMO
         boolean isPMO = userComponent.isPmo();
 
+        Map<Long, List<ProductDemandVO>> productDemandMap = taskProductDemandMapper.linkProductDemandListByTaskIds(taskIds)
+                .stream()
+                .collect(Collectors.groupingBy(
+                        ProductDemandListDO::getTaskId,
+                        Collectors.mapping(ProductDemandCopier.INSTANCE::convert, Collectors.toList())
+                ));
+
         List<TaskVO> taskVO = TaskCopier.INSTANCE.convert(taskDos);
         taskVO.forEach(a -> {
             List<PersonDO> executors = executorMap.get(a.getId());
@@ -172,6 +186,8 @@ public class TaskComponentImpl implements TaskComponent {
                 a.setIsDelay(isDelay);
             }
             a.setCategory(projectMap.get(a.getProjectId()).getCategory());
+
+            a.setProductDemandList(productDemandMap.get(a.getId()));
         });
         PageQueryResult<TaskVO> pageQueryResult = new PageQueryResult<>();
         PageInfo<TaskDO> pageInfo = new PageInfo<>(taskDos);

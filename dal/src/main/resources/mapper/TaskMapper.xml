@@ -56,7 +56,7 @@
 
     <select id="list" resultType="com.timevale.forward.dal.entity.TaskDO">
         select a.id,a.project_id,product_line_id, a.name, a.stage ,a.status,a.todo, a.todo_id,a.plan_start_date,a.plan_end_date,
-        a.actual_start_date,a.actual_end_date,
+        a.actual_start_date,a.actual_end_date,a.plan_use_time,
         a.create_man_id, a.create_man,a.create_date,a.modify_date,a.type
         from task a
         <where>

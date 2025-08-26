@@ -27,6 +27,21 @@
          where b.task_id = #{taskId}
     </select>
 
+    <select id="linkProductDemandListByTaskIds" resultType="com.timevale.forward.dal.entity.ProductDemandListDO">
+        SELECT a.id,a.name,b.task_id
+        FROM product_demand a
+                 LEFT JOIN task_product_demand b ON a.id = b.product_demand_id AND b.is_deleted = false
+        <where>
+            <if test="taskIds!=null and taskIds.size()>0">
+                and b.task_id in
+                <foreach collection="taskIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and a.is_deleted=false
+        </where>
+    </select>
+
     <update id="update" parameterType="com.timevale.forward.dal.entity.TaskProductDemandUpdateDO">
         update task_product_demand
         <set>

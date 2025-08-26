@@ -9,6 +9,7 @@ import com.timevale.forward.facade.api.request.ProjectMilestoneAddReq;
 import com.timevale.forward.facade.api.request.TaskAddReq;
 import com.timevale.forward.facade.api.request.TaskModifyReq;
 import com.timevale.forward.facade.api.request.TaskSimpleAddReq;
+import com.timevale.forward.facade.api.request.TaskSimpleUpdateReq;
 import com.timevale.forward.facade.api.result.HomePageSingleTaskWorkTimeVO;
 import com.timevale.forward.facade.api.result.ProjectBoardTaskVO;
 import com.timevale.forward.facade.api.result.TaskDetailVO;
@@ -113,11 +114,26 @@ public interface TaskCopier {
 
     /**
      *
+     * @param taskSimpleUpdateReqs
+     * @return TaskDO
+     */
+    List<TaskDO> transferByUpdate(List<TaskSimpleUpdateReq> taskSimpleUpdateReqs);
+
+    /**
+     *
      * @param taskSimpleAddReq taskSimpleAddReq
      * @return TaskDO
      */
     @Mapping(target = "stage", expression = "java(TaskTypeEnum.getStageCode(taskSimpleAddReq.getType()))")
     TaskDO convert(TaskSimpleAddReq taskSimpleAddReq);
+
+    /**
+     *
+     * @param taskSimpleUpdateReq taskSimpleUpdateReq
+     * @return TaskDO
+     */
+    @Mapping(target = "stage", expression = "java(TaskTypeEnum.getStageCode(taskSimpleUpdateReq.getType()))")
+    TaskDO convert2Update(TaskSimpleUpdateReq taskSimpleUpdateReq);
 
     /**
      * 转换转换VO

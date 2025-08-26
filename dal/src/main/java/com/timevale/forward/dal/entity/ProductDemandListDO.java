@@ -13,6 +13,11 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class ProductDemandListDO extends BaseDO {
+
+    /**
+     * taskId
+     */
+    private Long taskId;
     /**
      * name
      */

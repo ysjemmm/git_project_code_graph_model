@@ -39,11 +39,13 @@ import com.timevale.forward.facade.api.request.ElapsedTimeQueryReq;
 import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.request.TaskAddReq;
 import com.timevale.forward.facade.api.request.TaskBatchAddReq;
+import com.timevale.forward.facade.api.request.TaskBatchUpdateReq;
 import com.timevale.forward.facade.api.request.TaskDoneReq;
 import com.timevale.forward.facade.api.request.TaskExecuteReq;
 import com.timevale.forward.facade.api.request.TaskModifyReq;
 import com.timevale.forward.facade.api.request.TaskProductDemandLinkReq;
 import com.timevale.forward.facade.api.request.TaskSimpleAddReq;
+import com.timevale.forward.facade.api.request.TaskSimpleUpdateReq;
 import com.timevale.forward.facade.api.request.TaskTransferReq;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.TaskDetailVO;
@@ -632,10 +634,8 @@ public class TaskServiceImpl implements TaskService {
             return BaseResult.success(true);
         }
 
-        boolean match = taskSimples.stream().anyMatch(a -> a.getName().contains(CommonConstant.BLANK));
-        if (match) {
-            throw new BaseBizRuntimeException("任务名称中请勿包含空格");
-        }
+        taskSimples.forEach(e -> e.setName(e.getName().replace(" ", "")));
+
         Set<String> names = taskSimples.stream().map(TaskSimpleAddReq::getName).collect(Collectors.toSet());
         if (taskSimples.size() != names.size()) {
             throw new BaseBizRuntimeException("任务名称重复,请修改后重试");
@@ -690,6 +690,74 @@ public class TaskServiceImpl implements TaskService {
 
         return BaseResult.success(true);
 
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> batchUpdate(TaskBatchUpdateReq taskBatchUpdateReq) {
+        log.info("任务批量更新接收参数:{}", taskBatchUpdateReq);
+        List<TaskSimpleUpdateReq> taskSimples = taskBatchUpdateReq.getTaskSimples();
+        if (CollectionUtils.isEmpty(taskSimples)) {
+            return BaseResult.success(true);
+        }
+
+        taskSimples.forEach(e -> e.setName(e.getName().replace(" ", "")));
+
+        Set<String> names = taskSimples.stream().map(TaskSimpleUpdateReq::getName).collect(Collectors.toSet());
+        if (taskSimples.size() != names.size()) {
+            throw new BaseBizRuntimeException("任务名称重复,请修改后重试");
+        }
+        //名称查重
+        List<TaskDO> taskDos = TaskCopier.INSTANCE.transferByUpdate(taskBatchUpdateReq.getTaskSimples());
+
+        // 耗时校验
+        checkTaskUseTime(taskDos);
+
+        checkNameExisted(taskDos);
+        //阶段限制
+        checkTaskStage(taskDos.get(0));
+
+        ProjectDO projectDO = projectMapper.get(taskDos.get(0).getProjectId());
+        checkTimeRange(taskDos, projectDO);
+
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        taskSimples.forEach(a -> threadPoolTaskExecutor.execute(() -> {
+            TaskDO taskDO = TaskCopier.INSTANCE.convert2Update(a);
+            if (taskDO.getId() == null) {
+                throw new BaseBizRuntimeException("任务不存在");
+            }
+            taskDO.setDesc(StringUtils.EMPTY);
+            taskDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+            taskDO.setCreateManId(userInfo.getId());
+
+            //填充状态
+            fillStatus(taskDO);
+
+            List<String> executorIds = a.getExecutors().stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
+
+            sendDingTodo(taskDO, executorIds, userInfo.getId());
+
+            taskMapper.update(taskDO);
+            //执行人
+            personComponent.update(a.getExecutors(), taskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
+
+            //关联产品需求
+            a.getProductDemandIds().forEach(demand -> taskProductDemandComponent.update(Collections.singletonList(a.getId()), demand));
+        }));
+
+        // 执行人
+        List<PersonAddReq> executorList = taskSimples.stream()
+                .flatMap(e -> e.getExecutors().stream())
+                .distinct()
+                .collect(Collectors.toList());
+
+        // 若执行人不在项目成员中,需新增
+        Long projectId = CollUtil.getFirst(taskDos).getProjectId();
+        personComponent.update(executorList, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.EXTENSION.getCode());
+        // 积分成员同步
+        evaluateComponent.syncMember(projectId);
+
+        return BaseResult.success(true);
     }
 
     @Override
