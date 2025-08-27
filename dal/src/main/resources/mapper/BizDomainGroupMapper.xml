@@ -1,0 +1,103 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.BizDomainGroupMapper">
+
+    <select id="selectAllBizDomainGroup" resultType="com.timevale.forward.dal.entity.BizDomainGroupDO">
+        select *
+        from biz_domain_group
+        where is_deleted = false
+    </select>
+
+    <select id="selectById" resultType="com.timevale.forward.dal.entity.BizDomainGroupDO">
+        select *
+        from biz_domain_group
+        where id = #{id}
+    </select>
+
+    <select id="getByIds" resultType="com.timevale.forward.dal.entity.BizDomainGroupDO">
+        select *
+        from biz_domain_group
+        <where>
+            is_deleted = false
+            <if test="ids != null and ids.size() > 0">
+                AND id IN
+                <foreach collection="ids" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <select id="selectByName" resultType="com.timevale.forward.dal.entity.BizDomainGroupDO">
+        SELECT *
+        FROM biz_domain_group
+        <where>
+            <if test="nameList != null and nameList.size() > 0">
+                AND `name` IN
+                <foreach collection="nameList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            AND is_deleted = false
+        </where>
+    </select>
+
+    <insert id="insert" parameterType="com.timevale.forward.dal.entity.BizDomainGroupDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO biz_domain_group
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null">`name`,</if>
+            <if test="owner != null">`owner`,</if>
+            <if test="ownerId != null">owner_id,</if>
+            <if test="desc != null">`desc`,</if>
+            <if test="createMan != null">create_man,</if>
+            <if test="createManId != null">create_man_id,</if>
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null">#{name},</if>
+            <if test="owner != null">#{owner},</if>
+            <if test="ownerId != null">#{ownerId},</if>
+            <if test="desc != null">#{desc},</if>
+            <if test="createMan != null">#{createMan},</if>
+            <if test="createManId != null">#{createManId},</if>
+        </trim>
+    </insert>
+
+    <update id="update" parameterType="com.timevale.forward.dal.entity.BizDomainGroupDO">
+        update biz_domain_group
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="owner != null">owner = #{owner},</if>
+            <if test="desc != null">`desc` = #{desc},</if>
+            <if test="ownerId != null">owner_id = #{ownerId},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="listingStatus != null">listing_status = #{listingStatus},</if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <select id="selectByCondition" resultType="com.timevale.forward.dal.entity.BizDomainGroupDO">
+        select *
+        from biz_domain_group
+        <where>
+            is_deleted = false
+            <if test="name != null and name!=''">
+                AND `name` like concat('%',#{name},'%')
+            </if>
+            <if test="ownerIds != null and ownerIds.size() > 0">
+                AND owner_id IN
+                <foreach collection="ownerIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="listingStatus != null">
+                AND listing_status=#{listingStatus}
+            </if>
+        </where>
+    </select>
+
+</mapper>

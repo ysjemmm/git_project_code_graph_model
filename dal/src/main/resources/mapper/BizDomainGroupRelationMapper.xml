@@ -1,0 +1,64 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.BizDomainGroupRelationMapper">
+
+    <select id="selectAllBizDomainGroupRelation" resultType="com.timevale.forward.dal.entity.BizDomainGroupRelationDO">
+        select *
+        from biz_domain_group_relation
+        where is_deleted = false
+    </select>
+
+    <select id="selectByBizDomainGroupId" resultType="com.timevale.forward.dal.entity.BizDomainGroupRelationDO">
+        SELECT *
+        FROM biz_domain_group_relation
+        <where>
+            biz_domain_group_id = #{bizDomainGroupId}
+            AND is_deleted = false
+        </where>
+    </select>
+
+    <insert id="batchInsert">
+        insert into biz_domain_group_relation (biz_domain_group_id, biz_domain_id, create_man_id, create_man)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.bizDomainGroupId}, #{item.bizDomainId}, #{createManId}, #{createMan})
+        </foreach>
+    </insert>
+
+    <update id="batchDelete">
+        update biz_domain_group_relation
+        <set>
+            is_deleted = true,
+            modify_man = #{modifyMan},
+            modify_man_id = #{modifyManId},
+        </set>
+        <where>
+            AND is_deleted = false
+            AND biz_domain_group_id = #{bizDomainGroupId}
+            <if test="bizDomainIds != null and bizDomainIds.size() > 0">
+                AND biz_domain_id IN
+                <foreach collection="bizDomainIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </update>
+
+    <insert id="insert" parameterType="com.timevale.forward.dal.entity.BizDomainGroupRelationDO">
+        INSERT INTO biz_domain_group_relation
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="bizDomainGroupId != null">`biz_domain_group_id`,</if>
+            <if test="bizDomainId != null">`biz_domain_id`,</if>
+            <if test="createMan != null">create_man,</if>
+            <if test="createManId != null">create_man_id,</if>
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="bizDomainGroupId != null">#{bizDomainGroupId},</if>
+            <if test="bizDomainId != null">#{bizDomainId},</if>
+            <if test="createMan != null">#{createMan},</if>
+            <if test="createManId != null">#{createManId},</if>
+        </trim>
+    </insert>
+
+</mapper>
