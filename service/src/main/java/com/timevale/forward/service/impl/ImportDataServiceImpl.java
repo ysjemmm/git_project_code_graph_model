@@ -443,7 +443,7 @@ public class ImportDataServiceImpl implements ImportDataService {
             }
         }
         ProjectAddReq projectAddReq = new ProjectAddReq();
-        projectAddReq.setName(projectName + "导入测试");
+        projectAddReq.setName(projectName);
         List<String> productLines = Arrays.asList(data[newIndex[1]].split(","));
         List<Long> productLineIds = productLineMapper.selectByProductLineNames(productLines).stream().map(ProductLineDO::getId).collect(Collectors.toList());
         projectAddReq.setProductLineIds(productLineIds);

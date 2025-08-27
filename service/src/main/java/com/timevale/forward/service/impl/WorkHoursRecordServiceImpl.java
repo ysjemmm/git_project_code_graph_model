@@ -282,18 +282,22 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
 
     private void updateTaskStatus(WorkHoursRecordDO workHoursRecordDO, TaskDO taskDO) {
         // 如果任务没有开启执行，则登记工时直接开启任务
-        Date startTime = new Date();
+        LocalDate registrationDate = workHoursRecordDO.getRegistrationDate().toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+        Date actualEndDate = Date.from(registrationDate.atTime(18, 0, 0).atZone(ZoneId.systemDefault()).toInstant());
+
         if (TaskStatusEnum.WAITING.getCode().equals(taskDO.getStatus())) {
             TaskExecuteReq taskExecuteReq = new TaskExecuteReq();
             taskExecuteReq.setId(taskDO.getId());
-            taskExecuteReq.setActualStartDate(startTime);
+            taskExecuteReq.setActualStartDate(new Date(actualEndDate.getTime() - 5000L));
             taskService.execute(taskExecuteReq);
         }
         // 如果任务进度是100，则任务直接完成
         if (workHoursRecordDO.getProgress() >= 100) {
             TaskDoneReq taskDoneReq = new TaskDoneReq();
             taskDoneReq.setId(taskDO.getId());
-            taskDoneReq.setActualEndDate(new Date(startTime.getTime() + 5000L));
+            taskDoneReq.setActualEndDate(actualEndDate);
             taskService.done(taskDoneReq);
         }
     }
