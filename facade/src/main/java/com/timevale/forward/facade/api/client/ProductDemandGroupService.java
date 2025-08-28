@@ -61,14 +61,6 @@ public interface ProductDemandGroupService {
      */
     BaseResult<Boolean> delete(ProductDemandGroupReq productDemandGroupReq);
 
-
-    /**
-     * 绑定产品需求分组
-     * @param productDemandGroupProjectReq 产品需求分组项目请求
-     * @return 是否成功
-     */
-    BaseResult<Boolean> bindProject(ProductDemandGroupProjectReq productDemandGroupProjectReq);
-
     /**
      * 拖动产品需求
      * @param productDemandGroupMoveReq 产品需求分组拖动请求

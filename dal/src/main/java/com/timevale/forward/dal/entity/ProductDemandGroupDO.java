@@ -22,9 +22,9 @@ public class ProductDemandGroupDO extends BaseDO {
     private String name;
 
     /**
-     * 业务域id
+     * 业务域集id
      */
-    private Long bizDomainId;
+    private Long bizDomainGroupId;
 
     /**
      * 相对位置

@@ -158,7 +158,7 @@ public class ProductDemandGroupItemComponentImpl implements ProductDemandGroupIt
             // 创建
             Pair<BigDecimal, Boolean> position = calculateNewPosition(req.getPrevId(),
                     req.getNextId(),
-                    req.getBizDomainId(),
+                    req.getBizDomainGroupId(),
                     req.getTargetGroupId(),
                     getPosition,
                     getPrevByPosition,
@@ -166,10 +166,10 @@ public class ProductDemandGroupItemComponentImpl implements ProductDemandGroupIt
             );
             // position和前后相同，说明需要重新排序
             if (!position.getSecond()) {
-                resetPosition(req.getTargetGroupId(), req.getBizDomainId());
+                resetPosition(req.getTargetGroupId(), req.getBizDomainGroupId());
                 position = calculateNewPosition(req.getPrevId(),
                         req.getNextId(),
-                        req.getBizDomainId(),
+                        req.getBizDomainGroupId(),
                         req.getTargetGroupId(),
                         getPosition,
                         getPrevByPosition,
@@ -230,7 +230,7 @@ public class ProductDemandGroupItemComponentImpl implements ProductDemandGroupIt
             // 更新位置或目标分组id
             Pair<BigDecimal, Boolean> position = calculateNewPosition(req.getPrevId(),
                     req.getNextId(),
-                    req.getBizDomainId(),
+                    req.getBizDomainGroupId(),
                     req.getTargetGroupId(),
                     getPosition,
                     getPrevByPosition,
@@ -238,10 +238,10 @@ public class ProductDemandGroupItemComponentImpl implements ProductDemandGroupIt
             );
             // position和前后相同，说明需要重新排序
             if (!position.getSecond()) {
-                resetPosition(req.getTargetGroupId(), req.getBizDomainId());
+                resetPosition(req.getTargetGroupId(), req.getBizDomainGroupId());
                 position = calculateNewPosition(req.getPrevId(),
                         req.getNextId(),
-                        req.getBizDomainId(),
+                        req.getBizDomainGroupId(),
                         req.getTargetGroupId(),
                         getPosition,
                         getPrevByPosition,
@@ -260,7 +260,6 @@ public class ProductDemandGroupItemComponentImpl implements ProductDemandGroupIt
                     log.error("更新产品需求分组产品需求位置失败:{}", updateGroupItemDO);
                     throw new BaseBizRuntimeException("操作失败，请刷新页面重试");
                 }
-                // TODO 如果更新失败【乐观锁更新失败，唯一键冲突失败】， 重试或者提示刷新页面重试
             } catch (DuplicateKeyException e) {
                 log.error("更新产品需求分组产品需求位置失败:{}", updateGroupItemDO, e);
                 throw new BaseBizRuntimeException("操作失败，请刷新页面重试");
@@ -319,7 +318,7 @@ public class ProductDemandGroupItemComponentImpl implements ProductDemandGroupIt
 
     @Override
     public void resetPosition(Long groupId, Long bizDomainId) {
-        log.info("开始对分组{}进行位置重排", groupId);
+        log.info("开始对分组{}的需求进行位置重排", groupId);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         String modifyManId = userInfo.getId();
         String modifyMan = userInfo.getFullAlias();

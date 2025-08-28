@@ -29,9 +29,9 @@ public class ProductDemandGroupListCondition extends QueryBase {
     private String name;
 
     /**
-     * 业务域（分组查询条件）
+     * 业务域集
      */
-    private Long groupBizDomainId;
+    private Long bizDomainGroupId;
 
     /**
      * 业务域列表(产品需求查询条件)

@@ -100,4 +100,17 @@
         </where>
     </select>
 
+    <select id="countProductLine" resultType="java.lang.Integer">
+        select count(*)
+        from product_line pl
+        left join biz_domain_group_relation bdgr on pl.biz_domain_id  = bdgr.biz_domain_id
+        <where>
+            pl.is_deleted = false
+            AND bdgr.is_deleted = false
+            AND bdgr.biz_domain_group_id = #{bizDomainGroupId}
+            AND pl.owner_id = #{ownerId}
+        </where>
+    </select>
+
+
 </mapper>
