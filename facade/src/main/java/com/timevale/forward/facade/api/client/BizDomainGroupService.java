@@ -6,6 +6,7 @@ import com.timevale.forward.facade.api.query.BizDomainGroupMatchQueryList;
 import com.timevale.forward.facade.api.query.BizDomainGroupQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BizDomainGroupVO;
+import com.timevale.forward.facade.api.result.ProductLineVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
@@ -69,4 +70,10 @@ public interface BizDomainGroupService {
      */
     BaseResult<Boolean> deleteBizDomainGroup(Long bizDomainGroupId);
 
+    /**
+     * 产品线列表
+     *
+     * @return 返回业务域集的产品线列表
+     */
+    BaseResult<List<ProductLineVO>> productLineList(Long bizDomainGroupId);
 }

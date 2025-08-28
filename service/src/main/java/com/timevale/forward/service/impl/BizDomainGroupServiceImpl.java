@@ -5,20 +5,25 @@ import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDomainGroupCondition;
 import com.timevale.forward.dal.condition.BizDomainGroupMatchCondition;
+import com.timevale.forward.dal.condition.ProductLineCondition;
 import com.timevale.forward.dal.dao.BizDomainGroupMapper;
 import com.timevale.forward.dal.dao.BizDomainGroupRelationMapper;
 import com.timevale.forward.dal.dao.BizDomainMapper;
+import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.entity.BizDomainGroupDO;
 import com.timevale.forward.dal.entity.BizDomainGroupRelationDO;
+import com.timevale.forward.dal.entity.ProductLineDO;
 import com.timevale.forward.facade.api.client.BizDomainGroupService;
 import com.timevale.forward.facade.api.query.BizDomainGroupMatchQueryList;
 import com.timevale.forward.facade.api.query.BizDomainGroupQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BizDomainGroupVO;
 import com.timevale.forward.facade.api.result.BizDomainVO;
+import com.timevale.forward.facade.api.result.ProductLineVO;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDomainCopier;
 import com.timevale.forward.service.copy.BizDomainGroupCopier;
+import com.timevale.forward.service.copy.ProductLineCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -27,6 +32,7 @@ import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -49,6 +55,8 @@ public class BizDomainGroupServiceImpl implements BizDomainGroupService {
     private BizDomainGroupRelationMapper bizDomainGroupRelationMapper;
     @Resource
     private BizDomainMapper bizDomainMapper;
+    @Resource
+    private ProductLineMapper productLineMapper;
 
     @Override
     public BaseResult<List<BizDomainGroupVO>> bizDomainGroupList() {
@@ -179,6 +187,18 @@ public class BizDomainGroupServiceImpl implements BizDomainGroupService {
 
         bizDomainGroupRelationMapper.batchDelete(bizDomainGroupId, null);
         return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<List<ProductLineVO>> productLineList(Long bizDomainGroupId) {
+        List<BizDomainGroupRelationDO> bizDomainGroupRelationDOS = bizDomainGroupRelationMapper.selectByBizDomainGroupId(bizDomainGroupId);
+        List<Long> bizDomainIds = bizDomainGroupRelationDOS.stream().map(BizDomainGroupRelationDO::getBizDomainId).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(bizDomainIds)) {
+            return BaseResult.success(Lists.emptyList());
+        }
+        List<ProductLineDO> productLineDOS = productLineMapper.selectByCondition(ProductLineCondition.builder().bizDomainIds(bizDomainIds).build());
+        List<ProductLineVO> productLineVOList = ProductLineCopier.INSTANCE.convert(productLineDOS);
+        return BaseResult.success(productLineVOList);
     }
 
 }
