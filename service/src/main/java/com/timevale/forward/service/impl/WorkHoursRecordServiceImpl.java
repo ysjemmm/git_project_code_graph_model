@@ -285,12 +285,15 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         LocalDate registrationDate = workHoursRecordDO.getRegistrationDate().toInstant()
                 .atZone(ZoneId.systemDefault())
                 .toLocalDate();
+        // 获取任务开始时间
+        Date actualStartDate = Date.from(registrationDate.atTime(9, 0, 0).atZone(ZoneId.systemDefault()).toInstant());
+        // 获取任务结束时间
         Date actualEndDate = Date.from(registrationDate.atTime(18, 0, 0).atZone(ZoneId.systemDefault()).toInstant());
 
         if (TaskStatusEnum.WAITING.getCode().equals(taskDO.getStatus())) {
             TaskExecuteReq taskExecuteReq = new TaskExecuteReq();
             taskExecuteReq.setId(taskDO.getId());
-            taskExecuteReq.setActualStartDate(new Date(actualEndDate.getTime() - 5000L));
+            taskExecuteReq.setActualStartDate(actualStartDate);
             taskService.execute(taskExecuteReq);
         }
         // 如果任务进度是100，则任务直接完成
