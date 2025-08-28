@@ -31,7 +31,7 @@ public interface ProductDemandGroupItemComponent {
     ProductDemandMoveDTO moveProductDemand(ProductDemandGroupItemMoveReq productDemandGroupItemMoveReq);
     Pair<BigDecimal, Boolean> calculateNewPosition(Long prevId,
                                                Long nextId,
-                                               Long bizDomainId,
+                                               Long bizDomainGroupId,
                                                Long positionTarget,
                                                BiFunction<Long, Long, BigDecimal> getPosition,
                                                BiFunction<Long, BigDecimal, BigDecimal> getPrevByPosition,

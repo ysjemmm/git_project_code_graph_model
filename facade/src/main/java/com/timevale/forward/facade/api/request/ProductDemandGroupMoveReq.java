@@ -17,9 +17,9 @@ import javax.validation.constraints.NotNull;
 @ApiModel("产品需求分组拖动请求")
 public class ProductDemandGroupMoveReq extends BaseReq {
 
-    @ApiModelProperty(value = "业务域id", required = true)
-    @NotNull(message = "业务域id不能为空")
-    private Long bizDomainId;
+    @ApiModelProperty(value = "业务域集id", required = true)
+    @NotNull(message = "业务域集id不能为空")
+    private Long bizDomainGroupId;
 
     @ApiModelProperty(value = "待拖动ID, mode为moveIn时为产品需求id，其他为分组需求id", required = true)
     @NotNull(message = "拖动ID不能为空")

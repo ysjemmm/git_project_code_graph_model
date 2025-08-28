@@ -1,7 +1,9 @@
 package com.timevale.forward.service.copy;
 
 import com.timevale.forward.dal.condition.BizDomainGroupCondition;
+import com.timevale.forward.dal.condition.BizDomainGroupMatchCondition;
 import com.timevale.forward.dal.entity.BizDomainGroupDO;
+import com.timevale.forward.facade.api.query.BizDomainGroupMatchQueryList;
 import com.timevale.forward.facade.api.query.BizDomainGroupQueryList;
 import com.timevale.forward.facade.api.request.BizDomainGroupAddReq;
 import com.timevale.forward.facade.api.request.BizDomainGroupModifyReq;
@@ -58,4 +60,6 @@ public interface BizDomainGroupCopier {
      * @return 业务域集DO
      */
     BizDomainGroupCondition convert(BizDomainGroupQueryList bizDomainGroupQueryList);
+
+    BizDomainGroupMatchCondition convert(BizDomainGroupMatchQueryList bizDomainGroupMatchQueryList);
 }

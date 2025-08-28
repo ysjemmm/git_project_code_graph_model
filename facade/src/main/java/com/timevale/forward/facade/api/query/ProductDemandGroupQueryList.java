@@ -19,8 +19,8 @@ import java.util.List;
 @ApiModel("产品需求分组查询")
 public class ProductDemandGroupQueryList extends QueryBase {
 
-    @ApiModelProperty(value = "业务域（分组查询条件）")
-    private Long groupBizDomainId;
+    @ApiModelProperty(value = "业务域集id")
+    private Long bizDomainGroupId;
 
     @ApiModelProperty("id")
     private Long id;

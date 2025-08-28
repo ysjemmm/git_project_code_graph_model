@@ -1185,10 +1185,10 @@ public class ProjectServiceImpl implements ProjectService {
                     if (productDemandGroupItemDO != null) {
                         // 如果规划的分组和当前项目分组不是同一个业务域不能操作
                         ProductDemandGroupDO demandGroup = productDemandGroupComponent.getById(productDemandGroupItemDO.getProductDemandGroupId());
-                        if (demandGroup != null && !Objects.equals(demandGroup.getBizDomainId(), projectGroupDO.getBizDomainId())) {
-                            BizDomainDO bizDomainDO = bizDomainMapper.selectById(demandGroup.getBizDomainId());
+                        if (demandGroup != null && !Objects.equals(demandGroup.getBizDomainGroupId(), projectGroupDO.getBizDomainGroupId())) {
+                            BizDomainDO bizDomainDO = bizDomainMapper.selectById(demandGroup.getBizDomainGroupId());
                             ProductDemandGroupDO productDemandGroupDO = productDemandGroupComponent.getById(demandGroup.getId());
-                            throw new BaseBizRuntimeException(String.format("需求【%d】已被规划到其他业务域【%s】的分组【%s】中，不能关联",
+                            throw new BaseBizRuntimeException(String.format("需求【%d】已被规划到其他业务域集【%s】的分组【%s】中，不能关联",
                                     productDemandId, bizDomainDO.getName(), productDemandGroupDO.getName()));
                         }
                         productDemandGroupItemMoveReq.setMode(ProductDemandGroupMoveModeEnum.FOLLOW.getCode());
@@ -1198,13 +1198,13 @@ public class ProjectServiceImpl implements ProjectService {
                         productDemandGroupItemMoveReq.setId(productDemandId);
                     }
                     productDemandGroupItemMoveReq.setTargetGroupId(projectGroupDO.getId());
-                    productDemandGroupItemMoveReq.setBizDomainId(projectGroupDO.getBizDomainId());
+                    productDemandGroupItemMoveReq.setBizDomainGroupId(projectGroupDO.getBizDomainGroupId());
                     productDemandGroupItemComponent.moveProductDemand(productDemandGroupItemMoveReq);
                 } else {
                     ProductDemandGroupItemDO productDemandGroupItemDO = productDemandGroupItemComponent.getByGroupIdAndDemandId(projectGroupDO.getId(), productDemandId);
                     if (productDemandGroupItemDO != null) {
                         productDemandGroupItemMoveReq.setMode(ProductDemandGroupMoveModeEnum.MOVE_OUT.getCode());
-                        productDemandGroupItemMoveReq.setBizDomainId(projectGroupDO.getBizDomainId());
+                        productDemandGroupItemMoveReq.setBizDomainGroupId(projectGroupDO.getBizDomainGroupId());
                         productDemandGroupItemMoveReq.setTargetGroupId(projectGroupDO.getId());
                         productDemandGroupItemMoveReq.setId(productDemandGroupItemDO.getId());
                         productDemandGroupItemComponent.moveProductDemand(productDemandGroupItemMoveReq);

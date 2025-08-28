@@ -4,12 +4,14 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDomainGroupCondition;
+import com.timevale.forward.dal.condition.BizDomainGroupMatchCondition;
 import com.timevale.forward.dal.dao.BizDomainGroupMapper;
 import com.timevale.forward.dal.dao.BizDomainGroupRelationMapper;
 import com.timevale.forward.dal.dao.BizDomainMapper;
 import com.timevale.forward.dal.entity.BizDomainGroupDO;
 import com.timevale.forward.dal.entity.BizDomainGroupRelationDO;
 import com.timevale.forward.facade.api.client.BizDomainGroupService;
+import com.timevale.forward.facade.api.query.BizDomainGroupMatchQueryList;
 import com.timevale.forward.facade.api.query.BizDomainGroupQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BizDomainGroupVO;
@@ -19,6 +21,7 @@ import com.timevale.forward.service.copy.BizDomainCopier;
 import com.timevale.forward.service.copy.BizDomainGroupCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -87,8 +90,26 @@ public class BizDomainGroupServiceImpl implements BizDomainGroupService {
     }
 
     @Override
+    public BaseResult<PageQueryResult<BizDomainGroupVO>> matchBizDomainGroupList(BizDomainGroupMatchQueryList bizDomainGroupMatchQueryList) {
+        BizDomainGroupMatchCondition condition = BizDomainGroupCopier.INSTANCE.convert(bizDomainGroupMatchQueryList);
+        PageHelper.startPage(bizDomainGroupMatchQueryList.pageNum, bizDomainGroupMatchQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
+        List<BizDomainGroupDO> bizDomainGroupDOList = bizDomainGroupMapper.matchBizDomainGroupList(condition);
+        List<BizDomainGroupVO> bizDomainGroupVOList = BizDomainGroupCopier.INSTANCE.convert(bizDomainGroupDOList);
+        PageInfo<BizDomainGroupDO> pageInfo = new PageInfo<>(bizDomainGroupDOList);
+        PageQueryResult<BizDomainGroupVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(bizDomainGroupVOList);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+        return BaseResult.success(pageQueryResult);
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> add(BizDomainGroupAddReq bizDomainGroupAddReq) {
+        BizDomainGroupDO bizDomainGroup = bizDomainGroupMapper.selectByName(bizDomainGroupAddReq.getName());
+        if (bizDomainGroup != null) {
+            throw new BaseBizRuntimeException("该业务域集的名称已存在,请修改后重试");
+        }
+
         BizDomainGroupDO bizDomainGroupDO = BizDomainGroupCopier.INSTANCE.convert(bizDomainGroupAddReq);
         bizDomainGroupMapper.insert(bizDomainGroupDO);
 
@@ -105,6 +126,10 @@ public class BizDomainGroupServiceImpl implements BizDomainGroupService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> update(BizDomainGroupModifyReq bizDomainGroupModifyReq) {
+        BizDomainGroupDO bizDomainGroup  = bizDomainGroupMapper.selectByName(bizDomainGroupModifyReq.getName());
+        if (bizDomainGroup != null && !Objects.equals(bizDomainGroup.getId(), bizDomainGroupModifyReq.getId())) {
+            throw new BaseBizRuntimeException("该业务域集的名称已存在,请修改后重试");
+        }
         BizDomainGroupDO bizDomainGroupDO = BizDomainGroupCopier.INSTANCE.convert(bizDomainGroupModifyReq);
         bizDomainGroupMapper.update(bizDomainGroupDO);
 

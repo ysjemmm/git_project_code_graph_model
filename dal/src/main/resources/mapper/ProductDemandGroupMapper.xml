@@ -8,7 +8,7 @@
         FROM product_demand_group pdg
         LEFT JOIN project p on pdg.project_id = p.id
         <where>
-            pdg.biz_domain_id = #{groupBizDomainId}
+            pdg.biz_domain_group_id = #{bizDomainGroupId}
             AND pdg.is_deleted = false
             <if test="groupCreateDateStart != null and groupCreateDateEnd != null">
                 and pdg.create_date &gt;= #{groupCreateDateStart} and pdg.create_date &lt;= #{groupCreateDateEnd}
@@ -108,14 +108,14 @@
     <!-- 新增一条产品需求分组信息 -->
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProductDemandGroupDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
         INSERT INTO product_demand_group
-        (name, biz_domain_id, position, version, owner, owner_id, project_id, create_man_id, create_man, is_active)
+        (name, biz_domain_group_id, position, version, owner, owner_id, project_id, create_man_id, create_man, is_active)
         VALUES
-        (#{name}, #{bizDomainId}, #{position}, #{version}, #{owner}, #{ownerId}, #{projectId}, #{createManId}, #{createMan}, #{isActive})
+        (#{name}, #{bizDomainGroupId}, #{position}, #{version}, #{owner}, #{ownerId}, #{projectId}, #{createManId}, #{createMan}, #{isActive})
     </insert>
 
-    <!-- 根据业务域id和名称查询产品需求分组 -->
-    <select id="getByBizDomainIdAndName" resultType="com.timevale.forward.dal.entity.ProductDemandGroupDO">
-        SELECT * FROM product_demand_group WHERE biz_domain_id = #{bizDomainId} AND name = #{name} AND is_deleted = 0
+    <!-- 根据业务域集id和名称查询产品需求分组 -->
+    <select id="getByBizDomainGroupIdAndName" resultType="com.timevale.forward.dal.entity.ProductDemandGroupDO">
+        SELECT * FROM product_demand_group WHERE biz_domain_group_id = #{bizDomainGroupId} AND name = #{name} AND is_deleted = 0
     </select>
 
     <!-- 更新产品需求分组信息 -->
@@ -123,7 +123,7 @@
         UPDATE product_demand_group
         <set>
             <if test="name != null">name = #{name},</if>
-            <if test="bizDomainId != null">biz_domain_id = #{bizDomainId},</if>
+            <if test="bizDomainGroupId != null">biz_domain_group_id = #{bizDomainGroupId},</if>
             <if test="position != null">position = #{position},</if>
             <if test="version != null">version = #{version},</if>
             <if test="owner != null">owner = #{owner},</if>
@@ -157,26 +157,26 @@
         SELECT * FROM product_demand_group WHERE id = #{id} AND is_deleted = false
     </select>
 
-    <!-- 根据主键id和业务域id获取产品需求分组信息 -->
-    <select id="getByIdAndBizDomainId" resultType="com.timevale.forward.dal.entity.ProductDemandGroupDO">
-        SELECT * FROM product_demand_group WHERE id = #{id} AND biz_domain_id = #{bizDomainId} AND is_deleted = false
+    <!-- 根据主键id和业务域集id获取产品需求分组信息 -->
+    <select id="getByIdAndBizDomainGroupId" resultType="com.timevale.forward.dal.entity.ProductDemandGroupDO">
+        SELECT * FROM product_demand_group WHERE id = #{id} AND biz_domain_group_id = #{bizDomainGroupId} AND is_deleted = false
     </select>
 
-    <!-- 根据业务域id获取产品需求分组信息 -->
-    <select id="getByBizDomainId" resultType="com.timevale.forward.dal.entity.ProductDemandGroupDO">
-        SELECT * FROM product_demand_group WHERE biz_domain_id = #{bizDomainId} AND is_deleted = false order by position desc
+    <!-- 根据业务域集id获取产品需求分组信息 -->
+    <select id="getByBizDomainGroupId" resultType="com.timevale.forward.dal.entity.ProductDemandGroupDO">
+        SELECT * FROM product_demand_group WHERE biz_domain_group_id = #{bizDomainGroupId} AND is_deleted = false order by position desc
     </select>
 
     <select id="getPreByPosition" resultType="com.timevale.forward.dal.entity.ProductDemandGroupDO">
         select * from product_demand_group
-        where biz_domain_id = #{bizDomainId} and is_deleted = false
+        where biz_domain_group_id = #{bizDomainGroupId} and is_deleted = false
         and `position` &gt; #{position}
         order by `position`  asc
         limit 1
     </select>
     <select id="getNextByPosition" resultType="com.timevale.forward.dal.entity.ProductDemandGroupDO">
         select * from product_demand_group
-        where biz_domain_id = #{bizDomainId} and is_deleted = false
+        where biz_domain_group_id = #{bizDomainGroupId} and is_deleted = false
         and `position` &lt; #{position}
         order by `position` desc
         limit 1
