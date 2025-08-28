@@ -2,6 +2,7 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
+import com.timevale.forward.facade.api.query.BizDomainGroupMatchQueryList;
 import com.timevale.forward.facade.api.query.BizDomainGroupQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BizDomainGroupVO;
@@ -30,6 +31,13 @@ public interface BizDomainGroupService {
      * @return 返回业务域集列表
      */
     BaseResult<PageQueryResult<BizDomainGroupVO>> bizDomainGroupList(BizDomainGroupQueryList bizDomainGroupQueryList);
+
+    /**
+     * 列表
+     *
+     * @return 返回业务域集列表
+     */
+    BaseResult<PageQueryResult<BizDomainGroupVO>> matchBizDomainGroupList(BizDomainGroupMatchQueryList bizDomainGroupMatchQueryList);
 
     /**
      * 新增

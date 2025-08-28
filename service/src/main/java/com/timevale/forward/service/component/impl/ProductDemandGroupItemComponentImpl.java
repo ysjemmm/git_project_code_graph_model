@@ -271,7 +271,7 @@ public class ProductDemandGroupItemComponentImpl implements ProductDemandGroupIt
     @Override
     public Pair<BigDecimal, Boolean> calculateNewPosition(Long prevId,
                                 Long nextId,
-                                Long bizDomainId,
+                                Long bizDomainGroupId,
                                 Long positionTarget,
                                 BiFunction<Long, Long, BigDecimal> getPosition,
                                 BiFunction<Long, BigDecimal, BigDecimal> getPrevByPosition,
@@ -279,7 +279,7 @@ public class ProductDemandGroupItemComponentImpl implements ProductDemandGroupIt
         BigDecimal position;
         if (prevId == null && nextId == null) {
             // 前后都为空，直接添加到第一个
-            position = PositionUtil.generate(bizDomainId.toString(), System.currentTimeMillis());
+            position = PositionUtil.generate(bizDomainGroupId.toString(), System.currentTimeMillis());
         } else if (prevId == null && nextId != null) {
             BigDecimal nextPosition = getPosition.apply(positionTarget, nextId);
             // 前面为空，后面不为空
@@ -294,7 +294,7 @@ public class ProductDemandGroupItemComponentImpl implements ProductDemandGroupIt
                 }
             } else {
                 // 如果后面是第一个（前面不存在) 则直接添加到第一个
-                position = PositionUtil.generate(bizDomainId.toString(), System.currentTimeMillis());
+                position = PositionUtil.generate(bizDomainGroupId.toString(), System.currentTimeMillis());
             }
         } else {
             BigDecimal prevPosition = getPosition.apply(positionTarget, prevId);

@@ -27,7 +27,7 @@ public interface ProductDemandGroupService {
 
 
     /**
-     * 查询业务域需求分组列表
+     * 查询业务域集需求分组列表
      * @param productDemandGroupQueryList 产品需求查询信息
      * @return 产品需求分组VO列表
      */
@@ -62,14 +62,14 @@ public interface ProductDemandGroupService {
     BaseResult<Boolean> delete(ProductDemandGroupReq productDemandGroupReq);
 
     /**
-     * 拖动产品需求
+     * 拖动产品分组
      * @param productDemandGroupMoveReq 产品需求分组拖动请求
      * @return 是否成功
      */
     BaseResult<Boolean> moveProductDemandGroup(ProductDemandGroupMoveReq productDemandGroupMoveReq);
 
     /**
-     * 拖动产品需分组
+     * 拖动产品需求
      * @param productDemandGroupItemMoveReq 产品需求拖动请求
      * @return 是否成功
      */
@@ -81,6 +81,13 @@ public interface ProductDemandGroupService {
      * @return 是否成功
      */
     BaseResult<Boolean> linkOrUnlinkProject(ProductDemandGroupProjectLinkReq productDemandGroupItemMoveReq);
+
+    /**
+     * 转交产品分组
+     * @param productDemandGroupTransferReq 产品需求分组转交请求
+     * @return 是否成功
+     */
+    BaseResult<Boolean> transferProductDemandGroup(ProductDemandGroupTransferReq productDemandGroupTransferReq);
 
 
 } 

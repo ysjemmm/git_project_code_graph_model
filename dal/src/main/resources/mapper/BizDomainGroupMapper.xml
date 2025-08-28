@@ -8,6 +8,33 @@
         where is_deleted = false
     </select>
 
+    <select id="matchBizDomainGroupList" resultType="com.timevale.forward.dal.entity.BizDomainGroupDO">
+        select * from biz_domain_group bdg
+        <where>
+            bdg.is_deleted  = false
+            <if test="name != null and name != ''">and bdg.name like concat('%',#{name},'%')</if>
+            and bdg.id in (
+            SELECT DISTINCT r1.biz_domain_group_id
+            FROM biz_domain_group_relation r1
+            WHERE NOT EXISTS (
+            -- 找出目标组中有但当前组中没有的biz_domain_id
+                SELECT 1
+                FROM biz_domain_group_relation r2
+                WHERE r2.biz_domain_group_id = #{bizDomainGroupId}
+                AND r2.is_deleted = 0
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM biz_domain_group_relation r3
+                    WHERE r3.biz_domain_group_id = r1.biz_domain_group_id
+                    AND r3.biz_domain_id = r2.biz_domain_id
+                    AND r3.is_deleted = 0
+                )
+            )
+            AND r1.is_deleted = 0
+            AND r1.biz_domain_group_id != #{bizDomainGroupId})
+        </where>
+    </select>
+
     <select id="selectById" resultType="com.timevale.forward.dal.entity.BizDomainGroupDO">
         select *
         from biz_domain_group
@@ -32,12 +59,7 @@
         SELECT *
         FROM biz_domain_group
         <where>
-            <if test="nameList != null and nameList.size() > 0">
-                AND `name` IN
-                <foreach collection="nameList" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
+            AND `name` = #{name}
             AND is_deleted = false
         </where>
     </select>

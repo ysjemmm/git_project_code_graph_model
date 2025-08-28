@@ -93,6 +93,9 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
     @Resource
     private BizDomainGroupMapper bizDomainGroupMapper;
 
+    @Resource
+    private BizDomainGroupRelationMapper bizDomainGroupRelationMapper;
+
     /**
      * 查询业务域内的待规划的产品需求
      *
@@ -312,7 +315,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
             throw new BaseBizRuntimeException("该产品需求分组的业务域集不能修改,请修改后重试");
         }
         ProductDemandGroupDO oldProductDemandGroup = productDemandGroupMapper.getByBizDomainGroupIdAndName(productDemandGroupDO.getBizDomainGroupId(), productDemandGroupDO.getName());
-        if (oldProductDemandGroup != null && !Objects.equals(oldProductDemandGroup.getId(),productDemandGroupDO.getId())) {
+        if (oldProductDemandGroup != null && !Objects.equals(oldProductDemandGroup.getId(), productDemandGroupDO.getId())) {
             throw new BaseBizRuntimeException("该产品需求分组名称已存在,请修改后重试");
         }
         productDemandGroupComponent.update(productDemandGroupDO);
@@ -491,7 +494,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
             ProjectDO projectDO = projectMapper.get(projectId);
             AssertUtil.notNull(projectDO, "项目不存在");
             // 客开项目 || 内部项目 || PBG项目/1-N客开项目 不能关联分组
-            if (projectDO.getCustomerDev() != 0 || projectDO.getCategory() != 0 || projectDO.getKind() == 2 ) {
+            if (projectDO.getCustomerDev() != 0 || projectDO.getCategory() != 0 || projectDO.getKind() == 2) {
                 throw new BaseBizRuntimeException("项目类型错误，不能关联分组");
             }
             // 已结项 | 已暂停 | 已中止 | 已废除 不支持关联
@@ -545,6 +548,39 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
             // 删除分组的项目
             productDemandGroupComponent.removeProject(groupId);
         }
+        return BaseResult.success(true);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> transferProductDemandGroup(ProductDemandGroupTransferReq productDemandGroupTransferReq) {
+        ProductDemandGroupDO productDemandGroupDO = productDemandGroupMapper.get(productDemandGroupTransferReq.getId());
+        AssertUtil.checkState(productDemandGroupDO != null, "规划分组不存在");
+        if (Objects.equals(productDemandGroupDO.getBizDomainGroupId(), productDemandGroupTransferReq.getBizDomainGroupId())) {
+            return BaseResult.success(true);
+        }
+        // 校验操作权限
+        checkOperationPermission(productDemandGroupDO.getBizDomainGroupId());
+        // 校验业务域集范围
+        List<BizDomainGroupRelationDO> sourceBizDomainGroupRelationDOS = bizDomainGroupRelationMapper.selectByBizDomainGroupId(productDemandGroupDO.getBizDomainGroupId());
+        List<BizDomainGroupRelationDO> targetBizDomainGroupRelationDOS = bizDomainGroupRelationMapper.selectByBizDomainGroupId(productDemandGroupTransferReq.getBizDomainGroupId());
+
+        // 提取target中的所有bizDomainId
+        Set<Long> targetBizDomainIds = targetBizDomainGroupRelationDOS.stream()
+                .map(BizDomainGroupRelationDO::getBizDomainId)
+                .collect(Collectors.toSet());
+
+        // 检查source中的所有bizDomainId是否都在target中
+        boolean containsAll = sourceBizDomainGroupRelationDOS.stream()
+                .map(BizDomainGroupRelationDO::getBizDomainId)
+                .allMatch(targetBizDomainIds::contains);
+        AssertUtil.checkState(containsAll, "目标业务域集的范围没有包含当前业务域集，不能操作");
+        // 转交
+        ProductDemandGroupDO groupDO = new ProductDemandGroupDO();
+        groupDO.setId(productDemandGroupTransferReq.getId());
+        groupDO.setBizDomainGroupId(productDemandGroupTransferReq.getBizDomainGroupId());
+        groupDO.setPosition(PositionUtil.generate(productDemandGroupTransferReq.getBizDomainGroupId().toString(), System.currentTimeMillis()));
+        productDemandGroupMapper.update(groupDO);
         return BaseResult.success(true);
     }
 }

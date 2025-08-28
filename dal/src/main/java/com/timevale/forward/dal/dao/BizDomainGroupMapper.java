@@ -1,6 +1,7 @@
 package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.condition.BizDomainGroupCondition;
+import com.timevale.forward.dal.condition.BizDomainGroupMatchCondition;
 import com.timevale.forward.dal.entity.BizDomainGroupDO;
 import org.apache.ibatis.annotations.Param;
 
@@ -20,6 +21,8 @@ public interface BizDomainGroupMapper {
      */
     List<BizDomainGroupDO> selectAllBizDomainGroup();
 
+    List<BizDomainGroupDO> matchBizDomainGroupList(BizDomainGroupMatchCondition bizDomainGroupMatchCondition);
+
     /**
      * 通过id选择
      *
@@ -31,10 +34,10 @@ public interface BizDomainGroupMapper {
     /**
      * 选择 by 名字
      *
-     * @param nameList 名字列表
+     * @param name 名字
      * @return 业务域集DO
      */
-    List<BizDomainGroupDO> selectByName(@Param("nameList") List<String> nameList);
+    BizDomainGroupDO selectByName(@Param("name") String name);
 
     /**
      * 通过id选择
