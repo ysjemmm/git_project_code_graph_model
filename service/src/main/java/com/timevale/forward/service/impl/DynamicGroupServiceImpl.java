@@ -2088,7 +2088,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         }
 
         // 创建一层空的子节点
-        List<DemandGroupNodeVO> children = new ArrayList<>();
+        List<DemandGroupNodeVO> children = parent.getChildren();
         String groupField = groupFields.get(level);
 
         List<DemandGroupNodeVO> parentChildren = parent.getChildren();
@@ -2145,15 +2145,16 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
                                            String groupField, Map<String, Long> longMap,
                                            List<DemandGroupNodeVO> children) {
         DemandGroupNodeVO child = new DemandGroupNodeVO();
-        child.setField(fieldMap.get(groupField));
-        child.setFieldValue(code);
-        child.setLabel(text);
-        if (longMap.containsKey(code)) {
-            child.setTotal(longMap.getOrDefault(code, 0L));
-        } else {
+        Map<String, DemandGroupNodeVO> nodeVOMap = children.stream().collect(Collectors.toMap(DemandGroupNodeVO::getFieldValue, Function.identity()));
+        if (!longMap.containsKey(code)) {
+            child.setField(fieldMap.get(groupField));
+            child.setFieldValue(code);
+            child.setLabel(text);
             child.setTotal(0L);
+            children.add(child);
+        } else {
+            child = nodeVOMap.get(code);
         }
-        children.add(child);
         return child;
     }
 
@@ -2163,16 +2164,17 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
                                        Map<String, Long> longMap,
                                        List<DemandGroupNodeVO> children) {
         DemandGroupNodeVO child = new DemandGroupNodeVO();
-        child.setField(fieldMap.get(groupField));
         String valueOf = String.valueOf(entry.getKey());
-        child.setFieldValue(valueOf);
-        child.setLabel(entry.getValue());
-        if (longMap.containsKey(valueOf)) {
-            child.setTotal(longMap.getOrDefault(valueOf, 0L));
-        } else {
+        Map<String, DemandGroupNodeVO> nodeVOMap = children.stream().collect(Collectors.toMap(DemandGroupNodeVO::getFieldValue, Function.identity()));
+        if (!longMap.containsKey(valueOf)) {
+            child.setField(fieldMap.get(groupField));
+            child.setFieldValue(valueOf);
+            child.setLabel(entry.getValue());
             child.setTotal(0L);
+            children.add(child);
+        } else {
+            child = nodeVOMap.get(valueOf);
         }
-        children.add(child);
         return child;
     }
 
@@ -2306,7 +2308,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
         if (ProductGroupFieldEnum.STATUS.getGroupField().equals(groupField)) {
             Map<String, String> statusMap = enumMap.get(ProductGroupFieldEnum.STATUS.getGroupField());
-            return MapUtils.isEmpty(statusMap) || node.getChildren().size() >= statusMap.size();
+            return MapUtils.isEmpty(statusMap) || node.getChildren().size() < statusMap.size();
         }
 
         return false;
