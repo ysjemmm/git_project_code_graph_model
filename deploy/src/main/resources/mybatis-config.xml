@@ -132,5 +132,7 @@
         <mapper resource="mapper/ProductDemandGroupItemMapper.xml"/>
         <mapper resource="mapper/ViewsMapper.xml"/>
         <mapper resource="mapper/ViewsUserMapper.xml"/>
+        <mapper resource="mapper/BizDomainGroupMapper.xml"/>
+        <mapper resource="mapper/BizDomainGroupRelationMapper.xml"/>
     </mappers>
 </configuration>

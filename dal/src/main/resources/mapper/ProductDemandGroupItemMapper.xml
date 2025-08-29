@@ -99,6 +99,7 @@
         from product_demand a
         left join product_line c on a.product_line_id=c.id
         left join biz_domain d on c.biz_domain_id=d.id
+        left join biz_domain_group_relation e on d.id = e .biz_domain_id
         <if test="copierId != null and copierId != ''">
             left join person e on a.id=e.main_id and e.type =20 and e.is_deleted =false
         </if>
@@ -133,9 +134,9 @@
                     #{item}
                 </foreach>
             </if>-->
-            <!-- 只查询当前业务域下的产品需求 -->
-            <if test="groupBizDomainId!=null ">
-                and d.id = #{groupBizDomainId}
+            <!-- 只查询当前业务域集下的产品需求 -->
+            <if test="bizDomainGroupId!=null ">
+                and e.biz_domain_group_id = #{bizDomainGroupId}
             </if>
             <if test="ownerIds!=null and ownerIds.size()>0">
                 and a.owner_id in
@@ -171,6 +172,9 @@
                 and a.type REGEXP CONCAT('[', #{types},']')
             </if>
             and  a.is_deleted = false
+            and  c.is_deleted = false
+            and  d.is_deleted = false
+            and  e.is_deleted = false
             and not exists (
                 select 1 from product_demand_group_item pdgi
                 where pdgi.product_demand_id  = a.id and pdgi.is_deleted = false

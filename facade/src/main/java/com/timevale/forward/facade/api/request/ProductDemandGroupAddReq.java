@@ -22,9 +22,9 @@ public class ProductDemandGroupAddReq extends BaseReq {
     @NotEmpty(message = "名称不能为空")
     private String name;
 
-    @ApiModelProperty(value = "业务域id", required = true)
-    @NotNull(message = "业务域id不能为空")
-    private Long bizDomainId;
+    @ApiModelProperty(value = "业务域集id", required = true)
+    @NotNull(message = "业务域集id不能为空")
+    private Long bizDomainGroupId;
 
     @ApiModelProperty(value = "需求负责人", required = true)
     @NotNull(message = "需求负责人不能为空")

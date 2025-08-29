@@ -66,48 +66,48 @@ public interface ProductDemandGroupMapper {
     ProductDemandGroupDO get(@Param("id") Long id);
 
     /**
-     * 根据业务域id和id查询产品需求分组
+     * 根据业务域集d和id查询产品需求分组
      *
-     * @param bizDomainId 业务域id
+     * @param bizDomainGroupId 业务域集id
      * @param id 主键id
      * @return 产品需求分组DO
      */
-    ProductDemandGroupDO getByIdAndBizDomainId(@Param("bizDomainId") Long bizDomainId, @Param("id") Long id);
+    ProductDemandGroupDO getByIdAndBizDomainGroupId(@Param("bizDomainGroupId") Long bizDomainGroupId, @Param("id") Long id);
 
     /**
-     * 根据业务域id查询产品需求分组
+     * 根据业务域集id查询产品需求分组
      *
-     * @param bizDomainId 业务域id
+     * @param bizDomainGroupId 业务域集id
      * @return 产品需求分组DO
      */
-    List<ProductDemandGroupDO> getByBizDomainId(@Param("bizDomainId") Long bizDomainId);
+    List<ProductDemandGroupDO> getByBizDomainGroupId(@Param("bizDomainGroupId") Long bizDomainGroupId);
 
     /**
-     * 根据业务域id和名称查询产品需求分组
+     * 根据业务域集id和名称查询产品需求分组
      *
-     * @param bizDomainId 业务域id
+     * @param bizDomainGroupId 业务域集id
      * @param name        分组名称
      * @return 产品需求分组DO
      */
-    ProductDemandGroupDO getByBizDomainIdAndName(@Param("bizDomainId") Long bizDomainId, @Param("name") String name);
+    ProductDemandGroupDO getByBizDomainGroupIdAndName(@Param("bizDomainGroupId") Long bizDomainGroupId, @Param("name") String name);
 
     /**
      * 获取当前位置前一个分组
      *
-     * @param bizDomainId 业务域id
+     * @param bizDomainGroupId 业务域集id
      * @param position    当前位置
      * @return 产品需求分组DO
      */
-    ProductDemandGroupDO getPreByPosition(@Param("bizDomainId") Long bizDomainId, @Param("position") BigDecimal position);
+    ProductDemandGroupDO getPreByPosition(@Param("bizDomainGroupId") Long bizDomainGroupId, @Param("position") BigDecimal position);
 
     /**
      * 获取当前位置后一个分组
      *
-     * @param bizDomainId 业务域id
+     * @param bizDomainGroupId 业务域集id
      * @param position    当前位置
      * @return 产品需求分组DO
      */
-    ProductDemandGroupDO getNextByPosition(@Param("bizDomainId") Long bizDomainId, @Param("position") BigDecimal position);
+    ProductDemandGroupDO getNextByPosition(@Param("bizDomainGroupId") Long bizDomainGroupId, @Param("position") BigDecimal position);
 
     /**
      * 统计个数

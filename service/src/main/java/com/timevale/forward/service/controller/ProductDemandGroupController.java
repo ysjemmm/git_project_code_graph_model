@@ -66,12 +66,6 @@ public class ProductDemandGroupController {
         return ResultUtils.result(productDemandGroupService.delete(productDemandGroupReq));
     }
 
-    @ApiOperation("产品需求分组绑定项目")
-    @PostMapping("/bindProject")
-    public BusinessResult<Boolean> bindProject(@RequestBody @Valid ProductDemandGroupProjectReq productDemandGroupProjectReq) {
-        return ResultUtils.result(productDemandGroupService.bindProject(productDemandGroupProjectReq));
-    }
-
     @ApiOperation("产品需求拖动")
     @PostMapping("/moveProductDemand")
     public BusinessResult<Boolean> moveProductDemand(@RequestBody @Valid ProductDemandGroupItemMoveReq productDemandGroupItemMoveReq) {

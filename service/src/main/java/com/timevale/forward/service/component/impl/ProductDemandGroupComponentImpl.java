@@ -152,7 +152,7 @@ public class ProductDemandGroupComponentImpl implements ProductDemandGroupCompon
         String modifyManId = userInfo.getId();
         String modifyMan = userInfo.getFullAlias();
         // 获取当前业务域下的所有分组（按position倒序）
-        List<ProductDemandGroupDO> productDemandGroupDOS = productDemandGroupMapper.getByBizDomainId(bizDomainId);
+        List<ProductDemandGroupDO> productDemandGroupDOS = productDemandGroupMapper.getByBizDomainGroupId(bizDomainId);
         BigDecimal position = PositionUtil.generate(bizDomainId.toString(), System.currentTimeMillis());
         for (ProductDemandGroupDO productDemandGroupDO : productDemandGroupDOS) {
             log.info("业务域({})的分组({}-{})位置重排，{} -》 {}", bizDomainId, productDemandGroupDO.getId(),productDemandGroupDO.getName(), productDemandGroupDO.getPosition(), position);
