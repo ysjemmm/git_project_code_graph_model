@@ -49,13 +49,34 @@
     </select>
 
     <select id="getPlineAndBizDomain" resultType="com.timevale.forward.dal.entity.ProjectProductLineBizDomain">
-        select a.id product_line_id,a.name productLineName,b.name bizDomainName
+        select a.id product_line_id,a.biz_domain_id bizDomainId,a.name productLineName,b.name bizDomainName
         from product_line a
         left join biz_domain b on a.biz_domain_id=b.id
         <where>
             <if test="bizDomainIds != null and bizDomainIds.size() > 0">
                 and b.id in
                 <foreach collection="bizDomainIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and a.is_deleted = false
+        </where>
+    </select>
+
+    <select id="getPlineAndBizDomainList" resultType="com.timevale.forward.dal.entity.ProjectProductLineBizDomain">
+        select a.id product_line_id,a.biz_domain_id bizDomainId,a.name productLineName,b.name bizDomainName
+        from product_line a
+        left join biz_domain b on a.biz_domain_id=b.id
+        <where>
+            <if test="bizDomainIds != null and bizDomainIds.size() > 0">
+                and b.id in
+                <foreach collection="bizDomainIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="productLineIds != null and productLineIds.size() > 0">
+                and a.id in
+                <foreach collection="productLineIds" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>

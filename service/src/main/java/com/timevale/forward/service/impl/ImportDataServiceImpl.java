@@ -47,6 +47,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -83,12 +84,12 @@ public class ImportDataServiceImpl implements ImportDataService {
     private static final SimpleDateFormat DATE_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
     private static final String[] importProjectDataHeader = {"项目名称", "产品线", "项目类型（PBG:1;1-N:2;职能后台:3）", "项目性质（产品研发:0;技术优化:1;日常迭代:2）",
-            "项目等级（S:20;A:30;B:40）", "计划开始时间", "计划结束时间", "优先级（P0:0;P1:10;P2:20;P3:30）", "项目经理", "产品经理", "项目负责人", "项目描述", "项目成员",
+            "项目等级（S:20;A:30;B:40）", "计划开始时间", "计划结束时间", "优先级（P0:0;P1:10;P2:20;P3:30）", "项目id", "项目经理", "产品经理", "项目负责人", "项目描述", "项目成员",
             "是否需要在发布平台发布", "是否需要项目验收", "是否有项目目标"};
 
     private static final String[] importDemandDataHeader = {"需求主题", "产品线", "优先级（P0:0;P1:10;P2:20;P3:30）", "产品需求类型（新增功能:0;功能迭代:1;体验优化:2;技术需求:3;安全需求:4;埋点需求:5;数据需求:6）", "产品需求负责人", "预期排期时间", "所属项目", "需求描述"};
 
-    private static final String[] importTaskDataHeader = {"任务名称", "产品线", "所属项目", "项目阶段（需求规划阶段:0;研发阶段:1;测试阶段:2）", "任务执行人", "计划开始时间", "计划完成时间", "实际开始时间", "实际完成时间", "任务描述", "关联产品需求", "是否为任务执行人创建代办"};
+    private static final String[] importTaskDataHeader = {"任务名称", "任务状态", "产品线", "所属项目", "项目阶段（需求规划阶段:0;研发阶段:1;测试阶段:2）", "任务执行人", "计划开始时间", "计划完成时间", "实际开始时间", "实际完成时间", "任务描述", "关联产品需求", "是否为任务执行人创建代办"};
 
     @Override
     public void downloadTemplate(Integer type, HttpServletResponse response) {
@@ -214,7 +215,13 @@ public class ImportDataServiceImpl implements ImportDataService {
         demandAddReq.setTypes(types);
 
         // 处理负责人
-        String owner = data[newIndex[4]];
+        String owner;
+        String[] partsStr = data[newIndex[4]].split("-");
+        if (partsStr.length >= 2) {
+            owner =  partsStr[0] + "-" + partsStr[1];
+        } else {
+            owner = partsStr[0];
+        }
         if (StringUtils.isNotEmpty(owner)) {
             demandAddReq.setDemandOwner(new PersonAddReq(owner, PinyinConverter.toPinyin(owner.split("-")[0])));
         }
@@ -229,7 +236,7 @@ public class ImportDataServiceImpl implements ImportDataService {
             throw new BaseBizRuntimeException("需求排期日期格式错误: " + data[newIndex[5]]);
         }
 
-        ProjectDO projectDO = projectMapper.getByName(data[newIndex[6]]);
+        ProjectDO projectDO = projectMapper.getByName(data[newIndex[6]] + "导入测试");
         if (projectDO != null) {
             demandAddReq.setProjectId(projectDO.getId());
         }
@@ -269,6 +276,8 @@ public class ImportDataServiceImpl implements ImportDataService {
         String[] data = ImportDataUtil.splitLineData(line, actualLength);
         TaskAddReq taskAddReq = new TaskAddReq();
         taskAddReq.setName(data[newIndex[0]] + "导入测试");
+
+        // TODO 如果任务状态是已完成则填充实际结束实际为计划结束时间
 
         String productLineName = data[newIndex[1]];
         if (StringUtils.isNotBlank(productLineName)) {
@@ -428,8 +437,21 @@ public class ImportDataServiceImpl implements ImportDataService {
     @NotNull
     private void addProjectData(int actualLength, int[] newIndex, String line) {
         String[] data = ImportDataUtil.splitLineData(line, actualLength);
+        String projectName = data[newIndex[0]];
+        if (StringUtils.isBlank(projectName)) {
+            throw new BaseBizRuntimeException("项目名称不能为空");
+        }
+        String projectIdStr = data[newIndex[8]];
+        if (StringUtils.isNotBlank(projectIdStr)) {
+            ProjectDO projectDO = projectMapper.get(Long.valueOf(projectIdStr));
+            if (Objects.nonNull(projectDO)) {
+                projectDO.setName(projectName);
+                projectMapper.update(projectDO);
+                return;
+            }
+        }
         ProjectAddReq projectAddReq = new ProjectAddReq();
-        projectAddReq.setName(data[newIndex[0]] + "导入测试");
+        projectAddReq.setName(projectName + "导入测试");
         List<String> productLines = Arrays.asList(data[newIndex[1]].split(","));
         List<Long> productLineIds = productLineMapper.selectByProductLineNames(productLines).stream().map(ProductLineDO::getId).collect(Collectors.toList());
         projectAddReq.setProductLineIds(productLineIds);
@@ -456,16 +478,33 @@ public class ImportDataServiceImpl implements ImportDataService {
 
         Set<String> userNames = new HashSet<>();
         // 项目经理
-        String pm = data[newIndex[8]];
+        String pm = data[newIndex[9]];
         userNames.add(pm);
         // 产品经理
-        List<String> pds = Arrays.asList(data[newIndex[9]].split(","));
+        List<String> pds = Arrays.asList(data[newIndex[10]].split(","));
         userNames.addAll(pds);
         // 项目负责人
-        String principal = data[newIndex[10]];
+        String principal;
+        String[] partsStr = data[newIndex[11]].split("-");
+        if (partsStr.length >= 2) {
+            principal =  partsStr[0] + "-" + partsStr[1];
+        } else {
+            principal = partsStr[0];
+        }
         userNames.add(principal);
         // 项目成员
-        List<String> teamMembers = Arrays.asList(data[newIndex[12]].split(","));
+        List<String> members = Arrays.asList(data[newIndex[12]].split(","));
+        // 项目成员
+        List<String> teamMembers = members.stream()
+                .map(e -> {
+                    String[] parts = e.split("-");
+                    if (parts.length >= 2) {
+                        return parts[0] + "-" + parts[1];
+                    } else {
+                        return e;
+                    }
+                })
+                .collect(Collectors.toList());
         userNames.addAll(teamMembers);
         // 获取人员信息
         Map<String, PersonAddReq> personAddReqMap = new HashMap<>(userNames.size());
@@ -484,11 +523,11 @@ public class ImportDataServiceImpl implements ImportDataService {
         // 项目团队成员赋值
         projectAddReq.setTeamMembers(teamMembersAddList);
 
-        projectAddReq.setDesc(data[newIndex[11]]);
+        projectAddReq.setDesc(data[newIndex[12]]);
 
-        projectAddReq.setIsPlatformPublish(Integer.valueOf(data[newIndex[13]]));
-        projectAddReq.setIsAcceptance(Integer.valueOf(data[newIndex[14]]));
-        projectAddReq.setIsWithGoal(Integer.valueOf(data[newIndex[15]]));
+        projectAddReq.setIsPlatformPublish(Integer.valueOf(data[newIndex[14]]));
+        projectAddReq.setIsAcceptance(Integer.valueOf(data[newIndex[15]]));
+        projectAddReq.setIsWithGoal(Integer.valueOf(data[newIndex[16]]));
 
         projectAddReq.setWorkHoursNotify(0);
 

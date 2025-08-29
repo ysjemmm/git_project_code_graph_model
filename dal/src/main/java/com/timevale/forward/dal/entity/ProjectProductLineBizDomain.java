@@ -24,6 +24,11 @@ public class ProjectProductLineBizDomain extends BaseDO {
      * productLineName
      */
     private String productLineName;
+
+    /**
+     * bizDomainId
+     */
+    private Long bizDomainId;
     /**
      * bizDomainName
      */

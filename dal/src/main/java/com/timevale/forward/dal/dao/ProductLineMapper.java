@@ -61,6 +61,13 @@ public interface ProductLineMapper {
 
     /**
      *
+     * @param bizDomainIds bizDomainIds
+     * @return ProjectProductLineBizDomain
+     */
+    List<ProjectProductLineBizDomain> getPlineAndBizDomainList(@Param("bizDomainIds") List<Long> bizDomainIds, @Param("productLineIds") List<Long> productLineIds);
+
+    /**
+     *
      * @param bizDomainId bizDomainId
      * @return 列表
      */
