@@ -1,14 +1,19 @@
 package com.timevale.forward.service.job;
 
+import com.alibaba.fastjson.JSON;
 import com.timevale.crm.sdk.common.constant.enums.EnvEnum;
 import com.timevale.forward.dal.condition.TaskListCondition;
+import com.timevale.forward.dal.condition.WorkHoursRecordCondition;
 import com.timevale.forward.dal.dao.PersonMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.TaskMapper;
+import com.timevale.forward.dal.dao.WorkHoursRecordMapper;
 import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.TaskDO;
+import com.timevale.forward.dal.entity.WorkHoursRecordDO;
 import com.timevale.forward.facade.api.result.TaskVO;
+import com.timevale.forward.model.enums.BizTypeEnum;
 import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.model.enums.ProjectCategoryEnum;
 import com.timevale.forward.model.enums.ProjectKindEnum;
@@ -22,14 +27,17 @@ import com.timevale.forward.service.manager.MessageRetryManager;
 import com.timevale.forward.service.utils.EnvUtils;
 import com.timevale.forward.service.utils.JwtGeneratorUtil;
 import com.timevale.forward.service.utils.TokenUtil;
+import com.timevale.forward.service.utils.date.WorkDateUtil;
 import com.timevale.framework.schedulerT.client.annotaion.JobHandler;
 import com.timevale.framework.schedulerT.core.biz.model.ReturnT;
 import com.timevale.framework.schedulerT.core.handler.IJobHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -52,6 +60,8 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
     private final EnvUtils envUtils;
     private final ShortLinkClient shortLinkClient;
     private final ElapsedTimeClient elapsedTimeClient;
+    private final WorkDateUtil workDateUtil;
+    private final WorkHoursRecordMapper workHoursRecordMapper;
 
     private static final List<Integer> PROJECT_STATUSES = Arrays.asList(
             ProjectStatusEnum.PLANING.getCode(),
@@ -67,18 +77,27 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     @Override
     public ReturnT<String> execute(String s) throws Exception {
         // 开始执行定时任务的日志记录
         log.info("[sendWorkHoursSubmitJob]开始执行");
         ZoneId zoneId = ZoneId.of("Asia/Shanghai");
-        LocalDate today = LocalDate.now(zoneId);
         // 避开节假日
         Date todayDate = new Date();
         List<String> holidays = elapsedTimeClient.getHolidays(todayDate, todayDate, true);
         if (!holidays.isEmpty()) {
             log.warn("[sendWorkHoursSubmitJob]今天是节假日，不执行任务");
             return ReturnT.SUCCESS;
+        }
+
+        LocalDate today;
+        boolean isExpedite = StringUtils.isNotEmpty(s) ? JSON.parseObject(s).getBoolean("isExpedite") : false;
+        if (isExpedite) {
+            today = workDateUtil.getLatestWorkday(todayDate);
+        } else {
+            today = LocalDate.now(zoneId);
         }
 
         String url;
@@ -115,6 +134,20 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
                 .status(TASK_STATUSES)
                 .currentDate(dateStr)
                 .build());
+        
+        if (isExpedite) {
+            List<Long> taskIds = progressTaskList.stream().map(TaskDO::getId).collect(Collectors.toList());
+            List<Long> registerTaskIds = workHoursRecordMapper.list(WorkHoursRecordCondition.builder()
+                    .stratTime(today.atStartOfDay().format(DATE_TIME_FORMATTER))
+                    .endTime(today.atTime(LocalTime.MAX).format(DATE_TIME_FORMATTER))
+                    .workItemType(BizTypeEnum.TASK.getCode())
+                    .workItemIds(taskIds)
+                    .build()
+            ).stream().map(WorkHoursRecordDO::getWorkItemId).collect(Collectors.toList());
+            progressTaskList = progressTaskList.stream()
+                    .filter(e -> !registerTaskIds.contains(e.getId()))
+                    .collect(Collectors.toList());
+        }
 
         // 如果没有找到待通知的任务，则记录日志并结束执行
         if (progressTaskList.isEmpty()) {

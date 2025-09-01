@@ -23,6 +23,7 @@ import com.timevale.forward.service.integration.erp.model.ActionCardMsg;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.manager.MessageRetryManager;
 import com.timevale.forward.service.utils.EnvUtils;
+import com.timevale.forward.service.utils.date.WorkDateUtil;
 import com.timevale.framework.schedulerT.client.annotaion.JobHandler;
 import com.timevale.framework.schedulerT.core.biz.model.ReturnT;
 import com.timevale.framework.schedulerT.core.handler.IJobHandler;
@@ -65,6 +66,7 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
     private final EnvUtils envUtils;
     private final ShortLinkClient shortLinkClient;
     private final ElapsedTimeClient elapsedTimeClient;
+    private final WorkDateUtil workDateUtil;
 
     private static final List<Integer> PROJECT_STATUSES = Arrays.asList(
             ProjectStatusEnum.PLANING.getCode(),
@@ -195,7 +197,7 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
         }
 
         // 封装昨日时间逻辑
-        LocalDate latestWorkday = getLatestWorkday(todayDate);
+        LocalDate latestWorkday = workDateUtil.getLatestWorkday(todayDate);
         LocalDateTime startOfLatestWorkday = latestWorkday.atStartOfDay();
         LocalDateTime endOfLatestWorkday = latestWorkday.atTime(LocalTime.MAX);
         String startTimeStr = startOfLatestWorkday.format(DATE_TIME_FORMATTER);
@@ -300,33 +302,5 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
                 "  \n👉 [点击跳转填报详情页面](" + fullUrl + ")  \n" +
                 "⚠️ 如跳转失败，请复制下方链接在浏览器打开：  \n" +
                 fullUrl;
-    }
-
-    /**
-     * 在集合workdays中获取最新一天的日期
-     */
-    private LocalDate getLatestWorkday(Date todayDate) {
-        // 得到最近30天之前的日期
-        Date offsetDay = DateUtil.offsetDay(todayDate, -30);
-        Date yesterday = DateUtil.offsetDay(todayDate, -1);
-        List<String> workdays = elapsedTimeClient.getHolidays(offsetDay, yesterday, false);
-        // 默认返回昨天
-        LocalDate defaultDate = LocalDate.from(yesterday.toInstant().atZone(ZoneId.systemDefault()));
-        if (workdays == null || workdays.isEmpty()) {
-            // yesterday转为LocalDate
-            return defaultDate;
-        }
-
-        return workdays.stream()
-                .map(dateStr -> {
-                    try {
-                        return LocalDate.parse(dateStr, DATE_FORMATTER);
-                    } catch (Exception e) {
-                        log.warn("日期解析失败: {}", dateStr, e);
-                        return defaultDate;
-                    }
-                })
-                .max(Comparator.naturalOrder())
-                .orElse(defaultDate);
     }
 }
