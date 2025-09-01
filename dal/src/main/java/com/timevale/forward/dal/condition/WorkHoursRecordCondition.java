@@ -55,6 +55,11 @@ public class WorkHoursRecordCondition extends QueryBase {
     private String createManId;
 
     /**
+     * 创建人ids
+     */
+    private List<String> createManIds;
+
+    /**
      * 前一天的开始时间
      */
     private String stratTime;

@@ -2,12 +2,14 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
+import com.timevale.forward.facade.api.query.OverviewWorkHoursQueryList;
 import com.timevale.forward.facade.api.query.TaskExecutorWorkHoursQueryList;
 import com.timevale.forward.facade.api.query.WorkHoursRecordQueryList;
 import com.timevale.forward.facade.api.request.WorkHoursRecordAddReq;
 import com.timevale.forward.facade.api.request.WorkHoursRecordBatchAddReq;
 import com.timevale.forward.facade.api.request.WorkHoursRecordModifyReq;
 import com.timevale.forward.facade.api.request.WorkHoursRecordQueryReq;
+import com.timevale.forward.facade.api.result.WorkHoursOverviewVO;
 import com.timevale.forward.facade.api.result.RegisterWorkHoursTaskVO;
 import com.timevale.forward.facade.api.result.WorkHoursProgressVO;
 import com.timevale.forward.facade.api.result.WorkHoursRecordVO;
@@ -81,4 +83,6 @@ public interface WorkHoursRecordService {
     BaseResult<List<RegisterWorkHoursTaskVO>> waitRegisterTaskList(String dateStr);
 
     BaseResult<PageQueryResult<WorkbenchesWorkHoursVO>> workbenches(TaskExecutorWorkHoursQueryList query);
+
+    BaseResult<PageQueryResult<WorkHoursOverviewVO>> overview(OverviewWorkHoursQueryList query);
 }

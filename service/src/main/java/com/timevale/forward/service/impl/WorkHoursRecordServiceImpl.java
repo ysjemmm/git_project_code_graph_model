@@ -16,6 +16,7 @@ import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.dal.entity.WorkHoursRecordDO;
 import com.timevale.forward.facade.api.client.TaskService;
 import com.timevale.forward.facade.api.client.WorkHoursRecordService;
+import com.timevale.forward.facade.api.query.OverviewWorkHoursQueryList;
 import com.timevale.forward.facade.api.query.TaskExecutorWorkHoursQueryList;
 import com.timevale.forward.facade.api.query.WorkHoursRecordQueryList;
 import com.timevale.forward.facade.api.request.TaskDoneReq;
@@ -27,9 +28,11 @@ import com.timevale.forward.facade.api.request.WorkHoursRecordQueryReq;
 import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.facade.api.result.RegisterWorkHoursTaskVO;
+import com.timevale.forward.facade.api.result.WorkHoursOverviewVO;
 import com.timevale.forward.facade.api.result.WorkHoursProgressVO;
 import com.timevale.forward.facade.api.result.WorkHoursRecordVO;
 import com.timevale.forward.facade.api.result.WorkHoursRemainVO;
+import com.timevale.forward.facade.api.result.WorkHoursTaskVO;
 import com.timevale.forward.facade.api.result.WorkbenchesWorkHoursVO;
 import com.timevale.forward.model.enums.BizTypeEnum;
 import com.timevale.forward.model.enums.PersonTypeEnum;
@@ -43,8 +46,10 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.copy.WorkHoursRecordCopier;
+import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.framework.tedis.util.TedisUtil;
@@ -73,6 +78,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -109,6 +115,9 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
 
     @Resource
     private SqlOrderComponent sqlOrderComponent;
+
+    @Resource
+    private ElapsedTimeClient elapsedTimeClient;
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -342,7 +351,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             TaskDO taskDO = taskMapper.getById(workHoursRecordDO.getWorkItemId());
             ProjectDO projectDO = projectMapper.get(taskDO.getProjectId());
             workHoursRecordVO.setProjectName(projectDO.getName());
-            workHoursRecordVO.setTaskName(taskDO.getName());
+            workHoursRecordVO.setWorkItemName(taskDO.getName());
         }
         return BaseResult.success(workHoursRecordVO);
     }
@@ -420,7 +429,6 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             saveBeforeCheckTask(workHoursRecordDO, true);
             recordsToInsert.add(workHoursRecordDO);
         }
-
 
 
         // 批量插入所有记录（在同一个事务中）
@@ -650,9 +658,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
                                     }
                             );
 
-                    WorkbenchesWorkHoursVO workHoursVO = getWorkbenchesWorkHoursVO(member, hours, today);
-
-                    return workHoursVO;
+                    return getWorkbenchesWorkHoursVO(member, hours, today);
                 })
                 .collect(Collectors.toList());
 
@@ -682,6 +688,186 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         pageQueryResult.setTotalPages((int) Math.ceil((double) total / pageSize));
 
         return BaseResult.success(pageQueryResult);
+    }
+
+    @Override
+    public BaseResult<PageQueryResult<WorkHoursOverviewVO>> overview(OverviewWorkHoursQueryList query) {
+        log.info("工时概览查询,参数:{}", query);
+
+        // 处理日期范围
+        Date startDate = query.getStartDate();
+        Date endDate = query.getEndDate();
+        LocalDateTime startTime = LocalDateTime.ofInstant(startDate.toInstant(), ZoneId.systemDefault()).with(LocalTime.MIN);
+        LocalDateTime endTime = LocalDateTime.ofInstant(endDate.toInstant(), ZoneId.systemDefault()).with(LocalTime.MAX);
+
+        // 查询工时记录
+        WorkHoursRecordCondition workHoursRecordCondition = WorkHoursRecordCondition.builder()
+                .projectIds(query.getProjectIds())
+                .workItemType(BizTypeEnum.TASK.getCode())
+                .stratTime(startTime.format(DATE_TIME_FORMATTER))
+                .endTime(endTime.format(DATE_TIME_FORMATTER))
+                .createManIds(query.getMemberIds())
+                .build();
+
+        List<WorkHoursRecordDO> hoursRecordDOList = workHoursRecordMapper.list(workHoursRecordCondition);
+
+        // 获取工作日
+        List<String> workDays = elapsedTimeClient.getHolidays(startDate, endDate, false);
+
+        // 创建人id和name的Map
+        Map<String, String> createManMap = buildCreateManMap(query);
+
+        // 查询这些人的任务
+        List<String> executorIds = new ArrayList<>(createManMap.keySet());
+        if (executorIds.isEmpty()) {
+            return BaseResult.success(ResultUtil.pageEmpty());
+        }
+
+        List<TaskDO> taskDOList = taskMapper.list(TaskListCondition.builder()
+                .executorIds(executorIds)
+                .planStartDateLeft(DateUtil.getStartOfDay(startDate))
+                .planStartDateRight(DateUtil.getEndOfDay(endDate))
+                .build());
+
+        // 构建各种映射关系
+        Map<Long, String> taskNameMap = taskDOList.stream()
+                .collect(Collectors.toMap(TaskDO::getId, TaskDO::getName, (oldVal, newVal) -> newVal));
+
+        Map<String, List<Long>> executorTaskMap = personMapper.get(
+                        taskDOList.stream().map(TaskDO::getId).collect(Collectors.toList()),
+                        PersonTypeEnum.TASK_EXECUTOR.getCode())
+                .stream()
+                .collect(Collectors.groupingBy(
+                        PersonDO::getUserId,
+                        Collectors.mapping(PersonDO::getMainId, Collectors.toList())
+                ));
+
+        Map<Long, List<WorkHoursRecordDO>> taskWorkRecordMap = hoursRecordDOList.stream()
+                .collect(Collectors.groupingBy(WorkHoursRecordDO::getWorkItemId));
+
+        Map<Long, String> projectMap = projectMapper.getByIds(
+                        taskDOList.stream().map(TaskDO::getProjectId).collect(Collectors.toList()))
+                .stream()
+                .collect(Collectors.toMap(ProjectDO::getId, ProjectDO::getName));
+
+        Map<Long, Long> taskProjectMap = taskDOList.stream()
+                .collect(Collectors.toMap(TaskDO::getId, TaskDO::getProjectId));
+
+        // 构建结果列表
+        List<WorkHoursOverviewVO> workHoursOverviewVOList = createManMap.entrySet().stream()
+                .map(entry -> buildWorkHoursOverviewVO(entry, executorTaskMap, taskWorkRecordMap,
+                        taskNameMap, projectMap, taskProjectMap, workDays))
+                .collect(Collectors.toList());
+
+        // 过滤未登记
+        if (Boolean.TRUE.equals(query.getIsUnregistered())) {
+            workHoursOverviewVOList = workHoursOverviewVOList.stream()
+                    .filter(vo -> !vo.getUnregisteredDateList().isEmpty())
+                    .collect(Collectors.toList());
+        }
+
+        // 分页处理
+        return BaseResult.success(paginateResult(workHoursOverviewVOList, query.getPageNum(), query.getPageSize()));
+    }
+
+    private Map<String, String> buildCreateManMap(OverviewWorkHoursQueryList query) {
+        Map<String, String> createManMap = new HashMap<>();
+        List<Long> projectIdList = query.getProjectIds();
+        List<String> memberIds = query.getMemberIds();
+
+        if (CollectionUtils.isNotEmpty(projectIdList)) {
+            // 按项目查询人员信息
+            for (Long projectId : projectIdList) {
+                List<PersonDO> personDOList = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+                Map<String, String> projectPersonMap = personDOList.stream()
+                        .filter(personDO -> CollectionUtils.isEmpty(memberIds) || memberIds.contains(personDO.getUserId()))
+                        .filter(personDO -> StringUtils.isNotBlank(personDO.getUserId()) && StringUtils.isNotBlank(personDO.getUserName()))
+                        .collect(Collectors.toMap(PersonDO::getUserId, PersonDO::getUserName, (oldVal, newVal) -> oldVal));
+                createManMap.putAll(projectPersonMap);
+            }
+        } else {
+            // 查询所有项目人员信息
+            List<PersonDO> personDOList = personComponent.select(null, PersonTypeEnum.PROJECT_MEMBER.getCode());
+            createManMap.putAll(personDOList.stream()
+                    .filter(personDO -> CollectionUtils.isEmpty(memberIds) || memberIds.contains(personDO.getUserId()))
+                    .filter(personDO -> StringUtils.isNotBlank(personDO.getUserId()) && StringUtils.isNotBlank(personDO.getUserName()))
+                    .collect(Collectors.toMap(PersonDO::getUserId, PersonDO::getUserName, (oldVal, newVal) -> oldVal)));
+        }
+
+        return createManMap;
+    }
+
+    private WorkHoursOverviewVO buildWorkHoursOverviewVO(Map.Entry<String, String> entry,
+                                                         Map<String, List<Long>> executorTaskMap,
+                                                         Map<Long, List<WorkHoursRecordDO>> taskWorkRecordMap,
+                                                         Map<Long, String> taskNameMap,
+                                                         Map<Long, String> projectMap,
+                                                         Map<Long, Long> taskProjectMap,
+                                                         List<String> workDays) {
+        String userId = entry.getKey();
+        String userName = entry.getValue();
+
+        WorkHoursOverviewVO vo = new WorkHoursOverviewVO();
+        vo.setTeamMemberId(userId);
+        vo.setTeamMemberName(userName);
+
+        List<Long> taskIdList = executorTaskMap.getOrDefault(userId, Collections.emptyList());
+        List<WorkHoursTaskVO> workHoursTaskVOS = new ArrayList<>(taskIdList.size());
+        List<String> registeredDateList = new ArrayList<>();
+
+        for (Long taskId : taskIdList) {
+            WorkHoursTaskVO taskVO = new WorkHoursTaskVO();
+            Long projectId = taskProjectMap.get(taskId);
+
+            taskVO.setProjectId(projectId);
+            taskVO.setProjectName(projectMap.get(projectId));
+            taskVO.setWorkItemName(taskNameMap.get(taskId));
+            taskVO.setWorkItemType(BizTypeEnum.TASK.getCode());
+            taskVO.setWorkItemId(taskId);
+
+            List<WorkHoursRecordDO> recordList = taskWorkRecordMap.getOrDefault(taskId, Collections.emptyList());
+            taskVO.setWorkHoursRecords(
+                    recordList.stream()
+                            .map(WorkHoursRecordCopier.INSTANCE::convert)
+                            .collect(Collectors.toList())
+            );
+            taskVO.setTotalHours(recordList.stream()
+                    .map(WorkHoursRecordDO::getWorkHours)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add));
+
+            List<String> taskRegisteredDates = recordList.stream()
+                    .map(WorkHoursRecordDO::getRegistrationDate)
+                    .map(date -> DATE_FORMATTER.format(date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()))
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            registeredDateList.addAll(taskRegisteredDates);
+            workHoursTaskVOS.add(taskVO);
+        }
+
+        vo.setWorkHoursTasks(workHoursTaskVOS);
+        vo.setUnregisteredDateList(workDays.stream()
+                .filter(date -> !registeredDateList.contains(date))
+                .collect(Collectors.toList()));
+
+        return vo;
+    }
+
+    private PageQueryResult<WorkHoursOverviewVO> paginateResult(List<WorkHoursOverviewVO> workHoursOverviewVOList,
+                                                                int pageNum, int pageSize) {
+        int total = workHoursOverviewVOList.size();
+        int fromIndex = Math.min((pageNum - 1) * pageSize, total);
+        int toIndex = Math.min(fromIndex + pageSize, total);
+        List<WorkHoursOverviewVO> paginatedList = workHoursOverviewVOList.subList(fromIndex, toIndex);
+
+        PageQueryResult<WorkHoursOverviewVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(paginatedList);
+        pageQueryResult.setTotalItems(total);
+        pageQueryResult.setCurrentPage(pageNum);
+        pageQueryResult.setItemsPerPage(pageSize);
+        pageQueryResult.setTotalPages((int) Math.ceil((double) total / pageSize));
+
+        return pageQueryResult;
     }
 
     private WorkbenchesWorkHoursVO getWorkbenchesWorkHoursVO(PersonDO member, BigDecimal[] hours, LocalDate today) {

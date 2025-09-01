@@ -1,6 +1,7 @@
 package com.timevale.forward.service.controller;
 
 import com.timevale.forward.facade.api.client.WorkHoursRecordService;
+import com.timevale.forward.facade.api.query.OverviewWorkHoursQueryList;
 import com.timevale.forward.facade.api.query.TaskExecutorWorkHoursQueryList;
 import com.timevale.forward.facade.api.query.WorkHoursRecordQueryList;
 import com.timevale.forward.facade.api.request.WorkHoursRecordAddReq;
@@ -8,6 +9,7 @@ import com.timevale.forward.facade.api.request.WorkHoursRecordBatchAddReq;
 import com.timevale.forward.facade.api.request.WorkHoursRecordModifyReq;
 import com.timevale.forward.facade.api.request.WorkHoursRecordQueryReq;
 import com.timevale.forward.facade.api.result.RegisterWorkHoursTaskVO;
+import com.timevale.forward.facade.api.result.WorkHoursOverviewVO;
 import com.timevale.forward.facade.api.result.WorkHoursProgressVO;
 import com.timevale.forward.facade.api.result.WorkHoursRecordVO;
 import com.timevale.forward.facade.api.result.WorkHoursRemainVO;
@@ -44,6 +46,12 @@ public class WorkHoursRecordController {
 
     @Resource
     private WorkHoursRecordService workHoursRecordService;
+
+    @ApiOperation("工作台任务工时概览")
+    @PostMapping("/overview")
+    public BusinessResult<PageQueryResult<WorkHoursOverviewVO>> overview(@RequestBody OverviewWorkHoursQueryList query) {
+        return ResultUtils.result(workHoursRecordService.overview(query));
+    }
 
     @ApiOperation("工作台任务工时列表")
     @PostMapping("/workbenches")

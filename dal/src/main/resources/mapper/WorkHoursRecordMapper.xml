@@ -68,6 +68,12 @@
             </if>
             <if test="workItemId != null">and work_item_id = #{workItemId}</if>
             <if test="createManId != null">and create_man_id = #{createManId}</if>
+            <if test="createManIds != null and createManIds.size() > 0">
+                and create_man_id in
+                <foreach collection="createManIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="stratTime != null and endTime != null">
                 and registration_date &gt;= #{stratTime} and registration_date &lt;= #{endTime}
             </if>
