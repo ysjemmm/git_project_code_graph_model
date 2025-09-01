@@ -1828,7 +1828,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         String values = nodes.stream().filter(n -> !OTHER.equals(n.getLabel())).map(DemandGroupNodeVO::getFieldValue).collect(Collectors.joining(","));
         List<DemandGroupNodeVO> removeNodes = new ArrayList<>();
         for (DemandGroupNodeVO node : nodes) {
-            if (OTHER.equals(node.getLabel()) && "label".equals(node.getField())) {
+            if (OTHER.equals(node.getLabel()) && "labelId".equals(node.getField())) {
                 node.setFieldValue(StringUtils.isNotBlank(values) ? values : "-1");
                 node.setField(QUERY_OTHER_FIELD_MAP.get(node.getField()));
             }
