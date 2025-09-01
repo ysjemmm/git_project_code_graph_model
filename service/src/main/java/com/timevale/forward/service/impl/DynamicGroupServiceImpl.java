@@ -2155,7 +2155,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         }
 
         // 创建一层空的子节点
-        List<DemandGroupNodeVO> children = parent.getChildren();
+        List<DemandGroupNodeVO> children = parent.getChildren() != null ? parent.getChildren() : new ArrayList<>();
         String groupField = groupFields.get(level);
 
         List<DemandGroupNodeVO> parentChildren = parent.getChildren();
@@ -2258,7 +2258,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         }
 
         // 创建一层空的子节点
-        List<DemandGroupNodeVO> children = parent.getChildren();
+        List<DemandGroupNodeVO> children = parent.getChildren() != null ? parent.getChildren() : new ArrayList<>();
         String groupField = groupFields.get(level);
 
         List<DemandGroupNodeVO> parentChildren = parent.getChildren();
