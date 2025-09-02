@@ -3,8 +3,17 @@ package com.timevale.forward.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.dao.*;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.dao.BizDemandMapper;
+import com.timevale.forward.dal.dao.BugOfflineMapper;
+import com.timevale.forward.dal.dao.BugOnlineMapper;
+import com.timevale.forward.dal.dao.PersonMapper;
+import com.timevale.forward.dal.dao.ProductDemandMapper;
+import com.timevale.forward.dal.entity.BaseDO;
+import com.timevale.forward.dal.entity.BizDemandDO;
+import com.timevale.forward.dal.entity.BugOfflineDO;
+import com.timevale.forward.dal.entity.BugOnlineDO;
+import com.timevale.forward.dal.entity.PersonDO;
+import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.facade.api.client.BizDemandService;
 import com.timevale.forward.facade.api.client.PersonService;
 import com.timevale.forward.facade.api.client.ProductDemandService;
@@ -12,7 +21,11 @@ import com.timevale.forward.facade.api.request.BatchTransferReq;
 import com.timevale.forward.facade.api.request.RecipientAddReq;
 import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.forward.facade.api.result.TeamMemberVO;
-import com.timevale.forward.model.enums.*;
+import com.timevale.forward.model.enums.BizDemandStatusEnum;
+import com.timevale.forward.model.enums.BugOnlineStatusEnum;
+import com.timevale.forward.model.enums.BugStatusEnum;
+import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.service.component.BugOfflineComponent;
 import com.timevale.forward.service.component.BugOnlineComponent;
 import com.timevale.forward.service.component.PersonComponent;
@@ -77,7 +90,12 @@ public class PersonServiceImpl implements PersonService {
 
     @Override
     public BaseResult<List<TeamMemberVO>> getProjectMembers(List<Long> projectIds) {
-        List<PersonDO> personDOList = personMapper.get(projectIds, PersonTypeEnum.PROJECT_MEMBER.getCode());
+        List<PersonDO> personDOList;
+        if (CollectionUtils.isEmpty(projectIds)) {
+            personDOList = personMapper.get(null, PersonTypeEnum.PROJECT_MEMBER.getCode());
+        } else {
+            personDOList = personMapper.get(projectIds, PersonTypeEnum.PROJECT_MEMBER.getCode());
+        }
         return getPersonResult(personDOList);
     }
 

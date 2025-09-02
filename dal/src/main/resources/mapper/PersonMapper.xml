@@ -79,10 +79,12 @@
         select id ,main_id,user_name,user_id, type,is_deleted,create_man ,create_date ,modify_man ,modify_date
         from person
         <where>
-            and main_id in
-            <foreach collection="mainIds" item="item" separator="," open="(" close=")">
-                #{item}
-            </foreach>
+            <if test="mainIds!=null and mainIds.size()>0">
+                and main_id in
+                <foreach collection="mainIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             and type = #{type} and is_deleted=false
         </where>
     </select>
