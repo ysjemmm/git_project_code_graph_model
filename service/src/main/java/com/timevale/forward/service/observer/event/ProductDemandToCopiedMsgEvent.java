@@ -29,7 +29,7 @@ public class ProductDemandToCopiedMsgEvent extends MessageEvent {
 
     @Override
     public void run() {
-        String title = MessageTitleEnum.BIZDEMAND_RECEIVE.getText();
+        String title = MessageTitleEnum.PRODUCT_DEMAND_RECEIVE.getText();
         String singleUrl = domainName + String.format(PARAM, TabEnum.PRODUCT_MANAGEMENT.getText(), productDemandId);
         String markdown = String.format(PRODUCT_DEMAND_TO_RECEIVE_MSG, title, operator, name, singleUrl);
 

@@ -93,6 +93,8 @@ public enum MessageTitleEnum {
     PROJECT_SR_EVAL_END("SR项目评价完成提醒"),
 
     PROJECT_INVALID("产研项目状态中止通知"),
+
+    PRODUCT_DEMAND_RECEIVE("您收到一条新的产品需求"),
     ;
 
     private final String text;
