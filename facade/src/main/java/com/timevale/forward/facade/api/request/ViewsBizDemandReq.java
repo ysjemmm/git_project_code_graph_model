@@ -118,4 +118,10 @@ public class ViewsBizDemandReq extends ViewsFilterReq {
 
     @ApiModelProperty("客户等级")
     private String customerGrade;
+
+    @ApiModelProperty("当前页")
+    private Integer pageNum;
+
+    @ApiModelProperty("页大小")
+    private Integer pageSize;
 }

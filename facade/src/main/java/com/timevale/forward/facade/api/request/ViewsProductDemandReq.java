@@ -68,4 +68,10 @@ public class ViewsProductDemandReq extends ViewsFilterReq {
 
     @ApiModelProperty("预期排期时间-结束时间")
     private Date expectScheduleTimeEnd;
+
+    @ApiModelProperty("当前页")
+    private Integer pageNum;
+
+    @ApiModelProperty("页大小")
+    private Integer pageSize;
 }
