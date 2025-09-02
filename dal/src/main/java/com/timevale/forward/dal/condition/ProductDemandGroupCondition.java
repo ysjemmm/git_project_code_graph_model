@@ -66,11 +66,6 @@ public class ProductDemandGroupCondition extends QueryBase {
     private List<Long> labelCategoryIds;
 
     /**
-     * 不在标签类别集合
-     */
-    private List<Long> notInLabelCategoryIds;
-
-    /**
      * 标签类别集合
      */
     private List<Long> notInLabelIds;
@@ -79,6 +74,11 @@ public class ProductDemandGroupCondition extends QueryBase {
      * 需要包含的产品需求
      */
     private List<Long> inProductDemandIds;
+
+    /**
+     * 不需要包含的产品需求
+     */
+    private List<Long> notInProductDemandIds;
 
     /**
      * 产品需求类型

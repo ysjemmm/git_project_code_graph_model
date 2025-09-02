@@ -910,6 +910,12 @@
                         #{item}
                     </foreach>
                 </if>
+                <if test="parentCondition.exclusiveIds!=null and parentCondition.exclusiveIds.size()>0">
+                    and bd.id not in
+                    <foreach collection="parentCondition.exclusiveIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
             </if>
             <if test="orderField!= null and orderField!='' ">
                 order by ${orderField}
@@ -1252,9 +1258,9 @@
                         #{item}
                     </foreach>
                 </if>
-                <if test="parentCondition.notInLabelCategoryIds!=null and parentCondition.notInLabelCategoryIds.size()>0">
-                    and f.label_category_id not in
-                    <foreach collection="parentCondition.notInLabelCategoryIds" item="item" separator="," open="(" close=")">
+                <if test="parentCondition.exclusiveIds!=null and parentCondition.exclusiveIds.size()>0">
+                    and bd.id not in
+                    <foreach collection="parentCondition.exclusiveIds" item="item" separator="," open="(" close=")">
                         #{item}
                     </foreach>
                 </if>

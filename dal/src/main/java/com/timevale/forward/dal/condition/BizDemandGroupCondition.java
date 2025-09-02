@@ -1,11 +1,9 @@
 package com.timevale.forward.dal.condition;
 
 import com.timevale.mandarin.common.query.QueryBase;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -41,9 +39,12 @@ public class BizDemandGroupCondition extends QueryBase {
      */
     private List<Long> containIds;
 
-    private List<Long> labelCategoryIds;
+    /**
+     * 不包含的id
+     */
+    private List<Long> exclusiveIds;
 
-    private List<Long> notInLabelCategoryIds;
+    private List<Long> labelCategoryIds;
 
     private String targetCustomer;
 }

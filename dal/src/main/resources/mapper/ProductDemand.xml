@@ -598,6 +598,13 @@
                         #{item}
                     </foreach>
                 </if>
+                <if test="parentCondition.notInProductDemandIds!=null and parentCondition.notInProductDemandIds.size()>0">
+                    and a.id not in
+                    <foreach collection="parentCondition.notInProductDemandIds" item="item" separator="," open="("
+                             close=")">
+                        #{item}
+                    </foreach>
+                </if>
                 <if test="parentCondition.type!= null">
                     and a.type REGEXP CONCAT('[', #{parentCondition.type},']')
                 </if>
@@ -866,9 +873,10 @@
                         #{item}
                     </foreach>
                 </if>
-                <if test="parentCondition.notInLabelCategoryIds!=null and parentCondition.notInLabelCategoryIds.size()>0">
-                    and f.label_category_id not in
-                    <foreach collection="parentCondition.notInLabelCategoryIds" item="item" separator="," open="(" close=")">
+                <if test="parentCondition.notInProductDemandIds!=null and parentCondition.notInProductDemandIds.size()>0">
+                    and a.id not in
+                    <foreach collection="parentCondition.notInProductDemandIds" item="item" separator="," open="("
+                             close=")">
                         #{item}
                     </foreach>
                 </if>

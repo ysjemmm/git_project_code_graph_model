@@ -14,6 +14,7 @@ import com.timevale.forward.dal.condition.ProductGroupCondition;
 import com.timevale.forward.dal.dao.BizDomainMapper;
 import com.timevale.forward.dal.dao.BizLabelMapper;
 import com.timevale.forward.dal.dao.LabelMapper;
+import com.timevale.forward.dal.dao.ProductDemandMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.entity.BizDemandGroupFieldDO;
 import com.timevale.forward.dal.entity.BizDomainDO;
@@ -114,6 +115,9 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
     @Resource
     private ProductDemandComponent productDemandComponent;
+
+    @Resource
+    private ProductDemandMapper productDemandMapper;
 
     @Resource
     private GroupDuplicateUtil groupDuplicateUtil;
@@ -321,7 +325,9 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
             // 查询不在标签类别的需求数
             parentCondition.setLabelCategoryIds(null);
-            parentCondition.setNotInLabelCategoryIds(labelCategoryId);
+            List<Long> labelIds = labelMapper.getByCategoryIds(labelCategoryId, false).stream().map(LabelDO::getId).collect(Collectors.toList());
+            List<Long> bizIds = bizLabelMapper.getByLabelIdInType(labelIds, BizTypeEnum.PRODUCT_DEMAND.getCode()).stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+            parentCondition.setNotInProductDemandIds(bizIds);
             ProductDemandGroupQueryCondition groupCountCondition = ProductDemandGroupQueryCondition.builder()
                     .condition(condition)
                     .parentCondition(parentCondition)
@@ -423,7 +429,9 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         Long simpleGroupCount = 0L;
         if (count > 0) {
             // 查询不在标签类别的需求数
-            parentCondition.setNotInLabelCategoryIds(parentCondition.getLabelCategoryIds());
+            List<Long> labelIds = labelMapper.getByCategoryIds(parentCondition.getLabelCategoryIds(), false).stream().map(LabelDO::getId).collect(Collectors.toList());
+            List<Long> bizIds = bizLabelMapper.getByLabelIdInType(labelIds, BizTypeEnum.PRODUCT_DEMAND.getCode()).stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+            parentCondition.setNotInProductDemandIds(bizIds);
             parentCondition.setLabelCategoryIds(null);
             ProductDemandGroupQueryCondition groupCountCondition = ProductDemandGroupQueryCondition.builder()
                     .condition(condition)
@@ -1359,22 +1367,21 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
                 bizLabelDOList.addAll(bizLabelMapper.getByLabelIdInType(notInLabelIds, BizTypeEnum.PRODUCT_DEMAND.getCode()));
                 // 获取包含labelIds且但不包含notInLabelIds的bizId
                 bizIds = getLabelBizIds(labelIds, notInLabelIds, bizLabelDOList, ids);
+                parentCondition.setInProductDemandIds(bizIds);
             } else if (CollUtil.isNotEmpty(labelIds)) {
                 // 取出bizLabelDOList中包含labelIds中所有标签id的bizId
                 bizIds = getBizIdsContainingAllLabels(bizLabelDOList, labelIds);
+                parentCondition.setInProductDemandIds(bizIds);
             } else {
-                // 查询没有使用这些标签的需求id
-                bizIds = bizLabelMapper.getByLabelIdNotInType(notInLabelIds, BizTypeEnum.PRODUCT_DEMAND.getCode())
+                // 查询使用这些标签的需求id
+                List<Long> bizIdList = bizLabelMapper.getByLabelIdInType(notInLabelIds, BizTypeEnum.PRODUCT_DEMAND.getCode())
                         .stream()
                         .map(BizLabelDO::getBizId)
+                        .distinct()
                         .collect(Collectors.toList());
-            }
 
-            if (CollectionUtils.isEmpty(bizIds)) {
-                return BaseResult.success(ResultUtil.pageEmpty());
+                parentCondition.setNotInProductDemandIds(bizIdList);
             }
-
-            parentCondition.setInProductDemandIds(bizIds);
         }
         // 分页查询
         PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
@@ -1517,7 +1524,9 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
             // 查询不在标签类别的需求数
             parentCondition.setLabelCategoryIds(null);
-            parentCondition.setNotInLabelCategoryIds(labelCategoryId);
+            List<Long> labelIds = labelMapper.getByCategoryIds(labelCategoryId, false).stream().map(LabelDO::getId).collect(Collectors.toList());
+            List<Long> bizIds = bizLabelMapper.getByLabelIdInType(labelIds, BizTypeEnum.BIZ_DEMAND.getCode()).stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+            parentCondition.setExclusiveIds(bizIds);
             BizDemandGroupQueryCondition groupCountCondition = BizDemandGroupQueryCondition.builder()
                     .condition(condition)
                     .parentCondition(parentCondition)
@@ -1618,7 +1627,9 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         Long simpleGroupCount = 0L;
         if (count > 0) {
             // 查询不在标签类别的需求数
-            parentCondition.setNotInLabelCategoryIds(parentCondition.getLabelCategoryIds());
+            List<Long> labelIds = labelMapper.getByCategoryIds(parentCondition.getLabelCategoryIds(), false).stream().map(LabelDO::getId).collect(Collectors.toList());
+            List<Long> bizIds = bizLabelMapper.getByLabelIdInType(labelIds, BizTypeEnum.BIZ_DEMAND.getCode()).stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+            parentCondition.setExclusiveIds(bizIds);
             parentCondition.setLabelCategoryIds(null);
             BizDemandGroupQueryCondition groupCountCondition = BizDemandGroupQueryCondition.builder()
                     .condition(condition)
@@ -1748,22 +1759,21 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
                 bizLabelDOList.addAll(bizLabelMapper.getByLabelIdInType(notInLabelIds, BizTypeEnum.BIZ_DEMAND.getCode()));
                 // 获取包含labelIds且但不包含notInLabelIds的bizId
                 bizIds = getLabelBizIds(labelIds, notInLabelIds, bizLabelDOList, ids);
+                parentCondition.setContainIds(bizIds);
             } else if (CollUtil.isNotEmpty(labelIds)) {
                 // 取出bizLabelDOList中包含labelIds中所有标签id的bizId
                 bizIds = getBizIdsContainingAllLabels(bizLabelDOList, labelIds);
+                parentCondition.setContainIds(bizIds);
             } else {
-                // 查询没有使用这些标签的需求id
-                bizIds = bizLabelMapper.getByLabelIdNotInType(notInLabelIds, BizTypeEnum.BIZ_DEMAND.getCode())
+                // 查询使用这些标签的需求id
+                List<Long> bizIdList = bizLabelMapper.getByLabelIdInType(notInLabelIds, BizTypeEnum.BIZ_DEMAND.getCode())
                         .stream()
                         .map(BizLabelDO::getBizId)
+                        .distinct()
                         .collect(Collectors.toList());
-            }
 
-            if (CollectionUtils.isEmpty(bizIds)) {
-                return BaseResult.success(ResultUtil.pageEmpty());
+                parentCondition.setExclusiveIds(bizIdList);
             }
-
-            parentCondition.setContainIds(bizIds);
         }
 
         BizDemandGroupQueryCondition groupCondition = BizDemandGroupQueryCondition.builder()
