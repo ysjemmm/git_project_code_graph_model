@@ -120,6 +120,7 @@ import com.timevale.forward.service.observer.event.BizDemandModifyMsgEvent;
 import com.timevale.forward.service.observer.event.BizDemandPlanReleaseDateMsgEvent;
 import com.timevale.forward.service.observer.event.BizDemandReceivedMsgEvent;
 import com.timevale.forward.service.observer.event.BizDemandRejectMsgEvent;
+import com.timevale.forward.service.observer.event.BizDemandToCopiedMsgEvent;
 import com.timevale.forward.service.observer.event.BizDemandToReceiveAaginMsgEvent;
 import com.timevale.forward.service.observer.event.BizDemandToReceiveMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
@@ -446,6 +447,15 @@ public class BizDemandServiceImpl implements BizDemandService {
         List<PersonAddReq> recipientInfoList = bizDemandAddReq.getRecipientInfoList();
         if (!recipientInfoList.isEmpty()) {
             personComponent.add(recipientInfoList, bizDemandDO.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
+            // 通知抄送人
+            List<String> copiers = recipientInfoList.stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
+            messageEventPublisher.publish(new BizDemandToCopiedMsgEvent(
+                    this,
+                    bizDemandDO.getId(),
+                    bizDemandDO.getSubmitMan(),
+                    copiers,
+                    bizDemandDO.getName()
+            ));
         }
 
         // 添加客户信息
@@ -668,6 +678,14 @@ public class BizDemandServiceImpl implements BizDemandService {
         List<PersonAddReq> recipientInfoList = bizDemandModifyReq.getRecipientInfoList();
         if (!CollectionUtils.isEmpty(recipientInfoList)) {
             personComponent.update(recipientInfoList, bizDemandModifyReq.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
+            List<String> copiers = recipientInfoList.stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
+            messageEventPublisher.publish(new BizDemandToCopiedMsgEvent(
+                    this,
+                    newBizDemandDO.getId(),
+                    newBizDemandDO.getSubmitMan(),
+                    copiers,
+                    newBizDemandDO.getName()
+            ));
         }
 
         // 客户信息

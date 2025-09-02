@@ -49,6 +49,7 @@ import com.timevale.forward.facade.api.query.ProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandTrackEventQueryList;
 import com.timevale.forward.facade.api.query.ProductLinkCustomDemandQueryList;
 import com.timevale.forward.facade.api.request.BatchTransferReq;
+import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.request.ProductBizDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProductCustomDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProductDemandAddReq;
@@ -100,6 +101,8 @@ import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.copy.TrackEventCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.ProductDemandBatchTransferMsgEvent;
+import com.timevale.forward.service.observer.event.ProductDemandToCopiedMsgEvent;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.duplicate.GroupDuplicateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -217,6 +220,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Resource
     private GroupDuplicateUtil groupDuplicateUtil;
+
+    @Resource
+    private MessageEventPublisher messageEventPublisher;
 
     @Override
     public BaseResult<QueryResultVO<ProductDemandVO>> list(ProductDemandQueryList productDemandQueryList) {
@@ -406,8 +412,18 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
         fileComponent.add(productDemandAddReq.getFiles(), productDemand.getId(), FileTypeEnum.PRODUCT_DEMAND.getCode());
 
+        List<PersonAddReq> recipients = productDemandAddReq.getRecipients();
         personComponent.add(productDemandAddReq.getRecipients(), productDemand.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
-
+        if (!CollectionUtils.isEmpty(recipients)) {
+            List<String> copiers = recipients.stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
+            messageEventPublisher.publish(new ProductDemandToCopiedMsgEvent(
+                    this,
+                    productDemand.getId(),
+                    productDemand.getCreateMan(),
+                    copiers,
+                    productDemand.getName()
+            ));
+        }
         boolean hasProject = productDemandAddReq.getProjectId() != null;
 
         List<Long> bizDemandIds = productDemandAddReq.getBizDemandIds();
@@ -490,7 +506,19 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         // 附件
         fileComponent.update(productDemandModifyReq.getFiles(), newProductDemand.getId(), FileTypeEnum.PRODUCT_DEMAND.getCode());
         // 抄送人
-        personComponent.update(productDemandModifyReq.getRecipients(), newProductDemand.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
+        List<PersonAddReq> recipients = productDemandModifyReq.getRecipients();
+        personComponent.update(recipients, newProductDemand.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
+
+        if (!CollectionUtils.isEmpty(recipients)) {
+            List<String> copiers = recipients.stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
+            messageEventPublisher.publish(new ProductDemandToCopiedMsgEvent(
+                    this,
+                    newProductDemand.getId(),
+                    newProductDemand.getModifyMan(),
+                    copiers,
+                    newProductDemand.getName()
+            ));
+        }
 
         // 日志
         productDemandLogComponent.addLogWhenModifyData(oldProductDemand, newProductDemand);
