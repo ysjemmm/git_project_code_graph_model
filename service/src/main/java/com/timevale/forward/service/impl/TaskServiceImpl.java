@@ -205,10 +205,6 @@ public class TaskServiceImpl implements TaskService {
     public BaseResult<Long> add(TaskAddReq taskAddReq) {
         log.info("任务新增接收参数:{}", taskAddReq);
 
-        if (taskAddReq.getName().contains(CommonConstant.BLANK)) {
-            throw new BaseBizRuntimeException("任务名称中请勿包含空格");
-        }
-
         TaskDO taskDO = TaskCopier.INSTANCE.convert(taskAddReq);
         // 耗时校验
         checkTaskUseTime(Collections.singletonList(taskDO));
