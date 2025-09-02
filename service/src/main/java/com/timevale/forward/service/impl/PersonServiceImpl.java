@@ -89,12 +89,12 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
-    public BaseResult<List<TeamMemberVO>> getProjectMembers(List<Long> projectIds) {
+    public BaseResult<List<TeamMemberVO>> getProjectMembers(List<Long> ids) {
         List<PersonDO> personDOList;
-        if (CollectionUtils.isEmpty(projectIds)) {
+        if (CollectionUtils.isEmpty(ids)) {
             personDOList = personMapper.get(null, PersonTypeEnum.PROJECT_MEMBER.getCode());
         } else {
-            personDOList = personMapper.get(projectIds, PersonTypeEnum.PROJECT_MEMBER.getCode());
+            personDOList = personMapper.get(ids, PersonTypeEnum.PROJECT_MEMBER.getCode());
         }
         return getPersonResult(personDOList);
     }
