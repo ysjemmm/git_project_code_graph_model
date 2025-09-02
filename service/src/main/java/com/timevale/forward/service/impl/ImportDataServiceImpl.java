@@ -89,7 +89,7 @@ public class ImportDataServiceImpl implements ImportDataService {
 
     private static final String[] importDemandDataHeader = {"需求主题", "产品线", "优先级（P0:0;P1:10;P2:20;P3:30）", "产品需求类型（新增功能:0;功能迭代:1;体验优化:2;技术需求:3;安全需求:4;埋点需求:5;数据需求:6）", "产品需求负责人", "预期排期时间", "所属项目", "需求描述"};
 
-    private static final String[] importTaskDataHeader = {"任务名称", "任务状态", "产品线", "所属项目", "项目阶段（需求规划阶段:0;研发阶段:1;测试阶段:2）", "任务执行人", "计划开始时间", "计划完成时间", "实际开始时间", "实际完成时间", "任务描述", "关联产品需求", "是否为任务执行人创建代办"};
+    private static final String[] importTaskDataHeader = {"任务名称", "任务状态", "产品线", "所属项目", "任务类型（0其他，1调研，2详细设计，3测试用例设计，4开发，5集测开发，6code review，7测试，8线下bug修复，9发布，10线上bug修复，11支撑，12产品设计）", "任务执行人", "计划开始时间", "计划完成时间", "实际开始时间", "实际完成时间", "任务描述", "关联产品需求", "是否为任务执行人创建代办"};
 
     @Override
     public void downloadTemplate(Integer type, HttpServletResponse response) {
@@ -178,7 +178,9 @@ public class ImportDataServiceImpl implements ImportDataService {
                         dataProcessor.accept(size, newIndex, line);
                         successCount++;
                     } catch (Exception e) {
-                        failedRecords.add(line + "," + e.getMessage());
+                        // 将错误消息压缩成一行，替换掉换行符
+                        String errorMessage = e.getMessage().replaceAll("[\\r\\n]+", " ");
+                        failedRecords.add(line + "," + errorMessage);
                         failCount++;
                         log.warn("导入数据失败，数据行: {}, 错误: {}", line, e.getMessage());
                     }
@@ -200,11 +202,16 @@ public class ImportDataServiceImpl implements ImportDataService {
     private void addDemandData(int actualLength, int[] newIndex, String line) {
         String[] data = ImportDataUtil.splitLineData(line, actualLength);
         ProductDemandAddReq demandAddReq = new ProductDemandAddReq();
-        demandAddReq.setName(data[newIndex[0]] + "导入测试");
+        String demandName = data[newIndex[0]];
+        if (StringUtils.isEmpty(demandName)) {
+            return;
+        }
+        demandAddReq.setName(demandName + "导入测试");
 
         String productLineName = data[newIndex[1]];
+        ProductLineDO productLineDO = new ProductLineDO();
         if (StringUtils.isNotBlank(productLineName)) {
-            ProductLineDO productLineDO = productLineMapper.selectByName(productLineName);
+            productLineDO = productLineMapper.selectByName(productLineName);
             if (productLineDO != null) {
                 demandAddReq.setProductLineId(productLineDO.getId());
             }
@@ -224,6 +231,8 @@ public class ImportDataServiceImpl implements ImportDataService {
         }
         if (StringUtils.isNotEmpty(owner)) {
             demandAddReq.setDemandOwner(new PersonAddReq(owner, PinyinConverter.toPinyin(owner.split("-")[0])));
+        } else {
+            demandAddReq.setDemandOwner(new PersonAddReq(productLineDO.getOwner(), productLineDO.getOwnerId()));
         }
 
         // 处理日期
@@ -236,14 +245,15 @@ public class ImportDataServiceImpl implements ImportDataService {
             throw new BaseBizRuntimeException("需求排期日期格式错误: " + data[newIndex[5]]);
         }
 
-        ProjectDO projectDO = projectMapper.getByName(data[newIndex[6]] + "导入测试");
+        String projectName = data[newIndex[6]];
+        if (StringUtils.isNotBlank(projectName) && projectName.contains(",")) {
+            projectName = projectName.split(",")[0];
+        }
+        ProjectDO projectDO = projectMapper.getByName(projectName + "导入测试");
         if (projectDO != null) {
             demandAddReq.setProjectId(projectDO.getId());
         }
         demandAddReq.setDesc(data[newIndex[7]]);
-
-        // 去掉空格
-        ImportDataUtil.trimAllStringFields(demandAddReq);
 
         // 必填项校验
         if (StringUtils.isBlank(demandAddReq.getName())) {
@@ -251,9 +261,6 @@ public class ImportDataServiceImpl implements ImportDataService {
         }
         if (demandAddReq.getProductLineId() == null) {
             throw new BaseBizRuntimeException("产品线不能为空");
-        }
-        if (demandAddReq.getProjectId() == null) {
-            throw new BaseBizRuntimeException("所属项目不能为空");
         }
         if (demandAddReq.getPriority() == null) {
             throw new BaseBizRuntimeException("优先级不能为空");
@@ -277,25 +284,23 @@ public class ImportDataServiceImpl implements ImportDataService {
         TaskAddReq taskAddReq = new TaskAddReq();
         taskAddReq.setName(data[newIndex[0]] + "导入测试");
 
-        // TODO 如果任务状态是已完成则填充实际结束实际为计划结束时间
-
-        String productLineName = data[newIndex[1]];
+        String productLineName = data[newIndex[2]];
         if (StringUtils.isNotBlank(productLineName)) {
             ProductLineDO productLineDO = productLineMapper.selectByName(productLineName);
             taskAddReq.setProductLineId(productLineDO.getId());
         }
 
-        String projectName = data[newIndex[2]];
+        String projectName = data[newIndex[3]];
         if (StringUtils.isNotBlank(projectName)) {
-            ProjectDO projectDO = projectMapper.getByName(projectName);
+            ProjectDO projectDO = projectMapper.getByName(projectName + "导入测试");
             if (projectDO != null) {
                 taskAddReq.setProjectId(projectDO.getId());
             }
         }
-        taskAddReq.setStage(Integer.valueOf(data[newIndex[3]]));
+        taskAddReq.setType(Integer.valueOf(data[newIndex[4]]));
 
         // 处理执行人
-        List<String> userNames = Arrays.asList(data[newIndex[4]].split(","));
+        List<String> userNames = Arrays.asList(data[newIndex[5]].split(","));
         if (CollUtil.isNotEmpty(userNames)) {
             List<PersonAddReq> personAddReqs = userNames.stream().map(e -> new PersonAddReq(e, PinyinConverter.toPinyin(e.split("-")[0]))).collect(Collectors.toList());
             taskAddReq.setExecutors(personAddReqs);
@@ -303,8 +308,8 @@ public class ImportDataServiceImpl implements ImportDataService {
 
         // 处理日期时间，如果只包含日期则添加默认时间09:00
         try {
-            if (StringUtils.isNotBlank(data[newIndex[5]])) {
-                String dateTimeStr = data[newIndex[5]].trim();
+            if (StringUtils.isNotBlank(data[newIndex[6]])) {
+                String dateTimeStr = data[newIndex[6]].trim();
                 Date date;
                 // 判断是否只包含日期（没有时间部分）
                 if (dateTimeStr.matches("\\d{4}-\\d{2}-\\d{2}") || dateTimeStr.matches("\\d{4}/\\d{2}/\\d{2}")) {
@@ -315,13 +320,13 @@ public class ImportDataServiceImpl implements ImportDataService {
                 taskAddReq.setPlanStartDate(date);
             }
         } catch (ParseException e) {
-            throw new BaseBizRuntimeException("计划开始时间日期格式错误: " + data[newIndex[5]]);
+            throw new BaseBizRuntimeException("计划开始时间日期格式错误: " + data[newIndex[6]]);
         }
 
         // 处理日期时间，如果只包含日期则添加默认时间18:30
         try {
-            if (StringUtils.isNotBlank(data[newIndex[6]])) {
-                String dateTimeStr = data[newIndex[6]].trim();
+            if (StringUtils.isNotBlank(data[newIndex[7]])) {
+                String dateTimeStr = data[newIndex[7]].trim();
                 Date date;
                 // 判断是否只包含日期（没有时间部分）
                 if (dateTimeStr.matches("\\d{4}-\\d{2}-\\d{2}") || dateTimeStr.matches("\\d{4}/\\d{2}/\\d{2}")) {
@@ -332,13 +337,13 @@ public class ImportDataServiceImpl implements ImportDataService {
                 taskAddReq.setPlanEndDate(date);
             }
         } catch (ParseException e) {
-            throw new BaseBizRuntimeException("计划结束时间日期格式错误: " + data[newIndex[6]]);
+            throw new BaseBizRuntimeException("计划结束时间日期格式错误: " + data[newIndex[7]]);
         }
 
         // 处理日期时间，如果只包含日期则添加默认时间09:00
         try {
-            if (StringUtils.isNotBlank(data[newIndex[7]])) {
-                String dateTimeStr = data[newIndex[7]].trim();
+            if (StringUtils.isNotBlank(data[newIndex[8]])) {
+                String dateTimeStr = data[newIndex[8]].trim();
                 Date date;
                 // 判断是否只包含日期（没有时间部分）
                 if (dateTimeStr.matches("\\d{4}-\\d{2}-\\d{2}") || dateTimeStr.matches("\\d{4}/\\d{2}/\\d{2}")) {
@@ -349,13 +354,16 @@ public class ImportDataServiceImpl implements ImportDataService {
                 taskAddReq.setActualStartDate(date);
             }
         } catch (ParseException e) {
-            throw new BaseBizRuntimeException("实际开始时间日期格式错误: " + data[newIndex[7]]);
+            throw new BaseBizRuntimeException("实际开始时间日期格式错误: " + data[newIndex[8]]);
         }
 
         // 处理日期时间，如果只包含日期则添加默认时间18:30
         try {
-            if (StringUtils.isNotBlank(data[newIndex[8]])) {
-                String dateTimeStr = data[newIndex[8]].trim();
+            if (StringUtils.isNotBlank(data[newIndex[9]])) {
+                String dateTimeStr = data[newIndex[9]].trim();
+                if (dateTimeStr.contains(",")) {
+                    dateTimeStr = dateTimeStr.split(",")[0];
+                }
                 Date date;
                 // 判断是否只包含日期（没有时间部分）
                 if (dateTimeStr.matches("\\d{4}-\\d{2}-\\d{2}") || dateTimeStr.matches("\\d{4}/\\d{2}/\\d{2}")) {
@@ -366,7 +374,7 @@ public class ImportDataServiceImpl implements ImportDataService {
                 taskAddReq.setActualEndDate(date);
             }
         } catch (ParseException e) {
-            throw new BaseBizRuntimeException("计划结束时间日期格式错误: " + data[newIndex[8]]);
+            throw new BaseBizRuntimeException("实际结束时间日期格式错误: " + data[newIndex[9]]);
         }
         ElapsedTimeQueryReq elapsedTimeQueryReq = new ElapsedTimeQueryReq();
         elapsedTimeQueryReq.setStartTime(taskAddReq.getPlanStartDate());
@@ -374,13 +382,23 @@ public class ImportDataServiceImpl implements ImportDataService {
         BigDecimal planUseTime = Optional.of(taskService.getElapsedTime(elapsedTimeQueryReq)).map(BaseResult::getData).orElse(BigDecimal.ZERO);
         taskAddReq.setPlanUseTime(planUseTime);
 
-        taskAddReq.setDesc(data[newIndex[9]]);
+        String taskStatus = data[newIndex[1]];
+        if ("已完成".equals(taskStatus)) {
+            if (taskAddReq.getActualStartDate() == null) {
+                taskAddReq.setActualStartDate(taskAddReq.getPlanStartDate());
+            }
+            if (taskAddReq.getActualEndDate() == null) {
+                taskAddReq.setActualEndDate(taskAddReq.getPlanEndDate());
+            }
+        }
+
+        taskAddReq.setDesc(data[newIndex[10]]);
 
         // 关联产品需求
-        List<String> productNames = Arrays.asList(data[newIndex[10]].split(","));
+        List<String> productNames = Arrays.asList(data[newIndex[11]].split(","));
         List<Long> productDemandIds = new ArrayList<>(productNames.size());
         for (String productName : productNames) {
-            ProductDemandDO productDemandDO = productDemandMapper.getByName(productName);
+            ProductDemandDO productDemandDO = productDemandMapper.getByName(productName + "导入测试");
             if (productDemandDO != null) {
                 productDemandIds.add(productDemandDO.getId());
             }
@@ -388,10 +406,7 @@ public class ImportDataServiceImpl implements ImportDataService {
         // 关联产品需求
         taskAddReq.setProductDemandIds(productDemandIds);
 
-        taskAddReq.setTodo(Boolean.valueOf(data[newIndex[11]]));
-
-        // 去掉空格
-        ImportDataUtil.trimAllStringFields(taskAddReq);
+        taskAddReq.setTodo(Boolean.valueOf(data[newIndex[12]]));
 
         // 必填项校验
         if (StringUtils.isBlank(taskAddReq.getName())) {
@@ -530,9 +545,6 @@ public class ImportDataServiceImpl implements ImportDataService {
         projectAddReq.setIsWithGoal(Integer.valueOf(data[newIndex[16]]));
 
         projectAddReq.setWorkHoursNotify(0);
-
-        // 去掉空格
-        ImportDataUtil.trimAllStringFields(projectAddReq);
 
         // 必填项校验
         if (StringUtils.isBlank(projectAddReq.getName())) {
