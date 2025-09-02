@@ -25,6 +25,14 @@ public interface ProjectService {
     BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList);
 
     /**
+     * 查列表
+     *
+     * @param projectQueryList 项目信息
+     * @return 列表
+     */
+    BaseResult<List<ProjectVO>> simpleList(ProjectQueryList projectQueryList);
+
+    /**
      * 修改状态
      *
      * @param req 暂停/作废更新

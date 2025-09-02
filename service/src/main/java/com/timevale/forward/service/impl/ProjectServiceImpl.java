@@ -13,20 +13,163 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.condition.ProjectListChildCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
-import com.timevale.forward.dal.dao.*;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.dao.BizChangeLogMapper;
+import com.timevale.forward.dal.dao.BizDemandMapper;
+import com.timevale.forward.dal.dao.BizDomainMapper;
+import com.timevale.forward.dal.dao.BizLabelMapper;
+import com.timevale.forward.dal.dao.BugLogMapper;
+import com.timevale.forward.dal.dao.EvaluateDimensionMapper;
+import com.timevale.forward.dal.dao.PersonMapper;
+import com.timevale.forward.dal.dao.ProductDemandMapper;
+import com.timevale.forward.dal.dao.ProductLineMapper;
+import com.timevale.forward.dal.dao.ProjectBizDemandMapper;
+import com.timevale.forward.dal.dao.ProjectBizDomainMapper;
+import com.timevale.forward.dal.dao.ProjectBudgetMapper;
+import com.timevale.forward.dal.dao.ProjectEvaluateMapper;
+import com.timevale.forward.dal.dao.ProjectFlowMapper;
+import com.timevale.forward.dal.dao.ProjectGoalMapper;
+import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.dao.ProjectMemberEvaluateMapper;
+import com.timevale.forward.dal.dao.ProjectMilestoneMapper;
+import com.timevale.forward.dal.dao.ProjectNodeFlowMapper;
+import com.timevale.forward.dal.dao.ProjectNodeRecordMapper;
+import com.timevale.forward.dal.dao.ProjectPbuMapper;
+import com.timevale.forward.dal.dao.ProjectProductDemandMapper;
+import com.timevale.forward.dal.dao.ProjectProductLineMapper;
+import com.timevale.forward.dal.dao.ProjectRiskMapper;
+import com.timevale.forward.dal.dao.TaskProductDemandMapper;
+import com.timevale.forward.dal.entity.BaseDO;
+import com.timevale.forward.dal.entity.BizChangeLogDO;
+import com.timevale.forward.dal.entity.BizDemandDO;
+import com.timevale.forward.dal.entity.BizDomainDO;
+import com.timevale.forward.dal.entity.BizLabelDO;
+import com.timevale.forward.dal.entity.EvaluateDimensionDO;
+import com.timevale.forward.dal.entity.PersonDO;
+import com.timevale.forward.dal.entity.ProductDemandDO;
+import com.timevale.forward.dal.entity.ProductDemandGroupDO;
+import com.timevale.forward.dal.entity.ProductDemandListDO;
+import com.timevale.forward.dal.entity.ProductLineDO;
+import com.timevale.forward.dal.entity.ProjectBizDemandDO;
+import com.timevale.forward.dal.entity.ProjectBizDomainDO;
+import com.timevale.forward.dal.entity.ProjectBudgetDO;
+import com.timevale.forward.dal.entity.ProjectChildCountDO;
+import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.entity.ProjectEvaluateDO;
+import com.timevale.forward.dal.entity.ProjectFlowDO;
+import com.timevale.forward.dal.entity.ProjectGoalDO;
+import com.timevale.forward.dal.entity.ProjectListDO;
+import com.timevale.forward.dal.entity.ProjectMemberEvaluateDO;
+import com.timevale.forward.dal.entity.ProjectNodeDO;
+import com.timevale.forward.dal.entity.ProjectNodeFlowDO;
+import com.timevale.forward.dal.entity.ProjectNodeRecordDO;
+import com.timevale.forward.dal.entity.ProjectPbuDO;
+import com.timevale.forward.dal.entity.ProjectProductDemandDO;
+import com.timevale.forward.dal.entity.ProjectProductLineBizDomain;
+import com.timevale.forward.dal.entity.ProjectProductLineDO;
+import com.timevale.forward.dal.entity.TaskProductDemandDO;
 import com.timevale.forward.facade.api.client.ProjectBizDemandService;
 import com.timevale.forward.facade.api.client.ProjectMilestoneService;
 import com.timevale.forward.facade.api.client.ProjectService;
-import com.timevale.forward.facade.api.query.*;
-import com.timevale.forward.facade.api.request.*;
-import com.timevale.forward.facade.api.result.*;
+import com.timevale.forward.facade.api.query.ProjectBizDemandQueryList;
+import com.timevale.forward.facade.api.query.ProjectLinkProductDemandQueryList;
+import com.timevale.forward.facade.api.query.ProjectPageQuery;
+import com.timevale.forward.facade.api.query.ProjectProductDemandQueryList;
+import com.timevale.forward.facade.api.query.ProjectQueryList;
+import com.timevale.forward.facade.api.request.BizDemandLinkProjectReq;
+import com.timevale.forward.facade.api.request.PersonAddReq;
+import com.timevale.forward.facade.api.request.ProjectAddReq;
+import com.timevale.forward.facade.api.request.ProjectAppendChildReq;
+import com.timevale.forward.facade.api.request.ProjectBudgetSaveReq;
+import com.timevale.forward.facade.api.request.ProjectChildListReq;
+import com.timevale.forward.facade.api.request.ProjectConclusionReq;
+import com.timevale.forward.facade.api.request.ProjectDateModifyReq;
+import com.timevale.forward.facade.api.request.ProjectDeleteChildReq;
+import com.timevale.forward.facade.api.request.ProjectGoalAddReq;
+import com.timevale.forward.facade.api.request.ProjectInnerAddReq;
+import com.timevale.forward.facade.api.request.ProjectInnerCompleteReq;
+import com.timevale.forward.facade.api.request.ProjectModifyReq;
+import com.timevale.forward.facade.api.request.ProjectProductDemandLinkReq;
+import com.timevale.forward.facade.api.request.ProjectSimpleModifyReq;
+import com.timevale.forward.facade.api.request.ProjectStageChangeReq;
+import com.timevale.forward.facade.api.request.ProjectUnWriteReasonModifyReq;
+import com.timevale.forward.facade.api.request.ProjectUpdateStatusReq;
+import com.timevale.forward.facade.api.result.BizDemandVO;
+import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
+import com.timevale.forward.facade.api.result.ConclusionFormVO;
+import com.timevale.forward.facade.api.result.ConclusionMemberItemVO;
+import com.timevale.forward.facade.api.result.ModifyProjectCheckVO;
+import com.timevale.forward.facade.api.result.PersonVO;
+import com.timevale.forward.facade.api.result.ProductDemandStatusVO;
+import com.timevale.forward.facade.api.result.ProductDemandVO;
+import com.timevale.forward.facade.api.result.ProductLineVO;
+import com.timevale.forward.facade.api.result.ProjectBaseVO;
+import com.timevale.forward.facade.api.result.ProjectDetailVO;
+import com.timevale.forward.facade.api.result.ProjectEvaluateItemVO;
+import com.timevale.forward.facade.api.result.ProjectInnerDetailVO;
+import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
+import com.timevale.forward.facade.api.result.ProjectNodeVO;
+import com.timevale.forward.facade.api.result.ProjectProductLineVO;
+import com.timevale.forward.facade.api.result.ProjectSimpleVO;
+import com.timevale.forward.facade.api.result.ProjectTabCountVO;
+import com.timevale.forward.facade.api.result.ProjectTreeVO;
+import com.timevale.forward.facade.api.result.ProjectVO;
+import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.model.dto.ModifyProjectProcessedBundle;
-import com.timevale.forward.model.enums.*;
+import com.timevale.forward.model.enums.AscriptionEnum;
+import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
+import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
+import com.timevale.forward.model.enums.BizDemandStatusEnum;
+import com.timevale.forward.model.enums.BizTypeEnum;
+import com.timevale.forward.model.enums.ButtonActionEnum;
+import com.timevale.forward.model.enums.FlowTypeEnum;
+import com.timevale.forward.model.enums.ForwardFlowStatusEnum;
+import com.timevale.forward.model.enums.LinkOrUnLinkEnum;
+import com.timevale.forward.model.enums.PersonLevelEnum;
+import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.model.enums.PriorityEnum;
+import com.timevale.forward.model.enums.ProductDemandStatusEnum;
+import com.timevale.forward.model.enums.ProjectCategoryEnum;
+import com.timevale.forward.model.enums.ProjectGoalTypeEnum;
+import com.timevale.forward.model.enums.ProjectInnerTypeEnum;
+import com.timevale.forward.model.enums.ProjectKindEnum;
+import com.timevale.forward.model.enums.ProjectNodeEnum;
+import com.timevale.forward.model.enums.ProjectNodeStatusEnum;
+import com.timevale.forward.model.enums.ProjectRiskStatusEnum;
+import com.timevale.forward.model.enums.ProjectStageEnum;
+import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.model.enums.YesOrNoEnum;
 import com.timevale.forward.model.event.ProjectCreateEvent;
-import com.timevale.forward.service.component.*;
+import com.timevale.forward.service.component.BizDemandComponent;
+import com.timevale.forward.service.component.BizLabelComponent;
+import com.timevale.forward.service.component.InnerProjectStatusUpdateComponent;
+import com.timevale.forward.service.component.LabelComponent;
+import com.timevale.forward.service.component.ManDayReportComponent;
+import com.timevale.forward.service.component.PersonComponent;
+import com.timevale.forward.service.component.ProductDemandComponent;
+import com.timevale.forward.service.component.ProductDemandGroupComponent;
+import com.timevale.forward.service.component.ProjectComponent;
+import com.timevale.forward.service.component.ProjectDocumentComponent;
+import com.timevale.forward.service.component.ProjectEvaluateComponent;
+import com.timevale.forward.service.component.ProjectLogComponent;
+import com.timevale.forward.service.component.ProjectMilestoneComponent;
+import com.timevale.forward.service.component.ProjectNodeComponent;
+import com.timevale.forward.service.component.ProjectNodeFlowComponent;
+import com.timevale.forward.service.component.ProjectProductDemandComponent;
+import com.timevale.forward.service.component.ProjectProductLineComponent;
+import com.timevale.forward.service.component.TaskComponent;
+import com.timevale.forward.service.component.UserComponent;
 import com.timevale.forward.service.constant.CommonConstant;
-import com.timevale.forward.service.copy.*;
+import com.timevale.forward.service.copy.BizDemandCopier;
+import com.timevale.forward.service.copy.PersonCopier;
+import com.timevale.forward.service.copy.ProductDemandCopier;
+import com.timevale.forward.service.copy.ProductLineCopier;
+import com.timevale.forward.service.copy.ProjectBudgetsCopier;
+import com.timevale.forward.service.copy.ProjectCopier;
+import com.timevale.forward.service.copy.ProjectEvaluateCopier;
+import com.timevale.forward.service.copy.ProjectGoalCopier;
+import com.timevale.forward.service.copy.ProjectMemberEvaluateCopier;
+import com.timevale.forward.service.copy.ProjectNodeCopier;
+import com.timevale.forward.service.copy.ProjectNodeFlowCopier;
 import com.timevale.forward.service.flow.ForwardFlow;
 import com.timevale.forward.service.flow.model.TargetStatusModel;
 import com.timevale.forward.service.integration.dock.CrmProjectClient;
@@ -56,7 +199,18 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -91,21 +245,15 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private ProjectProductDemandMapper projectProductDemandMapper;
     @Resource
-    private ProductBizDemandMapper productBizDemandMapper;
-    @Resource
     private PersonMapper personMapper;
     @Resource
     private TaskComponent taskComponent;
-    @Resource
-    private TaskProductDemandComponent taskProductDemandComponent;
     @Resource
     private TaskProductDemandMapper taskProductDemandMapper;
     @Resource
     protected BugLogMapper bugLogMapper;
     @Resource
     private ProjectLogComponent projectLogComponent;
-    @Resource
-    private ProductDemandLogComponent productDemandLogComponent;
     @Resource
     private ProjectFlowMapper projectFlowMapper;
     @Resource
@@ -175,10 +323,6 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private BizDomainMapper bizDomainMapper;
     @Resource
-    private BizDomainGroupMapper bizDomainGroupMapper;
-    @Resource
-    private ProductDemandGroupItemComponent productDemandGroupItemComponent;
-    @Resource
     private ProductDemandGroupComponent productDemandGroupComponent;
 
     @Override
@@ -212,6 +356,31 @@ public class ProjectServiceImpl implements ProjectService {
             condition.setLabelIds(labelIds);
         }
         return BaseResult.success(projectComponent.page(condition, projectIds));
+    }
+
+    @Override
+    public BaseResult<List<ProjectVO>> simpleList(ProjectQueryList projectQueryList) {
+        ProjectListCondition condition = ProjectCopier.INSTANCE.convert(projectQueryList);
+        // 项目状态需要过滤掉已暂停、已作废、已发布、已结项
+        buildProjectStatus(condition);
+        List<ProjectListDO> projectDOList = projectMapper.list(condition);
+
+        // 转换
+        List<ProjectVO> projectVOList = ProjectCopier.INSTANCE.convert(projectDOList);
+        return BaseResult.success(projectVOList);
+    }
+
+    private void buildProjectStatus(ProjectListCondition condition) {
+        List<Integer> status = condition.getStatus();
+        if (CollUtil.isEmpty(status)) {
+            for (ProjectStatusEnum e : ProjectStatusEnum.values()) {
+                status.add(e.getCode());
+            }
+        }
+        status.remove(ProjectStatusEnum.SUSPEND.getCode());
+        status.remove(ProjectStatusEnum.INVALID.getCode());
+        status.remove(ProjectStatusEnum.RELEASED.getCode());
+        status.remove(ProjectStatusEnum.CONCLUSION.getCode());
     }
 
     @Override

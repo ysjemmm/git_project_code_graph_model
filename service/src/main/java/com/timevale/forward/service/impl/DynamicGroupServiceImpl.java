@@ -14,7 +14,6 @@ import com.timevale.forward.dal.condition.ProductGroupCondition;
 import com.timevale.forward.dal.dao.BizDomainMapper;
 import com.timevale.forward.dal.dao.BizLabelMapper;
 import com.timevale.forward.dal.dao.LabelMapper;
-import com.timevale.forward.dal.dao.ProductDemandMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.entity.BizDemandGroupFieldDO;
 import com.timevale.forward.dal.entity.BizDomainDO;
@@ -115,9 +114,6 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
     @Resource
     private ProductDemandComponent productDemandComponent;
-
-    @Resource
-    private ProductDemandMapper productDemandMapper;
 
     @Resource
     private GroupDuplicateUtil groupDuplicateUtil;

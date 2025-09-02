@@ -33,6 +33,14 @@ public interface PersonService {
     BaseResult<List<TeamMemberVO>> getTeamMembers(Long projectId);
 
     /**
+     * 查看团队成员
+     *
+     * @param projectId 项目信息
+     * @return 详情信息
+     */
+    BaseResult<List<TeamMemberVO>> getProjectMembers(List<Long> projectId);
+
+    /**
      * 获取抄送人
      * @return PersonVO
      */
