@@ -166,9 +166,9 @@
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
             <if test="desc != null">`desc` = #{desc},</if>
-            actual_start_date = #{actualStartDate},
-            actual_end_date = #{actualEndDate},
-            todo_id = #{todoId}
+            <if test="actualStartDate != null">actual_start_date = #{actualStartDate},</if>
+            <if test="actualEndDate != null">actual_end_date = #{actualEndDate},</if>
+            <if test="todoId != null">todo_id = #{todoId}</if>
         </set>
         <where>
             id = #{id} and is_deleted=false
