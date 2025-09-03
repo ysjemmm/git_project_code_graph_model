@@ -46,6 +46,7 @@ import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 
 import javax.annotation.Resource;
@@ -140,7 +141,7 @@ public class PersonServiceImpl implements PersonService {
             teamMemberVO.setUserName(a.getAlias() + CommonConstant.JOIN_LINE + a.getName());
             teamMemberVO.setQuited(Integer.valueOf(1).equals(a.getStatus()));
             return teamMemberVO;
-        }).collect(Collectors.toList());
+        }).filter(e -> StringUtils.isNotEmpty(e.getUserId())).collect(Collectors.toList());
         return BaseResult.success(list);
     }
 
