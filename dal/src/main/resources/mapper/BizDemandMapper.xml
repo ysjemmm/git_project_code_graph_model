@@ -877,8 +877,8 @@
                 and bd.is_deleted = false
             </if>
             <if test="parentCondition != null">
-                <if test="parentCondition.targetCustomer != null">
-                    and bd.target_customer like concat('%',#{targetCustomer},'%')
+                <if test="parentCondition.targetCustomer !=null and parentCondition.targetCustomer!=''">
+                    and bd.target_customer = #{parentCondition.targetCustomer}
                 </if>
                 <if test="parentCondition.priority!=null">
                     and bd.priority = #{parentCondition.priority}
