@@ -523,7 +523,11 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
     }
 
     @Override
-    public BaseResult<List<RegisterWorkHoursTaskVO>> waitRegisterTaskList(String dateStr) {
+    public BaseResult<List<RegisterWorkHoursTaskVO>> waitRegisterTaskList(String userId, String dateStr) {
+        if (StringUtils.isBlank(userId)) {
+            UserInfo userInfo = LocalSessionUtils.getUserInfo();
+            userId = userInfo.getId();
+        }
         LocalDate localDate;
         if (StringUtils.isBlank(dateStr)) {
             // 字符串日期不要时间
@@ -551,9 +555,8 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         List<Long> projectIds = new ArrayList<>(notifyProjectMap.keySet());
 
         List<RegisterWorkHoursTaskVO> registerWorkHoursTaskVOS = new ArrayList<>();
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
-        List<Long> executorTaskIds = personMapper.getMainIds(Lists.newArrayList(userInfo.getId()), null, PersonTypeEnum.TASK_EXECUTOR.getCode());
+        List<Long> executorTaskIds = personMapper.getMainIds(Lists.newArrayList(userId), null, PersonTypeEnum.TASK_EXECUTOR.getCode());
         // 是否存在进行中的任务
         if (executorTaskIds.isEmpty()) {
             return BaseResult.success(registerWorkHoursTaskVOS);
