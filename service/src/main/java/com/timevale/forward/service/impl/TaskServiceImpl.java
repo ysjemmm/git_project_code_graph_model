@@ -737,8 +737,10 @@ public class TaskServiceImpl implements TaskService {
             //执行人
             personComponent.update(a.getExecutors(), taskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
 
-            //关联产品需求
+            //取消关联产品需求
             a.getProductDemandIds().forEach(demand -> taskProductDemandComponent.update(Collections.singletonList(a.getId()), demand));
+            // 批量关联
+            taskProductDemandComponent.batchInsert(a.getId(), a.getProductDemandIds());
         }));
 
         // 执行人
