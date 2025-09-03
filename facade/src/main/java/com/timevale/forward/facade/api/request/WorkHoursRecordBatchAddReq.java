@@ -24,4 +24,6 @@ public class WorkHoursRecordBatchAddReq extends BaseReq {
     @Valid
     private List<WorkHoursRecordAddReq> workHoursSimples;
 
+    @ApiModelProperty("是否内部")
+    private Boolean isInner = false;
 }

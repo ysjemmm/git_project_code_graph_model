@@ -372,7 +372,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
                 .filter(Objects::nonNull)
                 .min(Comparator.naturalOrder())
                 .orElse(null);
-        if (Objects.nonNull(date)) {
+        if (Boolean.FALSE.equals(workHoursRecordBatchAddReq.getIsInner()) && Objects.nonNull(date)) {
             String registrationDate = DateUtils.format(date, "yyyy-MM-dd");
             if (Objects.isNull(TedisUtil.get(USER_KEY_PREFIX + registrationDate + ":" + userInfo.getId()))) {
                 throw new BaseBizRuntimeException("token已过期，请修改登记日期为近三天工作日的日期");
