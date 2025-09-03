@@ -152,7 +152,7 @@
     <update id="update" parameterType="com.timevale.forward.dal.entity.TaskDO">
         update task
         <set>
-            <if test="name != null">name = #{name},</if>
+            <if test="name != null and name != ''">name = #{name},</if>
             <if test="status != null">status = #{status},</if>
             <if test="stage != null">stage = #{stage},</if>
             <if test="type != null">type = #{type},</if>
@@ -165,7 +165,7 @@
             <if test="planUseTime != null">plan_use_time = #{planUseTime},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
-            <if test="desc != null">`desc` = #{desc},</if>
+            <if test="desc != null and desc != ''">`desc` = #{desc},</if>
             <if test="actualStartDate != null">actual_start_date = #{actualStartDate},</if>
             <if test="actualEndDate != null">actual_end_date = #{actualEndDate},</if>
             <if test="todoId != null">todo_id = #{todoId}</if>
