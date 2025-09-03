@@ -35,10 +35,9 @@ public interface PersonService {
     /**
      * 查看团队成员
      *
-     * @param ids 项目信息
      * @return 详情信息
      */
-    BaseResult<List<TeamMemberVO>> getProjectMembers(List<Long> ids);
+    BaseResult<List<TeamMemberVO>> getProjectMembers();
 
     /**
      * 获取抄送人
