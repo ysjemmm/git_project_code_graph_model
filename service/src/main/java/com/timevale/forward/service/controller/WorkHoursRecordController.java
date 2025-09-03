@@ -61,8 +61,10 @@ public class WorkHoursRecordController {
 
     @ApiOperation("待填报工时任务列表")
     @GetMapping("/waitRegTaskList")
-    public BusinessResult<List<RegisterWorkHoursTaskVO>> waitRegisterTaskList(@ApiParam(value = "日期") @RequestParam(value = "dateStr", required = false) String dateStr) {
-        return ResultUtils.result(workHoursRecordService.waitRegisterTaskList(dateStr));
+    public BusinessResult<List<RegisterWorkHoursTaskVO>> waitRegisterTaskList(
+            @ApiParam(value = "用户id") @RequestParam(value = "userId", required = false) String userId,
+            @ApiParam(value = "日期") @RequestParam(value = "dateStr", required = false) String dateStr) {
+        return ResultUtils.result(workHoursRecordService.waitRegisterTaskList(userId, dateStr));
     }
 
     @ApiOperation("工时记录列表")
@@ -91,7 +93,7 @@ public class WorkHoursRecordController {
 
     @ApiOperation("删除")
     @PostMapping("/delete")
-    public BusinessResult<Boolean> delete(@RequestBody @Valid CommonIdInput<Long> id){
+    public BusinessResult<Boolean> delete(@RequestBody @Valid CommonIdInput<Long> id) {
         return ResultUtils.result(workHoursRecordService.delete(id.getId()));
     }
 
