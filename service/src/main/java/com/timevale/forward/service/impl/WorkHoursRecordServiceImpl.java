@@ -587,6 +587,10 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             registerWorkHoursTaskVO.setName(taskDO.getName());
             registerWorkHoursTaskVO.setWorkItemType(BizTypeEnum.TASK.getCode());
             registerWorkHoursTaskVO.setDateStr(date);
+            registerWorkHoursTaskVO.setStatus(taskDO.getStatus());
+            registerWorkHoursTaskVO.setStatusName(TaskStatusEnum.getTextByCode(taskDO.getStatus()));
+            registerWorkHoursTaskVO.setDesc(taskDO.getDesc());
+            registerWorkHoursTaskVO.setEstimatedHours(taskDO.getPlanUseTime());
             registerWorkHoursTaskVOS.add(registerWorkHoursTaskVO);
         }
         return BaseResult.success(registerWorkHoursTaskVOS);

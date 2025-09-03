@@ -8,6 +8,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.math.BigDecimal;
+
 /**
  * @auther: yuhua
  * @date: 2025/7/2 17:46
@@ -37,4 +39,16 @@ public class RegisterWorkHoursTaskVO extends ToString {
 
     @ApiModelProperty("工时日期")
     private String dateStr;
+
+    @ApiModelProperty("预计工时")
+    private BigDecimal estimatedHours;
+
+    @ApiModelProperty("优先级")
+    private Integer status;
+
+    @ApiModelProperty("优先级名称")
+    private String statusName;
+
+    @ApiModelProperty("任务描述")
+    private String desc;
 }
