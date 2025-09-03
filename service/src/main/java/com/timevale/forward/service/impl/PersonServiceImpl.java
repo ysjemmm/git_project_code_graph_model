@@ -18,6 +18,7 @@ import com.timevale.forward.facade.api.client.BizDemandService;
 import com.timevale.forward.facade.api.client.PersonService;
 import com.timevale.forward.facade.api.client.ProductDemandService;
 import com.timevale.forward.facade.api.request.BatchTransferReq;
+import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.request.RecipientAddReq;
 import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.forward.facade.api.result.TeamMemberVO;
@@ -32,10 +33,13 @@ import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.observer.event.BizDemandToCopiedMsgEvent;
 import com.timevale.forward.service.observer.event.BizResignTransferEvent;
 import com.timevale.forward.service.observer.event.BugOfflineResignTransferEvent;
 import com.timevale.forward.service.observer.event.BugOnlineResignTransferEvent;
 import com.timevale.forward.service.observer.event.PdResignTransferEvent;
+import com.timevale.forward.service.observer.event.ProductDemandToCopiedMsgEvent;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -81,10 +85,39 @@ public class PersonServiceImpl implements PersonService {
     @Resource
     private BugOfflineComponent bugOfflineComponent;
 
+    @Resource
+    private MessageEventPublisher messageEventPublisher;
+
     @Override
     public BaseResult<Boolean> addRecipients(RecipientAddReq recipientAddReq) {
+        List<PersonAddReq> recipients = recipientAddReq.getRecipients();
+        Integer type = recipientAddReq.getType();
+        Long mainId = recipientAddReq.getMainId();
         // 抄送人
-        personComponent.update(recipientAddReq.getRecipients(), recipientAddReq.getMainId(), recipientAddReq.getType());
+        personComponent.update(recipients, mainId, type);
+        if (CollectionUtils.isNotEmpty(recipients)) {
+            List<String> copiers = recipients.stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
+            if (PersonTypeEnum.PRODUCT_DEMAND_CC.equals(type)) {
+                ProductDemandDO productDemand = productDemandMapper.get(mainId);
+                messageEventPublisher.publish(new ProductDemandToCopiedMsgEvent(
+                        this,
+                        productDemand.getId(),
+                        productDemand.getCreateMan(),
+                        copiers,
+                        productDemand.getName()
+                ));
+            }
+            if (PersonTypeEnum.BIZ_DEMAND_CC.equals(type)) {
+                BizDemandDO bizDemandDO = bizDemandMapper.get(mainId);
+                messageEventPublisher.publish(new BizDemandToCopiedMsgEvent(
+                        this,
+                        bizDemandDO.getId(),
+                        bizDemandDO.getSubmitMan(),
+                        copiers,
+                        bizDemandDO.getName()
+                ));
+            }
+        }
         return BaseResult.success(true);
     }
 
