@@ -57,6 +57,16 @@ public class TaskListCondition extends QueryBase {
     private List<String> createManIds;
 
     /**
+     * 查询开始时间
+     */
+    private Date startDate;
+
+    /**
+     * 查询结束时间
+     */
+    private Date endDate;
+
+    /**
      * 计划开始时间左区间
      */
     private Date planStartDateLeft;

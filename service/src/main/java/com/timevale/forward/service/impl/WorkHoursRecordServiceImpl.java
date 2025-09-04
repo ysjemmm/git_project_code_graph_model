@@ -1,9 +1,11 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.github.pagehelper.BasePageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Lists;
 import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.condition.TaskListCondition;
 import com.timevale.forward.dal.condition.WorkHoursRecordCondition;
 import com.timevale.forward.dal.dao.PersonMapper;
@@ -12,6 +14,7 @@ import com.timevale.forward.dal.dao.TaskMapper;
 import com.timevale.forward.dal.dao.WorkHoursRecordMapper;
 import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.entity.ProjectListDO;
 import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.dal.entity.WorkHoursRecordDO;
 import com.timevale.forward.facade.api.client.TaskService;
@@ -707,6 +710,12 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         LocalDateTime startTime = LocalDateTime.ofInstant(startDate.toInstant(), ZoneId.systemDefault()).with(LocalTime.MIN);
         LocalDateTime endTime = LocalDateTime.ofInstant(endDate.toInstant(), ZoneId.systemDefault()).with(LocalTime.MAX);
 
+        if (CollUtil.isEmpty(query.getProjectIds())) {
+            List<Long> projectIds = projectMapper.list(ProjectListCondition.builder().workHoursNotify(1).status(PROJECT_STATUSES).build())
+                    .stream().map(ProjectListDO::getId).collect(Collectors.toList());
+            query.setProjectIds(projectIds);
+        }
+
         // 查询工时记录
         WorkHoursRecordCondition workHoursRecordCondition = WorkHoursRecordCondition.builder()
                 .projectIds(query.getProjectIds())
@@ -731,14 +740,17 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         }
 
         List<TaskDO> taskDOList = taskMapper.list(TaskListCondition.builder()
-                .executorIds(executorIds)
-                .planStartDateLeft(DateUtil.getStartOfDay(startDate))
-                .planStartDateRight(DateUtil.getEndOfDay(endDate))
+                .projectIds(query.getProjectIds())
+                // 需要计划开始时间和计划结束时间与选择的范围时间有交集
+                .startDate(DateUtil.getStartOfDay(startDate))
+                .endDate(DateUtil.getEndOfDay(endDate))
                 .build());
 
         // 构建各种映射关系
         Map<Long, String> taskNameMap = taskDOList.stream()
                 .collect(Collectors.toMap(TaskDO::getId, TaskDO::getName, (oldVal, newVal) -> newVal));
+
+        Map<Long, BigDecimal> taskUseTimeMap = taskDOList.stream().collect(Collectors.toMap(TaskDO::getId, TaskDO::getPlanUseTime, (oldVal, newVal) -> newVal));
 
         Map<String, List<Long>> executorTaskMap = personMapper.get(
                         taskDOList.stream().map(TaskDO::getId).collect(Collectors.toList()),
@@ -763,7 +775,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         // 构建结果列表
         List<WorkHoursOverviewVO> workHoursOverviewVOList = createManMap.entrySet().stream()
                 .map(entry -> buildWorkHoursOverviewVO(entry, executorTaskMap, taskWorkRecordMap,
-                        taskNameMap, projectMap, taskProjectMap, workDays))
+                        taskNameMap, projectMap, taskProjectMap, workDays, taskUseTimeMap))
                 .collect(Collectors.toList());
 
         // 过滤未登记
@@ -810,7 +822,8 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
                                                          Map<Long, String> taskNameMap,
                                                          Map<Long, String> projectMap,
                                                          Map<Long, Long> taskProjectMap,
-                                                         List<String> workDays) {
+                                                         List<String> workDays,
+                                                         Map<Long, BigDecimal> taskUseTimeMap) {
         String userId = entry.getKey();
         String userName = entry.getValue();
 
@@ -831,6 +844,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             taskVO.setWorkItemName(taskNameMap.get(taskId));
             taskVO.setWorkItemType(BizTypeEnum.TASK.getCode());
             taskVO.setWorkItemId(taskId);
+            taskVO.setEstimateHours(taskUseTimeMap.getOrDefault(taskId, BigDecimal.ZERO));
 
             List<WorkHoursRecordDO> recordList = taskWorkRecordMap.getOrDefault(taskId, Collections.emptyList());
             taskVO.setWorkHoursRecords(

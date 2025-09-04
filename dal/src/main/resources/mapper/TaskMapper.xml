@@ -60,6 +60,12 @@
         a.create_man_id, a.create_man,a.create_date,a.modify_date,a.type
         from task a
         <where>
+            <if test="projectIds!=null and projectIds.size()>0">
+                and a.project_id in
+                <foreach collection="projectIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="ids!=null and ids.size()>0">
                 and a.id in
                 <foreach collection="ids" item="item" separator="," open="(" close=")">
@@ -73,6 +79,9 @@
             </if>
             <if test="planEndDateLeft != null and planEndDateRight != null">
                 and a.plan_end_date &gt;= #{planEndDateLeft} and a.plan_end_date &lt;= #{planEndDateRight}
+            </if>
+            <if test="startDate != null and endDate != null">
+                and a.plan_start_date &lt;= #{endDate} and a.plan_end_date &gt;= #{startDate}
             </if>
             <if test="actualStartDateLeft != null and actualStartDateRight != null">
                 and a.actual_start_date &gt;= #{actualStartDateLeft} and a.actual_start_date &lt;= #{actualStartDateRight}

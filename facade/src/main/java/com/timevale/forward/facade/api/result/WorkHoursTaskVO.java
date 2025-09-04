@@ -40,6 +40,9 @@ public class WorkHoursTaskVO extends ToString {
     @ApiModelProperty("工时记录")
     private List<WorkHoursRecordVO> workHoursRecords;
 
+    @ApiModelProperty("预估工时")
+    private BigDecimal estimateHours;
+
     @ApiModelProperty("总工时")
     private BigDecimal totalHours;
 }
