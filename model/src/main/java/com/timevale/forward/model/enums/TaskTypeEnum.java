@@ -25,7 +25,7 @@ public enum TaskTypeEnum {
     ONLINE_BUG(10, "线上bug修复", ProjectStageEnum.TEST),
     SUPPORT(11, "支撑", ProjectStageEnum.DEV),
     PRODUCT_DESIGN(12, "产品设计", ProjectStageEnum.DEV),
-    UI_AUTO(13, "UI自动化设计", ProjectStageEnum.TEST),
+    UI_AUTO(13, "UI自动化设计", ProjectStageEnum.DEMAND),
     RE_TEST(14, "回归测试", ProjectStageEnum.TEST);
 
     private final Integer code;
