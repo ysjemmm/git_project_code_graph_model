@@ -52,4 +52,10 @@ public class ImportDataController {
     public void importTaskData(@ApiParam(value = "任务文件") @RequestParam("file") MultipartFile file, HttpServletResponse response) {
         importDataService.importTaskData(file, response);
     }
+
+    @ApiOperation("更新项目节点")
+    @PostMapping("/updateProjectNode")
+    public void updateProjectNode(@ApiParam(value = "任务文件") @RequestParam("file") MultipartFile file, HttpServletResponse response) {
+        importDataService.updateProjectNode(file, response);
+    }
 }

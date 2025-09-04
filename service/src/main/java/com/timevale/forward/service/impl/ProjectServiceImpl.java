@@ -1732,7 +1732,7 @@ public class ProjectServiceImpl implements ProjectService {
                 .setProposerId(userInfo.getId())
                 .setProposer(userInfo.getFullAlias())
                 .setFlowType(FlowTypeEnum.CONCLUSION.getCode())
-                .setStatus(ForwardFlowStatusEnum.AUDITING.getCode())
+                .setStatus(Boolean.TRUE.equals(req.getIsImport()) ? ForwardFlowStatusEnum.COMPLETE.getCode() : ForwardFlowStatusEnum.AUDITING.getCode())
                 .setFlowData(JSONObject.toJSONString(targetStatusModel));
         projectFlowMapper.insert(projectFlowDO);
 

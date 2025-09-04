@@ -27,4 +27,7 @@ public class ProjectConclusionReq extends ToString {
 
     @ApiModelProperty("作废原因")
     private String invalidReason;
+
+    @ApiModelProperty("是否导入结项")
+    private Boolean isImport = false;
 }

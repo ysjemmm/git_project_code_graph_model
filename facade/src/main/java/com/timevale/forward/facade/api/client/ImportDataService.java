@@ -38,4 +38,10 @@ public interface ImportDataService {
      * @param file
      */
     void importTaskData(MultipartFile file, HttpServletResponse response);
+
+    /**
+     * 更新项目节点
+     * @param file
+     */
+    void updateProjectNode(MultipartFile file, HttpServletResponse response);
 }

@@ -10,13 +10,22 @@ import com.timevale.forward.dal.entity.ProductLineDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.facade.api.client.ImportDataService;
 import com.timevale.forward.facade.api.client.ProductDemandService;
+import com.timevale.forward.facade.api.client.ProjectEvaluateService;
 import com.timevale.forward.facade.api.client.ProjectService;
 import com.timevale.forward.facade.api.client.TaskService;
 import com.timevale.forward.facade.api.request.ElapsedTimeQueryReq;
+import com.timevale.forward.facade.api.request.EvaluateReq;
 import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.request.ProductDemandAddReq;
 import com.timevale.forward.facade.api.request.ProjectAddReq;
+import com.timevale.forward.facade.api.request.ProjectConclusionReq;
+import com.timevale.forward.facade.api.request.ProjectEvaluateReq;
+import com.timevale.forward.facade.api.request.ProjectModifyReq;
+import com.timevale.forward.facade.api.request.ProjectNodeAddReq;
 import com.timevale.forward.facade.api.request.TaskAddReq;
+import com.timevale.forward.facade.api.result.ProjectDetailVO;
+import com.timevale.forward.facade.api.result.ProjectNodeVO;
+import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.utils.file.FileUtil;
 import com.timevale.forward.service.utils.file.ImportDataUtil;
 import com.timevale.forward.service.utils.file.PinyinConverter;
@@ -25,6 +34,7 @@ import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.TriConsumer;
+import org.assertj.core.util.Lists;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
@@ -79,6 +89,9 @@ public class ImportDataServiceImpl implements ImportDataService {
     @Resource
     private ProductLineMapper productLineMapper;
 
+    @Resource
+    private ProjectEvaluateService evaluateService;
+
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
     private static final SimpleDateFormat DATE_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm");
@@ -90,6 +103,8 @@ public class ImportDataServiceImpl implements ImportDataService {
     private static final String[] importDemandDataHeader = {"需求主题", "产品线", "优先级（P0:0;P1:10;P2:20;P3:30）", "产品需求类型（新增功能:0;功能迭代:1;体验优化:2;技术需求:3;安全需求:4;埋点需求:5;数据需求:6）", "产品需求负责人", "预期排期时间", "所属项目", "需求描述"};
 
     private static final String[] importTaskDataHeader = {"任务名称", "任务状态", "产品线", "所属项目", "任务类型（0其他，1调研，2详细设计，3测试用例设计，4开发，5集测开发，6code review，7测试，8线下bug修复，9发布，10线上bug修复，11支撑，12产品设计）", "任务执行人", "计划开始时间", "计划完成时间", "实际开始时间", "实际完成时间", "任务描述", "关联产品需求", "是否为任务执行人创建代办"};
+
+    private static final String[] updateProjectNodeDataHeader = {"项目id"};
 
     @Override
     public void downloadTemplate(Integer type, HttpServletResponse response) {
@@ -145,6 +160,15 @@ public class ImportDataServiceImpl implements ImportDataService {
     public void importTaskData(MultipartFile file, HttpServletResponse response) {
         try {
             importDataTemplate(file, response, importTaskDataHeader, this::addTaskData, "failed_task_data.csv");
+        } catch (Exception e) {
+            throw new BaseBizRuntimeException(e.getMessage());
+        }
+    }
+
+    @Override
+    public void updateProjectNode(MultipartFile file, HttpServletResponse response) {
+        try {
+            importDataTemplate(file, response, updateProjectNodeDataHeader, this::updateProjectNodeData, "failed_update_project_node_data.csv");
         } catch (Exception e) {
             throw new BaseBizRuntimeException(e.getMessage());
         }
@@ -585,5 +609,87 @@ public class ImportDataServiceImpl implements ImportDataService {
         }
 
         projectService.add(projectAddReq);
+    }
+
+    private void updateProjectNodeData(int actualLength, int[] newIndex, String line) {
+        String[] data = ImportDataUtil.splitLineData(line, actualLength);
+        if (StringUtils.isEmpty(data[newIndex[0]])) {
+            return;
+        }
+        Long projectId = Long.valueOf(data[newIndex[0]]);
+
+        ProjectDetailVO projectDetailVO = Optional.ofNullable(projectService.get(projectId)).map(BaseResult::getData).get();
+
+        ProjectModifyReq projectModifyReq = new ProjectModifyReq();
+        projectModifyReq.setId(projectId);
+        projectModifyReq.setName(projectDetailVO.getName());
+        projectModifyReq.setDelayType(-1);
+        projectModifyReq.setProductLineIds(projectDetailVO.getProductLineVO().stream().map(e -> e.getId()).collect(Collectors.toList()));
+        projectModifyReq.setKind(projectDetailVO.getKind());
+        projectModifyReq.setType(projectDetailVO.getType());
+        projectModifyReq.setPriority(projectDetailVO.getPriority());
+        projectModifyReq.setPlanStartDate(projectDetailVO.getPlanStartDate());
+        projectModifyReq.setPlanEndDate(projectDetailVO.getPlanEndDate());
+        projectModifyReq.setPm(new PersonAddReq(projectDetailVO.getPmName(), projectDetailVO.getPmId()));
+        projectModifyReq.setPds(projectDetailVO.getPd().stream().map(e -> new PersonAddReq(e.getUserName(), e.getUserId())).collect(Collectors.toList()));
+        projectModifyReq.setSr(new PersonAddReq(projectDetailVO.getSr(), projectDetailVO.getSrId()));
+        projectModifyReq.setPrincipal(new PersonAddReq(projectDetailVO.getPrincipal(), projectDetailVO.getPrincipalId()));
+        projectModifyReq.setTeamMembers(projectDetailVO.getTeamMember().stream().map(e -> new PersonAddReq(e.getUserName(), e.getUserId())).collect(Collectors.toList()));
+        projectModifyReq.setOtnPrincipal(new PersonAddReq(projectDetailVO.getOtnPrincipal(), projectDetailVO.getOtnPrincipalId()));
+        projectModifyReq.setDesc(projectDetailVO.getDesc());
+        projectModifyReq.setSuspendReason(projectDetailVO.getSuspendReason());
+        projectModifyReq.setInvalidReason(projectDetailVO.getInvalidReason());
+        projectModifyReq.setIsAcceptance(projectDetailVO.getIsAcceptance());
+        projectModifyReq.setIsWithGoal(projectDetailVO.getIsWithGoal());
+        projectModifyReq.setUnWriteReason(projectDetailVO.getUnWriteReason());
+        projectModifyReq.setWorkHoursNotify(projectDetailVO.getWorkHoursNotify());
+        projectModifyReq.setIsPlatformPublish(projectDetailVO.getIsPlatformPublish());
+        projectModifyReq.setResourceAssessment(projectDetailVO.getResourceAssessment());
+        projectModifyReq.setProjectGoals(new ArrayList<>());
+        projectModifyReq.setDelayType(-1);
+        projectModifyReq.setLevel(projectDetailVO.getLevel());
+
+        List<ProjectNodeAddReq> projectNodeAddReqList = Lists.newArrayList();
+        for (ProjectNodeVO projectNodeVO : projectDetailVO.getProjectNodes()) {
+            ProjectNodeAddReq projectNodeAddReq = new ProjectNodeAddReq();
+            projectNodeAddReq.setName(projectNodeVO.getName());
+            projectNodeAddReq.setPlanDate(projectDetailVO.getPlanStartDate());
+            if ("发布正式".equals(projectNodeVO.getName())) {
+                projectNodeAddReq.setActualDate(projectDetailVO.getPlanEndDate());
+            } else {
+                projectNodeAddReq.setActualDate(projectDetailVO.getPlanStartDate());
+            }
+            projectNodeAddReqList.add(projectNodeAddReq);
+        }
+        projectModifyReq.setProjectNodes(projectNodeAddReqList);
+        projectService.modify(projectModifyReq);
+
+        ProjectEvaluateReq projectEvaluateReq = getProjectEvaluateReq(projectId);
+        evaluateService.evaluateUpdate(projectEvaluateReq);
+
+        ProjectConclusionReq req = new ProjectConclusionReq();
+        req.setProjectId(projectId);
+        req.setTargetStatus(ProjectStatusEnum.CONCLUSION.getCode());
+        req.setIsImport(true);
+        projectService.conclusion(req);
+    }
+
+    private ProjectEvaluateReq getProjectEvaluateReq(Long projectId) {
+        List<EvaluateReq> evaluateReqList = Lists.newArrayList();
+        ProjectEvaluateReq projectEvaluateReq = new ProjectEvaluateReq();
+        EvaluateReq evaluateReq1 = new EvaluateReq();
+        evaluateReq1.setProjectId(projectId);
+        evaluateReq1.setEvaluateDimensionId(1L);
+        evaluateReq1.setScores(new BigDecimal(5));
+
+        EvaluateReq evaluateReq2 = new EvaluateReq();
+        evaluateReq2.setProjectId(projectId);
+        evaluateReq2.setEvaluateDimensionId(2L);
+        evaluateReq2.setScores(new BigDecimal(5));
+
+        evaluateReqList.add(evaluateReq1);
+        evaluateReqList.add(evaluateReq2);
+        projectEvaluateReq.setEvaluateReqList(evaluateReqList);
+        return projectEvaluateReq;
     }
 }
