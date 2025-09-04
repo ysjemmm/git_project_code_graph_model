@@ -146,4 +146,9 @@ public class ProjectListDO extends BaseDO {
      * 是否需要项目验收
      */
     private Integer isAcceptance;
+
+    /**
+     * 工时填报通知开关
+     */
+    private Integer workHoursNotify;
 }
