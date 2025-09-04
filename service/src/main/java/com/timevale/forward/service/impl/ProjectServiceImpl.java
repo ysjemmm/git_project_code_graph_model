@@ -364,9 +364,11 @@ public class ProjectServiceImpl implements ProjectService {
         // 项目状态需要过滤掉已暂停、已作废、已发布、已结项
         buildProjectStatus(condition);
         List<ProjectListDO> projectDOList = projectMapper.list(condition);
+        //开启通知的项目
+        List<ProjectListDO> resultList = projectDOList.stream().filter(e -> e.getWorkHoursNotify() == 1).collect(Collectors.toList());
 
         // 转换
-        List<ProjectVO> projectVOList = ProjectCopier.INSTANCE.convert(projectDOList);
+        List<ProjectVO> projectVOList = ProjectCopier.INSTANCE.convert(resultList);
         return BaseResult.success(projectVOList);
     }
 
