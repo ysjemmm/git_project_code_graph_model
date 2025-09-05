@@ -254,7 +254,7 @@ public class ImportDataServiceImpl implements ImportDataService {
         String owner;
         String[] partsStr = data[newIndex[4]].split("-");
         if (partsStr.length >= 2) {
-            owner =  partsStr[0] + "-" + partsStr[1];
+            owner = partsStr[0] + "-" + partsStr[1];
         } else {
             owner = partsStr[0];
         }
@@ -332,7 +332,8 @@ public class ImportDataServiceImpl implements ImportDataService {
         // 处理执行人
         List<String> userNames = Arrays.asList(data[newIndex[5]].split(","));
         if (CollUtil.isNotEmpty(userNames)) {
-            List<PersonAddReq> personAddReqs = userNames.stream().map(e -> new PersonAddReq(e, PinyinConverter.toPinyin(e.split("-")[0]))).collect(Collectors.toList());
+            List<String> collect = userNames.stream().filter(StringUtils::isNotBlank).map(e -> e.split("-")).map(e -> e[0] + "-" + e[1]).collect(Collectors.toList());
+            List<PersonAddReq> personAddReqs = collect.stream().map(e -> new PersonAddReq(e, PinyinConverter.toPinyin(e.split("-")[0]))).collect(Collectors.toList());
             taskAddReq.setExecutors(personAddReqs);
         }
 
@@ -550,7 +551,7 @@ public class ImportDataServiceImpl implements ImportDataService {
         String principal;
         String[] partsStr = data[newIndex[11]].split("-");
         if (partsStr.length >= 2) {
-            principal =  partsStr[0] + "-" + partsStr[1];
+            principal = partsStr[0] + "-" + partsStr[1];
         } else {
             principal = partsStr[0];
         }
