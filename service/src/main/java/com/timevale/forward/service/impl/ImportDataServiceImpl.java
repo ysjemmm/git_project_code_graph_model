@@ -235,7 +235,7 @@ public class ImportDataServiceImpl implements ImportDataService {
         if (StringUtils.isEmpty(demandName)) {
             return;
         }
-        demandAddReq.setName(demandName + "导入测试");
+        demandAddReq.setName(demandName);
 
         String productLineName = data[newIndex[1]];
         ProductLineDO productLineDO = new ProductLineDO();
@@ -278,7 +278,7 @@ public class ImportDataServiceImpl implements ImportDataService {
         if (StringUtils.isNotBlank(projectName) && projectName.contains(",")) {
             projectName = projectName.split(",")[0];
         }
-        ProjectDO projectDO = projectMapper.getByName(projectName + "导入测试");
+        ProjectDO projectDO = projectMapper.getByName(projectName);
         if (projectDO != null) {
             demandAddReq.setProjectId(projectDO.getId());
         }
@@ -311,7 +311,7 @@ public class ImportDataServiceImpl implements ImportDataService {
     private void addTaskData(int actualLength, int[] newIndex, String line) {
         String[] data = ImportDataUtil.splitLineData(line, actualLength);
         TaskAddReq taskAddReq = new TaskAddReq();
-        taskAddReq.setName(data[newIndex[0]] + "导入测试");
+        taskAddReq.setName(data[newIndex[0]]);
 
         String productLineName = data[newIndex[2]];
         if (StringUtils.isNotBlank(productLineName)) {
@@ -322,7 +322,7 @@ public class ImportDataServiceImpl implements ImportDataService {
         ProjectDO projectDO = new ProjectDO();
         String projectName = data[newIndex[3]];
         if (StringUtils.isNotBlank(projectName)) {
-            projectDO = projectMapper.getByName(projectName + "导入测试");
+            projectDO = projectMapper.getByName(projectName);
             if (projectDO != null) {
                 taskAddReq.setProjectId(projectDO.getId());
             }
@@ -428,7 +428,7 @@ public class ImportDataServiceImpl implements ImportDataService {
         List<String> productNames = Arrays.asList(data[newIndex[11]].split(","));
         List<Long> productDemandIds = new ArrayList<>(productNames.size());
         for (String productName : productNames) {
-            ProductDemandDO productDemandDO = productDemandMapper.getByName(productName + "导入测试");
+            ProductDemandDO productDemandDO = productDemandMapper.getByName(productName);
             if (productDemandDO != null) {
                 productDemandIds.add(productDemandDO.getId());
             }
@@ -514,7 +514,7 @@ public class ImportDataServiceImpl implements ImportDataService {
             }
         }
         ProjectAddReq projectAddReq = new ProjectAddReq();
-        projectAddReq.setName(projectName + "导入测试");
+        projectAddReq.setName(projectName);
         List<String> productLines = Arrays.asList(data[newIndex[1]].split(","));
         List<Long> productLineIds = productLineMapper.selectByProductLineNames(productLines).stream().map(ProductLineDO::getId).collect(Collectors.toList());
         projectAddReq.setProductLineIds(productLineIds);
