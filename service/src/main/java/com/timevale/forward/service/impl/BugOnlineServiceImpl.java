@@ -2056,7 +2056,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         List<BaseInfoResponse> personByAccountNew = innerUserPersonClient.getPersonByAccountNew(operatorIds);
         BaseInfoResponse baseInfoResponse = personByAccountNew.get(0);
         if (baseInfoResponse != null) {
-            return jobFunction.equals(baseInfoResponse.getJobFunction());
+            return baseInfoResponse.getJobFunction().contains(jobFunction);
         }
         return true;
     }
