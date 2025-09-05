@@ -13,6 +13,7 @@ import com.timevale.forward.facade.api.client.ProductDemandService;
 import com.timevale.forward.facade.api.client.ProjectEvaluateService;
 import com.timevale.forward.facade.api.client.ProjectService;
 import com.timevale.forward.facade.api.client.TaskService;
+import com.timevale.forward.facade.api.query.ProjectProductDemandQueryList;
 import com.timevale.forward.facade.api.request.ElapsedTimeQueryReq;
 import com.timevale.forward.facade.api.request.EvaluateReq;
 import com.timevale.forward.facade.api.request.PersonAddReq;
@@ -22,15 +23,19 @@ import com.timevale.forward.facade.api.request.ProjectConclusionReq;
 import com.timevale.forward.facade.api.request.ProjectEvaluateReq;
 import com.timevale.forward.facade.api.request.ProjectModifyReq;
 import com.timevale.forward.facade.api.request.ProjectNodeAddReq;
+import com.timevale.forward.facade.api.request.ProjectProductDemandLinkReq;
 import com.timevale.forward.facade.api.request.TaskAddReq;
+import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.ProjectDetailVO;
 import com.timevale.forward.facade.api.result.ProjectNodeVO;
+import com.timevale.forward.model.enums.LinkOrUnLinkEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.utils.file.FileUtil;
 import com.timevale.forward.service.utils.file.ImportDataUtil;
 import com.timevale.forward.service.utils.file.PinyinConverter;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
+import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.TriConsumer;
@@ -314,9 +319,10 @@ public class ImportDataServiceImpl implements ImportDataService {
             taskAddReq.setProductLineId(productLineDO.getId());
         }
 
+        ProjectDO projectDO = new ProjectDO();
         String projectName = data[newIndex[3]];
         if (StringUtils.isNotBlank(projectName)) {
-            ProjectDO projectDO = projectMapper.getByName(projectName + "导入测试");
+            projectDO = projectMapper.getByName(projectName + "导入测试");
             if (projectDO != null) {
                 taskAddReq.setProjectId(projectDO.getId());
             }
@@ -427,6 +433,24 @@ public class ImportDataServiceImpl implements ImportDataService {
                 productDemandIds.add(productDemandDO.getId());
             }
         }
+
+        ProjectProductDemandQueryList query = new ProjectProductDemandQueryList();
+        query.setProjectId(projectDO.getId());
+        query.setPageNum(1);
+        query.setPageSize(1000);
+        List<ProductDemandVO> productDemandVOS = Optional.of(projectService.linkProductDemandList(query)).map(BaseResult::getData).map(PageQueryResult::getResultList).get();
+        List<Long> demandIds = productDemandVOS.stream().map(ProductDemandVO::getId).collect(Collectors.toList());
+
+        List<Long> list = productDemandIds.stream().filter(e -> !demandIds.contains(e)).collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(list)) {
+            ProjectProductDemandLinkReq req = new ProjectProductDemandLinkReq();
+            req.setProjectId(projectDO.getId());
+            req.setType(LinkOrUnLinkEnum.LINK.getCode());
+            req.setProductDemandIds(list);
+            // 批量关联
+            projectService.linkOrUnLinkProductDemand(req);
+        }
+
         // 关联产品需求
         taskAddReq.setProductDemandIds(productDemandIds);
 
@@ -442,8 +466,8 @@ public class ImportDataServiceImpl implements ImportDataService {
         if (taskAddReq.getProjectId() == null) {
             throw new BaseBizRuntimeException("所属项目不能为空");
         }
-        if (taskAddReq.getStage() == null) {
-            throw new BaseBizRuntimeException("项目阶段不能为空");
+        if (taskAddReq.getType() == null) {
+            throw new BaseBizRuntimeException("项目类型不能为空");
         }
         if (taskAddReq.getPlanStartDate() == null) {
             throw new BaseBizRuntimeException("计划开始时间不能为空");
