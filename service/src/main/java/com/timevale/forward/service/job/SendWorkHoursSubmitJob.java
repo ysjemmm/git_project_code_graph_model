@@ -93,7 +93,7 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
         }
 
         LocalDate today;
-        boolean isExpedite = StringUtils.isNotEmpty(s) ? JSON.parseObject(s).getBoolean("isExpedite") : false;
+        boolean isExpedite = StringUtils.isNotEmpty(s) && JSON.parseObject(s).getBoolean("isExpedite");
         if (isExpedite) {
             today = workDateUtil.getLatestWorkday(todayDate);
         } else {
@@ -134,19 +134,26 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
                 .status(TASK_STATUSES)
                 .currentDate(dateStr)
                 .build());
+
+        // 登记过的负责人
+        List<String> registerOwnerIds;
         
         if (isExpedite) {
             List<Long> taskIds = progressTaskList.stream().map(TaskDO::getId).collect(Collectors.toList());
-            List<Long> registerTaskIds = workHoursRecordMapper.list(WorkHoursRecordCondition.builder()
+            List<WorkHoursRecordDO> hoursRecordDOList = workHoursRecordMapper.list(WorkHoursRecordCondition.builder()
                     .stratTime(today.atStartOfDay().format(DATE_TIME_FORMATTER))
                     .endTime(today.atTime(LocalTime.MAX).format(DATE_TIME_FORMATTER))
                     .workItemType(BizTypeEnum.TASK.getCode())
                     .workItemIds(taskIds)
                     .build()
-            ).stream().map(WorkHoursRecordDO::getWorkItemId).collect(Collectors.toList());
+            );
+            registerOwnerIds = hoursRecordDOList.stream().map(WorkHoursRecordDO::getCreateManId).distinct().collect(Collectors.toList());
+            List<Long> registerTaskIds = hoursRecordDOList.stream().map(WorkHoursRecordDO::getWorkItemId).collect(Collectors.toList());
             progressTaskList = progressTaskList.stream()
                     .filter(e -> !registerTaskIds.contains(e.getId()))
                     .collect(Collectors.toList());
+        } else {
+            registerOwnerIds = new ArrayList<>();
         }
 
         // 如果没有找到待通知的任务，则记录日志并结束执行
@@ -163,6 +170,13 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
         // 3. 获取执行人信息
         // 根据任务ID列表查询任务执行人信息，并按执行人ID分组
         List<PersonDO> personDOS = personMapper.get(progressTaskIdList, PersonTypeEnum.TASK_EXECUTOR.getCode());
+
+        if (isExpedite && !registerOwnerIds.isEmpty()) {
+            personDOS = personDOS.stream()
+                    .filter(e -> !registerOwnerIds.contains(e.getUserId()))
+                    .collect(Collectors.toList());
+        }
+
         // 如果没有执行人信息，则返回成功
         if (personDOS.isEmpty()) {
             return ReturnT.SUCCESS;
