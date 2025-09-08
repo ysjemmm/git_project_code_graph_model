@@ -123,12 +123,8 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
-    public BaseResult<List<TeamMemberVO>> getProjectMembers() {
-        List<PersonDO> personDOList = personMapper.get(null, PersonTypeEnum.PROJECT_MEMBER.getCode());
-        return getPersonResult(personDOList);
-    }
-
-    private BaseResult<List<TeamMemberVO>> getPersonResult(List<PersonDO> personDOList) {
+    public BaseResult<List<TeamMemberVO>> getTeamMembers(Long projectId) {
+        List<PersonDO> personDOList = personMapper.get(Lists.newArrayList(projectId), PersonTypeEnum.PROJECT_MEMBER.getCode());
         if (CollectionUtils.isEmpty(personDOList)) {
             return BaseResult.success(Lists.emptyList());
         }
@@ -143,12 +139,6 @@ public class PersonServiceImpl implements PersonService {
             return teamMemberVO;
         }).filter(e -> StringUtils.isNotEmpty(e.getUserId())).collect(Collectors.toList());
         return BaseResult.success(list);
-    }
-
-    @Override
-    public BaseResult<List<TeamMemberVO>> getTeamMembers(Long projectId) {
-        List<PersonDO> personDOList = personMapper.get(Lists.newArrayList(projectId), PersonTypeEnum.PROJECT_MEMBER.getCode());
-        return getPersonResult(personDOList);
     }
 
     @Override
