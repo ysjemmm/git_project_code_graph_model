@@ -30,11 +30,13 @@ public enum ViewsGroupFieldEnum {
 
     PRODUCT_DEMAND_OWNER("owner","产品需求负责人",0, Lists.newArrayList(ViewsTypeEnum.PRODUCT_DEMAND)),
 
-    TARGET_CUSTOMER("targetCustomer","目标客户", 0, Lists.newArrayList(ViewsTypeEnum.BIZ_DEMAND)),
+    TARGET_CUSTOMER("targetCustomer","目标客户", 0, Lists.newArrayList(ViewsTypeEnum.BIZ_DEMAND, ViewsTypeEnum.PRODUCT_DEMAND)),
 
     DEMAND_DEPT("demandDept","需求部门", 0, Lists.newArrayList(ViewsTypeEnum.BIZ_DEMAND)),
 
     RECEIVE_MAN("receiveMan","需求接收人", 0, Lists.newArrayList(ViewsTypeEnum.BIZ_DEMAND)),
+
+    CUSTOMER_GRADE("customerGrade", "客户等级", 0, Lists.newArrayList(ViewsTypeEnum.BIZ_DEMAND, ViewsTypeEnum.PRODUCT_DEMAND)),
 
     LABEL_CATEGORY("labelCategory", "标签类别", 1, Lists.newArrayList(ViewsTypeEnum.BIZ_DEMAND, ViewsTypeEnum.PRODUCT_DEMAND));
 
