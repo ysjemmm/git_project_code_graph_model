@@ -764,8 +764,11 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         Map<Long, List<WorkHoursRecordDO>> taskWorkRecordMap = hoursRecordDOList.stream()
                 .collect(Collectors.groupingBy(WorkHoursRecordDO::getWorkItemId));
 
-        Map<Long, String> projectMap = projectMapper.getByIds(
-                        taskDOList.stream().map(TaskDO::getProjectId).collect(Collectors.toList()))
+        List<Long> projectIds = taskDOList.stream().map(TaskDO::getProjectId).collect(Collectors.toList());
+        if (CollUtil.isEmpty(projectIds)) {
+            return BaseResult.success(ResultUtil.pageEmpty());
+        }
+        Map<Long, String> projectMap = projectMapper.getByIds(projectIds)
                 .stream()
                 .collect(Collectors.toMap(ProjectDO::getId, ProjectDO::getName));
 
