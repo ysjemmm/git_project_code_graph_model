@@ -69,6 +69,7 @@ public class SendWorkHoursSubmitStatisticsJob extends IJobHandler {
     private final WorkDateUtil workDateUtil;
 
     private static final List<Integer> PROJECT_STATUSES = Arrays.asList(
+            ProjectStatusEnum.WAITING.getCode(),
             ProjectStatusEnum.PLANING.getCode(),
             ProjectStatusEnum.DEVING.getCode(),
             ProjectStatusEnum.TESTING.getCode(),

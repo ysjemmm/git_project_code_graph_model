@@ -130,6 +130,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
     private static final String USER_KEY_PREFIX = "FORWARD:USER_TOKEN:";
 
     private static final List<Integer> PROJECT_STATUSES = Arrays.asList(
+            ProjectStatusEnum.WAITING.getCode(),
             ProjectStatusEnum.PLANING.getCode(),
             ProjectStatusEnum.DEVING.getCode(),
             ProjectStatusEnum.TESTING.getCode(),

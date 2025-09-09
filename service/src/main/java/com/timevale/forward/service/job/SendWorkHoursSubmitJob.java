@@ -64,6 +64,7 @@ public class SendWorkHoursSubmitJob extends IJobHandler {
     private final WorkHoursRecordMapper workHoursRecordMapper;
 
     private static final List<Integer> PROJECT_STATUSES = Arrays.asList(
+            ProjectStatusEnum.WAITING.getCode(),
             ProjectStatusEnum.PLANING.getCode(),
             ProjectStatusEnum.DEVING.getCode(),
             ProjectStatusEnum.TESTING.getCode(),
