@@ -18,6 +18,8 @@ public enum BizDemandSelectFieldEnum {
 
     TARGET_CUSTOMER("targetCustomer","bd.target_customer as targetCustomer", "需求接收人"),
 
+    CUSTOMER_GRADE("customerGrade","bd.customer_grade as customerGrade", "客户等级"),
+
     STATUS("status","bd.status as status", "需求解决状态"),
 
     PRIORITY("priority","bd.priority as priority", "优先级"),

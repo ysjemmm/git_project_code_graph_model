@@ -24,6 +24,10 @@ public enum ProductSelectFieldEnum {
 
     EXPECT_SCHEDULE_TIME("expectScheduleTime","DATE_FORMAT(a.expect_schedule_time, '%Y-%m') as expectScheduleTime", "需求排期时间"),
 
+    TARGET_CUSTOMER("targetCustomer","a.target_customer as targetCustomer", "需求接收人"),
+
+    CUSTOMER_GRADE("customerGrade","a.customer_grade as customerGrade", "客户等级"),
+
     OWNER("owner","a.owner_id as ownerId", "产品需求负责人");
 
     final private String selectField;
