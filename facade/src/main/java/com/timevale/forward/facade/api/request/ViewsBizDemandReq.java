@@ -9,8 +9,6 @@ import lombok.EqualsAndHashCode;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 /**
  * @author qiyuan
@@ -128,7 +126,7 @@ public class ViewsBizDemandReq extends ViewsFilterReq {
     private Integer pageSize;
 
     @ApiModelProperty("标签映射")
-    private Map<String, Object> labelNames;
+    private Object labelNames;
 
     @ApiModelProperty("标签内容")
     private String contentValue;

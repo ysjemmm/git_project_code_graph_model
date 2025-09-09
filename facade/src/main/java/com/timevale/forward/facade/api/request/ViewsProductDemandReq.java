@@ -83,7 +83,7 @@ public class ViewsProductDemandReq extends ViewsFilterReq {
     private String customerGrade;
 
     @ApiModelProperty("标签映射")
-    private Map<String, Object> labelNames;
+    private Object labelNames;
 
     @ApiModelProperty("标签内容")
     private String contentValue;
