@@ -22,6 +22,8 @@ public enum BizDemandGroupFieldEnum {
 
     TARGET_CUSTOMER("targetCustomer","bd.target_customer", "目标客户"),
 
+    CUSTOMER_GRADE("customerGrade","bd.customer_grade", "客户等级"),
+
     DEMAND_DEPT("demandDept","bd.dept_id", "需求部门"),
 
     RECEIVE_MAN("receiveMan","bd.receive_man_id", "需求接收人");

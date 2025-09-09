@@ -600,6 +600,10 @@ public class BizDemandServiceImpl implements BizDemandService {
         productDemandDetailVO.setRecipients(personVOList);
         // 附件
         productDemandDetailVO.setFiles(fileVOList);
+        // 目标客户
+        productDemandDetailVO.setTargetCustomer(bizDemandDO.getTargetCustomer());
+        // 客户等级
+        productDemandDetailVO.setCustomerGrade(bizDemandDO.getCustomerGrade());
         // 标签
         LabelInCategoryQueryList labelInCategoryQueryList = new LabelInCategoryQueryList();
         labelInCategoryQueryList.setAuth(true);

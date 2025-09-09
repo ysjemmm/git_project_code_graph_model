@@ -1,5 +1,6 @@
 package com.timevale.forward.dal.entity;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -121,5 +122,9 @@ public class ProductDemandGroupItemListDO extends ProductDemandGroupItemDO {
      * 总资源评估（人天）
      */
     private BigDecimal totalTime;
+
+    private String targetCustomer;
+
+    private String customerGrade;
 
 } 

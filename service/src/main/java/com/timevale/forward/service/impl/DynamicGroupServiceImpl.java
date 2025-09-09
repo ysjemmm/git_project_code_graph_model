@@ -147,6 +147,8 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         PRODUCT_GROUP_FIELD_MAP.put(ProductGroupFieldEnum.STATUS.getGroupField(), "status");
         PRODUCT_GROUP_FIELD_MAP.put(ProductGroupFieldEnum.PRIORITY.getGroupField(), "priority");
         PRODUCT_GROUP_FIELD_MAP.put(ProductGroupFieldEnum.EXPECT_SCHEDULE_TIME.getGroupField(), "expectScheduleTime");
+        PRODUCT_GROUP_FIELD_MAP.put(ProductGroupFieldEnum.TARGET_CUSTOMER.getGroupField(), "targetCustomer");
+        PRODUCT_GROUP_FIELD_MAP.put(ProductGroupFieldEnum.CUSTOMER_GRADE.getGroupField(), "customerGrade");
         PRODUCT_GROUP_FIELD_MAP.put(ProductGroupFieldEnum.OWNER.getGroupField(), "ownerId");
     }
 
@@ -161,6 +163,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         BIZ_GROUP_FIELD_MAP.put(BizDemandGroupFieldEnum.LABEL.getGroupField() + "4", "labelId4");
         BIZ_GROUP_FIELD_MAP.put(BizDemandGroupFieldEnum.LABEL.getGroupField() + "5", "labelId5");
         BIZ_GROUP_FIELD_MAP.put(BizDemandGroupFieldEnum.TARGET_CUSTOMER.getGroupField(), "targetCustomer");
+        BIZ_GROUP_FIELD_MAP.put(BizDemandGroupFieldEnum.CUSTOMER_GRADE.getGroupField(), "customerGrade");
         BIZ_GROUP_FIELD_MAP.put(BizDemandGroupFieldEnum.STATUS.getGroupField(), "status");
         BIZ_GROUP_FIELD_MAP.put(BizDemandGroupFieldEnum.PRIORITY.getGroupField(), "priority");
         BIZ_GROUP_FIELD_MAP.put(BizDemandGroupFieldEnum.DEMAND_DEPT.getGroupField(), "deptId");
@@ -181,6 +184,8 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.STATUS.getGroupField(), ProductDemandGroupFieldDO::getStatus);
         FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.PRIORITY.getGroupField(), ProductDemandGroupFieldDO::getPriority);
         FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.EXPECT_SCHEDULE_TIME.getGroupField(), ProductDemandGroupFieldDO::getExpectScheduleTime);
+        FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.TARGET_CUSTOMER.getGroupField(), ProductDemandGroupFieldDO::getTargetCustomer);
+        FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.CUSTOMER_GRADE.getGroupField(), ProductDemandGroupFieldDO::getCustomerGrade);
         FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.OWNER.getGroupField(), ProductDemandGroupFieldDO::getOwnerId);
     }
 
@@ -195,6 +200,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         BIZ_FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.LABEL.getGroupField() + "4", BizDemandGroupFieldDO::getLabelId4);
         BIZ_FUNCTION_FIELD_MAP.put(ProductGroupFieldEnum.LABEL.getGroupField() + "5", BizDemandGroupFieldDO::getLabelId5);
         BIZ_FUNCTION_FIELD_MAP.put(BizDemandGroupFieldEnum.TARGET_CUSTOMER.getGroupField(), BizDemandGroupFieldDO::getTargetCustomer);
+        BIZ_FUNCTION_FIELD_MAP.put(BizDemandGroupFieldEnum.CUSTOMER_GRADE.getGroupField(), BizDemandGroupFieldDO::getCustomerGrade);
         BIZ_FUNCTION_FIELD_MAP.put(BizDemandGroupFieldEnum.STATUS.getGroupField(), BizDemandGroupFieldDO::getStatus);
         BIZ_FUNCTION_FIELD_MAP.put(BizDemandGroupFieldEnum.PRIORITY.getGroupField(), BizDemandGroupFieldDO::getPriority);
         BIZ_FUNCTION_FIELD_MAP.put(BizDemandGroupFieldEnum.DEMAND_DEPT.getGroupField(), BizDemandGroupFieldDO::getDeptId);
@@ -1182,6 +1188,12 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             if (ProductGroupFieldEnum.EXPECT_SCHEDULE_TIME.getGroupField().equals(field)) {
                 label = StringUtils.isBlank(fieldValue) ? OTHER : fieldValue;
             }
+            if (ProductGroupFieldEnum.TARGET_CUSTOMER.getGroupField().equals(field)) {
+                label = StringUtils.isBlank(fieldValue) ? OTHER : fieldValue;
+            }
+            if (ProductGroupFieldEnum.CUSTOMER_GRADE.getGroupField().equals(field)) {
+                label = StringUtils.isBlank(fieldValue) ? OTHER : fieldValue;
+            }
             if (ProductGroupFieldEnum.TYPE.getGroupField().equals(field)) {
                 label = StringUtils.defaultIfBlank(ProductDemandTypeEnum.getTextByCode(Integer.parseInt(fieldValue)), OTHER);
             }
@@ -1271,6 +1283,9 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
                 label = PriorityEnum.getTextByCode(Integer.parseInt(fieldValue));
             }
             if (BizDemandGroupFieldEnum.TARGET_CUSTOMER.getGroupField().equals(field)) {
+                label = StringUtils.isBlank(fieldValue) ? OTHER : fieldValue;
+            }
+            if (BizDemandGroupFieldEnum.CUSTOMER_GRADE.getGroupField().equals(field)) {
                 label = StringUtils.isBlank(fieldValue) ? OTHER : fieldValue;
             }
             Object value = entry.getValue();
@@ -2589,6 +2604,12 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         if (ProductGroupFieldEnum.EXPECT_SCHEDULE_TIME.getGroupField().equals(groupField)) {
             return StringUtils.defaultString(row.getExpectScheduleTime(), "");
         }
+        if (ProductGroupFieldEnum.TARGET_CUSTOMER.getGroupField().equals(groupField)) {
+            return StringUtils.defaultString(row.getTargetCustomer(), "");
+        }
+        if (ProductGroupFieldEnum.CUSTOMER_GRADE.getGroupField().equals(groupField)) {
+            return StringUtils.defaultString(row.getCustomerGrade(), "");
+        }
         if (ProductGroupFieldEnum.OWNER.getGroupField().equals(groupField)) {
             return StringUtils.defaultString(row.getOwnerId(), "");
         }
@@ -2656,6 +2677,9 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         if (BizDemandGroupFieldEnum.TARGET_CUSTOMER.getGroupField().equals(groupField)) {
             return StringUtils.defaultString(row.getTargetCustomer(), "");
         }
+        if (BizDemandGroupFieldEnum.CUSTOMER_GRADE.getGroupField().equals(groupField)) {
+            return StringUtils.defaultString(row.getCustomerGrade(), "");
+        }
         if (BizDemandGroupFieldEnum.LABEL.getGroupField().equals(groupField)) {
             return row.getLabelId() == null ? "" : String.valueOf(row.getLabelId());
         }
@@ -2685,6 +2709,12 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             return PriorityEnum.getTextByCode(Integer.parseInt(value));
         }
         if (ProductGroupFieldEnum.EXPECT_SCHEDULE_TIME.getGroupField().equals(groupField)) {
+            return StringUtils.isBlank(value) ? OTHER : value;
+        }
+        if (ProductGroupFieldEnum.TARGET_CUSTOMER.getGroupField().equals(groupField)) {
+            return StringUtils.isBlank(value) ? OTHER : value;
+        }
+        if (ProductGroupFieldEnum.CUSTOMER_GRADE.getGroupField().equals(groupField)) {
             return StringUtils.isBlank(value) ? OTHER : value;
         }
         if (ProductGroupFieldEnum.OWNER.getGroupField().equals(groupField)) {
@@ -2731,6 +2761,9 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             return PriorityEnum.getTextByCode(Integer.parseInt(value));
         }
         if (BizDemandGroupFieldEnum.TARGET_CUSTOMER.getGroupField().equals(groupField)) {
+            return StringUtils.isBlank(value) ? OTHER : value;
+        }
+        if (BizDemandGroupFieldEnum.CUSTOMER_GRADE.getGroupField().equals(groupField)) {
             return StringUtils.isBlank(value) ? OTHER : value;
         }
         if (BizDemandGroupFieldEnum.RECEIVE_MAN.getGroupField().equals(groupField)) {

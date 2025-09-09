@@ -6,7 +6,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
@@ -72,4 +71,10 @@ public class ProductDemandGroupQueryList extends QueryBase {
 
     @ApiModelProperty("预期排期时间-结束时间")
     private Date expectScheduleTimeEnd;
+
+    @ApiModelProperty("目标客户/用户/项目")
+    private String targetCustomer;
+
+    @ApiModelProperty("客户等级")
+    private String customerGrade;
 }

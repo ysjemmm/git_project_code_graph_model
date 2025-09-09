@@ -2,6 +2,7 @@ package com.timevale.forward.dal.condition;
 
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.query.QueryBase;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -145,6 +146,10 @@ public class ProductDemandGroupListCondition extends QueryBase {
      * 分组id
      */
     private Long groupId;
+
+    private String targetCustomer;
+
+    private String customerGrade;
 
     public Boolean judgeProductDemandQueryExist() {
         return this.id != null ||

@@ -5,16 +5,16 @@
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProductDemandDO" useGeneratedKeys="true"
             keyProperty="id" keyColumn="id">
         insert into product_demand (name, product_line_id, type, `desc`, status, priority, owner, owner_id,
-                                    expect_schedule_time, create_man_id, create_man, ued_time, transfer_time, back_time, front_time, qa_time, total_time)
+                                    expect_schedule_time, target_customer, customer_grade, create_man_id, create_man, ued_time, transfer_time, back_time, front_time, qa_time, total_time)
         values (#{name}, #{productLineId}, #{type}, #{desc}, #{status}, #{priority}, #{owner}, #{ownerId},
-                #{expectScheduleTime}, #{createManId}, #{createMan}, #{uedTime}, #{transferTime}, #{backTime}, #{frontTime}, #{qaTime}, #{totalTime})
+                #{expectScheduleTime}, #{targetCustomer}, #{customerGrade},#{createManId}, #{createMan}, #{uedTime}, #{transferTime}, #{backTime}, #{frontTime}, #{qaTime}, #{totalTime})
     </insert>
 
     <select id="list" resultType="com.timevale.forward.dal.entity.ProductDemandListDO">
         select a.id,a.name,a.priority,a.owner,a.owner_id,a.status, a.product_line_id,
         a.create_man,a.create_man_id,a.create_date,a.modify_date, a.type, a.expect_schedule_time,
         c.name productLineName ,d.name bizDomainName, a.ued_time, a.transfer_time, a.back_time,
-        a.front_time, a.qa_time, a.total_time
+        a.front_time, a.qa_time, a.total_time, a.target_customer, a.customer_grade
         <if test="copierId != null and copierId != ''">
             ,e.user_name copier
         </if>
@@ -149,7 +149,9 @@
                back_time,
                front_time,
                qa_time,
-               total_time
+               total_time,
+               target_customer,
+               customer_grade
         from product_demand
         where id = #{id}
     </select>
@@ -259,6 +261,8 @@
             <if test="status != null">status = #{status},</if>
             <if test="desc != null">`desc` = #{desc},</if>
             <if test="expectScheduleTime != null">expect_schedule_time = #{expectScheduleTime},</if>
+            <if test="targetCustomer != null">target_customer = #{targetCustomer},</if>
+            <if test="customerGrade != null">customer_grade = #{customerGrade},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
             <if test="uedTime != null">ued_time = #{uedTime},</if>
@@ -438,11 +442,23 @@
                 <if test="condition.types!= null and condition.types!='' ">
                     and a.type REGEXP CONCAT('[', #{condition.types},']')
                 </if>
+                <if test="condition.targetCustomer != null">
+                    and a.target_customer = #{condition.targetCustomer}
+                </if>
+                <if test="condition.customerGrade != null">
+                    and a.customer_grade = #{condition.customerGrade}
+                </if>
                 and a.is_deleted =false
             </if>
             <if test="parentCondition != null">
                 <if test="parentCondition.expectScheduleTime != null">
                     and DATE_FORMAT(a.expect_schedule_time, '%Y-%m') = #{parentCondition.expectScheduleTime}
+                </if>
+                <if test="parentCondition.targetCustomer != null">
+                    and a.target_customer = #{parentCondition.targetCustomer}
+                </if>
+                <if test="parentCondition.customerGrade != null">
+                    and a.customer_grade = #{parentCondition.customerGrade}
                 </if>
                 <if test="parentCondition.priority!=null">
                     and a.priority = #{parentCondition.priority}
@@ -482,7 +498,7 @@
         select a.id,a.name,a.priority,a.owner,a.owner_id,a.status, a.product_line_id,
         a.create_man,a.create_man_id,a.create_date,a.modify_date, a.type, a.expect_schedule_time,
         c.name productLineName ,d.name bizDomainName, a.ued_time, a.transfer_time, a.back_time,
-        a.front_time, a.qa_time, a.total_time
+        a.front_time, a.qa_time, a.total_time, a.target_customer, a.customer_grade
         <if test="condition.copierId != null and condition.copierId != ''">
             ,e.user_name copier
         </if>
@@ -564,11 +580,23 @@
                 <if test="condition.types!= null and condition.types!='' ">
                     and a.type REGEXP CONCAT('[', #{condition.types},']')
                 </if>
+                <if test="condition.targetCustomer != null">
+                    and a.target_customer = #{condition.targetCustomer}
+                </if>
+                <if test="condition.customerGrade != null">
+                    and a.customer_grade = #{condition.customerGrade}
+                </if>
                 and a.is_deleted =false
             </if>
             <if test="parentCondition != null">
                 <if test="parentCondition.expectScheduleTime != null">
                     and DATE_FORMAT(a.create_date, '%Y-%m') = #{parentCondition.expectScheduleTime}
+                </if>
+                <if test="parentCondition.targetCustomer != null">
+                    and a.target_customer = #{parentCondition.targetCustomer}
+                </if>
+                <if test="parentCondition.customerGrade != null">
+                    and a.customer_grade = #{parentCondition.customerGrade}
                 </if>
                 <if test="parentCondition.priority!=null">
                     and a.priority = #{parentCondition.priority}
@@ -617,7 +645,7 @@
 
     <select id="getSimpleGroupList" resultType="com.timevale.forward.dal.entity.ProductDemandGroupFieldDO">
         select a.id,a.priority,a.owner_id,a.status,c.biz_domain_id, a.product_line_id,
-        a.type, a.expect_schedule_time,e.label_id, f.label_category_id
+        a.type, a.expect_schedule_time,e.label_id, f.label_category_id, a.target_customer, a.customer_grade
         from product_demand a
         left join product_line c on a.product_line_id=c.id
         left join biz_domain d on c.biz_domain_id=d.id
@@ -698,11 +726,23 @@
                 <if test="condition.types!= null and condition.types!='' ">
                     and a.type REGEXP CONCAT('[', #{condition.types},']')
                 </if>
+                <if test="condition.targetCustomer != null">
+                    and a.target_customer = #{condition.targetCustomer}
+                </if>
+                <if test="condition.customerGrade != null">
+                    and a.customer_grade = #{condition.customerGrade}
+                </if>
                 and a.is_deleted =false
             </if>
             <if test="parentCondition != null">
                 <if test="parentCondition.expectScheduleTime != null">
                     and DATE_FORMAT(a.create_date, '%Y-%m') = #{parentCondition.expectScheduleTime}
+                </if>
+                <if test="parentCondition.targetCustomer != null">
+                    and a.target_customer = #{parentCondition.targetCustomer}
+                </if>
+                <if test="parentCondition.customerGrade != null">
+                    and a.customer_grade = #{parentCondition.customerGrade}
                 </if>
                 <if test="parentCondition.priority!=null">
                     and a.priority = #{parentCondition.priority}
@@ -830,11 +870,23 @@
                 <if test="condition.types!= null and condition.types!='' ">
                     and a.type REGEXP CONCAT('[', #{condition.types},']')
                 </if>
+                <if test="condition.targetCustomer != null">
+                    and a.target_customer = #{condition.targetCustomer}
+                </if>
+                <if test="condition.customerGrade != null">
+                    and a.customer_grade = #{condition.customerGrade}
+                </if>
                 and a.is_deleted =false
             </if>
             <if test="parentCondition != null">
                 <if test="parentCondition.expectScheduleTime != null">
                     and DATE_FORMAT(a.create_date, '%Y-%m') = #{parentCondition.expectScheduleTime}
+                </if>
+                <if test="parentCondition.targetCustomer != null">
+                    and a.target_customer = #{parentCondition.targetCustomer}
+                </if>
+                <if test="parentCondition.customerGrade != null">
+                    and a.customer_grade = #{parentCondition.customerGrade}
                 </if>
                 <if test="parentCondition.priority!=null">
                     and a.priority = #{parentCondition.priority}

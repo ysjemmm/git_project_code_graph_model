@@ -67,4 +67,10 @@ public class ProductDemandQueryList extends QueryBase {
 
     @ApiModelProperty("预期排期时间-结束时间")
     private Date expectScheduleTimeEnd;
+
+    @ApiModelProperty("目标客户/用户/项目")
+    private String targetCustomer;
+
+    @ApiModelProperty("客户等级")
+    private String customerGrade;
 }

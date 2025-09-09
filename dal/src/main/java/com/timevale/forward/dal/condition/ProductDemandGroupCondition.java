@@ -1,6 +1,7 @@
 package com.timevale.forward.dal.condition;
 
 import com.timevale.mandarin.common.query.QueryBase;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -84,4 +85,8 @@ public class ProductDemandGroupCondition extends QueryBase {
      * 产品需求类型
      */
     private Integer type;
+
+    private String targetCustomer;
+
+    private String customerGrade;
 }

@@ -49,4 +49,7 @@ public class BizDemandGroupList extends QueryBase {
 
     @ApiModelProperty("目标客户")
     private String targetCustomer;
+
+    @ApiModelProperty("客户等级")
+    private String customerGrade;
 }

@@ -57,6 +57,8 @@ public class BizDemandGroupFieldDO extends BaseDO {
 
     private String targetCustomer;
 
+    private String customerGrade;
+
     /**
      * 总数
      */

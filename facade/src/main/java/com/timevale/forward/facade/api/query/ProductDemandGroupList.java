@@ -50,4 +50,10 @@ public class ProductDemandGroupList extends QueryBase {
 
     @ApiModelProperty("产品需求类型")
     private Integer type;
+
+    @ApiModelProperty("目标客户/用户/项目")
+    private String targetCustomer;
+
+    @ApiModelProperty("客户等级")
+    private String customerGrade;
 }

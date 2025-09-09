@@ -83,4 +83,14 @@ public class ProductDemandDO extends BaseDO {
      */
     private BigDecimal totalTime;
 
+    /**
+     * 目标客户/用户/项目
+     */
+    private String targetCustomer;
+
+    /**
+     * 客户等级
+     */
+    private String customerGrade;
+
 }

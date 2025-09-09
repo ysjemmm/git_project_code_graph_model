@@ -1,6 +1,7 @@
 package com.timevale.forward.dal.condition;
 
 import com.timevale.mandarin.common.query.QueryBase;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -112,4 +113,8 @@ public class ProductDemandListCondition extends QueryBase {
      * 预期排期时间-结束时间
      */
     private Date expectScheduleTimeEnd;
+
+    private String targetCustomer;
+
+    private String customerGrade;
 }

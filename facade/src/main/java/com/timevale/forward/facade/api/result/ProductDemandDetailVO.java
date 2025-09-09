@@ -93,4 +93,10 @@ public class ProductDemandDetailVO extends ToString {
 
     @ApiModelProperty("总资源评估（人天）")
     private BigDecimal totalTime;
+
+    @ApiModelProperty("目标客户/用户/项目")
+    private String targetCustomer;
+
+    @ApiModelProperty("客户等级")
+    private String customerGrade;
 }

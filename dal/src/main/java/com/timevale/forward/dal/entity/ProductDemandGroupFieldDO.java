@@ -78,6 +78,16 @@ public class ProductDemandGroupFieldDO extends BaseDO {
     private String expectScheduleTime;
 
     /**
+     *  目标客户
+     */
+    private String targetCustomer;
+
+    /**
+     *  客户等级
+     */
+    private String customerGrade;
+
+    /**
      * 负责人id
      */
     private String ownerId;

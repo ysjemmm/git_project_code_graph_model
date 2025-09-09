@@ -74,4 +74,10 @@ public class ViewsProductDemandReq extends ViewsFilterReq {
 
     @ApiModelProperty("页大小")
     private Integer pageSize;
+
+    @ApiModelProperty("目标客户/用户/项目")
+    private String targetCustomer;
+
+    @ApiModelProperty("客户等级")
+    private String customerGrade;
 }

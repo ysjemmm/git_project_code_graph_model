@@ -85,4 +85,10 @@ public class ProductDemandAddReq extends BaseReq {
 
     @ApiModelProperty("功能迁移评估（人天）")
     private BigDecimal transferTime;
+
+    @ApiModelProperty("目标客户/用户/项目")
+    private String targetCustomer;
+
+    @ApiModelProperty("客户等级")
+    private String customerGrade;
 }

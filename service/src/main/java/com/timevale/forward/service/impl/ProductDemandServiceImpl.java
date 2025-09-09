@@ -99,6 +99,7 @@ import com.timevale.forward.service.copy.CustomDemandCopier;
 import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.copy.TrackEventCopier;
+import com.timevale.forward.service.integration.crm.CrmClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.ProductDemandBatchTransferMsgEvent;
 import com.timevale.forward.service.observer.event.ProductDemandToCopiedMsgEvent;
@@ -223,6 +224,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Resource
     private MessageEventPublisher messageEventPublisher;
+
+    @Resource
+    private CrmClient crmClient;
 
     @Override
     public BaseResult<QueryResultVO<ProductDemandVO>> list(ProductDemandQueryList productDemandQueryList) {
@@ -400,6 +404,14 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         if (productDemandDO != null) {
             throw new BaseBizRuntimeException("该产品需求名称已存在,请修改后重试");
         }
+
+        if (productDemandAddReq.getTargetCustomer().contains(CommonConstant.BLANK)) {
+            throw new BaseBizRuntimeException("目标客户/用户/项目中请勿包含空格");
+        }
+        if (StrUtil.isEmpty(productDemandAddReq.getCustomerGrade()) && StrUtil.isNotEmpty(productDemandAddReq.getTargetCustomer())) {
+            String postGrade = crmClient.getPostGrade(productDemandAddReq.getTargetCustomer());
+            productDemandAddReq.setCustomerGrade(postGrade);
+        }
         checkDescLength(productDemandAddReq.getDesc());
         ProductDemandDO productDemand = ProductDemandCopier.INSTANCE.convert(productDemandAddReq);
         productDemand.setStatus(ProductDemandStatusEnum.WAITING.getCode());
@@ -494,6 +506,12 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         if (productDemandModifyReq.getDescChangeReq() != null) {
             // 发起变更记录时不直接修改产品需求描述
             productDemandModifyReq.setDesc(oldProductDemand.getDesc());
+        }
+
+        // 如果有客户名称但是没有客户等级则尝试填入
+        if (StrUtil.isNotEmpty(productDemandModifyReq.getTargetCustomer()) && StrUtil.isEmpty(productDemandModifyReq.getCustomerGrade())) {
+            Optional.ofNullable(crmClient.getPostGrade(productDemandModifyReq.getTargetCustomer()))
+                    .ifPresent(productDemandModifyReq::setCustomerGrade);
         }
 
         ProductDemandDO newProductDemand = ProductDemandCopier.INSTANCE.convert(productDemandModifyReq);

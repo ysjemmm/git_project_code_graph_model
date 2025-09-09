@@ -24,6 +24,10 @@ public enum ProductGroupFieldEnum {
 
     EXPECT_SCHEDULE_TIME("expectScheduleTime","DATE_FORMAT(a.expect_schedule_time, '%Y-%m')", "需求排期时间"),
 
+    TARGET_CUSTOMER("targetCustomer","a.target_customer", "目标客户"),
+
+    CUSTOMER_GRADE("customerGrade","a.customer_grade", "客户等级"),
+
     OWNER("owner","a.owner_id", "产品需求负责人");
 
     final private String groupField;
