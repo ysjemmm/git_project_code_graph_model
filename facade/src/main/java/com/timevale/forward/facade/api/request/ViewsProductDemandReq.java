@@ -8,6 +8,7 @@ import lombok.EqualsAndHashCode;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author qiyuan
@@ -80,4 +81,10 @@ public class ViewsProductDemandReq extends ViewsFilterReq {
 
     @ApiModelProperty("客户等级")
     private String customerGrade;
+
+    @ApiModelProperty("标签映射")
+    private Map<String, Object> labelNames;
+
+    @ApiModelProperty("标签内容")
+    private String contentValue;
 }
