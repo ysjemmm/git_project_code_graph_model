@@ -699,8 +699,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                 productDemandMapper.update(productDemandDO);
             }
         } else {
-            productDemandDO.setCustomerGrade(null);
-            productDemandDO.setTargetCustomer(null);
+            productDemandDO.setCustomerGrade("");
+            productDemandDO.setTargetCustomer("");
             // 删除产品需求
             productDemandMapper.update(productDemandDO);
         }
