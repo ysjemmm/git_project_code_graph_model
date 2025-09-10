@@ -75,7 +75,7 @@ public interface ProductDemandMapper {
      * @param projectId 查询条件
      * @return 项目产品需求清单
      */
-    List<ProductDemandListDO> linkProductDemandList(@Param("projectId") Long projectId, @Param("demandName") String demandName);
+    List<ProductDemandListDO> linkProductDemandList(@Param("projectId") Long projectId);
 
 
     /**
