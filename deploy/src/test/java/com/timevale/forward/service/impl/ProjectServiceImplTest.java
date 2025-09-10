@@ -278,7 +278,7 @@ public class ProjectServiceImplTest extends AbstractTestNGSpringContextTests {
         ProductDemandListDO productDemandListDO = new ProductDemandListDO();
         productDemandListDO.setStatus(1);
         productDemandListDO.setPriority(1);
-        when(productDemandMapper.linkProductDemandList(any())).thenReturn(Collections.singletonList(productDemandListDO));
+        when(productDemandMapper.linkProductDemandList(any(), any())).thenReturn(Collections.singletonList(productDemandListDO));
 
         ProjectProductDemandQueryList projectProductDemandQueryList = new ProjectProductDemandQueryList();
         projectProductDemandQueryList.setPageNum(1);

@@ -1405,9 +1405,10 @@ public class ProjectServiceImpl implements ProjectService {
         Long projectId = query.getProjectId();
         int pageSize = query.getPageSize();
         int pageNum = query.getPageNum();
+        String demandName = query.getDemandName();
         log.info("项目-产品需求清单:{},{},{}", pageNum, pageSize, projectId);
         // 查询产品需求
-        List<ProductDemandListDO> productDemandListDO = productDemandMapper.linkProductDemandList(projectId);
+        List<ProductDemandListDO> productDemandListDO = productDemandMapper.linkProductDemandList(projectId, demandName);
         for (ProductDemandListDO demandListDO : productDemandListDO) {
             // 查询抄送人
             List<PersonDO> personDOList = personComponent.select(demandListDO.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
