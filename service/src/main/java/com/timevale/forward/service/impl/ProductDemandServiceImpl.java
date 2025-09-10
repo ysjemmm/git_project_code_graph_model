@@ -544,7 +544,62 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
         productDemandDescFlowComponent.startProductDemandDescChangeFlow(productDemandModifyReq);
 
+        updateTargetCustomer(newProductDemand, productDemandModifyReq.getId());
+
         return BaseResult.success(true);
+    }
+
+    private void updateTargetCustomer(ProductDemandDO newProductDemand, Long id) {
+        List<BizDemandListDO> bizDemandList = bizDemandMapper.linkBizDemandList(id);
+        if (CollUtil.isNotEmpty(bizDemandList)) {
+            // 得到业务需求的客户等级最大值
+            // 使用(v1, v2) -> v2作为合并函数，当出现重复的customerGrade时，保留后来的targetCustomer值
+            Map<String, String> customerGradeMap = bizDemandList.stream()
+                    .collect(Collectors.toMap(
+                            BizDemandListDO::getCustomerGrade,
+                            BizDemandListDO::getTargetCustomer,
+                            (v1, v2) -> v2
+                    ));
+
+            // 根据CustomerGradeEnum的score进行排序，获取具有最高优先级的客户等级
+            Optional<Map.Entry<String, String>> highestGradeEntry = customerGradeMap.entrySet()
+                    .stream()
+                    .filter(entry -> entry.getKey() != null)
+                    .sorted((entry1, entry2) -> {
+                        // 获取CustomerGradeEnum中对应的枚举值
+                        CustomerGradeEnum grade1 = CustomerGradeEnum.getByText(entry1.getKey());
+                        CustomerGradeEnum grade2 = CustomerGradeEnum.getByText(entry2.getKey());
+
+                        // 如果枚举值存在，则按score降序排序(优先级从高到低: S, A, B, C, D)
+                        if (grade1 != null && grade2 != null) {
+                            return Integer.compare(grade2.getScore(), grade1.getScore());
+                        }
+
+                        // 如果其中一个枚举值不存在，将其排在后面
+                        if (grade1 != null) return -1;
+                        if (grade2 != null) return 1;
+
+                        // 如果都不存在，保持原有顺序
+                        return 0;
+                    })
+                    .findFirst();
+
+            // 如果找到了最高优先级的客户等级，则可以获取对应的targetCustomer值
+            if (highestGradeEntry.isPresent()) {
+                String highestGrade = highestGradeEntry.get().getKey();
+                String targetCustomer = highestGradeEntry.get().getValue();
+                // 在这里可以使用highestGrade和targetCustomer进行后续处理
+                newProductDemand.setCustomerGrade(highestGrade);
+                newProductDemand.setTargetCustomer(targetCustomer);
+                // 更新产品需求
+                productDemandMapper.update(newProductDemand);
+            }
+        } else {
+            newProductDemand.setCustomerGrade("");
+            newProductDemand.setTargetCustomer("");
+            // 删除产品需求
+            productDemandMapper.update(newProductDemand);
+        }
     }
 
     @Override
@@ -654,56 +709,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
         }
 
-        List<BizDemandListDO> bizDemandList = bizDemandMapper.linkBizDemandList(productDemandDO.getId());
-        if (CollUtil.isNotEmpty(bizDemandList)) {
-            // 得到业务需求的客户等级最大值
-            // 使用(v1, v2) -> v2作为合并函数，当出现重复的customerGrade时，保留后来的targetCustomer值
-            Map<String, String> customerGradeMap = bizDemandList.stream()
-                    .collect(Collectors.toMap(
-                            BizDemandListDO::getCustomerGrade,
-                            BizDemandListDO::getTargetCustomer,
-                            (v1, v2) -> v2
-                    ));
-
-            // 根据CustomerGradeEnum的score进行排序，获取具有最高优先级的客户等级
-            Optional<Map.Entry<String, String>> highestGradeEntry = customerGradeMap.entrySet()
-                    .stream()
-                    .filter(entry -> entry.getKey() != null)
-                    .sorted((entry1, entry2) -> {
-                        // 获取CustomerGradeEnum中对应的枚举值
-                        CustomerGradeEnum grade1 = CustomerGradeEnum.getByText(entry1.getKey());
-                        CustomerGradeEnum grade2 = CustomerGradeEnum.getByText(entry2.getKey());
-
-                        // 如果枚举值存在，则按score降序排序(优先级从高到低: S, A, B, C, D)
-                        if (grade1 != null && grade2 != null) {
-                            return Integer.compare(grade2.getScore(), grade1.getScore());
-                        }
-
-                        // 如果其中一个枚举值不存在，将其排在后面
-                        if (grade1 != null) return -1;
-                        if (grade2 != null) return 1;
-
-                        // 如果都不存在，保持原有顺序
-                        return 0;
-                    })
-                    .findFirst();
-
-            // 如果找到了最高优先级的客户等级，则可以获取对应的targetCustomer值
-            if (highestGradeEntry.isPresent()) {
-                String highestGrade = highestGradeEntry.get().getKey();
-                String targetCustomer = highestGradeEntry.get().getValue();
-                // 在这里可以使用highestGrade和targetCustomer进行后续处理
-                productDemandDO.setCustomerGrade(highestGrade);
-                productDemandDO.setTargetCustomer(targetCustomer);
-                // 更新产品需求
-                productDemandMapper.update(productDemandDO);
-            }
-        } else {
-            productDemandDO.setCustomerGrade("");
-            productDemandDO.setTargetCustomer("");
-            // 删除产品需求
-            productDemandMapper.update(productDemandDO);
-        }
+        updateTargetCustomer(productDemandDO, productDemandDO.getId());
 
         return BaseResult.success(true);
     }
