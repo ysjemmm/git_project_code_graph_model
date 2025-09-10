@@ -24,4 +24,7 @@ public class ProjectProductDemandQueryList extends QueryBase {
     @ApiModelProperty("关联任务类型:0:(=0),1:(>=1)")
     private Integer type;
 
+    @ApiModelProperty("需求名称")
+    private String demandName;
+
 }
