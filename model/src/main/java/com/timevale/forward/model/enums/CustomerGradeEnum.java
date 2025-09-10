@@ -17,6 +17,7 @@ public enum CustomerGradeEnum {
     A(20, "A", 20),
     B(30, "B", 15),
     C(40, "C", 10),
+    D(45, "D", 7),
     OTHER(50, "", 5);
 
     private final Integer code;

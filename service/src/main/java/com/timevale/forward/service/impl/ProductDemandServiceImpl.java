@@ -40,6 +40,7 @@ import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectProductDemandDO;
 import com.timevale.forward.dal.entity.TrackEventDO;
 import com.timevale.forward.facade.api.client.ProductDemandService;
+import com.timevale.forward.facade.api.client.ProjectService;
 import com.timevale.forward.facade.api.query.ProductBizDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductCustomDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandLinkBizDemandQueryList;
@@ -67,6 +68,7 @@ import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.model.enums.BizTypeEnum;
 import com.timevale.forward.model.enums.ButtonActionEnum;
+import com.timevale.forward.model.enums.CustomerGradeEnum;
 import com.timevale.forward.model.enums.EnvEnum;
 import com.timevale.forward.model.enums.FileTypeEnum;
 import com.timevale.forward.model.enums.ForwardFlowStatusEnum;
@@ -209,6 +211,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Resource
     private LabelComponent labelComponent;
+
+    @Resource
+    private ProjectService projectService;
 
     @Resource
     private BizLabelMapper bizLabelMapper;
@@ -627,7 +632,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         List<Long> bizDemandIds = bizDemandLinkReq.getBizDemandIds();
         List<Long> productDemandIds = Lists.newArrayList(bizDemandLinkReq.getProductDemandId());
         ProductDemandDO productDemandDO = productDemandMapper.selectById(bizDemandLinkReq.getProductDemandId());
-        Map<Long, String> bdNameMap = bizDemandMapper.getByIds(bizDemandIds).stream().collect(Collectors.toMap(BizDemandDO::getId, BizDemandDO::getName, (v1, v2) -> v2));
+        List<BizDemandDO> bizDemandDOS = bizDemandMapper.getByIds(bizDemandIds);
+        Map<Long, String> bdNameMap = bizDemandDOS.stream().collect(Collectors.toMap(BizDemandDO::getId, BizDemandDO::getName, (v1, v2) -> v2));
 
         if (LinkOrUnLinkEnum.LINK.getCode().equals(bizDemandLinkReq.getType())) {
             productBizDemandComponent.batchInsert(bizDemandLinkReq.getProductDemandId(), bizDemandIds, true);
@@ -647,6 +653,58 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             productDemandLogComponent.addLogWhenLinkOrUnlink(productDemandDO.getName(), productDemandDO.getId(), bdNameMap, ButtonActionEnum.UN_LINK.getText());
 
         }
+
+        List<BizDemandListDO> bizDemandList = bizDemandMapper.linkBizDemandList(productDemandDO.getId());
+        if (CollUtil.isNotEmpty(bizDemandList)) {
+            // 得到业务需求的客户等级最大值
+            // 使用(v1, v2) -> v2作为合并函数，当出现重复的customerGrade时，保留后来的targetCustomer值
+            Map<String, String> customerGradeMap = bizDemandList.stream()
+                    .collect(Collectors.toMap(
+                            BizDemandListDO::getCustomerGrade,
+                            BizDemandListDO::getTargetCustomer,
+                            (v1, v2) -> v2
+                    ));
+
+            // 根据CustomerGradeEnum的score进行排序，获取具有最高优先级的客户等级
+            Optional<Map.Entry<String, String>> highestGradeEntry = customerGradeMap.entrySet()
+                    .stream()
+                    .filter(entry -> entry.getKey() != null)
+                    .sorted((entry1, entry2) -> {
+                        // 获取CustomerGradeEnum中对应的枚举值
+                        CustomerGradeEnum grade1 = CustomerGradeEnum.getByText(entry1.getKey());
+                        CustomerGradeEnum grade2 = CustomerGradeEnum.getByText(entry2.getKey());
+
+                        // 如果枚举值存在，则按score降序排序(优先级从高到低: S, A, B, C, D)
+                        if (grade1 != null && grade2 != null) {
+                            return Integer.compare(grade2.getScore(), grade1.getScore());
+                        }
+
+                        // 如果其中一个枚举值不存在，将其排在后面
+                        if (grade1 != null) return -1;
+                        if (grade2 != null) return 1;
+
+                        // 如果都不存在，保持原有顺序
+                        return 0;
+                    })
+                    .findFirst();
+
+            // 如果找到了最高优先级的客户等级，则可以获取对应的targetCustomer值
+            if (highestGradeEntry.isPresent()) {
+                String highestGrade = highestGradeEntry.get().getKey();
+                String targetCustomer = highestGradeEntry.get().getValue();
+                // 在这里可以使用highestGrade和targetCustomer进行后续处理
+                productDemandDO.setCustomerGrade(highestGrade);
+                productDemandDO.setTargetCustomer(targetCustomer);
+                // 更新产品需求
+                productDemandMapper.update(productDemandDO);
+            }
+        } else {
+            productDemandDO.setCustomerGrade(null);
+            productDemandDO.setTargetCustomer(null);
+            // 删除产品需求
+            productDemandMapper.update(productDemandDO);
+        }
+
         return BaseResult.success(true);
     }
 
