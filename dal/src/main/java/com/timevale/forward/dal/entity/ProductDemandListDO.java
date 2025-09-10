@@ -19,6 +19,11 @@ public class ProductDemandListDO extends BaseDO {
      * taskId
      */
     private Long taskId;
+
+    /**
+     * taskId
+     */
+    private String desc;
     /**
      * name
      */

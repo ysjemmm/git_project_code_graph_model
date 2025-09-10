@@ -28,6 +28,9 @@ public class ProductDemandVO extends ToString {
     @ApiModelProperty("名称")
     private String name;
 
+    @ApiModelProperty("描述")
+    private String desc;
+
     @ApiModelProperty("优先级:0(P0),1(P1),2(P2),3(P3)")
     private Integer priority;
 

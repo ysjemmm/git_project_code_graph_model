@@ -164,7 +164,8 @@
                a.status,
                a.create_man,
                a.create_date,
-               b.modify_date
+               b.modify_date,
+               a.desc
         FROM product_demand a
                  LEFT JOIN project_product_demand b ON a.id = b.product_demand_id AND b.is_deleted = false
         <where>
