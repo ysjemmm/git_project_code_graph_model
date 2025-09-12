@@ -448,10 +448,10 @@
                 <if test="condition.types!= null and condition.types!='' ">
                     and a.type REGEXP CONCAT('[', #{condition.types},']')
                 </if>
-                <if test="condition.targetCustomer != null">
-                    and a.target_customer = #{condition.targetCustomer}
+                <if test="condition.targetCustomer != null and condition.targetCustomer != ''">
+                    and a.target_customer like concat('%',#{condition.targetCustomer},'%')
                 </if>
-                <if test="condition.customerGrade != null">
+                <if test="condition.customerGrade != null and condition.customerGrade != ''">
                     and a.customer_grade = #{condition.customerGrade}
                 </if>
                 and a.is_deleted =false
@@ -460,10 +460,10 @@
                 <if test="parentCondition.expectScheduleTime != null">
                     and DATE_FORMAT(a.expect_schedule_time, '%Y-%m') = #{parentCondition.expectScheduleTime}
                 </if>
-                <if test="parentCondition.targetCustomer != null">
-                    and a.target_customer = #{parentCondition.targetCustomer}
+                <if test="parentCondition.targetCustomer != null and parentCondition.targetCustomer != ''">
+                    and a.target_customer like concat('%',#{parentCondition.targetCustomer},'%')
                 </if>
-                <if test="parentCondition.customerGrade != null">
+                <if test="parentCondition.customerGrade != null and parentCondition.customerGrade != ''">
                     and a.customer_grade = #{parentCondition.customerGrade}
                 </if>
                 <if test="parentCondition.priority!=null">
@@ -586,10 +586,10 @@
                 <if test="condition.types!= null and condition.types!='' ">
                     and a.type REGEXP CONCAT('[', #{condition.types},']')
                 </if>
-                <if test="condition.targetCustomer != null">
-                    and a.target_customer = #{condition.targetCustomer}
+                <if test="condition.targetCustomer != null and condition.targetCustomer != ''">
+                    and a.target_customer like concat('%',#{condition.targetCustomer},'%')
                 </if>
-                <if test="condition.customerGrade != null">
+                <if test="condition.customerGrade != null and condition.customerGrade != ''">
                     and a.customer_grade = #{condition.customerGrade}
                 </if>
                 and a.is_deleted =false
@@ -598,10 +598,10 @@
                 <if test="parentCondition.expectScheduleTime != null">
                     and DATE_FORMAT(a.create_date, '%Y-%m') = #{parentCondition.expectScheduleTime}
                 </if>
-                <if test="parentCondition.targetCustomer != null">
-                    and a.target_customer = #{parentCondition.targetCustomer}
+                <if test="parentCondition.targetCustomer != null and parentCondition.targetCustomer != ''">
+                    and a.target_customer like concat('%',#{parentCondition.targetCustomer},'%')
                 </if>
-                <if test="parentCondition.customerGrade != null">
+                <if test="parentCondition.customerGrade != null and parentCondition.customerGrade != ''">
                     and a.customer_grade = #{parentCondition.customerGrade}
                 </if>
                 <if test="parentCondition.priority!=null">
@@ -732,10 +732,10 @@
                 <if test="condition.types!= null and condition.types!='' ">
                     and a.type REGEXP CONCAT('[', #{condition.types},']')
                 </if>
-                <if test="condition.targetCustomer != null">
-                    and a.target_customer = #{condition.targetCustomer}
+                <if test="condition.targetCustomer != null and condition.targetCustomer != ''">
+                    and a.target_customer like concat('%',#{condition.targetCustomer},'%')
                 </if>
-                <if test="condition.customerGrade != null">
+                <if test="condition.customerGrade != null and condition.customerGrade != ''">
                     and a.customer_grade = #{condition.customerGrade}
                 </if>
                 and a.is_deleted =false
@@ -744,10 +744,10 @@
                 <if test="parentCondition.expectScheduleTime != null">
                     and DATE_FORMAT(a.create_date, '%Y-%m') = #{parentCondition.expectScheduleTime}
                 </if>
-                <if test="parentCondition.targetCustomer != null">
-                    and a.target_customer = #{parentCondition.targetCustomer}
+                <if test="parentCondition.targetCustomer != null and parentCondition.targetCustomer != ''">
+                    and a.target_customer like concat('%',#{parentCondition.targetCustomer},'%')
                 </if>
-                <if test="parentCondition.customerGrade != null">
+                <if test="parentCondition.customerGrade != null and parentCondition.customerGrade != ''">
                     and a.customer_grade = #{parentCondition.customerGrade}
                 </if>
                 <if test="parentCondition.priority!=null">
@@ -876,10 +876,10 @@
                 <if test="condition.types!= null and condition.types!='' ">
                     and a.type REGEXP CONCAT('[', #{condition.types},']')
                 </if>
-                <if test="condition.targetCustomer != null">
-                    and a.target_customer = #{condition.targetCustomer}
+                <if test="condition.targetCustomer != null and condition.targetCustomer != ''">
+                    and a.target_customer like concat('%',#{condition.targetCustomer},'%')
                 </if>
-                <if test="condition.customerGrade != null">
+                <if test="condition.customerGrade != null and condition.customerGrade != ''">
                     and a.customer_grade = #{condition.customerGrade}
                 </if>
                 and a.is_deleted =false
@@ -888,10 +888,10 @@
                 <if test="parentCondition.expectScheduleTime != null">
                     and DATE_FORMAT(a.create_date, '%Y-%m') = #{parentCondition.expectScheduleTime}
                 </if>
-                <if test="parentCondition.targetCustomer != null">
-                    and a.target_customer = #{parentCondition.targetCustomer}
+                <if test="parentCondition.targetCustomer != null and parentCondition.targetCustomer != ''">
+                    and a.target_customer like concat('%',#{parentCondition.targetCustomer},'%')
                 </if>
-                <if test="parentCondition.customerGrade != null">
+                <if test="parentCondition.customerGrade != null and parentCondition.customerGrade != ''">
                     and a.customer_grade = #{parentCondition.customerGrade}
                 </if>
                 <if test="parentCondition.priority!=null">

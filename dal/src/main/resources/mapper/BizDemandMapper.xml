@@ -169,7 +169,7 @@
             <if test="stuckOrderInstructions != null">
                stuck_order_instructions = #{stuckOrderInstructions},
             </if>
-            <if test="customerGrade != null">
+            <if test="customerGrade != null and customerGrade!=''">
                 customer_grade = #{customerGrade},
             </if>
             <if test="true">
@@ -370,7 +370,7 @@
             <if test="stuckOrderInstructions != null and stuckOrderInstructions != ''">
                 and bd.stuck_order_instructions like concat('%', #{stuckOrderInstructions}, '%')
             </if>
-            <if test="customerGrade != null">
+            <if test="customerGrade != null and customerGrade!=''">
                 and bd.customer_grade = #{customerGrade}
             </if>
             and bd.is_deleted = false
@@ -696,7 +696,7 @@
                 <if test="condition.stuckOrderInstructions != null and condition.stuckOrderInstructions != ''">
                     and bd.stuck_order_instructions like concat('%', #{condition.stuckOrderInstructions}, '%')
                 </if>
-                <if test="condition.customerGrade != null">
+                <if test="condition.customerGrade != null and condition.customerGrade!=''">
                     and bd.customer_grade = #{condition.customerGrade}
                 </if>
                 and bd.is_deleted = false
@@ -871,7 +871,7 @@
                 <if test="condition.stuckOrderInstructions != null and condition.stuckOrderInstructions != ''">
                     and bd.stuck_order_instructions like concat('%', #{condition.stuckOrderInstructions}, '%')
                 </if>
-                <if test="condition.customerGrade != null">
+                <if test="condition.customerGrade != null and condition.customerGrade!=''">
                     and bd.customer_grade = #{condition.customerGrade}
                 </if>
                 and bd.is_deleted = false
@@ -1056,7 +1056,7 @@
                 <if test="condition.stuckOrderInstructions != null and condition.stuckOrderInstructions != ''">
                     and bd.stuck_order_instructions like concat('%', #{condition.stuckOrderInstructions}, '%')
                 </if>
-                <if test="condition.customerGrade != null">
+                <if test="condition.customerGrade != null and condition.customerGrade!=''">
                     and bd.customer_grade = #{condition.customerGrade}
                 </if>
                 and bd.is_deleted = false
@@ -1228,7 +1228,7 @@
                 <if test="condition.stuckOrderInstructions != null and condition.stuckOrderInstructions != ''">
                     and bd.stuck_order_instructions like concat('%', #{condition.stuckOrderInstructions}, '%')
                 </if>
-                <if test="condition.customerGrade != null">
+                <if test="condition.customerGrade != null and condition.customerGrade!=''">
                     and bd.customer_grade = #{condition.customerGrade}
                 </if>
                 and bd.is_deleted = false
