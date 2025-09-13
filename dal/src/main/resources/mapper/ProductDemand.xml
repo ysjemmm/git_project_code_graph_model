@@ -455,7 +455,7 @@
                     and DATE_FORMAT(a.expect_schedule_time, '%Y-%m') = #{parentCondition.expectScheduleTime}
                 </if>
                 <if test="parentCondition.targetCustomer != null and parentCondition.targetCustomer != ''">
-                    and a.target_customer like concat('%',#{parentCondition.targetCustomer},'%')
+                    and a.target_customer = #{parentCondition.targetCustomer}
                 </if>
                 <if test="parentCondition.customerGrade != null and parentCondition.customerGrade != ''">
                     and a.customer_grade = #{parentCondition.customerGrade}
@@ -593,7 +593,7 @@
                     and DATE_FORMAT(a.create_date, '%Y-%m') = #{parentCondition.expectScheduleTime}
                 </if>
                 <if test="parentCondition.targetCustomer != null and parentCondition.targetCustomer != ''">
-                    and a.target_customer like concat('%',#{parentCondition.targetCustomer},'%')
+                    and a.target_customer = #{parentCondition.targetCustomer}
                 </if>
                 <if test="parentCondition.customerGrade != null and parentCondition.customerGrade != ''">
                     and a.customer_grade = #{parentCondition.customerGrade}
@@ -739,7 +739,7 @@
                     and DATE_FORMAT(a.create_date, '%Y-%m') = #{parentCondition.expectScheduleTime}
                 </if>
                 <if test="parentCondition.targetCustomer != null and parentCondition.targetCustomer != ''">
-                    and a.target_customer like concat('%',#{parentCondition.targetCustomer},'%')
+                    and a.target_customer = #{parentCondition.targetCustomer}
                 </if>
                 <if test="parentCondition.customerGrade != null and parentCondition.customerGrade != ''">
                     and a.customer_grade = #{parentCondition.customerGrade}
@@ -883,7 +883,7 @@
                     and DATE_FORMAT(a.create_date, '%Y-%m') = #{parentCondition.expectScheduleTime}
                 </if>
                 <if test="parentCondition.targetCustomer != null and parentCondition.targetCustomer != ''">
-                    and a.target_customer like concat('%',#{parentCondition.targetCustomer},'%')
+                    and a.target_customer = #{parentCondition.targetCustomer}
                 </if>
                 <if test="parentCondition.customerGrade != null and parentCondition.customerGrade != ''">
                     and a.customer_grade = #{parentCondition.customerGrade}
