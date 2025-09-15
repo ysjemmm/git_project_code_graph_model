@@ -6,6 +6,7 @@ import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
+import com.timevale.forward.facade.api.result.ProductLineVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
@@ -45,6 +46,8 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
     private PersonComponent personComponent;
     @Resource
     private ProductLineMapper productLineMapper;
+    @Resource
+    private BizDomainMapper bizDomainMapper;
     @Resource
     private ProductBizDemandMapper productBizDemandMapper;
     @Resource
@@ -94,7 +97,13 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
 
         //产品线
         ProductLineDO productLineDO = productLineMapper.selectById(demandDO.getProductLineId());
-        demandDetailVO.setProductLineVO(ProductLineCopier.INSTANCE.convert(productLineDO));
+
+        BizDomainDO bizDomainDO = bizDomainMapper.selectById(productLineDO.getBizDomainId());
+        ProductLineVO productLineVO = ProductLineCopier.INSTANCE.convert(productLineDO);
+        productLineVO.setBizDomainOwnerId(bizDomainDO.getOwnerId());
+        productLineVO.setBizDomainName(bizDomainDO.getName());
+        productLineVO.setBizDomainOwner(bizDomainDO.getOwner());
+        demandDetailVO.setProductLineVO(productLineVO);
 
         //附件
         List<FileDO> fileDO = fileComponent.select(id, FileTypeEnum.PRODUCT_DEMAND.getCode());
