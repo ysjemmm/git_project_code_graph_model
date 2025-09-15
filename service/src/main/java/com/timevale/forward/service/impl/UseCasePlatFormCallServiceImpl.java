@@ -10,6 +10,7 @@ import com.timevale.forward.service.utils.JsonUtils;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.http.UseCaseQueryConfigUtil;
 import com.timevale.mandarin.common.annotation.RestService;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -65,32 +66,36 @@ public class UseCasePlatFormCallServiceImpl implements UseCasePlatFormCallServic
     public BaseResult queryDemandCaseList(Map<String, Object> params) {
         BaseResult baseResult = new BaseResult();
         String res = HttpUtil.doPost(queryConfigUtil.getQueryDemandCaseListUrl(), params);
-        Map<String, Object> data = (Map<String, Object>) Optional.of(JsonUtils.fromJson(res, BaseResult.class)).map(BaseResult::getData).get();
-        if (MapUtils.isNotEmpty(data)) {
-            List<Map<String, Object>> demandCaseList = (List<Map<String, Object>>) data.get("data");
-            if (MapUtils.isNotEmpty(params) && StringUtils.isNotEmpty(MapUtils.getString(params, "demandName"))) {
-                List<Long> demandIds = demandCaseList.stream().map(demandCase -> Long.valueOf(String.valueOf(demandCase.get("demandId")))).collect(Collectors.toList());
+        List<Map<String, Object>> demandCaseList = (List<Map<String, Object>>) Optional.of(JsonUtils.fromJson(res, BaseResult.class)).map(BaseResult::getData).get();
+        if (CollectionUtils.isNotEmpty(demandCaseList)) {
+            List<Long> demandIds = demandCaseList.stream().map(demandCase -> Long.valueOf(String.valueOf(demandCase.get("demandId")))).collect(Collectors.toList());
+            List<ProductDemandDO> productDemandDOS = productDemandMapper.selectByIdList(demandIds);
+            Map<Long, ProductDemandDO> demandDOMap = productDemandDOS.stream().collect(Collectors.toMap(ProductDemandDO::getId, Function.identity()));
 
-                List<ProductDemandDO> productDemandDOS = productDemandMapper.selectByIdList(demandIds);
-                Map<Long, ProductDemandDO> demandDOMap = productDemandDOS.stream().collect(Collectors.toMap(ProductDemandDO::getId, Function.identity()));
-
-                for (Map<String, Object> demandCaseMap : demandCaseList) {
-                    Long demandId = Long.valueOf(String.valueOf(demandCaseMap.get("demandId")));
-                    ProductDemandDO productDemandDO = demandDOMap.get(demandId);
-                    if (Objects.nonNull(productDemandDO)) {
-                        demandCaseMap.put("demandName", productDemandDO.getName());
-                        demandCaseMap.put("desc", productDemandDO.getDesc());
-                        demandCaseMap.put("priorityName", PriorityEnum.getTextByCode(productDemandDO.getPriority()));
-                        demandCaseMap.put("ownerId", productDemandDO.getOwnerId());
-                        demandCaseMap.put("ownerName", productDemandDO.getOwner());
-                    }
+            for (Map<String, Object> demandCaseMap : demandCaseList) {
+                Long demandId = Long.valueOf(String.valueOf(demandCaseMap.get("demandId")));
+                ProductDemandDO productDemandDO = demandDOMap.get(demandId);
+                if (Objects.nonNull(productDemandDO)) {
+                    demandCaseMap.put("demandName", productDemandDO.getName());
+                    demandCaseMap.put("desc", productDemandDO.getDesc());
+                    demandCaseMap.put("priorityName", PriorityEnum.getTextByCode(productDemandDO.getPriority()));
+                    demandCaseMap.put("ownerId", productDemandDO.getOwnerId());
+                    demandCaseMap.put("ownerName", productDemandDO.getOwner());
                 }
-
-                data.put("data", demandCaseList);
             }
+
+            if (MapUtils.isNotEmpty(params) && StringUtils.isNotEmpty(MapUtils.getString(params, "demandName"))) {
+                String demandName = MapUtils.getString(params, "demandName");
+                demandCaseList = demandCaseList.stream().filter(demandCase -> demandName.equals(demandCase.get("demandName"))).collect(Collectors.toList());
+            }
+
+            if (MapUtils.isNotEmpty(params) && StringUtils.isNotEmpty(MapUtils.getString(params, "testResult"))) {
+                String testResult = MapUtils.getString(params, "testResult");
+                demandCaseList = demandCaseList.stream().filter(demandCase -> testResult.equals(demandCase.get("testResult"))).collect(Collectors.toList());
+            }
+            baseResult.setData(demandCaseList);
         }
 
-        baseResult.setData(data);
         return baseResult;
     }
 
