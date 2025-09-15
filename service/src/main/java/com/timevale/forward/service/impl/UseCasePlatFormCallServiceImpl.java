@@ -7,10 +7,11 @@ import com.timevale.forward.facade.api.client.UseCasePlatFormCallService;
 import com.timevale.forward.model.enums.PriorityEnum;
 import com.timevale.forward.service.utils.HttpUtil;
 import com.timevale.forward.service.utils.JsonUtils;
+import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.http.UseCaseQueryConfigUtil;
+import com.timevale.mandarin.common.annotation.RestService;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -20,7 +21,8 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@Service
+@LogPoint
+@RestService
 public class UseCasePlatFormCallServiceImpl implements UseCasePlatFormCallService {
 
     @Resource
