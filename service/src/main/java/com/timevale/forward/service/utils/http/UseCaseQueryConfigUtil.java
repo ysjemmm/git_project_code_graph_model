@@ -40,7 +40,7 @@ public class UseCaseQueryConfigUtil {
         } else if (EnvEnum.PRE.equals(envUtils.getEnv())) {
             useCaseQueryConfig.setUseCaseHost("http://test-case-platform-backend.smlk8s.esign.cn");
         } else {
-            useCaseQueryConfig.setUseCaseHost("http://test-case-platform-backend.testk8s.tsign.cn");
+            useCaseQueryConfig.setUseCaseHost("http://test-case-platform-backend-testcase-platform-test.projectk8s.tsign.cn");
         }
         return useCaseQueryConfig;
     }
