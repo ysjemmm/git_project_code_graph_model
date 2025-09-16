@@ -770,7 +770,9 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
 
         Map<Long, BigDecimal> taskUseTimeMap = taskDOList.stream().collect(Collectors.toMap(TaskDO::getId, TaskDO::getPlanUseTime, (oldVal, newVal) -> newVal));
 
-        Map<String, List<Long>> executorTaskMap = personMapper.get(taskIdList, PersonTypeEnum.TASK_EXECUTOR.getCode())
+        Map<String, List<Long>> executorTaskMap = personMapper.get(
+                        taskDOList.stream().map(TaskDO::getId).collect(Collectors.toList()),
+                        PersonTypeEnum.TASK_EXECUTOR.getCode())
                 .stream()
                 .collect(Collectors.groupingBy(
                         PersonDO::getUserId,
