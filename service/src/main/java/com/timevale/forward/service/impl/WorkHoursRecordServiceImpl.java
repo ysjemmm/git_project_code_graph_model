@@ -748,10 +748,20 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
                 .build());
 
         // 补充实际登记了的任务
+        List<Long> taskIdList = taskDOList.stream().map(TaskDO::getId).collect(Collectors.toList());
         List<Long> taskIds = hoursRecordDOList.stream().map(WorkHoursRecordDO::getWorkItemId).collect(Collectors.toList());
+        // 补充实际登记了但未在初始查询结果中的任务
         if (CollUtil.isNotEmpty(taskIds)) {
-            List<TaskDO> taskDOS = taskMapper.getByIdList(taskIds);
-            taskDOList.addAll(taskDOS);
+            // 获取不在初始任务列表中的任务ID
+            List<Long> missingTaskIds = taskIds.stream()
+                    .filter(taskId -> taskIdList.stream().noneMatch(id -> id.equals(taskId)))
+                    .collect(Collectors.toList());
+
+            // 如果有缺失的任务ID，则查询并添加到任务列表中
+            if (CollUtil.isNotEmpty(missingTaskIds)) {
+                List<TaskDO> missingTasks = taskMapper.getByIdList(missingTaskIds);
+                taskDOList.addAll(missingTasks);
+            }
         }
 
         // 构建各种映射关系
@@ -760,9 +770,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
 
         Map<Long, BigDecimal> taskUseTimeMap = taskDOList.stream().collect(Collectors.toMap(TaskDO::getId, TaskDO::getPlanUseTime, (oldVal, newVal) -> newVal));
 
-        Map<String, List<Long>> executorTaskMap = personMapper.get(
-                        taskDOList.stream().map(TaskDO::getId).collect(Collectors.toList()),
-                        PersonTypeEnum.TASK_EXECUTOR.getCode())
+        Map<String, List<Long>> executorTaskMap = personMapper.get(taskIdList, PersonTypeEnum.TASK_EXECUTOR.getCode())
                 .stream()
                 .collect(Collectors.groupingBy(
                         PersonDO::getUserId,
