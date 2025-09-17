@@ -747,6 +747,23 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
                 .endDate(DateUtil.getEndOfDay(endDate))
                 .build());
 
+        // 补充实际登记了的任务
+        List<Long> taskIdList = taskDOList.stream().map(TaskDO::getId).collect(Collectors.toList());
+        List<Long> taskIds = hoursRecordDOList.stream().map(WorkHoursRecordDO::getWorkItemId).collect(Collectors.toList());
+        // 补充实际登记了但未在初始查询结果中的任务
+        if (CollUtil.isNotEmpty(taskIds)) {
+            // 获取不在初始任务列表中的任务ID
+            List<Long> missingTaskIds = taskIds.stream()
+                    .filter(taskId -> taskIdList.stream().noneMatch(id -> id.equals(taskId)))
+                    .collect(Collectors.toList());
+
+            // 如果有缺失的任务ID，则查询并添加到任务列表中
+            if (CollUtil.isNotEmpty(missingTaskIds)) {
+                List<TaskDO> missingTasks = taskMapper.getByIdList(missingTaskIds);
+                taskDOList.addAll(missingTasks);
+            }
+        }
+
         // 构建各种映射关系
         Map<Long, String> taskNameMap = taskDOList.stream()
                 .collect(Collectors.toMap(TaskDO::getId, TaskDO::getName, (oldVal, newVal) -> newVal));

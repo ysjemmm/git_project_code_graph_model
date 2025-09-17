@@ -110,6 +110,7 @@ import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
+import com.timevale.mandarin.base.util.StringUtils;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
@@ -405,7 +406,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             throw new BaseBizRuntimeException("该产品需求名称已存在,请修改后重试");
         }
 
-        if (productDemandAddReq.getTargetCustomer().contains(CommonConstant.BLANK)) {
+        if (StringUtils.isNotBlank(productDemandAddReq.getTargetCustomer())
+                && productDemandAddReq.getTargetCustomer().contains(CommonConstant.BLANK)) {
             throw new BaseBizRuntimeException("目标客户/用户/项目中请勿包含空格");
         }
         if (StrUtil.isEmpty(productDemandAddReq.getCustomerGrade()) && StrUtil.isNotEmpty(productDemandAddReq.getTargetCustomer())) {
