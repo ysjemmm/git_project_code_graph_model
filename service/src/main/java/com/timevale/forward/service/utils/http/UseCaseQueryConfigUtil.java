@@ -21,7 +21,7 @@ public class UseCaseQueryConfigUtil {
     private EnvUtils envUtils;
 
     public static final String USE_CASE_QUERY_CONFIG = "{\n" +
-            "\t\"useCaseHost\": \"http://test-case-platform-backend.testk8s.tsign.cn\",\n" +
+            "\t\"useCaseHost\": \"http://test-case-platform-backend-testcase-platform-test.projectk8s.tsign.cn\",\n" +
             "\t\"queryProjectGroupListUrl\": \"/tmsdefender/queryGroup\",\n" +
             "\t\"queryCasePlatformProjectListUrl\": \"/tmsdefender/queryProjectByPage\",\n" +
             "\t\"addUseCasePlatformVersionUrl\": \"/tmsdefender/addVersion\",\n" +
@@ -30,7 +30,16 @@ public class UseCaseQueryConfigUtil {
             "\t\"queryDemandCaseListUrl\": \"/tmsdefender/queryDemandCaseList\",\n" +
             "\t\"queryCaseListUrl\": \"/tmsdefender/queryCaseList\",\n" +
             "\t\"queryVersionLinkCaseCountUrl\": \"/tmsdefender/queryVersionLinkCount\",\n" +
-            "\t\"queryTurnTreeListUrl\": \"/tmsdefender/getNeedExecuteCase\"\n" +
+            "\t\"queryTurnTreeListUrl\": \"/tmsdefender/getNeedExecuteCase\",\n" +
+            "\t\"queryTurnNameUrl\": \"/tmsdefender/queryTurnName\",\n" +
+            "\t\"addTurnUrl\": \"/tmsdefender/addTurn\",\n" +
+            "\t\"deleteTurnUrl\": \"/tmsdefender/deleteTurn\",\n" +
+            "\t\"linkOrUnLinkDemandUrl\": \"/tmsdefender/linkOrUnLinkDemand\",\n" +
+            "\t\"signCaseResultUrl\": \"/tmsdefender/signCaseResult\",\n" +
+            "\t\"queryTurnProgressUrl\": \"/tmsdefender/getTurnProgress\",\n" +
+            "\t\"queryCaseUrl\": \"/tmsdefender/queryCase\",\n" +
+            "\t\"editCaseUrl\": \"/tmsdefender/editCase\",\n" +
+            "\t\"deleteCaseUrl\": \"/tmsdefender/deleteCase\"\n" +
             "}";
 
     public UseCaseQueryConfig getConfigMap() {
@@ -129,6 +138,96 @@ public class UseCaseQueryConfigUtil {
         UseCaseQueryConfig config = getConfigMap();
         String host = config.getUseCaseHost();
         String res = config.getQueryTurnTreeListUrl();
+        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
+            return host + res;
+        }
+        return null;
+    }
+
+    public String getQueryTurnNameUrl() {
+        UseCaseQueryConfig config = getConfigMap();
+        String host = config.getUseCaseHost();
+        String res = config.getQueryTurnNameUrl();
+        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
+            return host + res;
+        }
+        return null;
+    }
+
+    public String getAddTurnUrl() {
+        UseCaseQueryConfig config = getConfigMap();
+        String host = config.getUseCaseHost();
+        String res = config.getAddTurnUrl();
+        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
+            return host + res;
+        }
+        return null;
+    }
+
+    public String getDeleteTurnUrl() {
+        UseCaseQueryConfig config = getConfigMap();
+        String host = config.getUseCaseHost();
+        String res = config.getDeleteTurnUrl();
+        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
+            return host + res;
+        }
+        return null;
+    }
+
+    public String getLinkOrUnLinkDemandUrl() {
+        UseCaseQueryConfig config = getConfigMap();
+        String host = config.getUseCaseHost();
+        String res = config.getLinkOrUnLinkDemandUrl();
+        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
+            return host + res;
+        }
+        return null;
+    }
+
+    public String getSignCaseResultUrl() {
+        UseCaseQueryConfig config = getConfigMap();
+        String host = config.getUseCaseHost();
+        String res = config.getSignCaseResultUrl();
+        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
+            return host + res;
+        }
+        return null;
+    }
+
+    public String getQueryTurnProgressUrl() {
+        UseCaseQueryConfig config = getConfigMap();
+        String host = config.getUseCaseHost();
+        String res = config.getQueryTurnProgressUrl();
+        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
+            return host + res;
+        }
+        return null;
+    }
+
+    public String getQueryCaseUrl() {
+        UseCaseQueryConfig config = getConfigMap();
+        String host = config.getUseCaseHost();
+        String res = config.getQueryCaseUrl();
+        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
+            return host + res;
+        }
+        return null;
+    }
+
+    public String getEditCaseUrl() {
+        UseCaseQueryConfig config = getConfigMap();
+        String host = config.getUseCaseHost();
+        String res = config.getEditCaseUrl();
+        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
+            return host + res;
+        }
+        return null;
+    }
+
+    public String getDeleteCaseUrl() {
+        UseCaseQueryConfig config = getConfigMap();
+        String host = config.getUseCaseHost();
+        String res = config.getDeleteCaseUrl();
         if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
             return host + res;
         }

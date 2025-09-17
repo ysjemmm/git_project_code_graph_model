@@ -26,4 +26,22 @@ public interface UseCasePlatFormCallService {
 
     BaseResult queryTurnTreeList(Map<String, Object> params);
 
+    BaseResult queryTurnProgress(Map<String, Object> params);
+
+    BaseResult queryCase(Map<String, Object> params);
+
+    BaseResult editCase(Map<String, Object> params);
+
+    BaseResult deleteCase(Map<String, Object> params);
+
+    BaseResult linkOrUnLinkDemand(Map<String, Object> params);
+
+    BaseResult signCaseResult(Map<String, Object> params);
+
+    BaseResult addTurn(Map<String, Object> params);
+
+    BaseResult deleteTurn(Map<String, Object> params);
+
+    BaseResult queryTurnName(Map<String, Object> params);
+
 }

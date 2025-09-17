@@ -31,4 +31,22 @@ public class UseCaseQueryConfig implements Serializable {
     private String queryVersionLinkCaseCountUrl;
 
     private String queryTurnTreeListUrl;
+
+    private String queryTurnNameUrl;
+
+    private String addTurnUrl;
+
+    private String deleteTurnUrl;
+
+    private String linkOrUnLinkDemandUrl;
+
+    private String signCaseResultUrl;
+
+    private String queryTurnProgressUrl;
+
+    private String queryCaseUrl;
+
+    private String editCaseUrl;
+
+    private String deleteCaseUrl;
 }

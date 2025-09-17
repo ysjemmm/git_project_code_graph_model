@@ -8,8 +8,10 @@ import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
@@ -53,10 +55,13 @@ public class HttpUtils {
         }
         return true;
     }
-    private HttpUtils() {}
+
+    private HttpUtils() {
+    }
 
     /**
      * 传参封装为具体的实体类
+     *
      * @param url
      * @param params
      * @return
@@ -67,18 +72,27 @@ public class HttpUtils {
 
     /**
      * 传参封装为Map
+     *
      * @param url
      * @param params
      * @return
      */
-    public  static String doPostMap(String url, Map<String, Object> params) {
+    public static String doPostMap(String url, Map<String, Object> params) {
         return doPost(url, JsonUtils.toJson(params));
+    }
+
+    public static String doPutMap(String url, Map<String, Object> params) {
+        return doPut(url, JsonUtils.toJson(params));
+    }
+
+    public static String doDeleteMap(String url, Map<String, Object> params) {
+        return doDelete(url, JsonUtils.toJson(params));
     }
 
     public static String doPost(String url, String params) {
 //        CurlUtils.curlPost(url, params)
         CloseableHttpClient httpClient = getCloseableHttpClient();
-        if(httpClient == null){
+        if (httpClient == null) {
             throw new RuntimeException("create http client error");
         }
         CloseableHttpResponse httpResponse = null;
@@ -103,33 +117,126 @@ public class HttpUtils {
             HttpEntity entity = httpResponse.getEntity();
             result = EntityUtils.toString(entity);
         } catch (IOException e) {
-            log.error("doPost error",e);
+            log.error("doPost error", e);
         } finally {
             // 关闭资源
             if (null != httpResponse) {
                 try {
                     httpResponse.close();
                 } catch (IOException e) {
-                    log.error("doPost error",e);
+                    log.error("doPost error", e);
                 }
             }
             try {
                 httpClient.close();
             } catch (IOException e) {
-                log.error("doPost error",e);
+                log.error("doPost error", e);
+            }
+        }
+        return result;
+    }
+
+    public static String doPut(String url, String params) {
+//        CurlUtils.curlPost(url, params)
+        CloseableHttpClient httpClient = getCloseableHttpClient();
+        if (httpClient == null) {
+            throw new RuntimeException("create http client error");
+        }
+        CloseableHttpResponse httpResponse = null;
+        String result = null;
+
+        // 创建httpPost远程连接实例
+        HttpPut httpPut = new HttpPut(url);
+        // 配置请求参数实例
+        RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(35000)// 设置连接主机服务超时时间
+                .setConnectionRequestTimeout(35000)// 设置连接请求超时时间
+                .setSocketTimeout(60000)// 设置读取数据连接超时时间
+                .build();
+        // 为httpPost实例设置配置
+        httpPut.setConfig(requestConfig);
+        // 设置请求头
+        httpPut.addHeader("Content-Type", "application/json");
+        httpPut.setEntity(new StringEntity(params, StandardCharsets.UTF_8));
+        try {
+            // httpClient对象执行post请求,并返回响应参数对象
+            httpResponse = httpClient.execute(httpPut);
+            // 从响应对象中获取响应内容
+            HttpEntity entity = httpResponse.getEntity();
+            result = EntityUtils.toString(entity);
+        } catch (IOException e) {
+            log.error("doPut error", e);
+        } finally {
+            // 关闭资源
+            if (null != httpResponse) {
+                try {
+                    httpResponse.close();
+                } catch (IOException e) {
+                    log.error("doPut error", e);
+                }
+            }
+            try {
+                httpClient.close();
+            } catch (IOException e) {
+                log.error("doPut error", e);
+            }
+        }
+        return result;
+    }
+
+    public static String doDelete(String url, String params) {
+//        CurlUtils.curlPost(url, params)
+        CloseableHttpClient httpClient = getCloseableHttpClient();
+        if (httpClient == null) {
+            throw new RuntimeException("create http client error");
+        }
+        CloseableHttpResponse httpResponse = null;
+        String result = null;
+
+        // 创建httpPost远程连接实例
+        HttpDelete httpDelete = new HttpDelete(url);
+        // 配置请求参数实例
+        RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(35000)// 设置连接主机服务超时时间
+                .setConnectionRequestTimeout(35000)// 设置连接请求超时时间
+                .setSocketTimeout(60000)// 设置读取数据连接超时时间
+                .build();
+        // 为httpPost实例设置配置
+        httpDelete.setConfig(requestConfig);
+        // 设置请求头
+        httpDelete.addHeader("Content-Type", "application/json");
+        try {
+            // httpClient对象执行post请求,并返回响应参数对象
+            httpResponse = httpClient.execute(httpDelete);
+            // 从响应对象中获取响应内容
+            HttpEntity entity = httpResponse.getEntity();
+            result = EntityUtils.toString(entity);
+        } catch (IOException e) {
+            log.error("doDelete error", e);
+        } finally {
+            // 关闭资源
+            if (null != httpResponse) {
+                try {
+                    httpResponse.close();
+                } catch (IOException e) {
+                    log.error("doDelete error", e);
+                }
+            }
+            try {
+                httpClient.close();
+            } catch (IOException e) {
+                log.error("doDelete error", e);
             }
         }
         return result;
     }
 
     public static String doGet(String url, Map<String, Object> params) throws URISyntaxException, IOException {
-        return doGet(url,params,null);
+        return doGet(url, params, null);
     }
 
     public static String doGet(String url, Map<String, Object> params, Map<String, String> headers) throws URISyntaxException, IOException {
 //        CurlUtils.curlGet(url, params)
         CloseableHttpClient httpClient = getCloseableHttpClient();
-        if(httpClient == null){
+        if (httpClient == null) {
             throw new RuntimeException("create http client error");
         }
         CloseableHttpResponse httpResponse;
@@ -151,12 +258,12 @@ public class HttpUtils {
             // 从响应对象中获取响应内容
             HttpEntity entity = httpResponse.getEntity();
             result = EntityUtils.toString(entity);
-        }  finally {
+        } finally {
             // 关闭资源
             try {
                 httpClient.close();
             } catch (IOException e) {
-                log.error("doGet error",e);
+                log.error("doGet error", e);
             }
         }
         return result;
@@ -164,7 +271,7 @@ public class HttpUtils {
 
     private static CloseableHttpClient getCloseableHttpClient() {
         CloseableHttpClient httpClient;
-        try{
+        try {
             SSLContext ctx = SSLContext.getInstance(getTls12());
             X509TrustManager tm = new X509TrustManager() {
                 @Override
@@ -179,6 +286,7 @@ public class HttpUtils {
                         throw new IllegalArgumentException("checkClientTrusted error");
                     }
                 }
+
                 @Override
                 public void checkServerTrusted(X509Certificate[] arg0, String arg1) {
                     boolean checkResult = check(arg0, arg1);
@@ -192,11 +300,11 @@ public class HttpUtils {
             httpClient = HttpClients.custom()
                     .setSSLSocketFactory(socketFactory)
                     .build();
-        }catch (NoSuchAlgorithmException e) {
-            log.error("doGet create client error",e);
+        } catch (NoSuchAlgorithmException e) {
+            log.error("doGet create client error", e);
             throw new RuntimeException(e);
         } catch (KeyManagementException e) {
-            log.error("doGet create client error",e);
+            log.error("doGet create client error", e);
             throw new RuntimeException(e);
         }
         return httpClient;

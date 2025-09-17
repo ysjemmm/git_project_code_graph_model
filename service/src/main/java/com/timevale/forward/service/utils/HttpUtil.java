@@ -49,4 +49,26 @@ public class HttpUtil {
             throw new BaseBizRuntimeException("http invoke case-server error");
         }
     }
+
+    public static String doPut(String url, Object params) {
+        Map<String, Object> paramsMap = getParams(params);
+        log.info("invoke case-captain, url:{},params:{}", url, JSON.toJSONString(params));
+
+        try {
+            return HttpUtils.doPutMap(url, paramsMap);
+        } catch (Exception e) {
+            throw new BaseBizRuntimeException("http invoke case-server error");
+        }
+    }
+
+    public static String doDelete(String url, Object params) {
+        Map<String, Object> paramsMap = getParams(params);
+        log.info("invoke case-captain, url:{},params:{}", url, JSON.toJSONString(params));
+
+        try {
+            return HttpUtils.doDeleteMap(url, paramsMap);
+        } catch (Exception e) {
+            throw new BaseBizRuntimeException("http invoke case-server error");
+        }
+    }
 }
