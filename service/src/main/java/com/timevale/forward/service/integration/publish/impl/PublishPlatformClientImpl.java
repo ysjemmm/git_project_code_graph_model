@@ -33,13 +33,13 @@ public class PublishPlatformClientImpl implements PublishPlatformClient {
     @Resource
     private RestTemplate restTemplate;
 
-    @Value("${publishPlan.baseUrl:http://poseidon-master.esign.cn/api/release_plan?}")
+    @Value("${publishPlan.baseUrl:http://poseidon-master.officek8s.esign.cn/api/release_plan?}")
     private String publishPlanUrl;
-    @Value("${project.baseUrl:http://poseidon-master.esign.cn/api/project/}")
+    @Value("${project.baseUrl:http://poseidon-master.officek8s.esign.cn/api/project/}")
     private String projectUrl;
-    @Value("${train.listUrl:http://poseidon-master.esign.cn/api/train?}")
+    @Value("${train.listUrl:http://poseidon-master.officek8s.esign.cn/api/train?}")
     private String trainListUrl;
-    @Value("${train.detailUrl:http://poseidon-master.esign.cn/api/train/}")
+    @Value("${train.detailUrl:http://poseidon-master.officek8s.esign.cn/api/train/}")
     private String trainDetailUrl;
 
     @Override
