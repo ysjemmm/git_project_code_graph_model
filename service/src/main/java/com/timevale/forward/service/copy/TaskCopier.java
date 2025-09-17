@@ -17,6 +17,7 @@ import com.timevale.forward.facade.api.result.TaskListVO;
 import com.timevale.forward.facade.api.result.TaskOverdueCountVO;
 import com.timevale.forward.facade.api.result.TaskVO;
 import com.timevale.forward.model.enums.PersonLevelEnum;
+import com.timevale.forward.model.enums.TaskStatusEnum;
 import com.timevale.forward.model.enums.TaskTypeEnum;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -27,7 +28,8 @@ import java.util.List;
 @Mapper(
         imports = {
                 PersonLevelEnum.class,
-                TaskTypeEnum.class
+                TaskTypeEnum.class,
+                TaskStatusEnum.class,
         }
 )
 public interface TaskCopier {
@@ -150,4 +152,15 @@ public interface TaskCopier {
      * @return TaskDO
      */
     ProjectBoardTaskVO convert2ProjectBoard(TaskDO TaskDO);
+
+
+    /**
+     *
+     * @param taskBoardDTO
+     * @return ProjectBoardTaskVO
+     */
+    @Mapping(target = "statusName", expression = "java(TaskStatusEnum.getTextByCode(taskBoardDTO.getStatus()))")
+    ProjectBoardTaskVO convert2ProjectBoardTask(TaskBoardDTO taskBoardDTO);
+
+
 }

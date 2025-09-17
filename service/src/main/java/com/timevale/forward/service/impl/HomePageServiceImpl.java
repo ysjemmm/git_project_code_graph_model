@@ -9,6 +9,7 @@ import com.timevale.crm.sdk.common.utils.JacksonUtil;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.condition.BugOnlineListCondition;
+import com.timevale.forward.dal.condition.WorkHoursRecordCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.dto.*;
 import com.timevale.forward.dal.entity.*;
@@ -104,6 +105,9 @@ public class HomePageServiceImpl implements HomePageService {
 
     @Resource
     private InnerGroupClient innerGroupClient;
+
+    @Resource
+    private WorkHoursRecordMapper workHoursRecordMapper;
 
     @Override
     public BaseResult<HomePageDataIndicatorVO> getDataIndicator(HomePageBaseReq homePageBaseReq) {
@@ -584,6 +588,68 @@ public class HomePageServiceImpl implements HomePageService {
         return BaseResult.success(result);
     }
 
+    public BaseResult<List<ProjectBoardSinglelWorkTimeVO>> getWorkTime(HomePageTaskBoardReq req) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        Set<String> accounts = CollUtil.emptyIfNull(req.getTeamMembers());
+        CollUtil.emptyIfNull(req.getDeptIds())
+                .forEach(e -> accounts.addAll(innerUserPersonClient.getByGroupIdNew(e)));
+        if (accounts.isEmpty()) {
+            log.warn("getWorkTime filtered users are empty, userInfo: {}", userInfo);
+            return BaseResult.success(Collections.emptyList());
+        }
+
+        List<BaseInfoResponse> users = innerUserPersonClient.batchGetStaffInfos(accounts, false);
+        List<ProjectBoardSinglelWorkTimeVO> res = users.stream().map(u ->
+                {
+                    ProjectBoardSinglelWorkTimeVO projectBoardSinglelWorkTimeVO = new ProjectBoardSinglelWorkTimeVO();
+                    projectBoardSinglelWorkTimeVO.setExecutor(u.getAlias());
+                    projectBoardSinglelWorkTimeVO.setExecutorId(u.getAccount());
+                    return projectBoardSinglelWorkTimeVO;
+                }
+        ).collect(Collectors.toList());
+        List<TaskBoardDTO> tasks = listTasksSuitDateRange(req.getStartDate(), req.getEndDate(), accounts);
+        if (tasks.isEmpty()) {
+            return BaseResult.success(res);
+        }
+        List<Long> taskIds = tasks.stream().map(TaskBoardDTO::getId).collect(Collectors.toList());
+        List<PersonDO> persons = personMapper.getPersons(accounts, taskIds, PersonTypeEnum.TASK_EXECUTOR.getCode());
+        ListMultimap<Long, PersonDO> personsByMainId = Multimaps.index(persons, PersonDO::getMainId);
+        Map<String, ProjectBoardSinglelWorkTimeVO> resByExecutorId = Maps.uniqueIndex(res, ProjectBoardSinglelWorkTimeVO::getExecutorId);
+        Map<String, List<TaskBoardDTO>> tasksByPersonId = new HashMap<>();
+        for (TaskBoardDTO currentDayTask : tasks) {
+            for (PersonDO personTask : personsByMainId.get(currentDayTask.getId())) {
+                tasksByPersonId.computeIfAbsent(personTask.getUserId(), k -> new ArrayList<>());
+                tasksByPersonId.get(personTask.getUserId()).add(currentDayTask);
+            }
+        }
+        // 查询工时信息
+        List<WorkHoursRecordDO> workHoursRecordDOS = workHoursRecordMapper.list(WorkHoursRecordCondition.builder().workItemType(BizTypeEnum.TASK.getCode()).workItemIds(taskIds).build());
+
+        Date current = new Date();
+        for (Map.Entry<String, List<TaskBoardDTO>> userEntry : tasksByPersonId.entrySet()) {
+            ProjectBoardSinglelWorkTimeVO userRes = resByExecutorId.get(userEntry.getKey());
+            if (userRes == null) {
+                continue;
+            }
+            List<ProjectBoardTaskVO> collect = userEntry.getValue().stream().map(a -> {
+                ProjectBoardTaskVO projectBoardTaskVO = TaskCopier.INSTANCE.convert2ProjectBoardTask(a);
+                setStartAndEndDates(a, projectBoardTaskVO, current);
+                projectBoardTaskVO.setIsDelay(isTaskDelayed(a, current));
+                // 设置任务进度
+                projectBoardTaskVO.setNewProgress(getTaskProgressMap(workHoursRecordDOS).getOrDefault(a.getId(), 0));
+                // 设置任务工时信息
+                projectBoardTaskVO.setTotalWorkHours(getWorkHoursMap(workHoursRecordDOS).getOrDefault(a.getId(), BigDecimal.ZERO));
+                return projectBoardTaskVO;
+            }).collect(Collectors.toList());
+            BigDecimal planUseTime = userEntry.getValue().stream().map(TaskBoardDTO::getPlanUseTime).filter(Objects::nonNull).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
+            userRes.setTaskCount(userEntry.getValue().size());
+            userRes.setTotalPlanUseTime(planUseTime);
+            List<ProjectBoardTaskVO> sort = collect.stream().sorted(Comparator.comparing(ProjectBoardTaskVO::getStartDate)).collect(Collectors.toList());
+            userRes.setProjectBoardTaskVos(sort);
+        }
+        return BaseResult.success(res);
+    }
+
     @Override
     public BaseResult<List<HomePageGroupWorkTimeVO>> getGroupTaskWorkTimeBoard(HomePageTaskBoardReq req) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -678,6 +744,50 @@ public class HomePageServiceImpl implements HomePageService {
             }
         }
         return BaseResult.success(res);
+    }
+
+    /**
+     * 获取项目下所有任务工时统计
+     */
+    private Map<Long, BigDecimal> getWorkHoursMap(List<WorkHoursRecordDO> workHoursRecordDOS) {
+        return workHoursRecordDOS.stream()
+                .collect(Collectors.groupingBy(WorkHoursRecordDO::getWorkItemId,
+                        Collectors.mapping(WorkHoursRecordDO::getWorkHours, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))));
+    }
+
+    /**
+     * 获取任务进度
+     */
+    private Map<Long, Integer> getTaskProgressMap(List<WorkHoursRecordDO> workHoursRecordDOS) {
+        return workHoursRecordDOS.stream()
+                .collect(Collectors.groupingBy(WorkHoursRecordDO::getWorkItemId,
+                        Collectors.collectingAndThen(
+                                Collectors.maxBy(Comparator.comparing(WorkHoursRecordDO::getRegistrationDate)),
+                                workHoursRecordDO -> workHoursRecordDO.map(WorkHoursRecordDO::getProgress).orElse(0)
+                        )));
+    }
+
+    private boolean isTaskDelayed(TaskBoardDTO taskDO, Date current) {
+        if (taskDO.getActualEndDate() == null) {
+            return current.after(taskDO.getPlanEndDate());
+        }
+        return taskDO.getActualEndDate().after(taskDO.getPlanEndDate());
+    }
+
+    private void setStartAndEndDates(TaskBoardDTO taskDO, ProjectBoardTaskVO vo, Date current) {
+        if (taskDO.getActualStartDate() == null) {
+            vo.setStartDate(taskDO.getPlanStartDate());
+            vo.setEndDate(taskDO.getPlanEndDate());
+        } else if (taskDO.getActualEndDate() != null) {
+            vo.setStartDate(taskDO.getActualStartDate());
+            vo.setEndDate(taskDO.getActualEndDate());
+        } else if (taskDO.getActualStartDate().after(taskDO.getPlanEndDate())) {
+            vo.setStartDate(taskDO.getActualStartDate());
+            vo.setEndDate(current);
+        } else {
+            vo.setStartDate(taskDO.getActualStartDate());
+            vo.setEndDate(taskDO.getPlanEndDate());
+        }
     }
 
     /**

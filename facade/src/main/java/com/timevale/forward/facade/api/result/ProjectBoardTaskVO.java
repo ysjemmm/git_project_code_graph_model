@@ -72,4 +72,7 @@ public class ProjectBoardTaskVO extends ToString {
     @ApiModelProperty("累计花费工时")
     private BigDecimal totalWorkHours;
 
+    @ApiModelProperty("项目名称")
+    private String projectName;
+
 }

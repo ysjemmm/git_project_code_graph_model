@@ -76,6 +76,14 @@ public interface HomePageService {
     BaseResult<List<HomePageSingleWorkTimeVO>> getTaskWorkTimeBoard(HomePageTaskBoardReq req);
 
     /**
+     * 任务工时看板查询（新）
+     *
+     * @param req 查询条件
+     * @return 列表
+     */
+    BaseResult<List<ProjectBoardSinglelWorkTimeVO>> getWorkTime(HomePageTaskBoardReq req);
+
+    /**
      * 团队任务工时看板
      */
     BaseResult<List<HomePageGroupWorkTimeVO>> getGroupTaskWorkTimeBoard(HomePageTaskBoardReq req);
