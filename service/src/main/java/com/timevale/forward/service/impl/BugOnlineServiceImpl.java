@@ -561,13 +561,13 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             outBizDealComponent.checkBizIdExistence(addReq.getBizId());
         }
 
-        if (StrUtil.isEmpty(addReq.getCustomerGrade()) && StrUtil.isNotEmpty(addReq.getCustomerName())) {
+        if (StrUtil.isNotEmpty(addReq.getCustomerName())) {
             String postGrade = crmClient.getPostGrade(addReq.getCustomerName());
             addReq.setCustomerGrade(postGrade);
         }
 
         // 如果有客户名称但是没有客户等级则尝试填入
-        if (StrUtil.isNotEmpty(addReq.getCustomerName()) && StrUtil.isEmpty(addReq.getCustomerGrade())) {
+        if (StrUtil.isNotEmpty(addReq.getCustomerName())) {
             Optional.ofNullable(crmClient.getPostGrade(addReq.getCustomerName()))
                     .ifPresent(addReq::setCustomerGrade);
         }
@@ -712,7 +712,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         // 如果有客户名称但是没有客户等级则尝试填入
-        if (StrUtil.isNotEmpty(modifyReq.getCustomerName()) && StrUtil.isEmpty(modifyReq.getCustomerGrade())) {
+        if (StrUtil.isNotEmpty(modifyReq.getCustomerName())) {
             Optional.ofNullable(crmClient.getPostGrade(modifyReq.getCustomerName()))
                     .ifPresent(modifyReq::setCustomerGrade);
         }

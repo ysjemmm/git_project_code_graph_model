@@ -410,7 +410,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                 && productDemandAddReq.getTargetCustomer().contains(CommonConstant.BLANK)) {
             throw new BaseBizRuntimeException("目标客户/用户/项目中请勿包含空格");
         }
-        if (StrUtil.isEmpty(productDemandAddReq.getCustomerGrade()) && StrUtil.isNotEmpty(productDemandAddReq.getTargetCustomer())) {
+        if (StrUtil.isNotEmpty(productDemandAddReq.getTargetCustomer())) {
             String postGrade = crmClient.getPostGrade(productDemandAddReq.getTargetCustomer());
             productDemandAddReq.setCustomerGrade(postGrade);
         }
@@ -511,7 +511,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
 
         // 如果有客户名称但是没有客户等级则尝试填入
-        if (StrUtil.isNotEmpty(productDemandModifyReq.getTargetCustomer()) && StrUtil.isEmpty(productDemandModifyReq.getCustomerGrade())) {
+        if (StrUtil.isNotEmpty(productDemandModifyReq.getTargetCustomer())) {
             Optional.ofNullable(crmClient.getPostGrade(productDemandModifyReq.getTargetCustomer()))
                     .ifPresent(productDemandModifyReq::setCustomerGrade);
         }

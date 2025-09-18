@@ -422,7 +422,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         if (StringUtils.isNotBlank(bizDemandAddReq.getBizId())) {
             outBizDealComponent.checkBizIdExistence(bizDemandAddReq.getBizId());
         }
-        if (StrUtil.isEmpty(bizDemandAddReq.getCustomerGrade()) && StrUtil.isNotEmpty(bizDemandAddReq.getTargetCustomer())) {
+        if (StrUtil.isNotEmpty(bizDemandAddReq.getTargetCustomer())) {
             String postGrade = crmClient.getPostGrade(bizDemandAddReq.getTargetCustomer());
             bizDemandAddReq.setCustomerGrade(postGrade);
         }
@@ -667,7 +667,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         // 如果有客户名称但是没有客户等级则尝试填入
-        if (StrUtil.isNotEmpty(bizDemandModifyReq.getTargetCustomer()) && StrUtil.isEmpty(bizDemandModifyReq.getCustomerGrade())) {
+        if (StrUtil.isNotEmpty(bizDemandModifyReq.getTargetCustomer())) {
             Optional.ofNullable(crmClient.getPostGrade(bizDemandModifyReq.getTargetCustomer()))
                     .ifPresent(bizDemandModifyReq::setCustomerGrade);
         }
