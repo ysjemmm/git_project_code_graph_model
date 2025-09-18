@@ -44,4 +44,5 @@ public interface UseCasePlatFormCallService {
 
     BaseResult queryTurnName(Map<String, Object> params);
 
+    BaseResult queryGroupProjectVersionList(Map<String, Object> params);
 }

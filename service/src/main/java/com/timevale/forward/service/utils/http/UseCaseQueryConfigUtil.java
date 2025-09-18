@@ -39,7 +39,8 @@ public class UseCaseQueryConfigUtil {
             "\t\"queryTurnProgressUrl\": \"/tmsdefender/getTurnProgress\",\n" +
             "\t\"queryCaseUrl\": \"/tmsdefender/queryCase\",\n" +
             "\t\"editCaseUrl\": \"/tmsdefender/editCase\",\n" +
-            "\t\"deleteCaseUrl\": \"/tmsdefender/deleteCase\"\n" +
+            "\t\"deleteCaseUrl\": \"/tmsdefender/deleteCase\",\n" +
+            "\t\"queryGroupProjectVersionListUrl\": \"/tmsdefender/queryGroupProjectVersionList\"\n" +
             "}";
 
     public UseCaseQueryConfig getConfigMap() {
@@ -228,6 +229,16 @@ public class UseCaseQueryConfigUtil {
         UseCaseQueryConfig config = getConfigMap();
         String host = config.getUseCaseHost();
         String res = config.getDeleteCaseUrl();
+        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
+            return host + res;
+        }
+        return null;
+    }
+
+    public String queryGroupProjectVersionListUrl() {
+        UseCaseQueryConfig config = getConfigMap();
+        String host = config.getUseCaseHost();
+        String res = config.getQueryGroupProjectVersionListUrl();
         if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
             return host + res;
         }

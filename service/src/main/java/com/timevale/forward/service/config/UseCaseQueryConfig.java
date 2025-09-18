@@ -49,4 +49,6 @@ public class UseCaseQueryConfig implements Serializable {
     private String editCaseUrl;
 
     private String deleteCaseUrl;
+
+    private String queryGroupProjectVersionListUrl;
 }

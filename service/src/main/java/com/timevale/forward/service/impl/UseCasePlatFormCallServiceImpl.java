@@ -231,4 +231,10 @@ public class UseCasePlatFormCallServiceImpl implements UseCasePlatFormCallServic
         String res = HttpUtil.doGet(queryConfigUtil.getQueryTurnNameUrl(), params);
         return JsonUtils.fromJson(res, BaseResult.class);
     }
+
+    @Override
+    public BaseResult queryGroupProjectVersionList(Map<String, Object> params) {
+        String res = HttpUtil.doGet(queryConfigUtil.queryGroupProjectVersionListUrl(), params);
+        return JsonUtils.fromJson(res, BaseResult.class);
+    }
 }
