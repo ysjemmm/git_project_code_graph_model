@@ -163,4 +163,6 @@ public interface ProductDemandService {
      * @return 列表
      */
     BaseResult<PageQueryResult<CustomDemandVO>> linkCustomDemandList(ProductCustomDemandQueryList customDemandQueryList);
+
+    BaseResult<Boolean> batchUpdateTargetCustomer();
 }

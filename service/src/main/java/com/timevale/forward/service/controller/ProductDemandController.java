@@ -60,6 +60,12 @@ public class ProductDemandController {
     @Resource
     private PersonService personService;
 
+    @ApiOperation("批量更新产品需求客户等级")
+    @GetMapping("/batchUpdateTargetCustomer")
+    public BusinessResult<Boolean> batchUpdateTargetCustomer() {
+        return ResultUtils.result(productDemandService.batchUpdateTargetCustomer());
+    }
+
     @ApiOperation("产品需求列表")
     @PostMapping("/list")
     public BusinessResult<QueryResultVO<ProductDemandVO>> list(@RequestBody @Valid ProductDemandQueryList productDemandQueryList) {

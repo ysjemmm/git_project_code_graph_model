@@ -127,6 +127,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -785,6 +787,34 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
         }
 
+        return BaseResult.success(true);
+    }
+
+    public BaseResult<Boolean> batchUpdateTargetCustomer() {
+        List<ProductDemandDO> productDemandDOS = productDemandMapper.selectList();
+        AtomicInteger updateCount = new AtomicInteger(0);
+
+        if (!CollUtil.isEmpty(productDemandDOS)) {
+            // 使用CompletableFuture并行处理
+            List<CompletableFuture<Void>> futures = productDemandDOS.stream()
+                    .map(productDemandDO -> CompletableFuture.runAsync(() -> {
+                        List<BizDemandListDO> bizDemandList = bizDemandMapper.linkBizDemandList(productDemandDO.getId());
+                        long count = bizDemandList.stream()
+                                .map(BizDemandListDO::getCustomerGrade)
+                                .filter(StrUtil::isNotEmpty)
+                                .count();
+                        if (count > 0) {
+                            updateTargetCustomer(productDemandDO, productDemandDO.getId());
+                            updateCount.getAndIncrement();
+                        }
+                    }))
+                    .collect(Collectors.toList());
+
+            // 等待所有任务完成
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+        }
+
+        log.info("批量更新产品需求客户成功,更新数量:{}", updateCount.get());
         return BaseResult.success(true);
     }
 

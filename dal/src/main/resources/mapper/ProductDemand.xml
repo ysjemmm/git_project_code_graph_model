@@ -105,6 +105,13 @@
         </foreach>
     </select>
 
+    <select id="selectList" resultType="com.timevale.forward.dal.entity.ProductDemandDO">
+        select *
+        from product_demand
+        where
+        is_deleted = false and (customer_grade is null or customer_grade = '')
+    </select>
+
     <select id="selectByBizDemandId" resultType="com.timevale.forward.dal.entity.BizDemandLinkProductDemandListDO">
         select pd.id,
                pd.name,
