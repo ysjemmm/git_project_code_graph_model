@@ -47,15 +47,4 @@ public class DevopsProjectTrainRelDO extends BaseDO {
      * 修改人
      */
     private String modifyMan;
-
-    // ==================== 构造方法 ====================
-
-    public DevopsProjectTrainRelDO() {
-    }
-
-    public DevopsProjectTrainRelDO(Long projectId, Integer publishTrainId) {
-        this.projectId = projectId;
-        this.publishTrainId = publishTrainId;
-        this.isDeleted = false;
-    }
 }
