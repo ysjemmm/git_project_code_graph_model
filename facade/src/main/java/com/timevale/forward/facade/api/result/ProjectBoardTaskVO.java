@@ -75,4 +75,6 @@ public class ProjectBoardTaskVO extends ToString {
     @ApiModelProperty("项目名称")
     private String projectName;
 
+    @ApiModelProperty("项目Id")
+    private Long projectId;
 }
