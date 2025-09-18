@@ -116,11 +116,11 @@ public class PublishPlatformClientImpl implements PublishPlatformClient {
     }
 
     @Override
-    public Map<String, Object> getTrainDetail(String trainId) {
+    public Map<String, Object> getTrainDetail(Integer trainId) {
         log.info("[PublishPlatformClientImpl.getTrainDetail]trainId:{}", trainId);
 
-        if (StrUtil.isBlank(trainId)) {
-            log.warn("[PublishPlatformClientImpl.getTrainDetail]trainId为空");
+        if (trainId == null || trainId <= 0) {
+            log.warn("[PublishPlatformClientImpl.getTrainDetail]trainId为空或无效");
             return null;
         }
 

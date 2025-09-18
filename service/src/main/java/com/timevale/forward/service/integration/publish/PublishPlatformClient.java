@@ -33,6 +33,6 @@ public interface PublishPlatformClient {
      * @param trainId 发布火车ID
      * @return 发布火车详情数据
      */
-    Map<String, Object> getTrainDetail(String trainId);
+    Map<String, Object> getTrainDetail(Integer trainId);
 
 }
