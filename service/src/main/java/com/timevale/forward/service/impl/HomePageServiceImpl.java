@@ -590,6 +590,21 @@ public class HomePageServiceImpl implements HomePageService {
 
     public BaseResult<List<ProjectBoardSinglelWorkTimeVO>> getWorkTime(HomePageTaskBoardReq req) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        // 保存部门&成员搜索条件 (用于快捷搜索)
+        if (!"SYSTEM".equals(userInfo.getId())) {
+            if (fastSearchConditionMapper.isExist(userInfo.getId())) {
+                if (CollectionUtils.isNotEmpty(req.getTeamMembers())) {
+                    fastSearchConditionMapper.updateSearchConditionContent(
+                            userInfo.getId(), getSearchConditionContent(userInfo.getId(), req.getTeamMembers()));
+                }
+            } else {
+                FastSearchConditionDO fastSearchCondition = new FastSearchConditionDO();
+                fastSearchCondition.setSearchConditionContent(getSearchConditionContent(
+                        userInfo.getId(), req.getTeamMembers()));
+                fastSearchCondition.setSearchUserId(userInfo.getId());
+                fastSearchConditionMapper.insert(fastSearchCondition);
+            }
+        }
         Set<String> accounts = CollUtil.emptyIfNull(req.getTeamMembers());
         CollUtil.emptyIfNull(req.getDeptIds())
                 .forEach(e -> accounts.addAll(innerUserPersonClient.getByGroupIdNew(e)));
