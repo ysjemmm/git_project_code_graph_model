@@ -15,6 +15,7 @@ import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
@@ -33,14 +34,30 @@ public class PublishPlatformClientImpl implements PublishPlatformClient {
     @Resource
     private RestTemplate restTemplate;
 
-    @Value("${publishPlan.baseUrl:http://poseidon-master.officek8s.esign.cn/api/release_plan?}")
-    private String publishPlanUrl;
-    @Value("${project.baseUrl:http://poseidon-master.officek8s.esign.cn/api/project/}")
-    private String projectUrl;
-    @Value("${train.listUrl:http://poseidon-master.officek8s.esign.cn/api/train?}")
-    private String trainListUrl;
-    @Value("${train.detailUrl:http://poseidon-master.officek8s.esign.cn/api/train/}")
-    private String trainDetailUrl;
+    // 提取公共的API基础URL
+    @Value("${devops.api.baseUrl:http://poseidon-master.officek8s.esign.cn/api}")
+    private String apiBaseUrl;
+
+    // URL构建方法
+    private String getPublishPlanUrl() {
+        return apiBaseUrl + "/release_plan?";
+    }
+
+    private String getProjectUrl() {
+        return apiBaseUrl + "/project/";
+    }
+
+    private String getTrainListUrl() {
+        return apiBaseUrl + "/train?";
+    }
+
+    private String getTrainDetailUrl() {
+        return apiBaseUrl + "/train/";
+    }
+
+    private String getTrainPublishPageUrl() {
+        return apiBaseUrl + "/train/{trainId}/publishPage";
+    }
 
     @Override
     public PublishPlanResultDTO list(PublishPlanQueryList publishPlanQueryList) {
@@ -62,6 +79,7 @@ public class PublishPlatformClientImpl implements PublishPlatformClient {
         paramMap.put("offset", (pageNum - 1) * pageSize);
         paramMap.put("limit", pageSize);
         String params = HttpUtil.toParams(paramMap, CharsetUtil.CHARSET_UTF_8, false);
+        String publishPlanUrl = getPublishPlanUrl();
         String result = restTemplate.getForObject(publishPlanUrl + params, String.class);
         log.info("请求url :{},发布平台返回结果: {}", publishPlanUrl + params, result);
         return JSONObject.parseObject(result, PublishPlanResultDTO.class);
@@ -76,6 +94,7 @@ public class PublishPlatformClientImpl implements PublishPlatformClient {
 
         JSONObject jsonObject = null;
         try {
+            String projectUrl = getProjectUrl();
             jsonObject = restTemplate.getForObject(projectUrl + projectSign, JSONObject.class);
             log.info("[PublishPlatformClientImpl.getProject]result:{}", jsonObject);
         } catch (RestClientException e) {
@@ -102,6 +121,7 @@ public class PublishPlatformClientImpl implements PublishPlatformClient {
                 queryParams = HttpUtil.toParams(params, CharsetUtil.CHARSET_UTF_8, false);
             }
 
+            String trainListUrl = getTrainListUrl();
             String requestUrl = trainListUrl + queryParams;
             JSONObject result = restTemplate.getForObject(requestUrl, JSONObject.class);
 
@@ -127,6 +147,7 @@ public class PublishPlatformClientImpl implements PublishPlatformClient {
         try {
             setRestTemplateCharset();
 
+            String trainDetailUrl = getTrainDetailUrl();
             String requestUrl = trainDetailUrl + trainId;
             JSONObject result = restTemplate.getForObject(requestUrl, JSONObject.class);
 
@@ -136,6 +157,57 @@ public class PublishPlatformClientImpl implements PublishPlatformClient {
 
         } catch (RestClientException e) {
             log.error("[PublishPlatformClientImpl.getTrainDetail]调用发布火车详情接口失败，trainId:{}", trainId, e);
+            return null;
+        }
+    }
+
+    /**
+     * 获取发布火车-发布详情
+     *
+     * @param trainId 发布火车ID
+     * @param params 查询参数
+     * @return 发布火车-发布详情
+     */
+    @Override
+    public Map<String, Object> getTrainPublishPage(Integer trainId, Map<String, Object> params) {
+        log.info("[PublishPlatformClientImpl.getTrainPublishPage]trainId:{}, params:{}", trainId, params);
+
+        if (trainId == null || trainId <= 0) {
+            log.warn("[PublishPlatformClientImpl.getTrainPublishPage]trainId为空或无效, params:{}", params);
+            return null;
+        }
+
+        try {
+            setRestTemplateCharset();
+
+            // 使用UriComponentsBuilder构建URL（推荐方式）
+            String trainPublishPageUrl = getTrainPublishPageUrl();
+            UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(trainPublishPageUrl);
+
+            // 添加查询参数
+            if (params != null && !params.isEmpty()) {
+                for (Map.Entry<String, Object> entry : params.entrySet()) {
+                    if (entry.getValue() != null) {
+                        uriBuilder.queryParam(entry.getKey(), entry.getValue());
+                    }
+                }
+            }
+
+            String requestUrl = uriBuilder.buildAndExpand(trainId).toUriString();
+            JSONObject result = restTemplate.getForObject(requestUrl, JSONObject.class);
+
+            log.info("[PublishPlatformClientImpl.getTrainPublishPage]url:{}, result:{}", requestUrl, result);
+
+            // 转换为Map类型并处理空值
+            if (result != null) {
+                return result.getInnerMap();
+            } else {
+                log.warn("[PublishPlatformClientImpl.getTrainPublishPage]接口返回结果为空，trainId:{}, params:{}", trainId, params);
+                return new HashMap<>();
+            }
+
+        } catch (RestClientException e) {
+            log.error("[PublishPlatformClientImpl.getTrainPublishPage]调用发布火车详情接口失败，trainId:{}, params:{}", trainId, params, e);
             return null;
         }
     }

@@ -63,9 +63,9 @@ public class DevopsTrainServiceImpl implements DevopsTrainService {
 
     /**
      * 获取发布火车详情
-     *
+     * 获取发布火车基础信息
      * @param trainId 发布火车ID
-     * @return 发布火车详情数据
+     * @return 发布火车基础信息
      */
     @Override
     public BaseResult<Map<String, Object>> getTrainDetail(Integer trainId) {
@@ -231,4 +231,25 @@ public class DevopsTrainServiceImpl implements DevopsTrainService {
         }
     }
 
+    /**
+     * 获取发布火车-发布详情
+     * @param trainId 发布火车ID
+     * @param params 查询参数
+     * @return 发布火车-发布详情
+     */
+    public BaseResult<Map<String, Object>> getPublishPage(Integer trainId, Map<String, Object> params) {
+        try {
+            Map<String, Object> result = platformClient.getTrainPublishPage(trainId, params);
+
+            if (result == null || result.isEmpty()) {
+                return BaseResult.fail(BaseResultCodeEnum.SYSTEM_ERROR.getNCode(), "获取发布火车-应用发布详情信息失败");
+            }
+
+            return BaseResult.success(result);
+
+        } catch (Exception e) {
+            log.error("获取发布火车详情异常, trainId: {}, params: {}", trainId, params, e);
+            return BaseResult.fail(BaseResultCodeEnum.SYSTEM_ERROR.getNCode(), "获取发布火车-应用发布详情信息异常: " + e.getMessage());
+        }
+    }
 }

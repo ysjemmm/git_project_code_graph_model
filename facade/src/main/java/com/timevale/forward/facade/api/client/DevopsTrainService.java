@@ -58,4 +58,13 @@ public interface DevopsTrainService {
             Integer projectId,
             Integer page,
             Integer pageSize);
+
+    /**
+     * 获取发布火车-发布详情页面（带查询参数）
+     *
+     * @param trainId 发布火车ID
+     * @param params 查询参数
+     * @return 发布火车详情页面数据
+     */
+    public BaseResult<Map<String, Object>> getPublishPage(Integer trainId, Map<String, Object> params);
 }
