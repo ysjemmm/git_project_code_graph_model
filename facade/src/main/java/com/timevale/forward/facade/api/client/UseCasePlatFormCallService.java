@@ -45,4 +45,8 @@ public interface UseCasePlatFormCallService {
     BaseResult queryTurnName(Map<String, Object> params);
 
     BaseResult queryGroupProjectVersionList(Map<String, Object> params);
+
+    BaseResult checkCaseOverTime(Map<String, Object> params);
+
+    BaseResult queryCaseOverTime(Map<String, Object> params);
 }

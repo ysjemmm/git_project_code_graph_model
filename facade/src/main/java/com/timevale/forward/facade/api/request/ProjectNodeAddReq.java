@@ -19,9 +19,15 @@ public class ProjectNodeAddReq extends BaseReq{
     @ApiModelProperty("名称")
     private String name;
 
-    @ApiModelProperty("计划完成时间")
+    @ApiModelProperty("计划完成开始时间")
     private Date planDate;
 
-    @ApiModelProperty("实际完成时间")
+    @ApiModelProperty("计划完成结束时间")
+    private Date planEndDate;
+
+    @ApiModelProperty("实际完成开始时间")
     private Date actualDate;
+
+    @ApiModelProperty("实际完成结束时间")
+    private Date actualEndDate;
 }

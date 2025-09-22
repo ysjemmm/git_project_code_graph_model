@@ -3,10 +3,10 @@
 <mapper namespace="com.timevale.forward.dal.dao.ProjectNodeMapper">
 
     <insert id="batchInsert" parameterType="java.util.List">
-        insert into project_node (project_id,name, plan_date, actual_date , code, create_man_id, create_man)
+        insert into project_node (project_id,name, plan_date, plan_end_date, actual_date, actual_end_date, code, create_man_id, create_man)
         values
         <foreach collection="list" item="i" open="" separator="," close="">
-            (#{i.projectId}, #{i.name}, #{i.planDate}, #{i.actualDate}, #{i.code}, #{createManId},#{createMan})
+            (#{i.projectId}, #{i.name}, #{i.planDate}, #{i.planEndDate}, #{i.actualDate}, #{i.actualEndDate}, #{i.code}, #{createManId},#{createMan})
         </foreach>
     </insert>
 
@@ -35,12 +35,12 @@
 
     <update id="updateSubmitTestActualDate">
         update project_node
-        set actual_date=#{actualDate}
+        set actual_date=#{actualDate},actual_end_date=#{actualEndDate}
         where project_id=#{projectId} and name= '提测'
     </update>
 
     <select id="getByName" resultType="com.timevale.forward.dal.entity.ProjectNodeDO">
-        SELECT id, plan_date, actual_date
+        SELECT id, plan_date, actual_date, actual_end_date
         FROM project_node
         WHERE project_id = #{projectId} AND
               name = #{name}
@@ -48,12 +48,12 @@
 
     <update id="updateActualDateById">
         update project_node
-        set actual_date=#{actualDate}
+        set actual_date=#{actualDate},actual_end_date=#{actualEndDate}
         where id=#{id}
     </update>
 
     <select id="selectByCondition" resultType="com.timevale.forward.dal.entity.ProjectNodeDO">
-        SELECT id,project_id,name, plan_date, actual_date
+        SELECT id,project_id,name, plan_date, plan_end_date, actual_date, actual_end_date
         FROM project_node
         <where>
             <if test="c.projectIds!=null and c.projectIds.size()>0">
@@ -70,7 +70,7 @@
     </select>
 
     <select id="selectByProjectIdListFilterDate" resultType="com.timevale.forward.dal.entity.ProjectNodeDO">
-        SELECT id,project_id,name, plan_date, actual_date ,create_man_id, create_man
+        SELECT id,project_id,name, plan_date, plan_end_date, actual_date, actual_end_date, create_man_id, create_man
         FROM project_node
         <where>
             project_id IN
@@ -82,7 +82,7 @@
     </select>
 
     <select id="getById" resultType="com.timevale.forward.dal.entity.ProjectNodeDO">
-        select id,project_id,name, plan_date, actual_date ,create_man_id, create_man
+        select id,project_id,name, plan_date, plan_end_date, actual_date, actual_end_date, create_man_id, create_man
         from project_node
         <where>
             <if test="id!=null">and id = #{id}</if>

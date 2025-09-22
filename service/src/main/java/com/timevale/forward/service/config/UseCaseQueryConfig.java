@@ -51,4 +51,8 @@ public class UseCaseQueryConfig implements Serializable {
     private String deleteCaseUrl;
 
     private String queryGroupProjectVersionListUrl;
+
+    private String queryCheckCaseOverTimeUrl;
+
+    private String queryQueryCaseOverTimeUrl;
 }

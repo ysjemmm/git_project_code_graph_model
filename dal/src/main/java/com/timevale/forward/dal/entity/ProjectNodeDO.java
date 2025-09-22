@@ -24,13 +24,24 @@ public class ProjectNodeDO extends BaseDO {
     private String name;
     
     /**
-     * 计划完成时间
+     * 计划完成开始时间
      */
     private Date planDate;
+
     /**
-     * 实际完成时间
+     * 计划完成结束时间
+     */
+    private Date planEndDate;
+
+    /**
+     * 实际完成开始时间
      */
     private Date actualDate;
+
+    /**
+     * 计划完成结束时间
+     */
+    private Date actualEndDate;
 
     /**
      * 编码

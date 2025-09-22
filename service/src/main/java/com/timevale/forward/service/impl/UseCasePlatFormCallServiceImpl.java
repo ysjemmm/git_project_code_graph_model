@@ -237,4 +237,16 @@ public class UseCasePlatFormCallServiceImpl implements UseCasePlatFormCallServic
         String res = HttpUtil.doGet(queryConfigUtil.queryGroupProjectVersionListUrl(), params);
         return JsonUtils.fromJson(res, BaseResult.class);
     }
+
+    @Override
+    public BaseResult checkCaseOverTime(Map<String, Object> params) {
+        String res = HttpUtil.doGet(queryConfigUtil.queryCheckCaseOverTimeUrl(), params);
+        return JsonUtils.fromJson(res, BaseResult.class);
+    }
+
+    @Override
+    public BaseResult queryCaseOverTime(Map<String, Object> params) {
+        String res = HttpUtil.doGet(queryConfigUtil.queryQueryCaseOverTimeUrl(), params);
+        return JsonUtils.fromJson(res, BaseResult.class);
+    }
 }
