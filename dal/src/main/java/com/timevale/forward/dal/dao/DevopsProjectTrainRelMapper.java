@@ -24,8 +24,9 @@ public interface DevopsProjectTrainRelMapper {
      * 软删除关联关系
      */
     @Update("UPDATE devops_project_train_rel SET is_deleted = true, modify_man=#{modifyMan}, modify_man_id=#{modifyManId}, modify_date=NOW() " +
-            "WHERE id = #{id} AND is_deleted = false")
-    void deleteRelation(@Param("id") Integer id,
+            "WHERE project_id = #{projectId} AND publish_train_id = #{publishTrainId} AND is_deleted = false")
+    void deleteRelation(@Param("projectId") Integer projectId,
+                        @Param("publishTrainId") Integer publishTrainId,
                         @Param("modifyMan") String modifyMan,
                         @Param("modifyManId") String modifyManId);
 

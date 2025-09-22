@@ -129,28 +129,30 @@ public class DevopsTrainServiceImpl implements DevopsTrainService {
 
     /**
      * 取消关联一个批量发布
-     * @param id 关联表主健id
+     * @param trainId 批量发布Id
+     * @param projectId 产研项目Id
      * @return {@link BaseResult}<{@link Boolean}>
      */
     @Override
-    public BaseResult<Boolean> unlinkProjectFromTrain(Integer id) {
+    public BaseResult<Boolean> unlinkProjectFromTrain(Integer trainId, Integer projectId) {
         try {
             // 1. 参数校验
-            if (id == null ) {
+            // 1. 参数校验
+            if (trainId == null || projectId == null) {
                 return BaseResult.fail(BaseResultCodeEnum.ILLEGAL_ARGUMENT.getNCode(), "参数不能为空");
             }
 
-            // 2. 检查关联关系是否存在
-            int count = projectPublishTrainRelMapper.countRelation1(id);
-            if (count == 0) {
-                return BaseResult.fail(400, "关联关系不存在");
-            }
+            // 2. 检查关联关系是否已存在
+//            int count = projectPublishTrainRelMapper.countRelation(projectId, trainId);
+//            if (count > 0) {
+//                return BaseResult.fail(BaseResultCodeEnum.DATA_ERROR.getNCode(), "关联关系不存在");
+//            }
 
             // 3. 获取当前操作人信息
             UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
             // 4. 软删除关联关系
-            projectPublishTrainRelMapper.deleteRelation(id, userInfo.getAlias(), userInfo.getId());
+            projectPublishTrainRelMapper.deleteRelation(projectId, trainId, userInfo.getAlias(), userInfo.getId());
 
             log.info("取消关联成功");
             return BaseResult.success(true);

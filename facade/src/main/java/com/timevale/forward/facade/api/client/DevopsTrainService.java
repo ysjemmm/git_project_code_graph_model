@@ -42,10 +42,11 @@ public interface DevopsTrainService {
 
     /**
      * 取消关联一个批量发布
-     * @param id 关联表主健id
+     * @param trainId 批量发布Id
+     * @param projectId 产研项目Id
      * @return {@link BaseResult}<{@link Boolean}>
      */
-    BaseResult<Boolean> unlinkProjectFromTrain(Integer id);
+    BaseResult<Boolean> unlinkProjectFromTrain(Integer trainId, Integer projectId);
 
     /**
      * 获取产研项目内的批量发布列表
