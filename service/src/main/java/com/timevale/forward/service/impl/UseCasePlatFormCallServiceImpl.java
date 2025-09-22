@@ -3,7 +3,10 @@ package com.timevale.forward.service.impl;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ProductDemandMapper;
 import com.timevale.forward.dal.entity.ProductDemandDO;
+import com.timevale.forward.facade.api.client.ProjectService;
 import com.timevale.forward.facade.api.client.UseCasePlatFormCallService;
+import com.timevale.forward.facade.api.result.ProductLineVO;
+import com.timevale.forward.facade.api.result.ProjectDetailVO;
 import com.timevale.forward.model.enums.PriorityEnum;
 import com.timevale.forward.service.utils.HttpUtil;
 import com.timevale.forward.service.utils.JsonUtils;
@@ -34,10 +37,31 @@ public class UseCasePlatFormCallServiceImpl implements UseCasePlatFormCallServic
     @Resource
     private ProductDemandMapper productDemandMapper;
 
+    @Resource
+    private ProjectService projectService;
+
     @Override
     public BaseResult queryProjectGroupList(Map<String, Object> params) {
+        BaseResult baseResult = new BaseResult();
         String res = HttpUtil.doGet(queryConfigUtil.getQueryProjectGroupListUrl(), params);
-        return JsonUtils.fromJson(res, BaseResult.class);
+        List<Map<String, Object>> groupList;
+        try {
+            groupList = (List<Map<String, Object>>) Optional.of(JsonUtils.fromJson(res, BaseResult.class)).map(BaseResult::getData).get();
+        } catch (Exception e) {
+            throw new BaseBizRuntimeException("获取用例平台业务组信息错误");
+        }
+        if (CollectionUtils.isNotEmpty(groupList) && MapUtils.isNotEmpty(params)) {
+            Long projectId = MapUtils.getLong(params, "chanyanProjectId");
+            ProjectDetailVO projectDetailVO = Optional.of(projectService.get(projectId)).map(BaseResult::getData).get();
+            if (projectDetailVO == null) {
+                throw new BaseBizRuntimeException("项目不存在");
+            }
+            List<Long> bizDomainIds = projectDetailVO.getProductLineVO().stream().map(ProductLineVO::getBizDomainId).collect(Collectors.toList());
+            // 过滤出符合的业务线的业务组
+            groupList = groupList.stream().filter(group -> bizDomainIds.contains(MapUtils.getLong(group, "bizDomainId"))).collect(Collectors.toList());
+        }
+        baseResult.setData(filterData(groupList));
+        return baseResult;
     }
 
     @Override

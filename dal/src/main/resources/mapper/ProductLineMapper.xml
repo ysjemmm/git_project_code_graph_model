@@ -15,7 +15,7 @@
     </select>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.ProductLineDO">
-        select a.id,a.name,a.listing_status
+        select a.id,a.name,a.listing_status,a.biz_domain_id
         from product_line a
         left join project_product_line b on a.id=b.product_line_id
         where b.project_id=#{projectId} and b.is_deleted=false and a.id is not null
