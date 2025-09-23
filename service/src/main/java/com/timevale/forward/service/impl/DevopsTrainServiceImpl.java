@@ -4,6 +4,7 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.DevopsProjectTrainRelMapper;
+import com.timevale.forward.dal.entity.DevopsProjectTrainRelDO;
 import com.timevale.forward.facade.api.client.DevopsTrainService;
 import com.timevale.forward.service.integration.publish.PublishPlatformClient;
 import com.timevale.forward.service.utils.aop.LogPoint;
@@ -183,11 +184,11 @@ public class DevopsTrainServiceImpl implements DevopsTrainService {
             // 2. 使用 PageHelper 开始分页（必须紧邻第一个查询语句）
             PageHelper.startPage(page, pageSize);
 
-            // 3. 执行分页查询
-            List<Integer> trainIds = projectPublishTrainRelMapper.selectTrainIdsByProjectId(projectId);
+            // 3. 执行分页查询 - 修改为获取完整的关联信息（包含关联表ID）
+            List<DevopsProjectTrainRelDO> relationInfoList = projectPublishTrainRelMapper.selectTrainRelationsByProjectId(projectId);
 
             // 4. 包装分页信息
-            PageInfo<Integer> pageInfo = new PageInfo<>(trainIds);
+            PageInfo<DevopsProjectTrainRelDO> pageInfo = new PageInfo<>(relationInfoList);
 
             // 5. 如果没有关联的批量发布，直接返回空结果
             if (pageInfo.getList().isEmpty()) {
@@ -198,26 +199,57 @@ public class DevopsTrainServiceImpl implements DevopsTrainService {
                 return BaseResult.success(emptyResult);
             }
 
-            // 6. 构建查询参数（固定分页为第一页）
-            Map<String, Object> params = new HashMap<>();
-            params.put("ids", pageInfo.getList());
-            params.put("page", 1); // 固定第一页
-            params.put("pageSize", pageInfo.getList().size()); // 请求全部数据
+            // 6. 提取trainId列表并保持与关联表ID的映射关系
+            List<Integer> trainIds = pageInfo.getList().stream()
+                    .map(DevopsProjectTrainRelDO::getPublishTrainId)
+                    .collect(Collectors.toList());
 
-            // 7. 调用平台接口获取数据
+            // 7. 构建查询参数（固定分页为第一页）
+            Map<String, Object> params = new HashMap<>();
+            params.put("ids", trainIds);
+            params.put("page", 1); // 固定第一页
+            params.put("pageSize", trainIds.size()); // 请求全部数据
+
+            // 8. 调用平台接口获取数据
             BaseResult<PageQueryResult<Map<String, Object>>> trainListResult = getTrainList(params);
 
-            // 8. 处理平台接口返回结果
+            // 9. 处理平台接口返回结果
             if (!trainListResult.ifSuccess() || trainListResult.getData() == null) {
                 log.error("获取批量发布列表失败, projectId={}, msg={}",
                         projectId, trainListResult.getMessage());
                 return BaseResult.fail(BaseResultCodeEnum.SYSTEM_ERROR.getNCode(), "获取批量发布列表失败");
             }
 
-            // 9. 重组分页结果
+            // 10. 重组分页结果并按关联表ID排序
             PageQueryResult<Map<String, Object>> remoteResult = trainListResult.getData();
+            List<Map<String, Object>> trainList = remoteResult.getResultList();
+
+            // 创建trainId到train数据的映射
+            Map<Integer, Map<String, Object>> trainDataMap = trainList.stream()
+                    .collect(Collectors.toMap(
+                            train -> (Integer) train.get("id"),
+                            train -> train
+                    ));
+
+            // 按照关联表ID顺序重新排列结果
+            List<Map<String, Object>> sortedTrainList = pageInfo.getList().stream()
+                    .map(relation -> {
+                        Integer trainId = relation.getPublishTrainId();
+                        Map<String, Object> trainData = trainDataMap.get(trainId);
+                        if (trainData != null) {
+                            // 可以选择性地添加关联表信息到结果中
+                            Map<String, Object> result = new HashMap<>(trainData);
+                            result.put("relationId", relation.getId()); // 添加关联表ID
+                            result.put("relationCreateDate", relation.getCreateDate()); // 添加关联创建时间
+                            return result;
+                        }
+                        return null;
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
             PageQueryResult<Map<String, Object>> pageResult = new PageQueryResult<>();
-            pageResult.setResultList(remoteResult.getResultList());
+            pageResult.setResultList(sortedTrainList);
             pageResult.setTotalItems((int) pageInfo.getTotal()); // 使用 PageHelper 的总记录数
 
             log.info("获取项目批量发布列表成功, projectId={}, page={}, pageSize={}, total={}",

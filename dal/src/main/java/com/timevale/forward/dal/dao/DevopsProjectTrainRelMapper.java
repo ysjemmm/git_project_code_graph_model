@@ -1,6 +1,7 @@
 package com.timevale.forward.dal.dao;
 
 import com.github.pagehelper.Page;
+import com.timevale.forward.dal.entity.DevopsProjectTrainRelDO;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -47,8 +48,8 @@ public interface DevopsProjectTrainRelMapper {
      * @param projectId 产研项目id
      * @return BaseResult<Integer>
      */
-    @Select("SELECT publish_train_id FROM devops_project_train_rel " +
+    @Select("SELECT * FROM devops_project_train_rel " +
             "WHERE project_id = #{projectId} AND is_deleted = false " +
             "ORDER BY create_date DESC")
-    List<Integer> selectTrainIdsByProjectId(@Param("projectId") Integer projectId);
+    List<DevopsProjectTrainRelDO> selectTrainRelationsByProjectId(@Param("projectId") Integer projectId);
 }
