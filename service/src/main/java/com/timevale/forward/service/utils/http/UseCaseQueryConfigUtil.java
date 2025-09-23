@@ -33,7 +33,7 @@ public class UseCaseQueryConfigUtil {
             "\t\"queryTurnTreeListUrl\": \"/tmsdefender/getNeedExecuteCase\",\n" +
             "\t\"queryTurnNameUrl\": \"/tmsdefender/queryTurnName\",\n" +
             "\t\"addTurnUrl\": \"/tmsdefender/addTurn\",\n" +
-            "\t\"deleteTurnUrl\": \"/tmsdefender/deleteTurn\",\n" +
+            "\t\"deleteTurnUrl\": \"/tmsdefender/delTurn\",\n" +
             "\t\"linkOrUnLinkDemandUrl\": \"/tmsdefender/linkOrUnLinkDemand\",\n" +
             "\t\"signCaseResultUrl\": \"/tmsdefender/signCaseResult\",\n" +
             "\t\"queryTurnProgressUrl\": \"/tmsdefender/getTurnProgress\",\n" +
