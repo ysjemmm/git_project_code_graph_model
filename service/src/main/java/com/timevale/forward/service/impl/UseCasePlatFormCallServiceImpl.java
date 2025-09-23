@@ -210,7 +210,7 @@ public class UseCasePlatFormCallServiceImpl implements UseCasePlatFormCallServic
 
     @Override
     public BaseResult queryCase(Map<String, Object> params) {
-        String res = HttpUtil.doGet(queryConfigUtil.getQueryCaseUrl(), params);
+        String res = HttpUtil.doPost(queryConfigUtil.getQueryCaseUrl(), params);
         return JsonUtils.fromJson(res, BaseResult.class);
     }
 
@@ -246,7 +246,7 @@ public class UseCasePlatFormCallServiceImpl implements UseCasePlatFormCallServic
 
     @Override
     public BaseResult deleteTurn(Map<String, Object> params) {
-        String res = HttpUtil.doDelete(queryConfigUtil.getDeleteTurnUrl(), params);
+        String res = HttpUtil.doPost(queryConfigUtil.getDeleteTurnUrl(), params);
         return JsonUtils.fromJson(res, BaseResult.class);
     }
 

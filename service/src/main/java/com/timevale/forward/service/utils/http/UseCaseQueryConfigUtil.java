@@ -37,7 +37,7 @@ public class UseCaseQueryConfigUtil {
             "\t\"linkOrUnLinkDemandUrl\": \"/tmsdefender/linkOrUnLinkDemand\",\n" +
             "\t\"signCaseResultUrl\": \"/tmsdefender/signCaseResult\",\n" +
             "\t\"queryTurnProgressUrl\": \"/tmsdefender/getTurnProgress\",\n" +
-            "\t\"queryCaseUrl\": \"/tmsdefender/queryCase\",\n" +
+            "\t\"queryCaseUrl\": \"/tmsdefender/queryCaseInfo\",\n" +
             "\t\"editCaseUrl\": \"/tmsdefender/editCase\",\n" +
             "\t\"deleteCaseUrl\": \"/tmsdefender/deleteCase\",\n" +
             "\t\"queryGroupProjectVersionListUrl\": \"/tmsdefender/queryGroupProjectVersionList\",\n" +
