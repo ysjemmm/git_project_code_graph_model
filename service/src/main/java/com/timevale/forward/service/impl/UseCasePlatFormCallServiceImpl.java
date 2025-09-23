@@ -273,4 +273,22 @@ public class UseCasePlatFormCallServiceImpl implements UseCasePlatFormCallServic
         String res = HttpUtil.doGet(queryConfigUtil.queryQueryCaseOverTimeUrl(), params);
         return JsonUtils.fromJson(res, BaseResult.class);
     }
+
+    @Override
+    public BaseResult caseImageUpload(Map<String, Object> params) {
+        String res = HttpUtil.doPost(queryConfigUtil.caseImageUploadUrl(), params);
+        return JsonUtils.fromJson(res, BaseResult.class);
+    }
+
+    @Override
+    public BaseResult caseDocumentDelete(Map<String, Object> params) {
+        String res = HttpUtil.doDelete(queryConfigUtil.caseDocumentDeleteUrl(), params);
+        return JsonUtils.fromJson(res, BaseResult.class);
+    }
+
+    @Override
+    public BaseResult addCase(Map<String, Object> params) {
+        String res = HttpUtil.doPost(queryConfigUtil.addCaseUrl(), params);
+        return JsonUtils.fromJson(res, BaseResult.class);
+    }
 }

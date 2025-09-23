@@ -42,7 +42,10 @@ public class UseCaseQueryConfigUtil {
             "\t\"deleteCaseUrl\": \"/tmsdefender/deleteCase\",\n" +
             "\t\"queryGroupProjectVersionListUrl\": \"/tmsdefender/queryGroupProjectVersionList\",\n" +
             "\t\"queryCheckCaseOverTimeUrl\": \"/tmsdefender/checkCaseOverTime\",\n" +
-            "\t\"queryQueryCaseOverTimeUrl\": \"/tmsdefender/queryCaseOverTime\"\n" +
+            "\t\"queryQueryCaseOverTimeUrl\": \"/tmsdefender/queryCaseOverTime\",\n" +
+            "\t\"caseImageUploadUrl\": \"/tmsdefender/caseImageUpload\",\n" +
+            "\t\"caseDocumentDeleteUrl\": \"/tmsdefender/caseDocumentDelete\",\n" +
+            "\t\"addCaseUrl\": \"/tmsdefender/addCase\"\n" +
             "}";
 
     public UseCaseQueryConfig getConfigMap() {
@@ -52,7 +55,7 @@ public class UseCaseQueryConfigUtil {
         } else if (EnvEnum.PRE.equals(envUtils.getEnv())) {
             useCaseQueryConfig.setUseCaseHost("http://test-case-platform-backend.smlk8s.esign.cn");
         } else {
-            useCaseQueryConfig.setUseCaseHost("http://test-case-platform-backend-testcase-platform-test.projectk8s.tsign.cn");
+            useCaseQueryConfig.setUseCaseHost("http://localhost:8082");
         }
         return useCaseQueryConfig;
     }
@@ -261,6 +264,36 @@ public class UseCaseQueryConfigUtil {
         UseCaseQueryConfig config = getConfigMap();
         String host = config.getUseCaseHost();
         String res = config.getQueryQueryCaseOverTimeUrl();
+        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
+            return host + res;
+        }
+        return null;
+    }
+
+    public String caseImageUploadUrl() {
+        UseCaseQueryConfig config = getConfigMap();
+        String host = config.getUseCaseHost();
+        String res = config.getCaseImageUploadUrl();
+        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
+            return host + res;
+        }
+        return null;
+    }
+
+    public String caseDocumentDeleteUrl() {
+        UseCaseQueryConfig config = getConfigMap();
+        String host = config.getUseCaseHost();
+        String res = config.getCaseDocumentDeleteUrl();
+        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
+            return host + res;
+        }
+        return null;
+    }
+
+    public String addCaseUrl() {
+        UseCaseQueryConfig config = getConfigMap();
+        String host = config.getUseCaseHost();
+        String res = config.getAddCaseUrl();
         if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
             return host + res;
         }

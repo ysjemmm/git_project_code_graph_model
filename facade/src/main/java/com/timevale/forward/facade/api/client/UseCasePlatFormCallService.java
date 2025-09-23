@@ -49,4 +49,10 @@ public interface UseCasePlatFormCallService {
     BaseResult checkCaseOverTime(Map<String, Object> params);
 
     BaseResult queryCaseOverTime(Map<String, Object> params);
+
+    BaseResult caseImageUpload(Map<String, Object> params);
+
+    BaseResult caseDocumentDelete(Map<String, Object> params);
+
+    BaseResult addCase(Map<String, Object> params);
 }

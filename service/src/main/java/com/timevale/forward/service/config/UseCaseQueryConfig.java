@@ -55,4 +55,10 @@ public class UseCaseQueryConfig implements Serializable {
     private String queryCheckCaseOverTimeUrl;
 
     private String queryQueryCaseOverTimeUrl;
+
+    private String caseImageUploadUrl;
+
+    private String caseDocumentDeleteUrl;
+
+    private String addCaseUrl;
 }
