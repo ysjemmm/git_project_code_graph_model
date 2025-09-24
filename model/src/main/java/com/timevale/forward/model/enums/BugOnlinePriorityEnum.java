@@ -20,17 +20,17 @@ public enum BugOnlinePriorityEnum {
     /**
      * 中
      */
-    MIDDLE(1, "中", 76),
+    MIDDLE(1, "中", 96),
 
     /**
      * 高
      */
-    HIGH(2, "高",91),
+    HIGH(2, "高",111),
 
     /**
      * 紧急
      */
-    URGENT(3, "紧急",100);
+    URGENT(3, "紧急",120);
 
     private final Integer code;
     private final String text;

@@ -5,6 +5,7 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -68,4 +69,12 @@ public interface DevopsTrainService {
      * @return 发布火车详情页面数据
      */
     public BaseResult<Map<String, Object>> getPublishPage(Integer trainId, Map<String, Object> params);
+
+    /**
+     * 根据批量发布ID获取产研项目ID列表
+     *
+     * @param trainId 发布火车ID
+     * @return 产研项目ID列表
+     */
+    public BaseResult<List<Long>> getProjectIdsByTrainId(Integer trainId);
 }

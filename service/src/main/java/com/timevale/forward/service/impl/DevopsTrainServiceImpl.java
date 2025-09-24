@@ -286,4 +286,35 @@ public class DevopsTrainServiceImpl implements DevopsTrainService {
             return BaseResult.fail(BaseResultCodeEnum.SYSTEM_ERROR.getNCode(), "获取发布火车-应用发布详情信息异常: " + e.getMessage());
         }
     }
+
+    /**
+     * 根据批量发布ID获取产研项目ID列表
+     *
+     * @param trainId 发布火车ID
+     * @return 产研项目ID列表
+     */
+    public BaseResult<List<Long>> getProjectIdsByTrainId(Integer trainId) {
+        try {
+            // 参数校验
+            if (trainId == null) {
+                return BaseResult.fail(BaseResultCodeEnum.NULL_ARGUMENT.getNCode(), "批量发布ID不能为空");
+            }
+
+            // 查询关联的项目ID列表
+            List<Long> projectIds = projectPublishTrainRelMapper.selectProjectIdsByTrainId(trainId);
+
+            // 直接返回结果，为空也正常返回
+            if (projectIds == null) {
+                projectIds = new ArrayList<>();
+            }
+
+            log.info("获取产研项目ID列表, trainId: {}, 项目数量: {}", trainId, projectIds.size());
+            return BaseResult.success(projectIds);
+
+        } catch (Exception e) {
+            log.error("根据批量发布ID获取产研项目ID列表异常, trainId: {}", trainId, e);
+            return BaseResult.fail(BaseResultCodeEnum.SYSTEM_ERROR.getNCode(),
+                    "获取产研项目ID列表异常: " + e.getMessage());
+        }
+    }
 }

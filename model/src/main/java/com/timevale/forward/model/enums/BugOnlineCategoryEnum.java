@@ -14,7 +14,7 @@ import java.util.Optional;
 @Getter
 @AllArgsConstructor
 public enum BugOnlineCategoryEnum {
-    FUNCTION(1, "功能问题", 15),
+    FUNCTION(1, "功能问题", 35),
     PERFORMANCE(2, "性能问题", 10),
     CAPABILITY(3, "兼容性问题", 10),
     UE(4, "用户体验问题", 5),

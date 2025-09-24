@@ -52,4 +52,15 @@ public interface DevopsProjectTrainRelMapper {
             "WHERE project_id = #{projectId} AND is_deleted = false " +
             "ORDER BY create_date DESC")
     List<DevopsProjectTrainRelDO> selectTrainRelationsByProjectId(@Param("projectId") Integer projectId);
+
+    /**
+     * 根据批量发布ID获取关联的产研项目ID列表
+     *
+     * @param trainId 批量发布ID
+     * @return 产研项目ID列表
+     */
+    @Select("SELECT project_id FROM devops_project_train_rel " +
+            "WHERE publish_train_id = #{trainId} AND is_deleted = false " +
+            "ORDER BY create_date DESC")
+    List<Long> selectProjectIdsByTrainId(@Param("trainId") Integer trainId);
 }
