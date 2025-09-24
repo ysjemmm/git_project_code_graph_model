@@ -3,6 +3,7 @@ package com.timevale.forward.facade.api.client;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.mandarin.common.annotation.RestClient;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
@@ -50,7 +51,7 @@ public interface UseCasePlatFormCallService {
 
     BaseResult queryCaseOverTime(Map<String, Object> params);
 
-    BaseResult caseImageUpload(Map<String, Object> params);
+    BaseResult caseImageUpload(Map<String, Object> params, MultipartFile file);
 
     BaseResult caseDocumentDelete(Map<String, Object> params);
 

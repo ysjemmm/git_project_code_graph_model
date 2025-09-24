@@ -17,6 +17,7 @@ import com.timevale.mandarin.common.annotation.RestService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
@@ -278,8 +279,8 @@ public class UseCasePlatFormCallServiceImpl implements UseCasePlatFormCallServic
     }
 
     @Override
-    public BaseResult caseImageUpload(Map<String, Object> params) {
-        String res = HttpUtil.doPost(queryConfigUtil.caseImageUploadUrl(), params);
+    public BaseResult caseImageUpload(Map<String, Object> params, MultipartFile file) {
+        String res = HttpUtil.doPostMultipart(queryConfigUtil.caseImageUploadUrl(), params, file);
         return JsonUtils.fromJson(res, BaseResult.class);
     }
 

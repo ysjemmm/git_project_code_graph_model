@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.timevale.forward.service.utils.http.HttpUtils;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -45,6 +46,16 @@ public class HttpUtil {
 
         try {
             return HttpUtils.doPostMap(url, paramsMap);
+        } catch (Exception e) {
+            throw new BaseBizRuntimeException("http invoke case-server error");
+        }
+    }
+
+    public static String doPostMultipart(String url, Map<String, Object> params, MultipartFile file) {
+        log.info("invoke case-captain, url:{},params:{}", url, JSON.toJSONString(params));
+
+        try {
+            return HttpUtils.doPostMultipart(url, params, file);
         } catch (Exception e) {
             throw new BaseBizRuntimeException("http invoke case-server error");
         }

@@ -43,7 +43,7 @@ public class UseCaseQueryConfigUtil {
             "\t\"queryGroupProjectVersionListUrl\": \"/tmsdefender/queryGroupProjectVersionList\",\n" +
             "\t\"queryCheckCaseOverTimeUrl\": \"/tmsdefender/checkCaseOverTime\",\n" +
             "\t\"queryQueryCaseOverTimeUrl\": \"/tmsdefender/queryCaseOverTime\",\n" +
-            "\t\"caseImageUploadUrl\": \"/tmsdefender/caseImageUpload\",\n" +
+            "\t\"caseImageUploadUrl\": \"/tmsdefender/imageUpload\",\n" +
             "\t\"caseDocumentDeleteUrl\": \"/tmsdefender/caseDocumentDelete\",\n" +
             "\t\"addCaseUrl\": \"/tmsdefender/addCase\"\n" +
             "}";

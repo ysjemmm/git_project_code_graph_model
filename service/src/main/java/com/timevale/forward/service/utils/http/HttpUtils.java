@@ -15,11 +15,16 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.ByteArrayBody;
+import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -131,6 +136,70 @@ public class HttpUtils {
                 httpClient.close();
             } catch (IOException e) {
                 log.error("doPost error", e);
+            }
+        }
+        return result;
+    }
+
+    public static String doPostMultipart(String url, Map<String, Object> params, MultipartFile file) {
+        CloseableHttpClient httpClient = getCloseableHttpClient();
+        if (httpClient == null) {
+            throw new RuntimeException("create http client error");
+        }
+        CloseableHttpResponse httpResponse = null;
+        String result = null;
+
+        // 创建httpPost远程连接实例
+        HttpPost httpPost = new HttpPost(url);
+        // 配置请求参数实例
+        RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(35000)// 设置连接主机服务超时时间
+                .setConnectionRequestTimeout(35000)// 设置连接请求超时时间
+                .setSocketTimeout(60000)// 设置读取数据连接超时时间
+                .build();
+        // 为httpPost实例设置配置
+        httpPost.setConfig(requestConfig);
+
+        try {
+            // 构建multipart请求体
+            MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+            
+            // 添加文件部分
+            if (file != null && !file.isEmpty()) {
+                builder.addPart("file", new ByteArrayBody(file.getBytes(), file.getOriginalFilename()));
+            }
+            
+            // 添加其他参数部分
+            if (params != null) {
+                for (Map.Entry<String, Object> entry : params.entrySet()) {
+                    if (entry.getValue() != null) {
+                        builder.addPart(entry.getKey(), new StringBody(String.valueOf(entry.getValue()), 
+                                ContentType.TEXT_PLAIN.withCharset(StandardCharsets.UTF_8)));
+                    }
+                }
+            }
+            
+            HttpEntity entity = builder.build();
+            httpPost.setEntity(entity);
+            
+            // httpClient对象执行post请求,并返回响应参数对象
+            httpResponse = httpClient.execute(httpPost);
+            // 从响应对象中获取响应内容
+            result = EntityUtils.toString(httpResponse.getEntity());
+        } catch (IOException e) {
+            log.error("doPostMultipart error", e);
+        } finally {
+            // 关闭资源
+            if (null != httpResponse) {
+                try {
+                    httpResponse.close();
+                } catch (IOException e) {
+                    log.error("doPostMultipart error", e);
+                }
+            }
+            try {
+                httpClient.close();
+            } catch (IOException e) {
+                log.error("doPostMultipart error", e);
             }
         }
         return result;
