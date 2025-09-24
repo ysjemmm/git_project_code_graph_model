@@ -130,9 +130,19 @@
             pl.is_deleted = false
             AND bdgr.is_deleted = false
             AND bdgr.biz_domain_group_id = #{bizDomainGroupId}
-            AND pl.owner_id = #{ownerId}
+            AND (pl.owner_id = #{ownerId} or pl.bug_online_owner_id = #{ownerId})
         </where>
     </select>
 
+    <select id="countBizGroup" resultType="java.lang.Integer">
+        select count(*) from biz_domain bd
+        left join biz_domain_group_relation bdgr on bd.id = bdgr.biz_domain_id
+        <where>
+        where bd.is_deleted = 0
+        and bdgr.is_deleted = 0
+        AND bdgr.biz_domain_group_id = #{bizDomainGroupId}
+        and (bd.pbu_owner_id = #{ownerId} or bd.owner_id = #{ownerId} or bd.tech_owner_id = #{ownerId})
+        </where>
+    </select>
 
 </mapper>

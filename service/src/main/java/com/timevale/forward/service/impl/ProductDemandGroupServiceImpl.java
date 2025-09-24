@@ -277,8 +277,8 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
 
     private void checkOperationPermission(Long bizDomainGroupId) {
         // 只有业务域集有里的产品经理才能新增
-        int cnt = bizDomainGroupMapper.countProductLine(bizDomainGroupId, LocalSessionUtils.getUserInfo().getId());
-        if (cnt <= 0) {
+        if (bizDomainGroupMapper.countBizGroup(bizDomainGroupId, LocalSessionUtils.getUserInfo().getId()) <= 0
+                && bizDomainGroupMapper.countProductLine(bizDomainGroupId, LocalSessionUtils.getUserInfo().getId()) <= 0) {
             throw new BaseBizRuntimeException("只有业务域集里的产品经理才能操作");
         }
     }
