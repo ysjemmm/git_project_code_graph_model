@@ -30,6 +30,7 @@ import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectMemberEvaluateMapper;
 import com.timevale.forward.dal.dao.ProjectMilestoneMapper;
 import com.timevale.forward.dal.dao.ProjectNodeFlowMapper;
+import com.timevale.forward.dal.dao.ProjectNodeMapper;
 import com.timevale.forward.dal.dao.ProjectNodeRecordMapper;
 import com.timevale.forward.dal.dao.ProjectPbuMapper;
 import com.timevale.forward.dal.dao.ProjectProductDemandMapper;
@@ -83,6 +84,7 @@ import com.timevale.forward.facade.api.request.ProjectGoalAddReq;
 import com.timevale.forward.facade.api.request.ProjectInnerAddReq;
 import com.timevale.forward.facade.api.request.ProjectInnerCompleteReq;
 import com.timevale.forward.facade.api.request.ProjectModifyReq;
+import com.timevale.forward.facade.api.request.ProjectNodeAddReq;
 import com.timevale.forward.facade.api.request.ProjectProductDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProjectSimpleModifyReq;
 import com.timevale.forward.facade.api.request.ProjectStageChangeReq;
@@ -258,6 +260,8 @@ public class ProjectServiceImpl implements ProjectService {
     private ProjectNodeFlowComponent projectNodeFlowComponent;
     @Resource
     private ProjectNodeFlowMapper projectNodeFlowMapper;
+    @Resource
+    private ProjectNodeMapper projectNodeMapper;
     @Resource
     private ProjectNodeRecordMapper projectNodeRecordMapper;
     @Resource
@@ -1679,6 +1683,32 @@ public class ProjectServiceImpl implements ProjectService {
                 result.add(new ModifyProjectCheckVO(check.getType().ordinal(),
                         check.isCritical(), check.getMsg())));
         return BaseResult.success(result);
+    }
+
+    @Override
+    public BaseResult<Boolean> autoCompleteTime(ProjectNodeAddReq projectNodeAddReq) {
+        Long projectId = projectNodeAddReq.getProjectId();
+        ProjectDO projectDO = projectMapper.get(projectId);
+        if (Objects.isNull(projectDO)) {
+            throw new BaseBizRuntimeException("项目不存在");
+        }
+        List<ProjectNodeDO> projectNodeDOS = projectNodeMapper.get(projectId);
+        ProjectNodeDO projectNodeDO = projectNodeMapper.getByName(projectId, projectNodeAddReq.getName());
+        if (Objects.nonNull(projectNodeDO) && ProjectNodeEnum.PUBLISH_OFFICIAL.getText().equals(projectNodeDO.getName())) {
+            if (ProjectStatusEnum.SUSPEND.getCode().equals(projectDO.getStatus())) {
+                throw new BaseBizRuntimeException("项目状态为暂停时，不能填写发布正式的实际时间。");
+            }
+            if (projectNodeDOS.stream().map(ProjectNodeDO::getActualDate).anyMatch(Objects::isNull)) {
+                throw new BaseBizRuntimeException("请填写完其他节点的实际时间后，再填写发布正式的实际时间。");
+            } else {
+                throw new BaseBizRuntimeException("项目节点的实际时间已全部填入，状态将变为已发布，已发布的项目不可再编辑。");
+            }
+        }
+        if (Objects.nonNull(projectNodeDO)) {
+            projectNodeMapper.updateEndDateByProjectIdAndName(projectNodeDO.getProjectId(), projectNodeDO.getName(),
+                    projectNodeAddReq.getActualDate(), projectNodeAddReq.getActualEndDate());
+        }
+        return BaseResult.success(true);
     }
 
     @Override

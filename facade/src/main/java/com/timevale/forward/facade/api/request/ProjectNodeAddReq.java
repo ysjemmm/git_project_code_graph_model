@@ -16,6 +16,9 @@ import java.util.Date;
 @ApiModel("项目节点新增")
 public class ProjectNodeAddReq extends BaseReq{
 
+    @ApiModelProperty("项目id")
+    private Long projectId;
+
     @ApiModelProperty("名称")
     private String name;
 

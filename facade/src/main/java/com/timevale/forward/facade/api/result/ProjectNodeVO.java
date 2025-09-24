@@ -32,7 +32,13 @@ public class ProjectNodeVO extends ToString {
     @ApiModelProperty("计划完成时间")
     private Date planDate;
 
+    @ApiModelProperty("计划完成结束时间")
+    private Date planEndDate;
+
     @ApiModelProperty("实际完成时间")
     private Date actualDate;
+
+    @ApiModelProperty("实际完成结束时间")
+    private Date actualEndDate;
 
 }

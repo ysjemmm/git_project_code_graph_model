@@ -5,12 +5,15 @@ import com.timevale.forward.dal.dao.ProductDemandMapper;
 import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.facade.api.client.ProjectService;
 import com.timevale.forward.facade.api.client.UseCasePlatFormCallService;
+import com.timevale.forward.facade.api.request.ProjectNodeAddReq;
 import com.timevale.forward.facade.api.result.ProductLineVO;
 import com.timevale.forward.facade.api.result.ProjectDetailVO;
 import com.timevale.forward.model.enums.PriorityEnum;
+import com.timevale.forward.model.enums.ProjectNodeEnum;
 import com.timevale.forward.service.utils.HttpUtil;
 import com.timevale.forward.service.utils.JsonUtils;
 import com.timevale.forward.service.utils.aop.LogPoint;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.http.UseCaseQueryConfigUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -20,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -274,7 +278,36 @@ public class UseCasePlatFormCallServiceImpl implements UseCasePlatFormCallServic
 
     @Override
     public BaseResult queryCaseOverTime(Map<String, Object> params) {
+        Long projectId = MapUtils.getLong(params, "chanyanProjectId");
+        if (Objects.isNull(projectId)) {
+            throw new BaseBizRuntimeException("产研项目id不能为空");
+        }
         String res = HttpUtil.doGet(queryConfigUtil.queryQueryCaseOverTimeUrl(), params);
+        Map<String, Object> timeMap;
+        try {
+            timeMap = (Map<String, Object>) Optional.of(JsonUtils.fromJson(res, BaseResult.class)).map(BaseResult::getData).get();
+        } catch (Exception e) {
+            throw new BaseBizRuntimeException("获取用例平台用例执行时间信息错误");
+        }
+        if (MapUtils.isNotEmpty(timeMap)) {
+            String actualDate = String.valueOf(timeMap.get("actualDate"));
+            String actualEndDate = String.valueOf(timeMap.get("actualEndDate"));
+            ProjectNodeAddReq projectNodeAddReq = new ProjectNodeAddReq();
+            Date date;
+            Date endDate;
+            try {
+                // 字符串日期转换为日期
+                date = DateUtil.parseToDate(actualDate);
+                endDate = DateUtil.parseToDate(actualEndDate);
+            } catch (Exception e) {
+                throw new BaseBizRuntimeException("获取用例平台用例执行时间信息错误");
+            }
+            projectNodeAddReq.setActualDate(date);
+            projectNodeAddReq.setActualEndDate(endDate);
+            projectNodeAddReq.setProjectId(projectId);
+            projectNodeAddReq.setName(ProjectNodeEnum.TEST_START.getText());
+            projectService.autoCompleteTime(projectNodeAddReq);
+        }
         return JsonUtils.fromJson(res, BaseResult.class);
     }
 

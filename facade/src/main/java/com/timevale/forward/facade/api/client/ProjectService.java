@@ -243,4 +243,10 @@ public interface ProjectService {
      */
     BaseResult<List<ModifyProjectCheckVO>> checkForFinishProject(ProjectModifyReq projectModifyReq);
 
+    /**
+     * 对完成项目做检查
+     * @param projectNodeAddReq 项目发布完成
+     * @return 项目检查结果集合
+     */
+    BaseResult<Boolean> autoCompleteTime(ProjectNodeAddReq projectNodeAddReq);
 }

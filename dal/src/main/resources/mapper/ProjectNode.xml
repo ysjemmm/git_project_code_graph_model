@@ -35,12 +35,12 @@
 
     <update id="updateSubmitTestActualDate">
         update project_node
-        set actual_date=#{actualDate},actual_end_date=#{actualEndDate}
+        set actual_date=#{actualDate}
         where project_id=#{projectId} and name= '提测'
     </update>
 
     <select id="getByName" resultType="com.timevale.forward.dal.entity.ProjectNodeDO">
-        SELECT id, plan_date, actual_date, actual_end_date
+        SELECT id, plan_date, actual_date, actual_end_date, project_id, name
         FROM project_node
         WHERE project_id = #{projectId} AND
               name = #{name}
@@ -48,8 +48,15 @@
 
     <update id="updateActualDateById">
         update project_node
-        set actual_date=#{actualDate},actual_end_date=#{actualEndDate}
+        set actual_date=#{actualDate}
         where id=#{id}
+    </update>
+
+    <update id="updateEndDateByProjectIdAndName">
+        update project_node
+        set actual_date=#{actualDate},actual_end_date=#{actualEndDate}
+        where project_id = #{projectId} AND
+            name = #{name}
     </update>
 
     <select id="selectByCondition" resultType="com.timevale.forward.dal.entity.ProjectNodeDO">
