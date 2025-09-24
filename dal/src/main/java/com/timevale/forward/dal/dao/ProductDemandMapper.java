@@ -46,6 +46,8 @@ public interface ProductDemandMapper {
      */
     List<ProductDemandDO> selectByIdList(@Param("productDemandIdList") Collection<Long> productDemandIdList);
 
+    List<ProductDemandDO> selectList();
+
     /**
      * 选择通过业务需求id
      *

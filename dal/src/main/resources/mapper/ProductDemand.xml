@@ -105,6 +105,13 @@
         </foreach>
     </select>
 
+    <select id="selectList" resultType="com.timevale.forward.dal.entity.ProductDemandDO">
+        select *
+        from product_demand
+        where
+        is_deleted = false and (customer_grade is null or customer_grade = '')
+    </select>
+
     <select id="selectByBizDemandId" resultType="com.timevale.forward.dal.entity.BizDemandLinkProductDemandListDO">
         select pd.id,
                pd.name,
@@ -461,7 +468,7 @@
                     and DATE_FORMAT(a.expect_schedule_time, '%Y-%m') = #{parentCondition.expectScheduleTime}
                 </if>
                 <if test="parentCondition.targetCustomer != null and parentCondition.targetCustomer != ''">
-                    and a.target_customer like concat('%',#{parentCondition.targetCustomer},'%')
+                    and a.target_customer = #{parentCondition.targetCustomer}
                 </if>
                 <if test="parentCondition.customerGrade != null and parentCondition.customerGrade != ''">
                     and a.customer_grade = #{parentCondition.customerGrade}
@@ -599,7 +606,7 @@
                     and DATE_FORMAT(a.create_date, '%Y-%m') = #{parentCondition.expectScheduleTime}
                 </if>
                 <if test="parentCondition.targetCustomer != null and parentCondition.targetCustomer != ''">
-                    and a.target_customer like concat('%',#{parentCondition.targetCustomer},'%')
+                    and a.target_customer = #{parentCondition.targetCustomer}
                 </if>
                 <if test="parentCondition.customerGrade != null and parentCondition.customerGrade != ''">
                     and a.customer_grade = #{parentCondition.customerGrade}
@@ -745,7 +752,7 @@
                     and DATE_FORMAT(a.create_date, '%Y-%m') = #{parentCondition.expectScheduleTime}
                 </if>
                 <if test="parentCondition.targetCustomer != null and parentCondition.targetCustomer != ''">
-                    and a.target_customer like concat('%',#{parentCondition.targetCustomer},'%')
+                    and a.target_customer = #{parentCondition.targetCustomer}
                 </if>
                 <if test="parentCondition.customerGrade != null and parentCondition.customerGrade != ''">
                     and a.customer_grade = #{parentCondition.customerGrade}
@@ -889,7 +896,7 @@
                     and DATE_FORMAT(a.create_date, '%Y-%m') = #{parentCondition.expectScheduleTime}
                 </if>
                 <if test="parentCondition.targetCustomer != null and parentCondition.targetCustomer != ''">
-                    and a.target_customer like concat('%',#{parentCondition.targetCustomer},'%')
+                    and a.target_customer = #{parentCondition.targetCustomer}
                 </if>
                 <if test="parentCondition.customerGrade != null and parentCondition.customerGrade != ''">
                     and a.customer_grade = #{parentCondition.customerGrade}

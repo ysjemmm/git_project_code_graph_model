@@ -70,5 +70,6 @@ public interface BizDomainGroupMapper {
     List<BizDomainGroupDO> selectByCondition(BizDomainGroupCondition condition);
 
     int countProductLine(@Param("bizDomainGroupId") Long bizDomainGroupId, @Param("ownerId") String ownerId);
+    int countBizGroup(@Param("bizDomainGroupId") Long bizDomainGroupId, @Param("ownerId") String ownerId);
 
 }

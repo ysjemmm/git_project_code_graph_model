@@ -378,7 +378,7 @@
     </select>
 
     <select id="linkBizDemandList" resultType="com.timevale.forward.dal.entity.BizDemandListDO">
-        select a.id, a.name,a.priority,a.dept_id,a.modify_date,a.create_man,a.create_man_id, a.submit_man, a.submit_man_id
+        select a.id, a.name,a.priority,a.dept_id,a.modify_date,a.create_man,a.create_man_id, a.submit_man, a.submit_man_id, a.target_customer, a.customer_grade
         from biz_demand a
         left join product_biz_demand b on a.id=b.biz_demand_id and b.is_deleted=false
         where b.product_demand_id = #{productDemandId} and   a.is_deleted = false
@@ -702,8 +702,11 @@
                 and bd.is_deleted = false
             </if>
             <if test="parentCondition != null">
-                <if test="parentCondition.targetCustomer != null">
-                    and bd.target_customer like concat('%',#{targetCustomer},'%')
+                <if test="parentCondition.targetCustomer != null and parentCondition.targetCustomer != ''">
+                    and bd.target_customer = #{parentCondition.targetCustomer}
+                </if>
+                <if test="parentCondition.customerGrade != null and parentCondition.customerGrade!=''">
+                    and bd.customer_grade = #{parentCondition.customerGrade}
                 </if>
                 <if test="parentCondition.priority!=null">
                     and bd.priority = #{parentCondition.priority}
@@ -879,6 +882,9 @@
             <if test="parentCondition != null">
                 <if test="parentCondition.targetCustomer !=null and parentCondition.targetCustomer!=''">
                     and bd.target_customer = #{parentCondition.targetCustomer}
+                </if>
+                <if test="parentCondition.customerGrade != null and parentCondition.customerGrade!=''">
+                    and bd.customer_grade = #{parentCondition.customerGrade}
                 </if>
                 <if test="parentCondition.priority!=null">
                     and bd.priority = #{parentCondition.priority}
@@ -1062,8 +1068,11 @@
                 and bd.is_deleted = false
             </if>
             <if test="parentCondition != null">
-                <if test="parentCondition.targetCustomer != null">
-                    and bd.target_customer like concat('%',#{targetCustomer},'%')
+                <if test="parentCondition.targetCustomer != null and parentCondition.targetCustomer != ''">
+                    and bd.target_customer = #{parentCondition.targetCustomer}
+                </if>
+                <if test="parentCondition.customerGrade != null and parentCondition.customerGrade!=''">
+                    and bd.customer_grade = #{parentCondition.customerGrade}
                 </if>
                 <if test="parentCondition.priority!=null">
                     and bd.priority = #{parentCondition.priority}
@@ -1234,8 +1243,11 @@
                 and bd.is_deleted = false
             </if>
             <if test="parentCondition != null">
-                <if test="parentCondition.targetCustomer != null">
-                    and bd.target_customer like concat('%',#{targetCustomer},'%')
+                <if test="parentCondition.targetCustomer != null and parentCondition.targetCustomer != ''">
+                    and bd.target_customer = #{parentCondition.targetCustomer}
+                </if>
+                <if test="parentCondition.customerGrade != null and parentCondition.customerGrade!=''">
+                    and bd.customer_grade = #{parentCondition.customerGrade}
                 </if>
                 <if test="parentCondition.priority!=null">
                     and bd.priority = #{parentCondition.priority}
