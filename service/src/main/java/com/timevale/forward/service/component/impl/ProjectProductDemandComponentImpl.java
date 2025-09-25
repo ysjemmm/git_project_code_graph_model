@@ -16,7 +16,6 @@ import com.timevale.forward.dal.entity.ProductCustomDemandDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectProductDemandDO;
-import com.timevale.forward.facade.api.client.UseCasePlatFormCallService;
 import com.timevale.forward.facade.api.request.ProjectProductDemandLinkReq;
 import com.timevale.forward.model.enums.ButtonActionEnum;
 import com.timevale.forward.model.enums.LinkOrUnLinkEnum;
@@ -107,9 +106,6 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
     @Resource
     private TaskProductDemandComponent taskProductDemandComponent;
 
-    @Resource
-    private UseCasePlatFormCallService useCasePlatFormCallService;
-
     @Override
     public void linkOrUnLinkProductDemand(ProjectProductDemandLinkReq productDemandLinkReq) {
         ProjectDO projectDO = projectMapper.get(productDemandLinkReq.getProjectId());
@@ -168,12 +164,6 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
 
             // 取消产品需求和任务的关联
             productDemandIds.forEach(a -> taskProductDemandComponent.update(null, a));
-
-            // 删除需求和用例关系
-            Map<String, Object> deleteDemandMap = new HashMap<>(2);
-            deleteDemandMap.put("chanyanProjectId", projectDO.getId());
-            deleteDemandMap.put("demandIds", productDemandIds);
-            useCasePlatFormCallService.deleteDemandCaseList(deleteDemandMap);
         }
     }
 
