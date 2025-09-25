@@ -5,9 +5,9 @@
     <!-- 新增一条视图 -->
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.ViewsDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
         INSERT INTO views
-        (name, `type`, owner, owner_id, create_man_id, create_man)
+        (name, `type`, owner, owner_id, create_man_id, create_man, group_field, filter_condition)
         VALUES
-        (#{name}, #{type}, #{owner}, #{ownerId}, #{createManId}, #{createMan})
+        (#{name}, #{type}, #{owner}, #{ownerId}, #{createManId}, #{createMan}, #{groupField}, #{filterCondition})
     </insert>
 
     <!-- 根据主键id获取视图 -->
