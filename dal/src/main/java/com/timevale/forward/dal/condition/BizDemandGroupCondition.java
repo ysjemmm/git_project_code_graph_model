@@ -47,4 +47,6 @@ public class BizDemandGroupCondition extends QueryBase {
     private List<Long> labelCategoryIds;
 
     private String targetCustomer;
+
+    private String customerGrade;
 }
