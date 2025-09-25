@@ -1694,7 +1694,13 @@ public class ProjectServiceImpl implements ProjectService {
         }
         List<ProjectNodeDO> projectNodeDOS = projectNodeMapper.get(projectId);
         ProjectNodeDO projectNodeDO = projectNodeMapper.getByName(projectId, projectNodeAddReq.getName());
-        if (Objects.nonNull(projectNodeDO) && ProjectNodeEnum.PUBLISH_OFFICIAL.getText().equals(projectNodeDO.getName())) {
+        if (Objects.isNull(projectNodeDO)) {
+            throw new BaseBizRuntimeException("节点不存在");
+        }
+        if (projectNodeDO.getPlanDate() == null) {
+            throw new BaseBizRuntimeException("请先填写节点计划时间");
+        }
+        if (ProjectNodeEnum.PUBLISH_OFFICIAL.getText().equals(projectNodeDO.getName())) {
             if (ProjectStatusEnum.SUSPEND.getCode().equals(projectDO.getStatus())) {
                 throw new BaseBizRuntimeException("项目状态为暂停时，不能填写发布正式的实际时间。");
             }
@@ -1704,10 +1710,10 @@ public class ProjectServiceImpl implements ProjectService {
                 throw new BaseBizRuntimeException("项目节点的实际时间已全部填入，状态将变为已发布，已发布的项目不可再编辑。");
             }
         }
-        if (Objects.nonNull(projectNodeDO)) {
-            projectNodeMapper.updateEndDateByProjectIdAndName(projectNodeDO.getProjectId(), projectNodeDO.getName(),
-                    projectNodeAddReq.getActualDate(), projectNodeAddReq.getActualEndDate());
-        }
+
+        projectNodeMapper.updateEndDateByProjectIdAndName(projectNodeDO.getProjectId(), projectNodeDO.getName(),
+                projectNodeAddReq.getActualDate(), projectNodeAddReq.getActualEndDate());
+
         return BaseResult.success(true);
     }
 
