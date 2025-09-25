@@ -2,6 +2,7 @@ package com.timevale.forward.service.impl;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.client.DevopsTrainService;
+import com.timevale.forward.facade.api.client.DevopsTrainTestCaseService;
 import com.timevale.forward.facade.api.client.UseCasePlatFormCallService;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.mandarin.base.enums.BaseResultCodeEnum;
@@ -22,8 +23,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @LogPoint
 @RestService
-public class DevopsTrainTestCaseServiceImpl {
-
+public class DevopsTrainTestCaseServiceImpl  implements DevopsTrainTestCaseService {
     @Resource
     private DevopsTrainService devopsTrainService;
 
