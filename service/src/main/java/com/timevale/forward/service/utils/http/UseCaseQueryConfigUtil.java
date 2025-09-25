@@ -45,7 +45,8 @@ public class UseCaseQueryConfigUtil {
             "\t\"queryQueryCaseOverTimeUrl\": \"/tmsdefender/queryCaseOverTime\",\n" +
             "\t\"caseImageUploadUrl\": \"/tmsdefender/imageUpload\",\n" +
             "\t\"caseDocumentDeleteUrl\": \"/tmsdefender/caseDocumentDelete\",\n" +
-            "\t\"addCaseUrl\": \"/tmsdefender/addCase\"\n" +
+            "\t\"addCaseUrl\": \"/tmsdefender/addCase\",\n" +
+            "\t\"deleteDemandCaseListUrl\": \"/tmsdefender/deleteDemandCaseList\"\n" +
             "}";
 
     public UseCaseQueryConfig getConfigMap() {
@@ -294,6 +295,16 @@ public class UseCaseQueryConfigUtil {
         UseCaseQueryConfig config = getConfigMap();
         String host = config.getUseCaseHost();
         String res = config.getAddCaseUrl();
+        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
+            return host + res;
+        }
+        return null;
+    }
+
+    public String deleteDemandCaseListUrl() {
+        UseCaseQueryConfig config = getConfigMap();
+        String host = config.getUseCaseHost();
+        String res = config.getDeleteDemandCaseListUrl();
         if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
             return host + res;
         }

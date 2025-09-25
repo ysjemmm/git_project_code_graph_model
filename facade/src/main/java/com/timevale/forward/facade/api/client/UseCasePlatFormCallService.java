@@ -56,4 +56,6 @@ public interface UseCasePlatFormCallService {
     BaseResult caseDocumentDelete(Map<String, Object> params);
 
     BaseResult addCase(Map<String, Object> params);
+
+    BaseResult deleteDemandCaseList(Map<String, Object> params);
 }

@@ -61,4 +61,6 @@ public class UseCaseQueryConfig implements Serializable {
     private String caseDocumentDeleteUrl;
 
     private String addCaseUrl;
+
+    private String deleteDemandCaseListUrl;
 }

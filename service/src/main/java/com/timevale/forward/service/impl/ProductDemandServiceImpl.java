@@ -40,7 +40,6 @@ import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectProductDemandDO;
 import com.timevale.forward.dal.entity.TrackEventDO;
 import com.timevale.forward.facade.api.client.ProductDemandService;
-import com.timevale.forward.facade.api.client.ProjectService;
 import com.timevale.forward.facade.api.query.ProductBizDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductCustomDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandLinkBizDemandQueryList;
@@ -214,9 +213,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Resource
     private LabelComponent labelComponent;
-
-    @Resource
-    private ProjectService projectService;
 
     @Resource
     private BizLabelMapper bizLabelMapper;

@@ -1,12 +1,35 @@
 package com.timevale.forward.service.component.impl;
 
-import com.timevale.forward.dal.dao.*;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.dao.BizChangeLogMapper;
+import com.timevale.forward.dal.dao.BizDemandMapper;
+import com.timevale.forward.dal.dao.CustomDemandMapper;
+import com.timevale.forward.dal.dao.ProductBizDemandMapper;
+import com.timevale.forward.dal.dao.ProductCustomDemandMapper;
+import com.timevale.forward.dal.dao.ProductDemandMapper;
+import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.dao.ProjectProductDemandMapper;
+import com.timevale.forward.dal.entity.BizChangeLogDO;
+import com.timevale.forward.dal.entity.BizDemandDO;
+import com.timevale.forward.dal.entity.CustomDemandDO;
+import com.timevale.forward.dal.entity.ProductBizDemandDO;
+import com.timevale.forward.dal.entity.ProductCustomDemandDO;
+import com.timevale.forward.dal.entity.ProductDemandDO;
+import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.entity.ProjectProductDemandDO;
+import com.timevale.forward.facade.api.client.UseCasePlatFormCallService;
 import com.timevale.forward.facade.api.request.ProjectProductDemandLinkReq;
 import com.timevale.forward.model.enums.ButtonActionEnum;
 import com.timevale.forward.model.enums.LinkOrUnLinkEnum;
 import com.timevale.forward.model.enums.ProductDemandStatusEnum;
-import com.timevale.forward.service.component.*;
+import com.timevale.forward.service.component.BizDemandComponent;
+import com.timevale.forward.service.component.BizDemandLogComponent;
+import com.timevale.forward.service.component.CustomDemandComponent;
+import com.timevale.forward.service.component.CustomDemandLogComponent;
+import com.timevale.forward.service.component.ProductDemandComponent;
+import com.timevale.forward.service.component.ProductDemandLogComponent;
+import com.timevale.forward.service.component.ProjectLogComponent;
+import com.timevale.forward.service.component.ProjectProductDemandComponent;
+import com.timevale.forward.service.component.TaskProductDemandComponent;
 import com.timevale.forward.service.utils.date.DateStyle;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -15,7 +38,14 @@ import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -77,6 +107,9 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
     @Resource
     private TaskProductDemandComponent taskProductDemandComponent;
 
+    @Resource
+    private UseCasePlatFormCallService useCasePlatFormCallService;
+
     @Override
     public void linkOrUnLinkProductDemand(ProjectProductDemandLinkReq productDemandLinkReq) {
         ProjectDO projectDO = projectMapper.get(productDemandLinkReq.getProjectId());
@@ -135,6 +168,12 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
 
             // 取消产品需求和任务的关联
             productDemandIds.forEach(a -> taskProductDemandComponent.update(null, a));
+
+            // 删除需求和用例关系
+            Map<String, Object> deleteDemandMap = new HashMap<>(2);
+            deleteDemandMap.put("chanyanProjectId", projectDO.getId());
+            deleteDemandMap.put("demandIds", productDemandIds);
+            useCasePlatFormCallService.deleteDemandCaseList(deleteDemandMap);
         }
     }
 
