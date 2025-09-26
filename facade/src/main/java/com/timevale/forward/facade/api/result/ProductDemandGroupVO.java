@@ -94,6 +94,9 @@ public class ProductDemandGroupVO extends ToString {
     @ApiModelProperty("功能迁移评估（人天）")
     private BigDecimal totalTransferTime;
 
+    @ApiModelProperty("产品需求评估（人天）")
+    private BigDecimal totalProductTime;
+
     @ApiModelProperty("总资源评估（人天）")
     private BigDecimal totalTotalTime;
 } 

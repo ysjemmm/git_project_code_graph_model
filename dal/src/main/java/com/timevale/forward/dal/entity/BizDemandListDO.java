@@ -120,6 +120,11 @@ public class BizDemandListDO extends BaseDO {
     private BigDecimal transferTime;
 
     /**
+     * 产品资源评估（人天）
+     */
+    private BigDecimal productTime;
+
+    /**
      * 总资源评估（人天）
      */
     private BigDecimal totalTime;

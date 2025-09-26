@@ -33,6 +33,7 @@
             <if test="backTime != null">back_time,</if>
             <if test="qaTime != null">qa_time,</if>
             <if test="transferTime != null">transfer_time,</if>
+            <if test="productTime != null">product_time,</if>
             <if test="totalTime != null">total_time,</if>
             <if test="srExpert != null">sr_expert,</if>
             <if test="srExpertId != null">sr_expert_id,</if>
@@ -70,6 +71,7 @@
             <if test="backTime != null">#{backTime},</if>
             <if test="qaTime != null">#{qaTime},</if>
             <if test="transferTime != null">#{transferTime},</if>
+            <if test="productTime != null">#{productTime},</if>
             <if test="totalTime != null">#{totalTime},</if>
             <if test="srExpert != null">#{srExpert},</if>
             <if test="srExpertId != null">#{srExpertId},</if>
@@ -211,6 +213,7 @@
             front_time = #{frontTime},
             qa_time = #{qaTime},
             transfer_time = #{transferTime},
+            product_time = #{productTime},
             total_time = #{totalTime},
             modify_man_id = #{modifyManId},
             modify_man = #{modifyMan},

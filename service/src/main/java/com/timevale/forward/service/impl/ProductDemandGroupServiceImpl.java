@@ -229,6 +229,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
             BigDecimal totalQaTime = BigDecimal.ZERO;
             BigDecimal totalTotalTime = BigDecimal.ZERO;
             BigDecimal totalTransferTime = BigDecimal.ZERO;
+            BigDecimal totalProductTime = BigDecimal.ZERO;
 
             for (ProductDemandGroupItemVO item : productDemandGroupItemVOList) {
                 totalUedTime = totalUedTime.add(item.getUedTime() != null ? item.getUedTime() : BigDecimal.ZERO);
@@ -237,6 +238,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
                 totalQaTime = totalQaTime.add(item.getQaTime() != null ? item.getQaTime() : BigDecimal.ZERO);
                 totalTotalTime = totalTotalTime.add(item.getTotalTime() != null ? item.getTotalTime() : BigDecimal.ZERO);
                 totalTransferTime = totalTransferTime.add(item.getTransferTime() != null ? item.getTransferTime() : BigDecimal.ZERO);
+                totalProductTime = totalProductTime.add(item.getProductTime() != null ? item.getProductTime() : BigDecimal.ZERO);
             }
 
             productDemandGroupVO.setTotalUedTime(totalUedTime);
@@ -244,6 +246,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
             productDemandGroupVO.setTotalFrontTime(totalFrontTime);
             productDemandGroupVO.setTotalQaTime(totalQaTime);
             productDemandGroupVO.setTotalTransferTime(totalTransferTime);
+            productDemandGroupVO.setTotalProductTime(totalProductTime);
             productDemandGroupVO.setTotalTotalTime(totalTotalTime);
         }
         // 返回分页数据
