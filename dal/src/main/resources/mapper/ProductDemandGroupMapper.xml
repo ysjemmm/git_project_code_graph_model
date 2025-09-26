@@ -64,7 +64,7 @@
                             </foreach>
                         </if>
                         <if test="ownerIds!=null and ownerIds.size()>0">
-                            and pl.owner_id in
+                            and pd.owner_id in
                             <foreach collection="ownerIds" item="item" separator="," open="(" close=")">
                                 #{item}
                             </foreach>
