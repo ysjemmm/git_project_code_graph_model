@@ -23,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -151,7 +152,7 @@ public class UseCasePlatFormCallServiceImpl implements UseCasePlatFormCallServic
     public BaseResult queryTurnTreeList(Map<String, Object> params) {
         String res = HttpUtil.doGet(queryConfigUtil.getQueryTurnTreeListUrl(), params);
         if (StringUtils.isBlank(res)) {
-            return BaseResult.success();
+            return BaseResult.success(new ArrayList<>());
         }
         // 从字符串res中获取到"demandId": null的集合，然后获取到demandId不为空的集合，然后返回
         BaseResult baseResult = JsonUtils.fromJson(res, BaseResult.class);
