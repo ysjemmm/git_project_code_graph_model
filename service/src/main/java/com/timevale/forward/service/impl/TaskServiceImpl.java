@@ -269,10 +269,9 @@ public class TaskServiceImpl implements TaskService {
             if (taskDO.getPlanUseTime() != null && taskDO.getPlanUseTime().compareTo(BigDecimal.ZERO) < 0) {
                 throw new BaseBizRuntimeException("任务计划耗时不能为负数");
             }
-            ElapsedTimeQueryReq elapsedTimeQueryReq = new ElapsedTimeQueryReq();
-            elapsedTimeQueryReq.setStartTime(taskDO.getPlanStartDate());
-            elapsedTimeQueryReq.setEndTime(taskDO.getPlanEndDate());
-            BigDecimal multiply = Optional.of(getElapsedTime(elapsedTimeQueryReq)).map(BaseResult::getData).orElse(BigDecimal.ZERO).multiply(BigDecimal.valueOf(3));
+            // 相差天数+1
+            int daysDiff = DateUtil.getIntervalDays(taskDO.getPlanStartDate(), taskDO.getPlanEndDate()) + 1;
+            BigDecimal multiply = new BigDecimal(daysDiff).multiply(BigDecimal.valueOf(24));
             if (taskDO.getPlanUseTime().compareTo(multiply) > 0) {
                 throw new BaseBizRuntimeException(taskDO.getName() + "任务计划耗时每天不能超过24小时");
             }
