@@ -85,7 +85,7 @@ public class DevopsTrainTestCaseServiceImpl  implements DevopsTrainTestCaseServi
                     if (projectId != null) {
                         projectIdSet.add(projectId);
                     }
-                } else if ("turn".equals(type)) {
+                } else {
                     turns.add(item);
                 }
             }
