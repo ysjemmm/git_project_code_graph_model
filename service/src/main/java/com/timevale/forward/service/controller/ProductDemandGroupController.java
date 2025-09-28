@@ -30,6 +30,12 @@ public class ProductDemandGroupController {
     @Resource
     private ProductDemandGroupService productDemandGroupService;
 
+    @ApiOperation("产品需求组内新增")
+    @PostMapping("/addDemand")
+    public BusinessResult<Boolean> addDemand(@RequestBody @Valid ProductDemandGroupInnerAddReq productDemandGroupInnerAddReq) {
+        return ResultUtils.result(productDemandGroupService.addDemand(productDemandGroupInnerAddReq));
+    }
+
     @ApiOperation("查询待排序的产品需求")
     @PostMapping("/listProductDemandBacklog")
     public BusinessResult<PageQueryResult<ProductDemandVO>> listProductDemandBacklog(@RequestBody @Valid ProductDemandGroupQueryList productDemandGroupQueryList) {

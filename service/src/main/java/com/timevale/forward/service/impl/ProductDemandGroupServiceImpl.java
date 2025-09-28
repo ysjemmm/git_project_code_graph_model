@@ -6,12 +6,37 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProductDemandGroupListCondition;
-import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.dao.BizDomainGroupMapper;
+import com.timevale.forward.dal.dao.BizDomainGroupRelationMapper;
+import com.timevale.forward.dal.dao.BizLabelMapper;
+import com.timevale.forward.dal.dao.ProductDemandGroupItemMapper;
+import com.timevale.forward.dal.dao.ProductDemandGroupMapper;
+import com.timevale.forward.dal.dao.ProductDemandMapper;
+import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.dao.ProjectProductDemandMapper;
 import com.timevale.forward.dal.dto.ProductDemandMoveDTO;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.entity.BizDomainGroupRelationDO;
+import com.timevale.forward.dal.entity.BizLabelDO;
+import com.timevale.forward.dal.entity.ProductDemandDO;
+import com.timevale.forward.dal.entity.ProductDemandGroupDO;
+import com.timevale.forward.dal.entity.ProductDemandGroupItemDO;
+import com.timevale.forward.dal.entity.ProductDemandGroupItemListDO;
+import com.timevale.forward.dal.entity.ProductDemandListDO;
+import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.entity.ProjectProductDemandDO;
 import com.timevale.forward.facade.api.client.ProductDemandGroupService;
+import com.timevale.forward.facade.api.client.ProductDemandService;
 import com.timevale.forward.facade.api.query.ProductDemandGroupQueryList;
-import com.timevale.forward.facade.api.request.*;
+import com.timevale.forward.facade.api.request.ProductDemandAddReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupAddReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupInnerAddReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupItemMoveReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupModifyReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupMoveReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupProjectLinkReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupTransferReq;
+import com.timevale.forward.facade.api.request.ProjectProductDemandLinkReq;
 import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
 import com.timevale.forward.facade.api.result.ProductDemandGroupItemVO;
 import com.timevale.forward.facade.api.result.ProductDemandGroupVO;
@@ -28,7 +53,6 @@ import com.timevale.forward.service.component.BizLabelComponent;
 import com.timevale.forward.service.component.LabelComponent;
 import com.timevale.forward.service.component.ProductDemandGroupComponent;
 import com.timevale.forward.service.component.ProductDemandGroupItemComponent;
-import com.timevale.forward.service.component.ProductLineComponent;
 import com.timevale.forward.service.component.ProjectProductDemandComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProductDemandCopier;
@@ -47,13 +71,19 @@ import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.collections.CollectionUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.util.Pair;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
@@ -92,7 +122,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
     private ProductDemandGroupItemMapper productDemandGroupItemMapper;
 
     @Resource
-    private ProductLineComponent productLineComponent;
+    private ProductDemandService productDemandService;
 
     @Resource
     private GroupDuplicateUtil groupDuplicateUtil;
@@ -102,6 +132,9 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
 
     @Resource
     private ProjectProductDemandMapper projectProductDemandMapper;
+
+    @Resource
+    private ProductDemandMapper productDemandMapper;
 
     @Resource
     private ProjectProductDemandComponent projectProductDemandComponent;
@@ -603,6 +636,24 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         groupDO.setBizDomainGroupId(productDemandGroupTransferReq.getBizDomainGroupId());
         groupDO.setPosition(PositionUtil.generate(productDemandGroupTransferReq.getBizDomainGroupId().toString(), System.currentTimeMillis()));
         productDemandGroupMapper.update(groupDO);
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> addDemand(ProductDemandGroupInnerAddReq productDemandGroupInnerAddReq) {
+        ProductDemandAddReq productDemandAddReq = new ProductDemandAddReq();
+        BeanUtils.copyProperties(productDemandGroupInnerAddReq, productDemandAddReq);
+        productDemandService.add(productDemandAddReq);
+        // 根据名称获取需求
+        ProductDemandDO productDemandDO = productDemandMapper.getByName(productDemandAddReq.getName());
+        AssertUtil.checkState(productDemandDO != null, "需求不存在");
+
+        ProductDemandGroupItemMoveReq productDemandGroupItemMoveReq = new ProductDemandGroupItemMoveReq();
+        BeanUtils.copyProperties(productDemandGroupInnerAddReq, productDemandGroupItemMoveReq);
+        productDemandGroupItemMoveReq.setMode(ProductDemandGroupMoveModeEnum.MOVE_IN.getCode());
+        productDemandGroupItemMoveReq.setId(productDemandDO.getId());
+        productDemandGroupItemMoveReq.setPrevId(null);
+        moveProductDemand(productDemandGroupItemMoveReq);
         return BaseResult.success(true);
     }
 }

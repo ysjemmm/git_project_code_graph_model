@@ -3,7 +3,14 @@ package com.timevale.forward.facade.api.client;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.ProductDemandGroupQueryList;
-import com.timevale.forward.facade.api.request.*;
+import com.timevale.forward.facade.api.request.ProductDemandGroupAddReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupInnerAddReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupItemMoveReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupModifyReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupMoveReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupProjectLinkReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupTransferReq;
 import com.timevale.forward.facade.api.result.ProductDemandGroupVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.mandarin.common.annotation.RestClient;
@@ -90,4 +97,5 @@ public interface ProductDemandGroupService {
     BaseResult<Boolean> transferProductDemandGroup(ProductDemandGroupTransferReq productDemandGroupTransferReq);
 
 
-} 
+    BaseResult<Boolean> addDemand(ProductDemandGroupInnerAddReq productDemandGroupInnerAddReq);
+}
