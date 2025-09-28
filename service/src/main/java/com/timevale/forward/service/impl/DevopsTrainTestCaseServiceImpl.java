@@ -30,6 +30,7 @@ public class DevopsTrainTestCaseServiceImpl  implements DevopsTrainTestCaseServi
     @Resource
     private UseCasePlatFormCallService useCasePlatFormCallService;
 
+
     /**
      * 根据发布火车ID获取测试用例版本和轮次级联信息
      *
@@ -59,11 +60,70 @@ public class DevopsTrainTestCaseServiceImpl  implements DevopsTrainTestCaseServi
 
             log.info("发布火车关联的产研项目ID列表, trainId: {}, projectIds: {}", trainId, projectIds);
 
-            // 3. 获取测试用例版本列表
+            // 3. 获取测试用例版本列表（内部已包含循环处理逻辑）
             List<Map<String, Object>> versionList = getVersionListByProjectIds(projectIds);
 
-            // 4. 构建版本-轮次级联数据
-            List<Map<String, Object>> cascadeData = buildVersionTurnCascadeData(versionList, projectIds);
+            // 检查是否收集到版本数据
+            if (CollectionUtils.isEmpty(versionList)) {
+                log.info("所有项目均未找到版本信息, trainId: {}", trainId);
+                return BaseResult.success(createEmptyResult());
+            }
+
+            // 4. 直接构建级联数据结构
+            List<Map<String, Object>> cascadeData = new ArrayList<>();
+
+            // 第一个for循环：找出所有不重复的projectId
+            Set<Long> projectIdSet = new HashSet<>();
+            List<Map<String, Object>> versions = new ArrayList<>();
+            List<Map<String, Object>> turns = new ArrayList<>();
+
+            for (Map<String, Object> item : versionList) {
+                String type = (String) item.get("type");
+                if ("version".equals(type)) {
+                    versions.add(item);
+                    Long projectId = (Long) item.get("chanyanProjectId");
+                    if (projectId != null) {
+                        projectIdSet.add(projectId);
+                    }
+                } else if ("turn".equals(type)) {
+                    turns.add(item);
+                }
+            }
+
+            // 第二个for循环：为每个项目构建数据
+            for (Long projectId : projectIdSet) {
+                // 找到该项目下的所有版本
+                List<Map<String, Object>> projectVersions = new ArrayList<>();
+                for (Map<String, Object> version : versions) {
+                    Long versionProjectId = (Long) version.get("chanyanProjectId");
+                    if (projectId.equals(versionProjectId)) {
+                        projectVersions.add(version);
+                    }
+                }
+
+                // 第三个for循环：为每个版本找到对应的轮次
+                for (Map<String, Object> version : projectVersions) {
+                    Map<String, Object> versionNode = new HashMap<>();
+                    versionNode.put("id", version.get("id"));
+                    versionNode.put("name", version.get("name"));
+                    versionNode.put("type", "version");
+                    versionNode.put("chanyanProjectId", projectId);
+
+                    // 找该版本下的轮次
+                    List<Map<String, Object>> versionTurns = new ArrayList<>();
+                    Object versionId = version.get("id");
+
+                    for (Map<String, Object> turn : turns) {
+                        Object turnVersionId = turn.get("versionId");
+                        if (versionId != null && versionId.equals(turnVersionId)) {
+                            versionTurns.add(turn);
+                        }
+                    }
+
+                    versionNode.put("children", versionTurns);
+                    cascadeData.add(versionNode);
+                }
+            }
 
             // 5. 组装返回结果
             Map<String, Object> result = new HashMap<>();
@@ -81,6 +141,8 @@ public class DevopsTrainTestCaseServiceImpl  implements DevopsTrainTestCaseServi
         }
     }
 
+
+
     /**
      * 根据产研项目ID列表获取版本列表
      *
@@ -91,90 +153,57 @@ public class DevopsTrainTestCaseServiceImpl  implements DevopsTrainTestCaseServi
         List<Map<String, Object>> allVersions = new ArrayList<>();
 
         for (Long projectId : projectIds) {
-            try {
-                Map<String, Object> params = new HashMap<>();
-                params.put("chanyanProjectId", projectId);
-                params.put("pageIndex", 1);
-                params.put("pageSize", 1000); // 获取足够多的数据
+            Map<String, Object> params = new HashMap<>();
+            params.put("chanyanProjectId", projectId);
+            params.put("pageIndex", 1);
+            params.put("pageSize", 1000); // 获取足够多的数据
 
-                BaseResult versionResult = useCasePlatFormCallService.queryVersionList(params);
-                if (versionResult.ifSuccess() && versionResult.getData() != null) {
-                    Map<String, Object> data = (Map<String, Object>) versionResult.getData();
-                    List<Map<String, Object>> versions = (List<Map<String, Object>>) data.get("tmsVersionVOs");
+            BaseResult versionResult = useCasePlatFormCallService.queryVersionList(params);
+            if (versionResult.ifSuccess() && versionResult.getData() != null) {
+                Map<String, Object> data = (Map<String, Object>) versionResult.getData();
+                List<Map<String, Object>> versions = (List<Map<String, Object>>) data.get("tmsVersionVOs");
 
-                    if (CollectionUtils.isNotEmpty(versions)) {
-                        // 为每个版本添加项目ID信息
-                        versions.forEach(version -> version.put("chanyanProjectId", projectId));
-                        allVersions.addAll(versions);
+                if (CollectionUtils.isNotEmpty(versions)) {
+                    for (Map<String, Object> version : versions) {
+                        // 设置版本基本信息
+                        Map<String, Object> versionNode = new HashMap<>();
+                        versionNode.put("chanyanProjectId", projectId);
+                        versionNode.put("id", version.get("id"));
+                        versionNode.put("name", version.get("versionName")); // 根据实际字段调整
+                        versionNode.put("type", "version");
 
-                        log.debug("获取项目版本列表成功, projectId: {}, versionCount: {}", projectId, versions.size());
+                        // 添加版本节点到结果中
+                        allVersions.add(versionNode);
+
+                        // 获取并添加该版本下的轮次信息
+                        Object versionIdObj = version.get("id");
+                        if (versionIdObj != null) {
+                            Integer versionId = null;
+                            if (versionIdObj instanceof Integer) {
+                                versionId = (Integer) versionIdObj;
+                            } else if (versionIdObj instanceof Long) {
+                                versionId = ((Long) versionIdObj).intValue();
+                            } else if (versionIdObj instanceof String) {
+                                try {
+                                    versionId = Integer.valueOf((String) versionIdObj);
+                                } catch (NumberFormatException e) {
+                                    log.warn("无法解析版本ID: {}", versionIdObj);
+                                    continue;
+                                }
+                            }
+
+                            if (versionId != null) {
+                                List<Map<String, Object>> turns = buildTurnNodes(versionId);
+                                if (CollectionUtils.isNotEmpty(turns)) {
+                                    allVersions.addAll(turns);
+                                }
+                            }
+                        }
                     }
-                } else {
-                    log.warn("获取项目版本列表失败, projectId: {}, error: {}", projectId,
-                            versionResult != null ? versionResult.getMessage() : "未知错误");
                 }
-            } catch (Exception e) {
-                log.error("获取项目版本列表异常, projectId: {}", projectId, e);
             }
         }
-
-        // 对版本列表进行去重和排序
-        return allVersions.stream()
-                .collect(Collectors.toMap(
-                        version -> version.get("id") + "_" + version.get("chanyanProjectId"), // 使用版本ID+项目ID作为key去重
-                        version -> version,
-                        (existing, replacement) -> existing // 保留第一个
-                ))
-                .values()
-                .stream()
-                .sorted((v1, v2) -> {
-                    // 按项目ID排序，再按版本创建时间排序
-                    Long projectId1 = (Long) v1.get("chanyanProjectId");
-                    Long projectId2 = (Long) v2.get("chanyanProjectId");
-                    int projectCompare = projectId1.compareTo(projectId2);
-                    if (projectCompare != 0) {
-                        return projectCompare;
-                    }
-                    // 按版本ID倒序排列（新版本在前）
-                    Integer versionId1 = (Integer) v1.get("id");
-                    Integer versionId2 = (Integer) v2.get("id");
-                    return versionId2.compareTo(versionId1);
-                })
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * 构建版本-轮次级联数据
-     *
-     * @param versionList 版本列表
-     * @param projectIds  项目ID列表
-     * @return 版本-轮次级联数据
-     */
-    private List<Map<String, Object>> buildVersionTurnCascadeData(List<Map<String, Object>> versionList, List<Long> projectIds) {
-        List<Map<String, Object>> cascadeData = new ArrayList<>();
-
-        for (Map<String, Object> version : versionList) {
-            try {
-                // 创建级联数据项
-                Map<String, Object> cascadeItem = new HashMap<>(version);
-
-                // 获取版本ID和项目ID
-                Integer versionId = (Integer) version.get("id");
-
-                // 查询该版本对应的轮次列表
-                List<Map<String, Object>> turnList = getTurnListByVersionIdAndProjectId(versionId);
-
-                // 将轮次列表添加到级联数据项中
-                cascadeItem.put("turnList", turnList);
-                cascadeItem.put("turnCount", turnList.size());
-                cascadeData.add(cascadeItem);
-
-            } catch (Exception e) {
-                log.error("构建版本轮次级联数据异常, version: {}", version, e);
-            }
-        }
-
-        return cascadeData;
+        return allVersions;
     }
 
     /**
@@ -183,20 +212,17 @@ public class DevopsTrainTestCaseServiceImpl  implements DevopsTrainTestCaseServi
      * @param versionId  版本ID
      * @return 轮次列表
      */
-    private List<Map<String, Object>> getTurnListByVersionIdAndProjectId(Integer versionId) {
+    private List<Map<String, Object>> buildTurnNodes(Integer versionId) {
         List<Map<String, Object>> turnList = new ArrayList<>();
-
         try {
             Map<String, Object> params = new HashMap<>();
             params.put("versionId", versionId);
             params.put("pageIndex", 1);
             params.put("pageSize", 1000);
-
             BaseResult turnResult = useCasePlatFormCallService.queryTurnList(params);
             if (turnResult.ifSuccess() && turnResult.getData() != null) {
                 Object data = turnResult.getData();
                 List<Map<String, Object>> turns = new ArrayList<>();
-
                 // 处理分页结构的数据
                 if (data instanceof Map) {
                     Map<String, Object> dataMap = (Map<String, Object>) data;
@@ -207,7 +233,6 @@ public class DevopsTrainTestCaseServiceImpl  implements DevopsTrainTestCaseServi
                 } else if (data instanceof List) {
                     turns = (List<Map<String, Object>>) data;
                 }
-
                 turnList = turns;
             } else {
                 log.warn("获取版本轮次列表失败, versionId: {}, error: {}", versionId,
@@ -216,11 +241,10 @@ public class DevopsTrainTestCaseServiceImpl  implements DevopsTrainTestCaseServi
         } catch (Exception e) {
             log.error("获取版本轮次列表异常, versionId: {}, projectId: {}", versionId, e);
         }
-
         return turnList;
     }
 
-     /**
+    /**
      * 创建空结果
      *
      * @return 空结果
