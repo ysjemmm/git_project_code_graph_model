@@ -47,6 +47,15 @@ public interface BizLabelMapper {
     int update(BizLabelDO bizLabelDO);
 
     /**
+     * 删除业务-标签
+     *
+     * @param bizId bizId
+     * @param type type
+     * @return int
+     */
+    int deleteByBizIdAndType(@Param("bizId") Long bizId,@Param("type") Integer type);
+
+    /**
      * 列表
      *
      * @param bizId bizId

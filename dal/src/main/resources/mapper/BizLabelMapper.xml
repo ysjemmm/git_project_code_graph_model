@@ -39,6 +39,14 @@
         </where>
     </update>
 
+    <delete id="deleteByBizIdAndType">
+        delete from biz_label
+        <where>
+            <if test="bizId!=null">and biz_id = #{bizId}</if>
+            <if test="type!=null">and type = #{type}</if>
+        </where>
+    </delete>
+
     <select id="list" resultType="com.timevale.forward.dal.entity.BizLabelDO">
         select id,biz_id,label_id,type,
         is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date

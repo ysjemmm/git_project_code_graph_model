@@ -131,6 +131,8 @@ public class BizLabelServiceImpl implements BizLabelService {
     public BaseResult<Boolean> batchUpdateLabels(BizLabelAddListReq req) {
         List<Long> labelIdList = req.getLabelIdList();
         if (CollectionUtils.isEmpty(labelIdList)) {
+            // 删除
+            bizLabelMapper.deleteByBizIdAndType(req.getBizId(), req.getType());
             return BaseResult.success(true);
         }
 
