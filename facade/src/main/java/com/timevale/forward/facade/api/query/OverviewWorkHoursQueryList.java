@@ -8,10 +8,14 @@ import lombok.Setter;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
 public class OverviewWorkHoursQueryList extends QueryBase {
+
+    @ApiModelProperty("部门id")
+    private Set<String> deptIds;
 
     @ApiModelProperty("项目成员id集合")
     private List<String> memberIds;

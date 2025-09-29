@@ -50,6 +50,7 @@ import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.copy.WorkHoursRecordCopier;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
+import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
@@ -121,6 +122,9 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
 
     @Resource
     private ElapsedTimeClient elapsedTimeClient;
+
+    @Resource
+    private InnerUserPersonClient innerUserPersonClient;
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -814,6 +818,9 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         Map<String, String> createManMap = new HashMap<>();
         List<Long> projectIdList = query.getProjectIds();
         List<String> memberIds = query.getMemberIds();
+
+        CollUtil.emptyIfNull(query.getDeptIds())
+                .forEach(e -> memberIds.addAll(innerUserPersonClient.getByGroupIdNew(e)));
 
         if (CollectionUtils.isNotEmpty(projectIdList)) {
             // 按项目查询人员信息
