@@ -1709,8 +1709,6 @@ public class ProjectServiceImpl implements ProjectService {
             }
             if (projectNodeDOS.stream().filter(a -> !Objects.equals(a.getName(), ProjectNodeEnum.PUBLISH_OFFICIAL.getText())).map(ProjectNodeDO::getActualDate).anyMatch(Objects::isNull)) {
                 throw new BaseBizRuntimeException("请填写完其他节点的实际时间后，再填写发布正式的实际时间。");
-            } else {
-                throw new BaseBizRuntimeException("项目节点的实际时间已全部填入，状态将变为已发布，已发布的项目不可再编辑。");
             }
         }
 
