@@ -207,10 +207,10 @@ public class DevopsTrainServiceImpl implements DevopsTrainService {
             // 7. 构建查询参数（固定分页为第一页）
             Map<String, Object> params = new HashMap<>();
             params.put("ids", trainIds);
-            params.put("page", 1); // 固定第一页
-            params.put("pageSize", trainIds.size()); // 请求全部数据
+            params.put("offset", 1); // 固定第一页
+            params.put("limit", trainIds.size()); // 请求全部数据
 
-            // 8. 调用平台接口获取数据
+            // 8. 调用发布平台接口获取数据
             BaseResult<PageQueryResult<Map<String, Object>>> trainListResult = getTrainList(params);
 
             // 9. 处理平台接口返回结果
