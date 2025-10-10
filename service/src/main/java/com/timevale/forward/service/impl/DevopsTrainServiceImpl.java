@@ -205,7 +205,7 @@ public class DevopsTrainServiceImpl implements DevopsTrainService {
             // 5. 调用远程接口（请求全部匹配的数据，不分页）
             Map<String, Object> params = new HashMap<>();
             params.put("ids", trainIds);
-            params.put("offset", 1);
+            params.put("offset", 0);
             params.put("limit", trainIds.size());
 
             BaseResult<PageQueryResult<Map<String, Object>>> trainListResult = getTrainList(params);
