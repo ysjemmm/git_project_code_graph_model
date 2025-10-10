@@ -250,12 +250,10 @@ public class DevopsTrainServiceImpl implements DevopsTrainService {
 
             PageQueryResult<Map<String, Object>> pageResult = new PageQueryResult<>();
             pageResult.setResultList(sortedTrainList);
-            pageResult.setTotalItems((int) pageInfo.getTotal()); // 使用 PageHelper 的总记录数
 
-            log.info("获取项目批量发布列表成功, projectId={}, page={}, pageSize={}, total={}",
-                    projectId, page, pageSize, pageResult.getTotalItems());
+            // 修改：使用实际返回的数据总数
+            pageResult.setTotalItems(sortedTrainList.size());
             return BaseResult.success(pageResult);
-
         } catch (Exception e) {
             log.error("获取项目批量发布列表失败, projectId={}", projectId, e);
             return BaseResult.fail(BaseResultCodeEnum.SYSTEM_ERROR.getNCode(), "获取列表失败: " + e.getMessage());
