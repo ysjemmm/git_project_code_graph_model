@@ -52,7 +52,7 @@ public class UseCaseQueryConfigUtil {
     public UseCaseQueryConfig getConfigMap() {
         UseCaseQueryConfig useCaseQueryConfig = JsonUtils.fromJson(USE_CASE_QUERY_CONFIG, UseCaseQueryConfig.class);
         if (EnvEnum.PROD.equals(envUtils.getEnv())) {
-            useCaseQueryConfig.setUseCaseHost("http://test-case-platform-backend.testk8s.tsign.cn");
+            useCaseQueryConfig.setUseCaseHost("http://test-case-platform.timevale.cn");
         } else if (EnvEnum.PRE.equals(envUtils.getEnv())) {
             useCaseQueryConfig.setUseCaseHost("http://test-case-platform-backend.smlk8s.esign.cn");
         } else {
