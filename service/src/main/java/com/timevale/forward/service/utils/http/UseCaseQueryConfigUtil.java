@@ -1,13 +1,10 @@
 package com.timevale.forward.service.utils.http;
 
-import com.timevale.crm.sdk.common.constant.enums.EnvEnum;
 import com.timevale.forward.service.config.UseCaseQueryConfig;
-import com.timevale.forward.service.utils.EnvUtils;
 import com.timevale.forward.service.utils.JsonUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.Resource;
 
 /**
  * @auther: yuhua
@@ -17,8 +14,8 @@ import javax.annotation.Resource;
 @Component
 public class UseCaseQueryConfigUtil {
 
-    @Resource
-    private EnvUtils envUtils;
+    @Value("${test.case.url: http://test-case-platform.timevale.cn}")
+    private String testCaseUrl;
 
     public static final String USE_CASE_QUERY_CONFIG = "{\n" +
             "\t\"useCaseHost\": \"http://test-case-platform-backend-testcase-platform-test.projectk8s.tsign.cn\",\n" +
@@ -51,13 +48,7 @@ public class UseCaseQueryConfigUtil {
 
     public UseCaseQueryConfig getConfigMap() {
         UseCaseQueryConfig useCaseQueryConfig = JsonUtils.fromJson(USE_CASE_QUERY_CONFIG, UseCaseQueryConfig.class);
-        if (EnvEnum.PROD.equals(envUtils.getEnv())) {
-            useCaseQueryConfig.setUseCaseHost("http://test-case-platform.timevale.cn");
-        } else if (EnvEnum.PRE.equals(envUtils.getEnv())) {
-            useCaseQueryConfig.setUseCaseHost("http://test-case-platform-backend.smlk8s.esign.cn");
-        } else {
-            useCaseQueryConfig.setUseCaseHost("http://test-case-platform-backend-testcase-platform-test.projectk8s.tsign.cn");
-        }
+        useCaseQueryConfig.setUseCaseHost(testCaseUrl);
         return useCaseQueryConfig;
     }
 
