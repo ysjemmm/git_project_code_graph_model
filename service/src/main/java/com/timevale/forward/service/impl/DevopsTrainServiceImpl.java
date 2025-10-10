@@ -194,12 +194,8 @@ public class DevopsTrainServiceImpl implements DevopsTrainService {
 
             // 4. 提取trainId（只循环一次）
             List<Integer> trainIds = new ArrayList<>(relationList.size());
-            Map<Integer, DevopsProjectTrainRelDO> relationMap = new HashMap<>(relationList.size());
-
             for (DevopsProjectTrainRelDO relation : relationList) {
-                Integer trainId = relation.getPublishTrainId();
-                trainIds.add(trainId);
-                relationMap.put(trainId, relation);
+                trainIds.add(relation.getPublishTrainId());
             }
 
             // 5. 调用远程接口（请求全部匹配的数据，不分页）
