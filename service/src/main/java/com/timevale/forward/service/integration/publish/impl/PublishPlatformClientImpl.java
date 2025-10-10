@@ -112,9 +112,6 @@ public class PublishPlatformClientImpl implements PublishPlatformClient {
         log.info("[PublishPlatformClientImpl.getTrainList]params:{}", params);
 
         try {
-            // 设置字符编码
-            setRestTemplateCharset();
-
             // 构建请求参数
             String queryParams = "";
             if (params != null && !params.isEmpty()) {
@@ -145,8 +142,6 @@ public class PublishPlatformClientImpl implements PublishPlatformClient {
         }
 
         try {
-            setRestTemplateCharset();
-
             String trainDetailUrl = getTrainDetailUrl();
             String requestUrl = trainDetailUrl + trainId;
             JSONObject result = restTemplate.getForObject(requestUrl, JSONObject.class);
@@ -178,8 +173,6 @@ public class PublishPlatformClientImpl implements PublishPlatformClient {
         }
 
         try {
-            setRestTemplateCharset();
-
             // 使用UriComponentsBuilder构建URL（推荐方式）
             String trainPublishPageUrl = getTrainPublishPageUrl();
             UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(trainPublishPageUrl);
@@ -209,18 +202,6 @@ public class PublishPlatformClientImpl implements PublishPlatformClient {
         } catch (RestClientException e) {
             log.error("[PublishPlatformClientImpl.getTrainPublishPage]调用发布火车详情接口失败，trainId:{}, params:{}", trainId, params, e);
             return null;
-        }
-    }
-
-    /**
-     * 设置RestTemplate字符编码
-     */
-    private void setRestTemplateCharset() {
-        List<HttpMessageConverter<?>> messageConverters = restTemplate.getMessageConverters();
-        for (HttpMessageConverter<?> messageConverter : messageConverters) {
-            if (messageConverter instanceof StringHttpMessageConverter) {
-                ((StringHttpMessageConverter) messageConverter).setDefaultCharset(CharsetUtil.CHARSET_UTF_8);
-            }
         }
     }
 }

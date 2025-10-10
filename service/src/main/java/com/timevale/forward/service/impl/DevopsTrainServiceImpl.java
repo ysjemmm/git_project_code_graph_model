@@ -17,7 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Devops发布火车服务实现
@@ -174,93 +173,87 @@ public class DevopsTrainServiceImpl implements DevopsTrainService {
             if (projectId == null) {
                 return BaseResult.fail(400, "项目ID不能为空");
             }
-            if (page == null || page < 1) {
-                page = 1; // 默认第一页
-            }
-            if (pageSize == null || pageSize < 1) {
-                pageSize = 10; // 默认每页10条
-            }
+            page = (page == null || page < 1) ? 1 : page;
+            pageSize = (pageSize == null || pageSize < 1) ? 10 : pageSize;
 
-            // 2. 使用 PageHelper 开始分页（必须紧邻第一个查询语句）
-            PageHelper.startPage(page, pageSize);
-
-            // 3. 执行分页查询 - 修改为获取完整的关联信息（包含关联表ID）
-            List<DevopsProjectTrainRelDO> relationInfoList = projectPublishTrainRelMapper.selectTrainRelationsByProjectId(projectId);
-
-            // 4. 包装分页信息
-            PageInfo<DevopsProjectTrainRelDO> pageInfo = new PageInfo<>(relationInfoList);
-
-            // 5. 如果没有关联的批量发布，直接返回空结果
-            if (pageInfo.getList().isEmpty()) {
-                PageQueryResult<Map<String, Object>> emptyResult = new PageQueryResult<>();
-                emptyResult.setResultList(Collections.emptyList());
-                emptyResult.setTotalItems((int) pageInfo.getTotal());
-                log.info("项目没有关联的批量发布, projectId={}", projectId);
-                return BaseResult.success(emptyResult);
+            // 2. 先查询总数（不使用PageHelper，直接count）
+            int totalCount = projectPublishTrainRelMapper.countByProjectId(projectId);
+            if (totalCount == 0) {
+                return BaseResult.success(createEmptyPageResult());
             }
 
-            // 6. 提取trainId列表并保持与关联表ID的映射关系
-            List<Integer> trainIds = pageInfo.getList().stream()
-                    .map(DevopsProjectTrainRelDO::getPublishTrainId)
-                    .collect(Collectors.toList());
+            // 3. 手动分页查询关联表（按创建时间或ID倒序，已排好序）
+            int offset = (page - 1) * pageSize;
+            List<DevopsProjectTrainRelDO> relationList =
+                    projectPublishTrainRelMapper.selectTrainRelationsByProjectIdWithLimit(
+                            projectId, offset, pageSize);
 
-            // 7. 构建查询参数（固定分页为第一页）
+            if (relationList.isEmpty()) {
+                return BaseResult.success(createEmptyPageResult());
+            }
+
+            // 4. 提取trainId（只循环一次）
+            List<Integer> trainIds = new ArrayList<>(relationList.size());
+            Map<Integer, DevopsProjectTrainRelDO> relationMap = new HashMap<>(relationList.size());
+
+            for (DevopsProjectTrainRelDO relation : relationList) {
+                Integer trainId = relation.getPublishTrainId();
+                trainIds.add(trainId);
+                relationMap.put(trainId, relation);
+            }
+
+            // 5. 调用远程接口（请求全部匹配的数据，不分页）
             Map<String, Object> params = new HashMap<>();
             params.put("ids", trainIds);
-            params.put("offset", 1); // 固定第一页
-            params.put("limit", trainIds.size()); // 请求全部数据
+            params.put("offset", 1);
+            params.put("limit", trainIds.size());
 
-            // 8. 调用发布平台接口获取数据
             BaseResult<PageQueryResult<Map<String, Object>>> trainListResult = getTrainList(params);
 
-            // 9. 处理平台接口返回结果
             if (!trainListResult.ifSuccess() || trainListResult.getData() == null) {
                 log.error("获取批量发布列表失败, projectId={}, msg={}",
                         projectId, trainListResult.getMessage());
-                return BaseResult.fail(BaseResultCodeEnum.SYSTEM_ERROR.getNCode(), "获取批量发布列表失败");
+                return BaseResult.fail(BaseResultCodeEnum.SYSTEM_ERROR.getNCode(),
+                        "获取批量发布列表失败");
             }
 
-            // 10. 重组分页结果并按关联表ID排序
-            PageQueryResult<Map<String, Object>> remoteResult = trainListResult.getData();
-            List<Map<String, Object>> trainList = remoteResult.getResultList();
+            // 6. 合并数据（保持关联表的顺序，只循环一次）
+            List<Map<String, Object>> trainList = trainListResult.getData().getResultList();
+            Map<Integer, Map<String, Object>> trainDataMap = new HashMap<>(trainList.size());
+            for (Map<String, Object> train : trainList) {
+                trainDataMap.put((Integer) train.get("id"), train);
+            }
 
-            // 创建trainId到train数据的映射
-            Map<Integer, Map<String, Object>> trainDataMap = trainList.stream()
-                    .collect(Collectors.toMap(
-                            train -> (Integer) train.get("id"),
-                            train -> train
-                    ));
+            // 7. 按关联表顺序组装结果（只循环一次）
+            List<Map<String, Object>> resultList = new ArrayList<>(relationList.size());
+            for (DevopsProjectTrainRelDO relation : relationList) {
+                Map<String, Object> trainData = trainDataMap.get(relation.getPublishTrainId());
+                if (trainData != null) {
+                    trainData.put("relationId", relation.getId());
+                    trainData.put("relationCreateDate", relation.getCreateDate());
+                    resultList.add(trainData);
+                }
+            }
 
-            // 按照关联表ID顺序重新排列结果
-            List<Map<String, Object>> sortedTrainList = pageInfo.getList().stream()
-                    .map(relation -> {
-                        Integer trainId = relation.getPublishTrainId();
-                        Map<String, Object> trainData = trainDataMap.get(trainId);
-                        if (trainData != null) {
-                            // 可以选择性地添加关联表信息到结果中
-                            Map<String, Object> result = new HashMap<>(trainData);
-                            result.put("relationId", relation.getId()); // 添加关联表ID
-                            result.put("relationCreateDate", relation.getCreateDate()); // 添加关联创建时间
-                            return result;
-                        }
-                        return null;
-                    })
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-
+            // 8. 返回结果
             PageQueryResult<Map<String, Object>> pageResult = new PageQueryResult<>();
-            pageResult.setResultList(sortedTrainList);
+            pageResult.setResultList(resultList);
+            pageResult.setTotalItems(totalCount);
 
-            // 修改：使用实际返回的数据总数
-            pageResult.setTotalItems(sortedTrainList.size());
             return BaseResult.success(pageResult);
+
         } catch (Exception e) {
             log.error("获取项目批量发布列表失败, projectId={}", projectId, e);
-            return BaseResult.fail(BaseResultCodeEnum.SYSTEM_ERROR.getNCode(), "获取列表失败: " + e.getMessage());
-        } finally {
-            // 清除 PageHelper 的分页参数，避免影响其他查询
-            PageHelper.clearPage();
+            return BaseResult.fail(BaseResultCodeEnum.SYSTEM_ERROR.getNCode(),
+                    "获取列表失败: " + e.getMessage());
         }
+    }
+
+    private PageQueryResult<Map<String, Object>> createEmptyPageResult() {
+        PageQueryResult<Map<String, Object>> result = new PageQueryResult<>();
+        result.setResultList(Collections.emptyList());
+        result.setTotalItems(0);
+        return result;
     }
 
     /**

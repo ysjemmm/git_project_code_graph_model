@@ -44,6 +44,25 @@ public interface DevopsProjectTrainRelMapper {
     int countRelation1(@Param("id") Integer id);
 
     /**
+     * 统计项目关联的批量发布总数
+     */
+    @Select("SELECT COUNT(1) FROM devops_project_train_rel WHERE project_id = #{projectId} AND is_deleted = false")
+    int countByProjectId(@Param("projectId") Integer projectId);
+
+    /**
+     * 分页查询项目关联的批量发布（按创建时间倒序）
+     */
+    @Select("SELECT * FROM devops_project_train_rel " +
+            "WHERE project_id = #{projectId} AND is_deleted = false " +
+            "ORDER BY create_date DESC " +
+            "LIMIT #{limit} OFFSET #{offset}")
+    List<DevopsProjectTrainRelDO> selectTrainRelationsByProjectIdWithLimit(
+            @Param("projectId") Integer projectId,
+            @Param("offset") int offset,
+            @Param("limit") int limit
+    );
+
+    /**
      *
      * @param projectId 产研项目id
      * @return BaseResult<Integer>
