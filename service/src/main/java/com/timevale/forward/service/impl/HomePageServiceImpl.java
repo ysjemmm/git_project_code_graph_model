@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import com.alibaba.fastjson.JSON;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
@@ -10,17 +11,80 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.condition.BugOnlineListCondition;
 import com.timevale.forward.dal.condition.WorkHoursRecordCondition;
-import com.timevale.forward.dal.dao.*;
-import com.timevale.forward.dal.dto.*;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.dao.BizDemandMapper;
+import com.timevale.forward.dal.dao.BugOfflineMapper;
+import com.timevale.forward.dal.dao.BugOnlineMapper;
+import com.timevale.forward.dal.dao.FastSearchConditionMapper;
+import com.timevale.forward.dal.dao.PersonMapper;
+import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.dao.TaskMapper;
+import com.timevale.forward.dal.dao.WorkHoursRecordMapper;
+import com.timevale.forward.dal.dto.HomePageDataIndicatorDTO;
+import com.timevale.forward.dal.dto.HomePageProjectBoardDTO;
+import com.timevale.forward.dal.dto.HomePageProjectOnlineLatelyDTO;
+import com.timevale.forward.dal.dto.HomePageRiskWarningDTO;
+import com.timevale.forward.dal.dto.HomePageRiskWarningSubmitTestDTO;
+import com.timevale.forward.dal.dto.HomePageRiskWarningTaskDTO;
+import com.timevale.forward.dal.dto.TaskBoardDTO;
+import com.timevale.forward.dal.dto.UpdateTimeDTO;
+import com.timevale.forward.dal.entity.BaseDO;
+import com.timevale.forward.dal.entity.BizDemandListDO;
+import com.timevale.forward.dal.entity.BugOfflineDO;
+import com.timevale.forward.dal.entity.BugOnlineListDO;
+import com.timevale.forward.dal.entity.FastSearchConditionDO;
+import com.timevale.forward.dal.entity.PersonDO;
+import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.entity.TaskDO;
+import com.timevale.forward.dal.entity.WorkHoursRecordDO;
 import com.timevale.forward.facade.api.client.HomePageService;
 import com.timevale.forward.facade.api.query.HomePageProjectOnlineLatelyQueryList;
-import com.timevale.forward.facade.api.request.*;
-import com.timevale.forward.facade.api.result.*;
-import com.timevale.forward.model.enums.*;
-import com.timevale.forward.service.component.*;
+import com.timevale.forward.facade.api.request.DeleteFastSearchConditionReq;
+import com.timevale.forward.facade.api.request.HomePageBaseReq;
+import com.timevale.forward.facade.api.request.HomePageHolidayReq;
+import com.timevale.forward.facade.api.request.HomePageProjectBoardReq;
+import com.timevale.forward.facade.api.request.HomePageTaskBoardReq;
+import com.timevale.forward.facade.api.result.FastSearchConditionVO;
+import com.timevale.forward.facade.api.result.HomePageDataIndicatorVO;
+import com.timevale.forward.facade.api.result.HomePageGroupWorkTimeVO;
+import com.timevale.forward.facade.api.result.HomePageProjectBoardVO;
+import com.timevale.forward.facade.api.result.HomePageProjectDateVO;
+import com.timevale.forward.facade.api.result.HomePageProjectOnlineLatelyVO;
+import com.timevale.forward.facade.api.result.HomePageProjectWorkTimeVO;
+import com.timevale.forward.facade.api.result.HomePageRiskWarningVO;
+import com.timevale.forward.facade.api.result.HomePageSingleProjectWorkTimeVO;
+import com.timevale.forward.facade.api.result.HomePageSingleTaskWorkTimeVO;
+import com.timevale.forward.facade.api.result.HomePageSingleWorkTimeVO;
+import com.timevale.forward.facade.api.result.HomePageTodoCardVO;
+import com.timevale.forward.facade.api.result.ProjectBoardSinglelWorkTimeVO;
+import com.timevale.forward.facade.api.result.ProjectBoardTaskVO;
+import com.timevale.forward.facade.api.result.UpdateTimeVO;
+import com.timevale.forward.model.enums.BizDemandStatusEnum;
+import com.timevale.forward.model.enums.BizTypeEnum;
+import com.timevale.forward.model.enums.BugOnlineStatusEnum;
+import com.timevale.forward.model.enums.BugStatusEnum;
+import com.timevale.forward.model.enums.HomePageTabEnum;
+import com.timevale.forward.model.enums.JobFunctionEnum;
+import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.model.enums.ProjectNodeEnum;
+import com.timevale.forward.model.enums.ProjectNodeStatusEnum;
+import com.timevale.forward.model.enums.ProjectRiskTypeEnum;
+import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.model.enums.TaskStatusEnum;
+import com.timevale.forward.model.enums.UserTypeEnum;
+import com.timevale.forward.service.component.DistributionComponent;
+import com.timevale.forward.service.component.HomePageDataIndicatorComponent;
+import com.timevale.forward.service.component.HomePageProjectBoardComponent;
+import com.timevale.forward.service.component.HomePageProjectOnlineLatelyComponent;
+import com.timevale.forward.service.component.HomePageRiskWarningComponent;
+import com.timevale.forward.service.component.HomePageRiskWarningSubmitTestComponent;
+import com.timevale.forward.service.component.HomePageRiskWarningTaskComponent;
 import com.timevale.forward.service.constant.CommonConstant;
-import com.timevale.forward.service.copy.*;
+import com.timevale.forward.service.copy.DistributionCopier;
+import com.timevale.forward.service.copy.HomePageDataIndicatorCopier;
+import com.timevale.forward.service.copy.HomePageProjectBoardCopier;
+import com.timevale.forward.service.copy.HomePageProjectOnlineLatelyCopier;
+import com.timevale.forward.service.copy.HomePageRiskWarningCopier;
+import com.timevale.forward.service.copy.TaskCopier;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
@@ -29,6 +93,8 @@ import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.framework.tedis.util.TedisUtil;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.base.util.StringUtils;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -41,10 +107,25 @@ import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 
 import javax.annotation.Resource;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.*;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
 
 /**
  * @author by YangXu
@@ -108,6 +189,8 @@ public class HomePageServiceImpl implements HomePageService {
 
     @Resource
     private WorkHoursRecordMapper workHoursRecordMapper;
+
+    private static final String CACHE_KEY_GET_BY_GROUP_ID = "getByGroupIdNew_";
 
     @Override
     public BaseResult<HomePageDataIndicatorVO> getDataIndicator(HomePageBaseReq homePageBaseReq) {
@@ -359,6 +442,68 @@ public class HomePageServiceImpl implements HomePageService {
     }
 
     @Override
+    public List<String> getCacheAccounts(Collection<String> groupIds) throws IOException {
+        List<String> accountIds = Lists.newArrayList();
+        List<String> cacheGroupIds = groupIds.stream().map(groupId -> CACHE_KEY_GET_BY_GROUP_ID + groupId).collect(Collectors.toList());
+
+        // 直接将cacheGroupIds转换为String[]数组
+        String[] keysArray = cacheGroupIds.toArray(new String[0]);
+        
+        // 1. 尝试从Redis中获取缓存数据 (返回String)
+        List<Object> compressedStrings = TedisUtil.mGet(keysArray);
+        // 如果compressedStrings的元素都是null，则说明缓存数据不存在
+        boolean anyMatch = compressedStrings.stream().allMatch(Objects::isNull);
+        if (!anyMatch) {
+            for (Object compressedString : compressedStrings) {
+                if (compressedString != null) {
+                    try {
+                        String s = String.valueOf(compressedString);
+                        accountIds.addAll(parseCompressedData(s));
+                    } catch (Exception e) {
+                        log.error("解析缓存数据失败", e);
+                    }
+                }
+            }
+        } else {
+            for (String groupId : groupIds) {
+                accountIds.addAll(innerUserPersonClient.getByGroupIdNew(groupId));
+            }
+        }
+        return accountIds;
+    }
+
+    private List<String> parseCompressedData(String compressedDataString) {
+        // 检查数据是否为空
+        if (compressedDataString == null || compressedDataString.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        try {
+            // 将Base64编码的字符串解码为字节数组
+            byte[] compressedData = Base64.getDecoder().decode(compressedDataString);
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(compressedData);
+            GZIPInputStream gzipInputStream = new GZIPInputStream(inputStream);
+            StringBuilder stringBuilder = new StringBuilder();
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = gzipInputStream.read(buffer)) != -1) {
+                stringBuilder.append(new String(buffer, 0, length, StandardCharsets.UTF_8));
+            }
+            gzipInputStream.close();
+            return JSON.parseArray(stringBuilder.toString(), String.class);
+        } catch (Exception e) {
+            log.warn("Failed to parse compressed data: {}", e.getMessage());
+            // 如果解析失败，尝试直接解析原始字符串
+            try {
+                return JSON.parseArray(compressedDataString, String.class);
+            } catch (Exception ex) {
+                log.error("Failed to parse uncompressed data: {}", ex.getMessage());
+                return new ArrayList<>();
+            }
+        }
+    }
+
+    @Override
     public BaseResult<List<HomePageProjectBoardVO>> getProjectBoard(HomePageProjectBoardReq req) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
@@ -390,8 +535,13 @@ public class HomePageServiceImpl implements HomePageService {
                 accounts.addAll(innerUserPersonClient.getAllMyStaffWithSelf(LocalSessionUtils.getUserInfo().getId(), false));
             }
         } else {
-            CollUtil.emptyIfNull(req.getDeptIds())
-                    .forEach(e -> accounts.addAll(innerUserPersonClient.getByGroupIdNew(e)));
+            if (CollUtil.isNotEmpty(req.getDeptIds())) {
+                try {
+                    accounts.addAll(getCacheAccounts(req.getDeptIds()));
+                } catch (IOException e) {
+                    throw new BaseBizRuntimeException("获取部门下的成员失败");
+                }
+            }
         }
 
         // 如果查询条件为空直接返回空数据
@@ -481,8 +631,13 @@ public class HomePageServiceImpl implements HomePageService {
                 accounts.addAll(innerUserPersonClient.getAllMyStaffWithSelf(LocalSessionUtils.getUserInfo().getId(), false));
             }
         } else {
-            CollUtil.emptyIfNull(req.getDeptIds())
-                    .forEach(e -> accounts.addAll(innerUserPersonClient.getByGroupIdNew(e)));
+            if (CollUtil.isNotEmpty(req.getDeptIds())) {
+                try {
+                    accounts.addAll(getCacheAccounts(req.getDeptIds()));
+                } catch (IOException e) {
+                    throw new BaseBizRuntimeException("获取部门下的成员失败");
+                }
+            }
         }
 
         // 如果查询条件为空直接返回空数据
@@ -606,8 +761,14 @@ public class HomePageServiceImpl implements HomePageService {
             }
         }
         Set<String> accounts = CollUtil.emptyIfNull(req.getTeamMembers());
-        CollUtil.emptyIfNull(req.getDeptIds())
-                .forEach(e -> accounts.addAll(innerUserPersonClient.getByGroupIdNew(e)));
+        if (CollUtil.isNotEmpty(req.getDeptIds())) {
+            try {
+                accounts.addAll(getCacheAccounts(req.getDeptIds()));
+            } catch (IOException e) {
+                throw new BaseBizRuntimeException("获取部门下的成员失败");
+            }
+        }
+
         if (accounts.isEmpty()) {
             log.warn("getWorkTime filtered users are empty, userInfo: {}", userInfo);
             return BaseResult.success(Collections.emptyList());
@@ -693,8 +854,13 @@ public class HomePageServiceImpl implements HomePageService {
                 accounts.addAll(innerUserPersonClient.getAllMyStaffWithSelf(LocalSessionUtils.getUserInfo().getId(), false));
             }
         } else {
-            CollUtil.emptyIfNull(req.getDeptIds())
-                    .forEach(e -> accounts.addAll(innerUserPersonClient.getByGroupIdNew(e)));
+            if (CollUtil.isNotEmpty(req.getDeptIds())) {
+                try {
+                    accounts.addAll(getCacheAccounts(req.getDeptIds()));
+                } catch (IOException e) {
+                    throw new BaseBizRuntimeException("获取部门下的成员失败");
+                }
+            }
         }
 
         if (accounts.isEmpty()) {

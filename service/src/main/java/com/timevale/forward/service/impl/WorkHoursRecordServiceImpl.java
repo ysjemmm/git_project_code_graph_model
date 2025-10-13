@@ -17,6 +17,7 @@ import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectListDO;
 import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.dal.entity.WorkHoursRecordDO;
+import com.timevale.forward.facade.api.client.HomePageService;
 import com.timevale.forward.facade.api.client.TaskService;
 import com.timevale.forward.facade.api.client.WorkHoursRecordService;
 import com.timevale.forward.facade.api.query.OverviewWorkHoursQueryList;
@@ -50,7 +51,6 @@ import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.copy.WorkHoursRecordCopier;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
-import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
@@ -67,6 +67,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.DayOfWeek;
@@ -124,7 +125,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
     private ElapsedTimeClient elapsedTimeClient;
 
     @Resource
-    private InnerUserPersonClient innerUserPersonClient;
+    private HomePageService homePageService;
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -819,8 +820,13 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         List<Long> projectIdList = query.getProjectIds();
         List<String> memberIds = query.getMemberIds();
 
-        CollUtil.emptyIfNull(query.getDeptIds())
-                .forEach(e -> memberIds.addAll(innerUserPersonClient.getByGroupIdNew(e)));
+        if (CollUtil.isNotEmpty(query.getDeptIds())) {
+            try {
+                memberIds.addAll(homePageService.getCacheAccounts(query.getDeptIds()));
+            } catch (IOException e) {
+                throw new BaseBizRuntimeException("获取部门下的成员失败");
+            }
+        }
 
         if (CollectionUtils.isNotEmpty(projectIdList)) {
             // 按项目查询人员信息

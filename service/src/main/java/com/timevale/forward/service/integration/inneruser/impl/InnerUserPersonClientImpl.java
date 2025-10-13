@@ -2,9 +2,11 @@ package com.timevale.forward.service.integration.inneruser.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.framework.tedis.util.TedisUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.security.facade.api.RpcPersonService;
@@ -20,8 +22,21 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * @author yuankai
@@ -33,6 +48,8 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
 
     @Resource
     private RpcPersonService rpcPersonService;
+
+    private static final String CACHE_KEY_GET_BY_GROUP_ID = "getByGroupIdNew_";
 
     @Override
     public Set<String> getAllSuperiorByAccount(String userId, boolean isLeave) {
@@ -276,6 +293,23 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
         if (StringUtils.isEmpty(groupId)) {
             throw new BaseBizRuntimeException("部门id为空! " + groupId);
         }
+        String cacheKey = CACHE_KEY_GET_BY_GROUP_ID + groupId;
+
+        // 调用实际的业务逻辑获取数据
+        List<String> accountIds = getAccountIdsFromActualService(groupId);
+
+        // 将结果转换为JSON字符串，然后压缩，并存储到Redis
+        try {
+            String jsonValue = JSON.toJSONString(accountIds);
+            String compressedStringToCache = compress(jsonValue);
+            TedisUtil.set(cacheKey, compressedStringToCache, 60 * 60 * 24, TimeUnit.SECONDS);
+        } catch (IOException e) {
+            log.error("压缩缓存数据失败", e);
+        }
+        return accountIds;
+    }
+
+    private List<String> getAccountIdsFromActualService(String groupId) {
         List<String> accountIds = Lists.newArrayList();
         try {
             GroupRequest groupRequest = new GroupRequest();
@@ -291,6 +325,23 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
             log.error("调用内部用户中心失败 getByGroupIdNew groupId: " + groupId + " error: " + e.getMessage(), e);
         }
         throw new BaseBizRuntimeException("调用内部用户中心失败! " + groupId);
+    }
+
+    /**
+     * 压缩字符串
+     *
+     * @param data 待要压缩的字符串
+     * @return 压缩后的字符串
+     * @throws IOException
+     */
+    private String compress(String data) throws IOException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        GZIPOutputStream gzipOutputStream = new GZIPOutputStream(outputStream);
+        gzipOutputStream.write(data.getBytes(StandardCharsets.UTF_8));
+        gzipOutputStream.close();
+        byte[] compressedBytes = outputStream.toByteArray();
+        // 将压缩后的字节数组转换为Base64编码的字符串，以便在Redis中正确存储
+        return Base64.getEncoder().encodeToString(compressedBytes);
     }
 
     @Override

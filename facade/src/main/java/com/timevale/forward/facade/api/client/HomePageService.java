@@ -8,6 +8,8 @@ import com.timevale.forward.facade.api.result.*;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
+import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -50,6 +52,8 @@ public interface HomePageService {
      * @return 列表
      */
     BaseResult<List<HomePageRiskWarningVO>> getRiskWarning(HomePageBaseReq homePageBaseReq);
+
+    List<String> getCacheAccounts(Collection<String> groupIds) throws IOException;
 
     /**
      * 项目工时看板查询
