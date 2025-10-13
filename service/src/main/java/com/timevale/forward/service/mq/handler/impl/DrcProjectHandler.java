@@ -8,14 +8,13 @@ import com.timevale.forward.dal.entity.BaseDO;
 import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectMilestoneActionDO;
-import com.timevale.forward.model.enums.MilestoneTypeEnum;
-import com.timevale.forward.model.enums.PersonTypeEnum;
-import com.timevale.forward.model.enums.ProjectCategoryEnum;
-import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.component.ProjectRiskComponent;
 import com.timevale.forward.service.mq.dto.DrcMsgBody;
 import com.timevale.forward.service.mq.handler.DrcHandler;
+import com.timevale.forward.service.observer.event.OtherProjectPublishMsgEvent;
+import com.timevale.forward.service.observer.event.OtnProjectPublishMsgEvent;
 import com.timevale.forward.service.observer.event.ProjectInvalidMsgEvent;
 import com.timevale.forward.service.observer.event.SrEvalEndMsgEvent;
 import com.timevale.forward.service.utils.aop.LogPoint;
@@ -61,6 +60,17 @@ public class DrcProjectHandler implements DrcHandler {
         // 目前只有产研项目需要发送
         if (!ProjectCategoryEnum.PRODUCT_PROJECT.getCode().equals(afterPj.getCategory())) {
             return;
+        }
+
+        // 如果项目变更为已发布
+        if (!Objects.equals(beforePj.getStatus(), afterPj.getStatus()) &&
+                ProjectStatusEnum.RELEASED.getCode().equals(afterPj.getStatus())) {
+            if (StrUtil.isNotEmpty(afterPj.getSrId()) && ProjectKindEnum.PBG_OTN.getCode().equals(afterPj.getKind())) {
+                new OtnProjectPublishMsgEvent(this, afterPj.getId(), afterPj.getSrId(), afterPj.getName()).send();
+            }
+            if (StrUtil.isNotEmpty(afterPj.getPmId())) {
+                new OtherProjectPublishMsgEvent(this, afterPj.getId(), afterPj.getPmId(), afterPj.getName()).send();
+            }
         }
 
         // 如果项目变更为已中止
