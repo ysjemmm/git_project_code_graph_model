@@ -433,21 +433,21 @@ public class ProjectEvaluateComponent {
         ProjectDO projectDO = projectMapper.get(projectId);
         AssertUtil.notNull(projectDO, "项目不存在");
 
-        String message = "请检查项目变更流程是否审批完成";
+        String message = "请检查项目积分模块中对项目成员评价和项目评价维护是否完整，变更流程是否审批完成";
 
-//        // 需要校验项目评价必填内容是否完成、
-//        List<ProjectEvaluateDO> evaluateDOList = evaluateMapper.getByProjectId(projectId);
-//        AssertUtil.checkState(evaluateDOList.stream().noneMatch(e -> ObjectUtil.isNull(e.getScores())),
-//                message);
+        // 需要校验项目评价必填内容是否完成、
+        List<ProjectEvaluateDO> evaluateDOList = evaluateMapper.getByProjectId(projectId);
+        AssertUtil.checkState(evaluateDOList.stream().noneMatch(e -> ObjectUtil.isNull(e.getScores())),
+                message);
 
-//        // 纳入积分员工的实际工作量是否录入完成，个人评价是否必填
-//        List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.getByProjectId(projectId);
-//        AssertUtil.checkState(memberEvaluateDOList.stream()
-//                        .filter(ProjectMemberEvaluateDO::getIncludeStat)
-//                        .noneMatch(e -> ObjectUtil.isNull(e.getActualWorkload())),
-//                message);
-//        AssertUtil.checkState(memberEvaluateDOList.stream().noneMatch(e -> ObjectUtil.isNull(e.getEvaluateGrade())),
-//                message);
+        // 纳入积分员工的实际工作量是否录入完成，个人评价是否必填
+        List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.getByProjectId(projectId);
+        AssertUtil.checkState(memberEvaluateDOList.stream()
+                        .filter(ProjectMemberEvaluateDO::getIncludeStat)
+                        .noneMatch(e -> ObjectUtil.isNull(e.getActualWorkload())),
+                message);
+        AssertUtil.checkState(memberEvaluateDOList.stream().noneMatch(e -> ObjectUtil.isNull(e.getEvaluateGrade())),
+                message);
 
         // 查询该项目的流程
         List<ProjectFlowDO> projectFlowDOList = projectFlowMapper.getByProjectId(projectId);
@@ -464,23 +464,23 @@ public class ProjectEvaluateComponent {
         boolean nonePublishFlow = nodeFlowDOList.stream().noneMatch(e -> ForwardFlowStatusEnum.AUDITING.getCode().equals(e.getStatus()));
         AssertUtil.checkState(nonePublishFlow, message);
 
-//        // 计划总工作量
-//        BigDecimal planWorkloadSum = memberEvaluateDOList.stream()
-//                .map(ProjectMemberEvaluateDO::getPlanWorkload)
-//                .filter(ObjectUtil::isNotNull)
-//                .reduce(BigDecimal.ZERO, BigDecimal::add);
-//
-//        // 再分配工作量
-//        BigDecimal actualWorkloadSum = memberEvaluateDOList.stream()
-//                .map(ProjectMemberEvaluateDO::getActualWorkload)
-//                .filter(ObjectUtil::isNotNull)
-//                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // 计划总工作量
+        BigDecimal planWorkloadSum = memberEvaluateDOList.stream()
+                .map(ProjectMemberEvaluateDO::getPlanWorkload)
+                .filter(ObjectUtil::isNotNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-//        // 比较两个工作量是否相等
-//        if (planWorkloadSum.compareTo(actualWorkloadSum) < 0) {
-//            BigDecimal diffDay = actualWorkloadSum.subtract(planWorkloadSum).setScale(1, RoundingMode.HALF_UP);
-//            throw new BaseBizRuntimeException("再分配计划工作量之和大于计划总工作量" + diffDay + "天，请调整");
-//        }
+        // 再分配工作量
+        BigDecimal actualWorkloadSum = memberEvaluateDOList.stream()
+                .map(ProjectMemberEvaluateDO::getActualWorkload)
+                .filter(ObjectUtil::isNotNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // 比较两个工作量是否相等
+        if (planWorkloadSum.compareTo(actualWorkloadSum) < 0) {
+            BigDecimal diffDay = actualWorkloadSum.subtract(planWorkloadSum).setScale(1, RoundingMode.HALF_UP);
+            throw new BaseBizRuntimeException("再分配计划工作量之和大于计划总工作量" + diffDay + "天，请调整");
+        }
     }
 
     /**

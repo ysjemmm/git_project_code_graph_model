@@ -1,11 +1,13 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
@@ -42,6 +44,7 @@ import com.timevale.forward.dal.entity.BizChangeLogDO;
 import com.timevale.forward.dal.entity.BizDemandDO;
 import com.timevale.forward.dal.entity.BizDomainDO;
 import com.timevale.forward.dal.entity.BizLabelDO;
+import com.timevale.forward.dal.entity.EvaluateDimensionDO;
 import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.dal.entity.ProductDemandGroupDO;
@@ -52,9 +55,11 @@ import com.timevale.forward.dal.entity.ProjectBizDomainDO;
 import com.timevale.forward.dal.entity.ProjectBudgetDO;
 import com.timevale.forward.dal.entity.ProjectChildCountDO;
 import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.entity.ProjectEvaluateDO;
 import com.timevale.forward.dal.entity.ProjectFlowDO;
 import com.timevale.forward.dal.entity.ProjectGoalDO;
 import com.timevale.forward.dal.entity.ProjectListDO;
+import com.timevale.forward.dal.entity.ProjectMemberEvaluateDO;
 import com.timevale.forward.dal.entity.ProjectNodeDO;
 import com.timevale.forward.dal.entity.ProjectNodeFlowDO;
 import com.timevale.forward.dal.entity.ProjectNodeRecordDO;
@@ -93,6 +98,7 @@ import com.timevale.forward.facade.api.request.ProjectUpdateStatusReq;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
 import com.timevale.forward.facade.api.result.ConclusionFormVO;
+import com.timevale.forward.facade.api.result.ConclusionMemberItemVO;
 import com.timevale.forward.facade.api.result.ModifyProjectCheckVO;
 import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.forward.facade.api.result.ProductDemandStatusVO;
@@ -100,6 +106,7 @@ import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.ProductLineVO;
 import com.timevale.forward.facade.api.result.ProjectBaseVO;
 import com.timevale.forward.facade.api.result.ProjectDetailVO;
+import com.timevale.forward.facade.api.result.ProjectEvaluateItemVO;
 import com.timevale.forward.facade.api.result.ProjectInnerDetailVO;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
 import com.timevale.forward.facade.api.result.ProjectNodeVO;
@@ -162,6 +169,7 @@ import com.timevale.forward.service.copy.ProjectBudgetsCopier;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.copy.ProjectEvaluateCopier;
 import com.timevale.forward.service.copy.ProjectGoalCopier;
+import com.timevale.forward.service.copy.ProjectMemberEvaluateCopier;
 import com.timevale.forward.service.copy.ProjectNodeCopier;
 import com.timevale.forward.service.copy.ProjectNodeFlowCopier;
 import com.timevale.forward.service.flow.ForwardFlow;
@@ -1781,9 +1789,38 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 查询项目评价、成员评价数据
         ProjectDO projectDO = projectMapper.get(projectId);
+        List<ProjectEvaluateDO> evaluateDOList = evaluateMapper.getByProjectId(projectId);
+        List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.getByProjectId(projectId);
+
+        // 计划总工作量
+        BigDecimal planWorkloadSum = memberEvaluateDOList.stream()
+                .map(ProjectMemberEvaluateDO::getPlanWorkload)
+                .filter(ObjectUtil::isNotNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // 工作量(计算积分)
+        BigDecimal pointsWorkloadSum = memberEvaluateDOList.stream()
+                .filter(ProjectMemberEvaluateDO::getIncludeStat)
+                .map(ProjectMemberEvaluateDO::getPlanWorkload)
+                .filter(ObjectUtil::isNotNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // 评价列表
+        List<EvaluateDimensionDO> dimensionDOList = dimensionMapper.getByKind(projectDO.getKind());
+        ImmutableMap<Long, EvaluateDimensionDO> dimensionDOMap = Maps.uniqueIndex(dimensionDOList, BaseDO::getId);
+        List<ProjectEvaluateItemVO> evaluateItemVOList = evaluateDOList.stream()
+                .map(e -> ProjectEvaluateCopier.INSTANCE.do2item(e, dimensionDOMap.get(e.getEvaluateDimensionId())))
+                .collect(Collectors.toList());
+
+        // 项目成员工作量信息
+        List<ConclusionMemberItemVO> memberItemVOList = ProjectMemberEvaluateCopier.INSTANCE.do2cvo(memberEvaluateDOList);
 
         // 数据填充
         ConclusionFormVO conclusionFormVO = ProjectEvaluateCopier.INSTANCE.do2vo(projectDO);
+        conclusionFormVO.setPlanWorkloadSum(planWorkloadSum);
+        conclusionFormVO.setPointsWorkloadSum(pointsWorkloadSum);
+        conclusionFormVO.setEvaluateItemVOList(evaluateItemVOList);
+        conclusionFormVO.setConclusionMemberItemVOList(memberItemVOList);
 
         return BaseResult.success(conclusionFormVO);
     }

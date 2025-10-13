@@ -6,6 +6,9 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+import java.util.List;
+
 
 /**
  * @author by YangXu
@@ -33,4 +36,16 @@ public class ConclusionFormVO extends ToString {
 
     @ApiModelProperty("项目状态")
     private String statusName;
+
+    @ApiModelProperty("计划总工作量")
+    private BigDecimal planWorkloadSum;
+
+    @ApiModelProperty("工作量(计算积分)")
+    private BigDecimal pointsWorkloadSum;
+
+    @ApiModelProperty("评价列表")
+    private List<ProjectEvaluateItemVO> evaluateItemVOList;
+
+    @ApiModelProperty("项目成员信息")
+    private List<ConclusionMemberItemVO> conclusionMemberItemVOList;
 }
