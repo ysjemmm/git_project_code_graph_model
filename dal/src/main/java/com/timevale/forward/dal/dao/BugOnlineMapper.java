@@ -6,6 +6,7 @@ import com.timevale.forward.dal.entity.BugOnlineListDO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
+import java.time.LocalTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -144,4 +145,8 @@ public interface BugOnlineMapper {
     void updateOperator(@Param("ids") Collection<Long> ids, @Param("operator") String operator, @Param("operatorId") String operatorId);
 
     void updateProposer(@Param("ids") Collection<Long> ids, @Param("proposer") String proposer, @Param("proposerId") String proposerId);
+
+    List<BugOnlineDO> findBugsApproachingResolveTime(@Param("timeFieldName") String timeFieldName, @Param("remindDays") int remindDays, @Param("remindTime") LocalTime remindTime);
+
+    List<BugOnlineDO> findBugsOverdue(@Param("timeFieldName") String timeFieldName);
 }

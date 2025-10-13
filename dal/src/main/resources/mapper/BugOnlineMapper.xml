@@ -542,6 +542,22 @@
         </where>
     </select>
 
+    <select id="findBugsApproachingResolveTime" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
+        SELECT *
+        FROM bug_online
+        WHERE ${timeFieldName} &gt;= CURDATE()
+        AND CURDATE() &gt;= DATE_SUB(DATE(${timeFieldName}), INTERVAL #{remindDays} DAY)
+        AND (status = 0 OR status = 10)
+    </select>
+
+    <select id="findBugsOverdue" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
+        SELECT *
+        FROM bug_online
+        WHERE
+           ${timeFieldName} &lt;= CURDATE()
+          AND (status = 0 OR status = 10)
+    </select>
+
     <update id="updateConvertBizStatus">
         UPDATE info_forward.bug_online
         SET convert_biz_status = #{convertBizStatus},

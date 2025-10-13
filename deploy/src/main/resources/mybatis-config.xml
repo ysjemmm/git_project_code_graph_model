@@ -134,5 +134,6 @@
         <mapper resource="mapper/ViewsUserMapper.xml"/>
         <mapper resource="mapper/BizDomainGroupMapper.xml"/>
         <mapper resource="mapper/BizDomainGroupRelationMapper.xml"/>
+        <mapper resource="mapper/AutomationRuleMapper.xml"/>
     </mappers>
 </configuration>

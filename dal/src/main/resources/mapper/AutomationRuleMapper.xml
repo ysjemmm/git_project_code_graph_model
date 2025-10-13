@@ -1,0 +1,55 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.AutomationRuleMapper">
+
+    <!-- 新增一条自动化规则 -->
+    <insert id="insert" parameterType="com.timevale.forward.dal.entity.AutomationRuleDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO automation_rule
+        (id, name, project_id, biz_type, trigger_type, status_condition, time_field, remind_days_before, remind_time, receiver_type, receiver_ids, action_type, action_config, is_active)
+        VALUES
+        (#{id}, #{name}, #{projectId}, #{bizType}, #{triggerType}, #{statusCondition}, #{timeField}, #{remindDaysBefore}, #{remindTime}, #{receiverType}, #{receiverIds}, #{actionType}, #{actionConfig}, #{isActive})
+    </insert>
+
+    <!-- 根据主键id获取自动化规则 -->
+    <select id="get" resultType="com.timevale.forward.dal.entity.AutomationRuleDO">
+        SELECT * FROM automation_rule WHERE id=#{id} AND is_enabled = 0
+    </select>
+
+    <!-- 根据项目id和业务类型查询自动化规则 -->
+    <select id="listByProjectIdAndBizType" resultType="com.timevale.forward.dal.entity.AutomationRuleDO">
+        SELECT * FROM automation_rule WHERE project_id=#{projectId} AND biz_type=#{bizType} AND is_enabled = 1
+    </select>
+
+    <select id="findByTriggerTypeAndIsEnabled" resultType="com.timevale.forward.dal.entity.AutomationRuleDO">
+        SELECT * FROM automation_rule WHERE trigger_type= #{triggerType} AND is_enabled = #{isEnabled}
+    </select>
+
+    <!-- 更新自动化规则 -->
+    <update id="update">
+        UPDATE automation_rule
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="projectId != null">project_id = #{projectId},</if>
+            <if test="bizType != null">biz_type = #{bizType},</if>
+            <if test="triggerType != null">trigger_type = #{triggerType},</if>
+            <if test="statusCondition != null">status_condition = #{statusCondition},</if>
+            <if test="timeField != null">time_field = #{timeField},</if>
+            <if test="remindDaysBefore != null">remind_days_before = #{remindDaysBefore},</if>
+            <if test="remindTime != null">remind_time = #{remindTime},</if>
+            <if test="receiverType != null">receiver_type = #{receiverType},</if>
+            <if test="receiverIds != null">receiver_ids = #{receiverIds},</if>
+            <if test="actionType != null">action_type = #{actionType},</if>
+            <if test="actionConfig != null">action_config = #{actionConfig},</if>
+            <if test="isActive != null">is_active = #{isActive},</if>
+        </set>
+        WHERE id = #{id} and is_enabled = false
+    </update>
+
+    <!-- 删除自动化规则 -->
+    <update id="delete">
+        UPDATE automation_rule
+        SET is_enabled = true, modify_man_id = #{modifyManId}, modify_man = #{modifyMan}
+        WHERE id = #{id} and is_enabled = false
+    </update>
+
+</mapper>
