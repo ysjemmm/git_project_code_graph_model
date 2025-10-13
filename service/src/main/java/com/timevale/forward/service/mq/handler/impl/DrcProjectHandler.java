@@ -63,7 +63,7 @@ public class DrcProjectHandler implements DrcHandler {
         }
 
         // 如果项目变更为已发布
-        if (!Objects.equals(beforePj.getStatus(), afterPj.getStatus()) &&
+        if (!ProjectKindEnum.PBG_BASE.getCode().equals(afterPj.getKind()) && !Objects.equals(beforePj.getStatus(), afterPj.getStatus()) &&
                 ProjectStatusEnum.RELEASED.getCode().equals(afterPj.getStatus())) {
             if (StrUtil.isNotEmpty(afterPj.getSrId()) && ProjectKindEnum.PBG_OTN.getCode().equals(afterPj.getKind())) {
                 new OtnProjectPublishMsgEvent(this, afterPj.getId(), afterPj.getSrId(), afterPj.getName()).send();
