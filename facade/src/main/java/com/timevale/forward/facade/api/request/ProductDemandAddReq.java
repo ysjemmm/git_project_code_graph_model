@@ -89,6 +89,12 @@ public class ProductDemandAddReq extends BaseReq {
     @ApiModelProperty("产品资源评估（人天）")
     private BigDecimal productTime;
 
+    @ApiModelProperty("运维迁移评估（人天）")
+    private BigDecimal opsTime;
+
+    @ApiModelProperty("安全资源评估（人天）")
+    private BigDecimal securityTime;
+
     @ApiModelProperty("目标客户/用户/项目")
     private String targetCustomer;
 
