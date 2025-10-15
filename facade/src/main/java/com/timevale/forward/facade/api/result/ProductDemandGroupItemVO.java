@@ -51,6 +51,12 @@ public class ProductDemandGroupItemVO extends ToString {
     @ApiModelProperty("产品资源评估（人天）")
     private BigDecimal productTime;
 
+    @ApiModelProperty("运维资源评估（人天）")
+    private BigDecimal opsTime;
+
+    @ApiModelProperty("安全资源评估（人天）")
+    private BigDecimal securityTime;
+
     @ApiModelProperty("总资源评估（人天）")
     private BigDecimal totalTime;
 }
