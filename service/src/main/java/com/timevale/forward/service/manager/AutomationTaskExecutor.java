@@ -35,6 +35,17 @@ public class AutomationTaskExecutor {
         if (ActionTypeEnum.SEND_NOTIFICATION.getCode().equals(rule.getActionType())) {
             sendNotification(rule, context);
         }
+
+        if (ActionTypeEnum.EXECUTE_TASK.getCode().equals(rule.getActionType())) {
+            sendNotificationToChatGroup(rule, context);
+        }
+    }
+
+    private void sendNotificationToChatGroup(AutomationRuleDO rule, AutomationExecutionContext context) {
+        if (BizTypeEnum.BUG_ONLINE.getCode().equals(rule.getBizType())) {
+            BugOnlineDO bug = (BugOnlineDO) context.getTarget();
+            // 1. 调用通知服务：发送到钉钉群
+        }
     }
 
     private void sendNotification(AutomationRuleDO rule, AutomationExecutionContext context) {

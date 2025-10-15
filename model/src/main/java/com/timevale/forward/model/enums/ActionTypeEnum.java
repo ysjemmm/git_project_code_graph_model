@@ -15,9 +15,9 @@ public enum ActionTypeEnum {
     SEND_NOTIFICATION("send_notification"),
 
     /**
-     * create_task:执行任务
+     * execute_task:执行任务
      */
-    CREATE_TASK("create_task");
+    EXECUTE_TASK("execute_task");
 
     private final String code;
     ActionTypeEnum(String code){

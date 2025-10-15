@@ -24,6 +24,11 @@
         SELECT * FROM automation_rule WHERE trigger_type= #{triggerType} AND is_enabled = #{isEnabled}
     </select>
 
+    <select id="findByBizTypeAndTriggerTypeAndIsActive"
+            resultType="com.timevale.forward.dal.entity.AutomationRuleDO">
+        SELECT * FROM automation_rule WHERE biz_type= #{bizType} AND trigger_type= #{triggerType} AND is_enabled = true
+    </select>
+
     <!-- 更新自动化规则 -->
     <update id="update">
         UPDATE automation_rule
