@@ -81,6 +81,12 @@ public class ProductDemandGroupInnerAddReq extends BaseReq {
     @ApiModelProperty("测试资源评估（人天）")
     private BigDecimal qaTime;
 
+    @ApiModelProperty("运维资源评估（人天）")
+    private BigDecimal opsTime;
+
+    @ApiModelProperty("安全资源评估（人天）")
+    private BigDecimal securityTime;
+
     @ApiModelProperty("总资源评估（人天）")
     private BigDecimal totalTime;
 

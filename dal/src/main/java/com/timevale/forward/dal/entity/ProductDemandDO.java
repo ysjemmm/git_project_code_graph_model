@@ -79,6 +79,16 @@ public class ProductDemandDO extends BaseDO {
     private BigDecimal transferTime;
 
     /**
+     * 运维资源评估（人天）
+     */
+    private BigDecimal opsTime;
+
+    /**
+     * 安全迁移评估（人天）
+     */
+    private BigDecimal securityTime;
+
+    /**
      * 产品资源评估（人天）
      */
     private BigDecimal productTime;

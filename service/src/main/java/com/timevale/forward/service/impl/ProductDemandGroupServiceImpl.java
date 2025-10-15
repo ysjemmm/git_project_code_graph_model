@@ -263,6 +263,8 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
             BigDecimal totalTotalTime = BigDecimal.ZERO;
             BigDecimal totalTransferTime = BigDecimal.ZERO;
             BigDecimal totalProductTime = BigDecimal.ZERO;
+            BigDecimal totalOpsTime = BigDecimal.ZERO;
+            BigDecimal totalSecurityTime = BigDecimal.ZERO;
 
             for (ProductDemandGroupItemVO item : productDemandGroupItemVOList) {
                 totalUedTime = totalUedTime.add(item.getUedTime() != null ? item.getUedTime() : BigDecimal.ZERO);
@@ -272,6 +274,8 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
                 totalTotalTime = totalTotalTime.add(item.getTotalTime() != null ? item.getTotalTime() : BigDecimal.ZERO);
                 totalTransferTime = totalTransferTime.add(item.getTransferTime() != null ? item.getTransferTime() : BigDecimal.ZERO);
                 totalProductTime = totalProductTime.add(item.getProductTime() != null ? item.getProductTime() : BigDecimal.ZERO);
+                totalOpsTime = totalOpsTime.add(item.getOpsTime() != null ? item.getOpsTime() : BigDecimal.ZERO);
+                totalSecurityTime = totalSecurityTime.add(item.getSecurityTime() != null ? item.getSecurityTime() : BigDecimal.ZERO);
             }
 
             productDemandGroupVO.setTotalUedTime(totalUedTime);
@@ -280,6 +284,8 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
             productDemandGroupVO.setTotalQaTime(totalQaTime);
             productDemandGroupVO.setTotalTransferTime(totalTransferTime);
             productDemandGroupVO.setTotalProductTime(totalProductTime);
+            productDemandGroupVO.setTotalOpsTime(totalOpsTime);
+            productDemandGroupVO.setTotalSecurityTime(totalSecurityTime);
             productDemandGroupVO.setTotalTotalTime(totalTotalTime);
         }
         // 返回分页数据
@@ -305,6 +311,8 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
             productDemandGroupItemVO.setFrontTime(productDemandGroupItemListDO.getFrontTime());
             productDemandGroupItemVO.setQaTime(productDemandGroupItemListDO.getQaTime());
             productDemandGroupItemVO.setTransferTime(productDemandGroupItemListDO.getTransferTime());
+            productDemandGroupItemVO.setOpsTime(productDemandGroupItemListDO.getOpsTime());
+            productDemandGroupItemVO.setSecurityTime(productDemandGroupItemListDO.getSecurityTime());
             productDemandGroupItemVO.setTotalTime(productDemandGroupItemListDO.getTotalTime());
             productDemandGroupItemVOList.add(productDemandGroupItemVO);
         }

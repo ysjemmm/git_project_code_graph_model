@@ -5,16 +5,16 @@
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProductDemandDO" useGeneratedKeys="true"
             keyProperty="id" keyColumn="id">
         insert into product_demand (name, product_line_id, type, `desc`, status, priority, owner, owner_id,
-                                    expect_schedule_time, target_customer, customer_grade, create_man_id, create_man, ued_time, transfer_time, product_time, back_time, front_time, qa_time, total_time)
+                                    expect_schedule_time, target_customer, customer_grade, create_man_id, create_man, ued_time, transfer_time, product_time, back_time, front_time, qa_time, ops_time, security_time, total_time)
         values (#{name}, #{productLineId}, #{type}, #{desc}, #{status}, #{priority}, #{owner}, #{ownerId},
-                #{expectScheduleTime}, #{targetCustomer}, #{customerGrade},#{createManId}, #{createMan}, #{uedTime}, #{transferTime}, #{productTime}, #{backTime}, #{frontTime}, #{qaTime}, #{totalTime})
+                #{expectScheduleTime}, #{targetCustomer}, #{customerGrade},#{createManId}, #{createMan}, #{uedTime}, #{transferTime}, #{productTime}, #{backTime}, #{frontTime}, #{qaTime}, #{opsTime}, #{securityTime}, #{totalTime})
     </insert>
 
     <select id="list" resultType="com.timevale.forward.dal.entity.ProductDemandListDO">
         select a.id,a.name,a.priority,a.owner,a.owner_id,a.status, a.product_line_id,
         a.create_man,a.create_man_id,a.create_date,a.modify_date, a.type, a.expect_schedule_time,
         c.name productLineName ,d.name bizDomainName, a.ued_time, a.transfer_time, a.back_time,
-        a.front_time, a.qa_time, a.total_time, a.target_customer, a.customer_grade
+        a.front_time, a.qa_time, a.ops_time, a.security_time, a.total_time, a.target_customer, a.customer_grade
         <if test="copierId != null and copierId != ''">
             ,e.user_name copier
         </if>
@@ -156,6 +156,8 @@
                back_time,
                front_time,
                qa_time,
+               ops_time,
+               security_time,
                total_time,
                target_customer,
                customer_grade
@@ -282,6 +284,8 @@
             <if test="frontTime != null">front_time = #{frontTime},</if>
             <if test="backTime != null">back_time = #{backTime},</if>
             <if test="qaTime != null">qa_time = #{qaTime},</if>
+            <if test="opsTime != null">ops_time = #{opsTime},</if>
+            <if test="securityTime != null">security_time = #{securityTime},</if>
             <if test="transferTime != null">transfer_time = #{transferTime},</if>
             <if test="productTime != null">product_time = #{productTime},</if>
             <if test="totalTime != null">total_time = #{totalTime},</if>
@@ -512,7 +516,7 @@
         select a.id,a.name,a.priority,a.owner,a.owner_id,a.status, a.product_line_id,
         a.create_man,a.create_man_id,a.create_date,a.modify_date, a.type, a.expect_schedule_time,
         c.name productLineName ,d.name bizDomainName, a.ued_time, a.transfer_time, a.back_time,
-        a.front_time, a.qa_time, a.total_time, a.target_customer, a.customer_grade
+        a.front_time, a.qa_time, a.ops_time, a.security_time, a.total_time, a.target_customer, a.customer_grade
         <if test="condition.copierId != null and condition.copierId != ''">
             ,e.user_name copier
         </if>
