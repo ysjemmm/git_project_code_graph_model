@@ -735,7 +735,8 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
 
     @Override
     public BaseResult<ProductDemandGroupResourcePlanVO> getResourcePlan(@NonNull Long bizDomainGroupId, @NonNull Long productDemandGroupId) {
-        ProductDemandGroupResourcePlanVO demandGroupResourcePlanVO = ProductDemandGroupResourcePlanVO.builder().productDemandGroupId(productDemandGroupId).build();
+        ProductDemandGroupResourcePlanVO demandGroupResourcePlanVO = new ProductDemandGroupResourcePlanVO();
+        demandGroupResourcePlanVO.setProductDemandGroupId(productDemandGroupId);
         List<ProductDemandGroupItemDO> groupItems = productDemandGroupItemMapper.getByGroupId(productDemandGroupId);
         Set<Long> productDemandIds = groupItems.stream().map(ProductDemandGroupItemDO::getProductDemandId).collect(Collectors.toSet());
         if (CollectionUtils.isEmpty(productDemandIds)) {
@@ -755,11 +756,11 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
 
         final List<ResourcePlanProductDemandVO> resourcePlanProductDemandVos = new ArrayList<>();
         productDemandId2Owners.forEach((productDemandId, owners) -> {
-            ResourcePlanProductDemandVO resourcePlanProductDemandVO = ResourcePlanProductDemandVO.builder()
-                    .id(productDemandId)
-                    .name(productDemandId2Name.get(productDemandId))
-                    .labelNames(productDemandId2Label.getOrDefault(productDemandId, Collections.emptyList()))
-                    .owners(owners.stream().map(ProductDemandCopier.INSTANCE::convert).collect(Collectors.toList())).build();
+            ResourcePlanProductDemandVO resourcePlanProductDemandVO = new ResourcePlanProductDemandVO();
+            resourcePlanProductDemandVO.setId(productDemandId);
+            resourcePlanProductDemandVO.setName(productDemandId2Name.get(productDemandId));
+            resourcePlanProductDemandVO.setLabelNames(productDemandId2Label.getOrDefault(productDemandId, Collections.emptyList()));
+            resourcePlanProductDemandVO.setOwners(owners.stream().map(ProductDemandCopier.INSTANCE::convert).collect(Collectors.toList()));
             resourcePlanProductDemandVos.add(resourcePlanProductDemandVO);
         });
 
