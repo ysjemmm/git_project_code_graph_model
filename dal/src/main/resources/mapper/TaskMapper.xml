@@ -305,7 +305,6 @@
             (a.plan_start_date &lt;=#{startDate} and a.plan_end_date &gt;= #{endDate}) or
             (a.actual_start_date &lt;=#{startDate} and a.actual_end_date &gt;= #{endDate}) or
             (a.plan_start_date &lt;=#{startDate} and a.actual_end_date &gt;= #{endDate}) or
-            (now()&gt;=#{startDate})
             )
             and a.status not in (-10,-20)
             and b.user_id in
