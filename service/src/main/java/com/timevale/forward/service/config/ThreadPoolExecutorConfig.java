@@ -30,6 +30,11 @@ public class ThreadPoolExecutorConfig {
         return initThreadPoolExecutor(CORE_POOL_SIZE, MAX_POOL_SIZE, 200, 60, "TrackImportExecutor-");
     }
 
+    @Bean(name = "productDemandAddRecipientExecutor")
+    public ThreadPoolTaskExecutor productDemandAddRecipientExecutor() {
+        return initThreadPoolExecutor(CORE_POOL_SIZE, CORE_POOL_SIZE << 1, 20000, 60, "productDemandAddRecipientExecutor-");
+    }
+
     public static ThreadPoolTaskExecutor initThreadPoolExecutor(int corePoolSize, int maxPoolSize, int queueCapacity, int keepAliveSeconds, String threadNamePrefix) {
         ThreadPoolTaskExecutor poolTaskExecutor = new ThreadPoolTaskExecutor();
         poolTaskExecutor.setCorePoolSize(corePoolSize);

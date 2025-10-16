@@ -23,10 +23,6 @@ public class ResourcePlanProductDemandOwnerVO extends ToString {
     @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
-    @ApiModelProperty("负责人唯一主键id")
-    @JsonSerialize(using = ToStringSerializer.class)
-    private Long ownerPk;
-
     @ApiModelProperty("负责人")
     private String owner;
 

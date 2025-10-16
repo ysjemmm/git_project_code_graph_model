@@ -22,10 +22,6 @@ public class ProductDemandOwnerAddReq extends ToString {
     @ApiModelProperty(value = "关联需求id", required = true)
     private Long productDemandId;
 
-    @NotNull(message = "关联负责人唯一id不能为空")
-    @ApiModelProperty(value = "关联负责人唯一id", required = true)
-    private Long ownerPk;
-
     @NotNull(message = "关联负责人不能为空")
     @ApiModelProperty(value = "关联负责人", required = true)
     private String owner;

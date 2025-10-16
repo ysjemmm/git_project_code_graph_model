@@ -93,6 +93,16 @@ public class PersonComponentImpl implements PersonComponent {
     }
 
     @Override
+    public void remove(String personId, Long mainId, Integer type) {
+        PersonDO personDO = new PersonDO();
+        personDO.setMainId(mainId);
+        personDO.setUserId(personId);
+        personDO.setType(type);
+        personDO.setIsDeleted(true);
+        personMapper.update(personDO);
+    }
+
+    @Override
     public List<PersonDO> select(Long mainId, Integer type) {
         PersonListCondition condition = PersonListCondition.builder()
                 .type(type)

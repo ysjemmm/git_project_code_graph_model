@@ -21,11 +21,7 @@ public class ProductDemandOwnerDO extends BaseDO {
      */
     @EqualsAndHashCode.Include
     private Long productDemandId;
-    /**
-     * 关联负责人唯一id
-     */
-    @EqualsAndHashCode.Include
-    private Long ownerPk;
+
     /**
      * 关联负责人
      */
@@ -33,6 +29,7 @@ public class ProductDemandOwnerDO extends BaseDO {
     /**
      * 关联负责人字符串id
      */
+    @EqualsAndHashCode.Include
     private String ownerId;
 
     /**

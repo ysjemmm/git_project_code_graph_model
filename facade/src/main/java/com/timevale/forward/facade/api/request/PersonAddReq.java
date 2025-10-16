@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 import javax.validation.constraints.NotBlank;
 
@@ -19,6 +20,7 @@ import javax.validation.constraints.NotBlank;
 @NoArgsConstructor
 @AllArgsConstructor
 @ApiModel("添加相关人员")
+@Accessors(chain = true)
 public class PersonAddReq extends ToString {
 
     @ApiModelProperty(value = "人员姓名", required = true)

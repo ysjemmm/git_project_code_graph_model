@@ -43,6 +43,14 @@ public interface PersonComponent {
     void update(List<PersonAddReq> list, Long mainId, Integer type, Integer personLevel);
 
     /**
+     * 移除指定业务关联的人员
+     * @param personId 关联人id
+     * @param mainId 所属主体id
+     * @param type 所属主体类型
+     */
+    void remove(String personId, Long mainId, Integer type);
+
+    /**
      *
      * @param mainId 所属主体id
      * @param type 所属主体类型

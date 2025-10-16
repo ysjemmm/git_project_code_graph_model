@@ -12,12 +12,11 @@
 
     <insert id="batchUpsertProductDemandOwners">
         INSERT INTO product_demand_owner
-        (product_demand_id, owner_pk, owner, owner_id, resource_type, resource_time, create_man_id, create_man)
+        (product_demand_id, owner, owner_id, resource_type, resource_time, create_man_id, create_man)
         VALUES
         <foreach collection="productDemandOwnerDoS" item="item" index="index" separator=",">
             (
             #{item.productDemandId},
-            #{item.ownerPk},
             #{item.owner},
             #{item.ownerId},
             #{item.resourceType},
@@ -997,7 +996,7 @@
     </select>
 
     <select id="listProductDemandOwners" resultType="com.timevale.forward.dal.entity.ProductDemandOwnerDO">
-        SELECT id,owner_pk,owner,owner_id,product_demand_id,resource_type,resource_time
+        SELECT id,owner,owner_id,product_demand_id,resource_type,resource_time
         FROM product_demand_owner
         WHERE is_deleted = 0
         <if test="productDemandIds != null and !productDemandIds.isEmpty()">
@@ -1012,7 +1011,7 @@
     </select>
     <select id="listProductDemandOwnersByGroupId"
             resultType="com.timevale.forward.dal.entity.ProductDemandOwnerDO">
-        select pdo.id, pdo.product_demand_id, pdo.owner_pk, pdo.owner_id, pdo.owner, pdo.resource_type, pdo.resource_time
+        select pdo.id, pdo.product_demand_id, pdo.owner_id, pdo.owner, pdo.resource_type, pdo.resource_time
         from product_demand_group_item pdgi inner join product_demand_owner pdo
         on pdgi.product_demand_id = pdo.product_demand_id
         where pdo.is_deleted = 0
