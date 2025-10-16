@@ -759,6 +759,9 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
     public BaseResult<ProductDemandGroupResourcePlanVO> getResourcePlan(@NonNull Long bizDomainGroupId, @NonNull Long productDemandGroupId) {
         ProductDemandGroupResourcePlanVO demandGroupResourcePlanVO = new ProductDemandGroupResourcePlanVO();
         demandGroupResourcePlanVO.setProductDemandGroupId(productDemandGroupId);
+        demandGroupResourcePlanVO.setEditable(bizDomainGroupMapper.countBizGroup(bizDomainGroupId, LocalSessionUtils.getUserInfo().getId()) > 0
+                || bizDomainGroupMapper.countProductLine(bizDomainGroupId, LocalSessionUtils.getUserInfo().getId()) > 0);
+
         List<ProductDemandGroupItemDO> groupItems = productDemandGroupItemMapper.getByGroupId(productDemandGroupId);
         Set<Long> productDemandIds = groupItems.stream().map(ProductDemandGroupItemDO::getProductDemandId).collect(Collectors.toSet());
         if (CollectionUtils.isEmpty(productDemandIds)) {
@@ -787,8 +790,6 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         });
 
         demandGroupResourcePlanVO.setProductDemands(resourcePlanProductDemandVos);
-        demandGroupResourcePlanVO.setEditable(bizDomainGroupMapper.countBizGroup(bizDomainGroupId, LocalSessionUtils.getUserInfo().getId()) > 0
-            || bizDomainGroupMapper.countProductLine(productDemandGroupId, LocalSessionUtils.getUserInfo().getId()) > 0);
         return BaseResult.success(demandGroupResourcePlanVO);
     }
 }
