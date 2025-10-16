@@ -199,6 +199,7 @@ import com.timevale.forward.service.utils.TokenUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateStyle;
 import com.timevale.forward.service.utils.date.DateUtil;
+import com.timevale.forward.service.utils.date.WorkDateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -219,6 +220,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -362,6 +364,9 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private WorkHoursRecordMapper workHoursRecordMapper;
 
+    @Resource
+    private WorkDateUtil workDateUtil;
+
     private static final List<Integer> PROJECT_STATUSES = Arrays.asList(
             ProjectStatusEnum.WAITING.getCode(),
             ProjectStatusEnum.PLANING.getCode(),
@@ -380,7 +385,14 @@ public class ProjectServiceImpl implements ProjectService {
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
-    public BaseResult<Void> sendWorkHourNotice(LocalDate today, boolean isExpedite, Long projectId) {
+    public BaseResult<Void> sendWorkHourNotice(boolean isExpedite, Long projectId) {
+        LocalDate today;
+        if (isExpedite) {
+            today = workDateUtil.getLatestWorkday(new Date());
+        } else {
+            today = LocalDate.now(ZoneId.of("Asia/Shanghai"));
+        }
+
         String url;
         if (EnvEnum.PROD.equals(envUtils.getEnv())) {
             url = "https://forward.esign.cn";

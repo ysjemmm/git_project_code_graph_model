@@ -17,7 +17,7 @@ import java.util.List;
  **/
 @RestClient(serviceId = MagicValue.FORWARD_RPC_PREFIX)
 public interface ProjectService {
-    BaseResult<Void> sendWorkHourNotice(LocalDate today, boolean isExpedite, Long projectId);
+    BaseResult<Void> sendWorkHourNotice(boolean isExpedite, Long projectId);
 
     /**
      * 查列表
