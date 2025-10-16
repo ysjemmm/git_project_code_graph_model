@@ -3,6 +3,7 @@ package com.timevale.forward.service.controller;
 import com.timevale.forward.facade.api.client.ProductDemandGroupService;
 import com.timevale.forward.facade.api.query.ProductDemandGroupQueryList;
 import com.timevale.forward.facade.api.request.*;
+import com.timevale.forward.facade.api.result.ProductDemandGroupResourcePlanVO;
 import com.timevale.forward.facade.api.result.ProductDemandGroupVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.service.utils.ResultUtils;
@@ -88,6 +89,18 @@ public class ProductDemandGroupController {
     @PostMapping("/linkOrUnlinkProject")
     public BusinessResult<Boolean> linkOrUnlinkProject(@RequestBody @Valid ProductDemandGroupProjectLinkReq productDemandGroupItemMoveReq) {
         return ResultUtils.result(productDemandGroupService.linkOrUnlinkProject(productDemandGroupItemMoveReq));
+    }
+
+    @ApiOperation("产品需求分组资源规划变更")
+    @PostMapping("/upsertResourcePlan")
+    public BusinessResult<Boolean> upsertResourcePlan(@RequestBody @Valid ProductDemandGroupResourcePlanReq productDemandGroupResourcePlanReq) {
+        return ResultUtils.result(productDemandGroupService.upsertResourcePlan(productDemandGroupResourcePlanReq));
+    }
+
+    @ApiOperation("获取产品需求分组资源规划")
+    @PostMapping("/getResourcePlan")
+    public BusinessResult<ProductDemandGroupResourcePlanVO> getResourcePlan(@RequestParam Long bizDomainGroupId, @RequestParam Long productDemandGroupId) {
+        return ResultUtils.result(productDemandGroupService.getResourcePlan(bizDomainGroupId, productDemandGroupId));
     }
 
 }

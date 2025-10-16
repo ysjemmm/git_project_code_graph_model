@@ -7,6 +7,7 @@ import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.dal.entity.ProductDemandGroupItemListDO;
 import com.timevale.forward.dal.entity.ProductDemandListDO;
+import com.timevale.forward.dal.entity.ProductDemandOwnerDO;
 import com.timevale.forward.facade.api.query.CustomLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandGroupList;
 import com.timevale.forward.facade.api.query.ProductDemandQueryList;
@@ -14,11 +15,14 @@ import com.timevale.forward.facade.api.query.ProjectLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.TaskLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.request.ProductDemandAddReq;
 import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
+import com.timevale.forward.facade.api.request.ProductDemandOwnerAddReq;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.facade.api.result.ProductDemandDocumentVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
+import com.timevale.forward.facade.api.result.ResourcePlanProductDemandOwnerVO;
 import com.timevale.forward.model.enums.ProductDemandTypeEnum;
 import com.timevale.forward.model.middle.ProductDemandMD;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -107,6 +111,35 @@ public interface ProductDemandCopier {
      * @return ProductDemandDetailVO
      */
     ProductDemandDetailVO convert(ProductDemandDO productDemandDO);
+
+    /**
+     * 转换转换DO
+     *
+     * @param productDemandOwnerAddReqs 对象
+     * @return List<ProductDemandOwnerDO>
+     */
+    default List<ProductDemandOwnerDO> convertList(List<ProductDemandOwnerAddReq> productDemandOwnerAddReqs) {
+        if (CollectionUtils.isEmpty(productDemandOwnerAddReqs)) {
+            return Collections.emptyList();
+        }
+        return productDemandOwnerAddReqs.stream().map(this::convert).collect(Collectors.toList());
+    }
+
+    /**
+     * 转换转换DO
+     *
+     * @param productDemandOwnerAddReq 对象
+     * @return ProductDemandOwnerDO
+     */
+    ProductDemandOwnerDO convert(ProductDemandOwnerAddReq productDemandOwnerAddReq);
+
+    /**
+     * 转换转换DO
+     *
+     * @param productDemandOwnerDO 对象
+     * @return ResourcePlanProductDemandOwnerVO
+     */
+    ResourcePlanProductDemandOwnerVO convert(ProductDemandOwnerDO productDemandOwnerDO);
 
     /**
      * 转换转换DO

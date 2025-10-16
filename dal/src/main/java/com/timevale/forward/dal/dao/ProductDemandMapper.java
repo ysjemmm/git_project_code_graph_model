@@ -3,16 +3,16 @@ package com.timevale.forward.dal.dao;
 import com.timevale.forward.dal.condition.BizDemandLinkProductDemandListCondition;
 import com.timevale.forward.dal.condition.ProductDemandGroupQueryCondition;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
-import com.timevale.forward.dal.entity.BizDemandDO;
-import com.timevale.forward.dal.entity.BizDemandLinkProductDemandListDO;
-import com.timevale.forward.dal.entity.ProductDemandDO;
-import com.timevale.forward.dal.entity.ProductDemandGroupFieldDO;
-import com.timevale.forward.dal.entity.ProductDemandListDO;
+import com.timevale.forward.dal.entity.*;
+import lombok.NonNull;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
+import javax.validation.constraints.NotNull;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 public interface ProductDemandMapper {
     /**
@@ -163,4 +163,34 @@ public interface ProductDemandMapper {
     List<ProductDemandGroupFieldDO> getSimpleGroupList(ProductDemandGroupQueryCondition condition);
 
     Long getSimpleGroupCount(ProductDemandGroupQueryCondition condition);
+
+    /**
+     * 批量变更需求负责人
+     * @param productDemandOwnerDoS 待变更信息
+     * @return int
+     */
+    int batchUpsertProductDemandOwners(@Param("productDemandOwnerDoS") Collection<ProductDemandOwnerDO> productDemandOwnerDoS,
+                                       @NonNull @Param("operatorId") String operatorId, @NonNull @Param("operator") String operator);
+
+    /**
+     * 批量删除需求负责人
+     * @param ids 主键表ids
+     * @return int
+     */
+    int batchDeleteProductDemandOwners(@Param("ids") Collection<Long> ids,
+                                       @NonNull @Param("operatorId") String operatorId, @NonNull @Param("operator") String operator);
+
+    /**
+     * 查询需求关联的负责人
+     * @param productDemandIds 产品需求ids
+     * @return List<ProductDemandOwnerDO>
+     */
+    List<ProductDemandOwnerDO> listProductDemandOwners(@Param("productDemandIds") Collection<Long> productDemandIds);
+
+    /**
+     * 查询需求关联的负责人
+     * @param productDemandGroupId 产品需求组id
+     * @return List<ProductDemandOwnerDO>
+     */
+    List<ProductDemandOwnerDO> listProductDemandOwnersByGroupId(@Param("productDemandGroupId") Long productDemandGroupId);
 }

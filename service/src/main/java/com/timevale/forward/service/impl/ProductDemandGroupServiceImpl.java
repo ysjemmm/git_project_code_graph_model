@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Lists;
@@ -15,32 +16,12 @@ import com.timevale.forward.dal.dao.ProductDemandMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectProductDemandMapper;
 import com.timevale.forward.dal.dto.ProductDemandMoveDTO;
-import com.timevale.forward.dal.entity.BizDomainGroupRelationDO;
-import com.timevale.forward.dal.entity.BizLabelDO;
-import com.timevale.forward.dal.entity.ProductDemandDO;
-import com.timevale.forward.dal.entity.ProductDemandGroupDO;
-import com.timevale.forward.dal.entity.ProductDemandGroupItemDO;
-import com.timevale.forward.dal.entity.ProductDemandGroupItemListDO;
-import com.timevale.forward.dal.entity.ProductDemandListDO;
-import com.timevale.forward.dal.entity.ProjectDO;
-import com.timevale.forward.dal.entity.ProjectProductDemandDO;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProductDemandGroupService;
 import com.timevale.forward.facade.api.client.ProductDemandService;
 import com.timevale.forward.facade.api.query.ProductDemandGroupQueryList;
-import com.timevale.forward.facade.api.request.ProductDemandAddReq;
-import com.timevale.forward.facade.api.request.ProductDemandGroupAddReq;
-import com.timevale.forward.facade.api.request.ProductDemandGroupInnerAddReq;
-import com.timevale.forward.facade.api.request.ProductDemandGroupItemMoveReq;
-import com.timevale.forward.facade.api.request.ProductDemandGroupModifyReq;
-import com.timevale.forward.facade.api.request.ProductDemandGroupMoveReq;
-import com.timevale.forward.facade.api.request.ProductDemandGroupProjectLinkReq;
-import com.timevale.forward.facade.api.request.ProductDemandGroupReq;
-import com.timevale.forward.facade.api.request.ProductDemandGroupTransferReq;
-import com.timevale.forward.facade.api.request.ProjectProductDemandLinkReq;
-import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
-import com.timevale.forward.facade.api.result.ProductDemandGroupItemVO;
-import com.timevale.forward.facade.api.result.ProductDemandGroupVO;
-import com.timevale.forward.facade.api.result.ProductDemandVO;
+import com.timevale.forward.facade.api.request.*;
+import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.AscriptionEnum;
 import com.timevale.forward.model.enums.BizTypeEnum;
 import com.timevale.forward.model.enums.LinkOrUnLinkEnum;
@@ -68,9 +49,11 @@ import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.BaseInfoResponse;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.util.Pair;
@@ -78,13 +61,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -156,7 +135,9 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         log.info("待规划产品需求接收参数:{}", productDemandGroupQueryList);
         ProductDemandGroupListCondition condition = ProductDemandGroupCopier.INSTANCE.convert(productDemandGroupQueryList);
         //是否打标
-        if (labelCondition(productDemandGroupQueryList, condition)) return BaseResult.success(ResultUtil.pageEmpty());
+        if (labelCondition(productDemandGroupQueryList, condition)) {
+            return BaseResult.success(ResultUtil.pageEmpty());
+        }
 
         // 分页查询
         PageHelper.startPage(productDemandGroupQueryList.getPageNum(), productDemandGroupQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
@@ -221,7 +202,9 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
             condition.setGroupOwnerIds(accountIds);
         }
         //是否打标
-        if (labelCondition(productDemandGroupQueryList, condition)) return BaseResult.success(ResultUtil.pageEmpty());
+        if (labelCondition(productDemandGroupQueryList, condition)) {
+            return BaseResult.success(ResultUtil.pageEmpty());
+        }
         // 设置分页
         PageHelper.startPage(productDemandGroupQueryList.getPageNum(), productDemandGroupQueryList.getPageSize());
         List<ProductDemandGroupDO> productDemandGroupListDO = productDemandGroupComponent.list(condition);
@@ -647,6 +630,91 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         return BaseResult.success(true);
     }
 
+    private List<ResourcePlanProductDemandAddReq> distinctResourceTypeAndOwner (ProductDemandGroupResourcePlanReq productDemandGroupResourcePlanReq) {
+        List<ResourcePlanProductDemandAddReq> productDemands = productDemandGroupResourcePlanReq.getProductDemands();
+        if (CollUtil.isEmpty(productDemands)) {
+            return Collections.emptyList();
+        }
+        boolean existDistinctResourceType = productDemands.stream().anyMatch(d ->
+                d.getProductDemandOwners().stream()
+                        .map(ProductDemandOwnerAddReq::getResourceType)
+                        .distinct().count() != d.getProductDemandOwners().size());
+        if (existDistinctResourceType) {
+            AssertUtil.checkState(false, "产品需求-资源规划中每个需求不能存在重复的资源类型");
+        }
+        productDemands.forEach(d -> {
+            if (CollectionUtils.isEmpty(d.getProductDemandOwners())) {
+                return;
+            }
+            Map<String, List<ProductDemandOwnerAddReq>> resourceType2Owner =
+                    d.getProductDemandOwners().stream()
+                            .collect(Collectors.groupingBy(
+                                    ProductDemandOwnerAddReq::getResourceType,
+                                    Collectors.collectingAndThen(
+                                            Collectors.toMap(
+                                                    ProductDemandOwnerAddReq::getOwnerPk,
+                                                    Function.identity(),
+                                                    (e, r) -> e,
+                                                    LinkedHashMap::new
+                                            ),
+                                            map -> new ArrayList<>(map.values())
+                                    )
+                            ));
+            d.setProductDemandOwners(resourceType2Owner.values().stream().flatMap(Collection::stream).collect(Collectors.toList()));
+        });
+        return productDemands;
+    }
+
+    private void batchDeleteProductDemandOwners(Collection<Long> ids, @NonNull String operatorId, @NonNull String operator) {
+        if (CollUtil.isEmpty(ids)) {
+            return;
+        }
+        productDemandMapper.batchDeleteProductDemandOwners(ids, operatorId, operator);
+    }
+
+    @Override
+    @Transactional
+    public BaseResult<Boolean> upsertResourcePlan(ProductDemandGroupResourcePlanReq productDemandGroupResourcePlanReq) {
+        List<ResourcePlanProductDemandAddReq> productDemands = distinctResourceTypeAndOwner(productDemandGroupResourcePlanReq);
+        checkOperationPermission(productDemandGroupResourcePlanReq.getBizDomainGroupId());
+
+        Map<Long,List<ProductDemandOwnerDO>> existedOwnersMap = productDemandMapper.listProductDemandOwnersByGroupId(productDemandGroupResourcePlanReq.getProductDemandGroupId())
+                .stream().collect(Collectors.groupingBy(ProductDemandOwnerDO::getProductDemandId));
+        if (CollectionUtils.isEmpty(productDemands)) {
+            batchDeleteProductDemandOwners(existedOwnersMap.values().stream()
+                    .flatMap(List::stream).map(ProductDemandOwnerDO::getId)
+                    .collect(Collectors.toSet()), productDemandGroupResourcePlanReq.getOperatorId(), productDemandGroupResourcePlanReq.getOperator());
+            return BaseResult.success(true);
+        }
+
+        final Set<ProductDemandOwnerDO> waitAddOwners = new LinkedHashSet<>();
+        final Set<ProductDemandOwnerDO> waitUpdateOwners = new LinkedHashSet<>();
+        final Set<ProductDemandOwnerDO> waitDeleteOwners = new LinkedHashSet<>();
+        List<ProductDemandOwnerAddReq> productDemandOwners = productDemands.stream()
+                .flatMap(d -> d.getProductDemandOwners().stream()
+                        .peek(o -> o.setProductDemandId(d.getProductDemandId()))
+                ).collect(Collectors.toList());
+        for (ProductDemandOwnerAddReq productDemandOwner : productDemandOwners) {
+            Set<ProductDemandOwnerDO> nowOwners = new LinkedHashSet<>(ProductDemandCopier.INSTANCE.convertList(productDemandOwners));
+            Set<ProductDemandOwnerDO> existedOwners = new LinkedHashSet<>(existedOwnersMap.getOrDefault(productDemandOwner.getProductDemandId(), Collections.emptyList()));
+            if (CollUtil.isEmpty(existedOwners)) {
+                waitAddOwners.addAll(nowOwners);
+                continue;
+            }
+            waitAddOwners.addAll(nowOwners.stream().filter(item -> !existedOwners.contains(item)).collect(Collectors.toList()));
+            waitUpdateOwners.addAll(nowOwners.stream().filter(existedOwners::contains).collect(Collectors.toList()));
+            waitDeleteOwners.addAll(existedOwners.stream().filter(item -> !nowOwners.contains(item)).collect(Collectors.toList()));
+        }
+
+        waitAddOwners.addAll(waitUpdateOwners);
+        productDemandMapper.batchUpsertProductDemandOwners(waitAddOwners, productDemandGroupResourcePlanReq.getOperatorId(), productDemandGroupResourcePlanReq.getOperator());
+        batchDeleteProductDemandOwners(waitDeleteOwners.stream().map(ProductDemandOwnerDO::getId).collect(Collectors.toSet()), productDemandGroupResourcePlanReq.getOperatorId(), productDemandGroupResourcePlanReq.getOperator());
+
+        // TODO 抄送需求给指定人
+
+        return BaseResult.success(true);
+    }
+
     @Override
     public BaseResult<Boolean> addDemand(ProductDemandGroupInnerAddReq productDemandGroupInnerAddReq) {
         ProductDemandAddReq productDemandAddReq = new ProductDemandAddReq();
@@ -663,5 +731,41 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         productDemandGroupItemMoveReq.setPrevId(null);
         moveProductDemand(productDemandGroupItemMoveReq);
         return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<ProductDemandGroupResourcePlanVO> getResourcePlan(@NonNull Long bizDomainGroupId, @NonNull Long productDemandGroupId) {
+        ProductDemandGroupResourcePlanVO demandGroupResourcePlanVO = ProductDemandGroupResourcePlanVO.builder().productDemandGroupId(productDemandGroupId).build();
+        List<ProductDemandGroupItemDO> groupItems = productDemandGroupItemMapper.getByGroupId(productDemandGroupId);
+        Set<Long> productDemandIds = groupItems.stream().map(ProductDemandGroupItemDO::getProductDemandId).collect(Collectors.toSet());
+        if (CollectionUtils.isEmpty(productDemandIds)) {
+            return BaseResult.success(demandGroupResourcePlanVO);
+        }
+
+        final Map<Long,List<ProductDemandOwnerDO>> productDemandId2Owners = productDemandMapper.listProductDemandOwners(productDemandIds).stream()
+                .collect(Collectors.groupingBy(ProductDemandOwnerDO::getProductDemandId));
+
+        if (MapUtils.isEmpty(productDemandId2Owners)) {
+            return BaseResult.success(demandGroupResourcePlanVO);
+        }
+
+        Map<Long, List<BizLabelSimpleVO>> productDemandId2Label = bizLabelComponent.getBizLabelMap(new ArrayList<>(productDemandIds), BizTypeEnum.PRODUCT_DEMAND.getCode());
+        Map<Long, String> productDemandId2Name = productDemandMapper.selectByIdList(productDemandIds).stream()
+                .collect(Collectors.toMap(ProductDemandDO::getId, ProductDemandDO::getName, (o, n) -> o));
+
+        final List<ResourcePlanProductDemandVO> resourcePlanProductDemandVos = new ArrayList<>();
+        productDemandId2Owners.forEach((productDemandId, owners) -> {
+            ResourcePlanProductDemandVO resourcePlanProductDemandVO = ResourcePlanProductDemandVO.builder()
+                    .id(productDemandId)
+                    .name(productDemandId2Name.get(productDemandId))
+                    .labelNames(productDemandId2Label.getOrDefault(productDemandId, Collections.emptyList()))
+                    .owners(owners.stream().map(ProductDemandCopier.INSTANCE::convert).collect(Collectors.toList())).build();
+            resourcePlanProductDemandVos.add(resourcePlanProductDemandVO);
+        });
+
+        demandGroupResourcePlanVO.setProductDemands(resourcePlanProductDemandVos);
+        demandGroupResourcePlanVO.setEditable(bizDomainGroupMapper.countBizGroup(bizDomainGroupId, LocalSessionUtils.getUserInfo().getId()) > 0
+            || bizDomainGroupMapper.countProductLine(productDemandGroupId, LocalSessionUtils.getUserInfo().getId()) > 0);
+        return BaseResult.success(demandGroupResourcePlanVO);
     }
 }

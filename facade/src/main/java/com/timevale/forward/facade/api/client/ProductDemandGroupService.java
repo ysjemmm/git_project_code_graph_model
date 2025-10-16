@@ -3,14 +3,8 @@ package com.timevale.forward.facade.api.client;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.ProductDemandGroupQueryList;
-import com.timevale.forward.facade.api.request.ProductDemandGroupAddReq;
-import com.timevale.forward.facade.api.request.ProductDemandGroupInnerAddReq;
-import com.timevale.forward.facade.api.request.ProductDemandGroupItemMoveReq;
-import com.timevale.forward.facade.api.request.ProductDemandGroupModifyReq;
-import com.timevale.forward.facade.api.request.ProductDemandGroupMoveReq;
-import com.timevale.forward.facade.api.request.ProductDemandGroupProjectLinkReq;
-import com.timevale.forward.facade.api.request.ProductDemandGroupReq;
-import com.timevale.forward.facade.api.request.ProductDemandGroupTransferReq;
+import com.timevale.forward.facade.api.request.*;
+import com.timevale.forward.facade.api.result.ProductDemandGroupResourcePlanVO;
 import com.timevale.forward.facade.api.result.ProductDemandGroupVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.mandarin.common.annotation.RestClient;
@@ -96,6 +90,20 @@ public interface ProductDemandGroupService {
      */
     BaseResult<Boolean> transferProductDemandGroup(ProductDemandGroupTransferReq productDemandGroupTransferReq);
 
+    /**
+     * 需求分组内资源规划
+     * @param productDemandGroupResourcePlanReq 产品需求分组资源规划请求
+     * @return 是否成功
+     */
+    BaseResult<Boolean> upsertResourcePlan(ProductDemandGroupResourcePlanReq productDemandGroupResourcePlanReq);
+
 
     BaseResult<Boolean> addDemand(ProductDemandGroupInnerAddReq productDemandGroupInnerAddReq);
+
+    /**
+     * 需求分组内资源规划信息
+     * @param productDemandGroupId 产品需求分组id
+     * @return ProductDemandGroupResourcePlanVO
+     */
+    BaseResult<ProductDemandGroupResourcePlanVO> getResourcePlan(Long bizDomainGroupId, Long productDemandGroupId);
 }

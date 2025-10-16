@@ -49,5 +49,4 @@ public interface LabelCopier {
      */
     List<LabelVO> convertT(List<LabelDO> labelDOList);
 
-
 }
