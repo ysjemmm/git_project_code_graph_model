@@ -13,25 +13,136 @@ import com.google.common.collect.Sets;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BugOnlineListCondition;
 import com.timevale.forward.dal.condition.PersonListCondition;
-import com.timevale.forward.dal.dao.*;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.dao.BizDemandMapper;
+import com.timevale.forward.dal.dao.BizDomainMapper;
+import com.timevale.forward.dal.dao.BizLabelMapper;
+import com.timevale.forward.dal.dao.BugLogMapper;
+import com.timevale.forward.dal.dao.BugOfflineMapper;
+import com.timevale.forward.dal.dao.BugOnlineBizDemandMapper;
+import com.timevale.forward.dal.dao.BugOnlineMapper;
+import com.timevale.forward.dal.dao.BugOnlineModelMapper;
+import com.timevale.forward.dal.dao.BugOnlineProductLineMapper;
+import com.timevale.forward.dal.dao.BugStatusOperatorMapper;
+import com.timevale.forward.dal.dao.CommentMapper;
+import com.timevale.forward.dal.dao.FileMapper;
+import com.timevale.forward.dal.dao.ModelMapper;
+import com.timevale.forward.dal.dao.PersonMapper;
+import com.timevale.forward.dal.dao.ProductLineMapper;
+import com.timevale.forward.dal.entity.BaseDO;
+import com.timevale.forward.dal.entity.BizDemandDO;
+import com.timevale.forward.dal.entity.BizDomainDO;
+import com.timevale.forward.dal.entity.BizLabelDO;
+import com.timevale.forward.dal.entity.BugLogDO;
+import com.timevale.forward.dal.entity.BugOfflineDO;
+import com.timevale.forward.dal.entity.BugOnlineCustomDO;
+import com.timevale.forward.dal.entity.BugOnlineDO;
+import com.timevale.forward.dal.entity.BugOnlineListDO;
+import com.timevale.forward.dal.entity.BugOnlineModelDO;
+import com.timevale.forward.dal.entity.BugOnlineProductLineDO;
+import com.timevale.forward.dal.entity.BugOnlineStatusOperatorDO;
+import com.timevale.forward.dal.entity.CommentDO;
+import com.timevale.forward.dal.entity.FileDO;
+import com.timevale.forward.dal.entity.ModelDO;
+import com.timevale.forward.dal.entity.PersonDO;
+import com.timevale.forward.dal.entity.ProductLineDO;
 import com.timevale.forward.facade.api.client.BugOnlineService;
 import com.timevale.forward.facade.api.query.BugOnlineQueryList;
-import com.timevale.forward.facade.api.request.*;
-import com.timevale.forward.facade.api.result.*;
+import com.timevale.forward.facade.api.request.BugOnlineAcceptanceReq;
+import com.timevale.forward.facade.api.request.BugOnlineAddReq;
+import com.timevale.forward.facade.api.request.BugOnlineAttachToBizReq;
+import com.timevale.forward.facade.api.request.BugOnlineConfirmRepairReq;
+import com.timevale.forward.facade.api.request.BugOnlineDetailReq;
+import com.timevale.forward.facade.api.request.BugOnlineGetFieldReq;
+import com.timevale.forward.facade.api.request.BugOnlineGetReq;
+import com.timevale.forward.facade.api.request.BugOnlineIdsReq;
+import com.timevale.forward.facade.api.request.BugOnlineModifyReq;
+import com.timevale.forward.facade.api.request.BugOnlineNoRepairReq;
+import com.timevale.forward.facade.api.request.BugOnlineOnlineReq;
+import com.timevale.forward.facade.api.request.BugOnlineOpenAgainReq;
+import com.timevale.forward.facade.api.request.BugOnlinePriorityGetReq;
+import com.timevale.forward.facade.api.request.BugOnlineRepairFailedReasonReq;
+import com.timevale.forward.facade.api.request.BugOnlineRepairFinishedReq;
+import com.timevale.forward.facade.api.request.BugOnlineReq;
+import com.timevale.forward.facade.api.request.BugOnlineStartRepairReq;
+import com.timevale.forward.facade.api.request.BugOnlineToBizApplyReq;
+import com.timevale.forward.facade.api.request.BugOnlineTransferReq;
+import com.timevale.forward.facade.api.request.FileAddReq;
+import com.timevale.forward.facade.api.request.PersonAddReq;
+import com.timevale.forward.facade.api.result.BizDemandVO;
+import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
+import com.timevale.forward.facade.api.result.BugOnlineDetailVO;
+import com.timevale.forward.facade.api.result.BugOnlineLinkVO;
+import com.timevale.forward.facade.api.result.BugOnlineQueryResultVO;
+import com.timevale.forward.facade.api.result.BugOnlineSimpleVO;
+import com.timevale.forward.facade.api.result.BugOnlineVO;
+import com.timevale.forward.facade.api.result.CommentVO;
+import com.timevale.forward.facade.api.result.FileVO;
+import com.timevale.forward.facade.api.result.PersonVO;
+import com.timevale.forward.facade.api.result.PriorityStatisticsVO;
+import com.timevale.forward.facade.api.result.ProductLineToFieldVO;
+import com.timevale.forward.facade.api.result.ProductLineVO;
 import com.timevale.forward.model.bo.BusinessBO;
-import com.timevale.forward.model.enums.*;
+import com.timevale.forward.model.enums.AscriptionEnum;
+import com.timevale.forward.model.enums.BizProductLineTypeEnum;
+import com.timevale.forward.model.enums.BizTypeEnum;
+import com.timevale.forward.model.enums.BugFieldEnum;
+import com.timevale.forward.model.enums.BugLogFieldEnum;
+import com.timevale.forward.model.enums.BugLogTypeEnum;
+import com.timevale.forward.model.enums.BugOnlineConvertBizStatusEnum;
+import com.timevale.forward.model.enums.BugOnlineEnvEnum;
+import com.timevale.forward.model.enums.BugOnlinePriorityEnum;
+import com.timevale.forward.model.enums.BugOnlineReasonEnum;
+import com.timevale.forward.model.enums.BugOnlineStatusEnum;
+import com.timevale.forward.model.enums.ButtonActionEnum;
+import com.timevale.forward.model.enums.CommentTypeEnum;
+import com.timevale.forward.model.enums.FileTypeEnum;
+import com.timevale.forward.model.enums.JobFunctionEnum;
+import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.model.middle.BugOnlineMD;
 import com.timevale.forward.model.middle.BusinessMD;
 import com.timevale.forward.model.to.PdLineDomainTO;
-import com.timevale.forward.service.component.*;
+import com.timevale.forward.service.component.BizLabelComponent;
+import com.timevale.forward.service.component.BugLogComponent;
+import com.timevale.forward.service.component.BugOnlineComponent;
+import com.timevale.forward.service.component.BugOnlineCustomComponent;
+import com.timevale.forward.service.component.BugOnlineModelComponent;
+import com.timevale.forward.service.component.BugOnlineProductLineComponent;
+import com.timevale.forward.service.component.BugOnlineStatusOperatorComponent;
+import com.timevale.forward.service.component.FileComponent;
+import com.timevale.forward.service.component.LabelComponent;
+import com.timevale.forward.service.component.OutBizDealComponent;
+import com.timevale.forward.service.component.PersonComponent;
+import com.timevale.forward.service.component.ProductLineComponent;
+import com.timevale.forward.service.component.SqlOrderComponent;
 import com.timevale.forward.service.constant.CommonConstant;
-import com.timevale.forward.service.copy.*;
+import com.timevale.forward.service.copy.BizDemandCopier;
+import com.timevale.forward.service.copy.BugOnlineCopier;
+import com.timevale.forward.service.copy.BugOnlineCustomCopier;
+import com.timevale.forward.service.copy.CommentCopier;
+import com.timevale.forward.service.copy.FileCopier;
+import com.timevale.forward.service.copy.PersonCopier;
+import com.timevale.forward.service.copy.ProductLineCopier;
 import com.timevale.forward.service.integration.SoarClient;
 import com.timevale.forward.service.integration.crm.CrmClient;
 import com.timevale.forward.service.integration.dock.CrmProjectClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
-import com.timevale.forward.service.observer.event.*;
+import com.timevale.forward.service.observer.event.BugOnlineAcceptanceFailMsgEvent;
+import com.timevale.forward.service.observer.event.BugOnlineAcceptanceMsgEvent;
+import com.timevale.forward.service.observer.event.BugOnlineAddMsgEvent;
+import com.timevale.forward.service.observer.event.BugOnlineModifyMsgEvent;
+import com.timevale.forward.service.observer.event.BugOnlineNoRepairMsgEvent;
+import com.timevale.forward.service.observer.event.BugOnlineOnlineMsgEvent;
+import com.timevale.forward.service.observer.event.BugOnlineOpenAgainMsgEvent;
+import com.timevale.forward.service.observer.event.BugOnlineRejectMsgEvent;
+import com.timevale.forward.service.observer.event.BugOnlineRepairFailedMsgEvent;
+import com.timevale.forward.service.observer.event.BugOnlineRepairFinishedMsgEvent;
+import com.timevale.forward.service.observer.event.BugOnlineResubmitNoRepairMsgEvent;
+import com.timevale.forward.service.observer.event.BugOnlineResubmitOnlineMsgEvent;
+import com.timevale.forward.service.observer.event.BugOnlineToBizAgreeEvent;
+import com.timevale.forward.service.observer.event.BugOnlineToBizApplyEvent;
+import com.timevale.forward.service.observer.event.BugOnlineToBizRejectEvent;
+import com.timevale.forward.service.observer.event.BugOnlineTransferMsgEvent;
+import com.timevale.forward.service.observer.event.OnlineBugStatusChangeEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
@@ -52,11 +163,23 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.FastDateFormat;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -102,6 +225,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     private final BugOnlineProductLineMapper bugOnlineProductLineMapper;
     private final BugOnlineProductLineComponent bugOnlineProductLineComponent;
     private final BugOnlineStatusOperatorComponent bugOnlineStatusOperatorComponent;
+    private final ApplicationEventPublisher eventPublisher;
 
 
     @Value("${business}")
@@ -910,6 +1034,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     public BusinessResult<Boolean> confirm(BugOnlineReq bugOnlineReq) {
         //查询线上bug
         BugOnlineDO bugOnlineDO = bugOnlineMapper.get(bugOnlineReq.getId());
+        String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
         AssertUtil.notNull(bugOnlineDO, "线上bug不存在");
         AssertUtil.checkState(bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.START_RESPONSE.getCode()),
                 "当前BUG状态为：" + BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus()) +
@@ -917,6 +1042,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         bugOnlineDO.setStatus(BugOnlineStatusEnum.QUESTION_CONFIRM.getCode());
         bugOnlineMapper.update(bugOnlineDO);
+        // 🔔 发布状态变更事件
+        eventPublisher.publishEvent(new OnlineBugStatusChangeEvent(this, bugOnlineDO, oldStatus, BugOnlineStatusEnum.QUESTION_CONFIRM.getText(), bugOnlineDO.getModifyMan()));
 
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(ButtonActionEnum.CONFIRM.getText());
@@ -967,6 +1094,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setStatus(BugOnlineStatusEnum.QUESTION_REPAIR.getCode());
         bugOnlineDO.setTemporarySolution(startRepairReq.getTemporarySolution());
         bugOnlineMapper.update(bugOnlineDO);
+        // 🔔 发布状态变更事件
+        eventPublisher.publishEvent(new OnlineBugStatusChangeEvent(this, bugOnlineDO, oldStatus, BugOnlineStatusEnum.QUESTION_REPAIR.getText(), bugOnlineDO.getModifyMan()));
 
         // 状态log
         BugLogDO bugLogDO = new BugLogDO();
@@ -1030,6 +1159,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setOperatorId(bugOnlineRepairFinishedReq.getOperatorId());
         //线上bug表更新
         bugOnlineMapper.update(bugOnlineDO);
+
+        // 🔔 发布状态变更事件
+        eventPublisher.publishEvent(new OnlineBugStatusChangeEvent(this, bugOnlineDO, oldStatus, BugOnlineStatusEnum.REPAIR_CONFIRM.getText(), bugOnlineDO.getModifyMan()));
 
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(ButtonActionEnum.REPAIR_FINISH.getText());
@@ -1117,6 +1249,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setStatus(BugOnlineStatusEnum.ONLINE.getCode());
         bugOnlineMapper.update(bugOnlineDO);
 
+        // 🔔 发布状态变更事件
+        eventPublisher.publishEvent(new OnlineBugStatusChangeEvent(this, bugOnlineDO, oldStatus, BugOnlineStatusEnum.ONLINE.getText(), bugOnlineDO.getModifyMan()));
+
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(ButtonActionEnum.CONFIRM_REPAIR.getText());
         bugLogDO.setOldValue(oldStatus);
@@ -1162,6 +1297,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setOperatorId(bugOnlineDO.getProposerId());
         bugOnlineDO.setOperator(bugOnlineDO.getProposer());
         bugOnlineMapper.update(bugOnlineDO);
+        // 🔔 发布状态变更事件
+        eventPublisher.publishEvent(new OnlineBugStatusChangeEvent(this, bugOnlineDO, oldStatus, BugOnlineStatusEnum.ACCEPTANCE.getText(), bugOnlineDO.getModifyMan()));
 
         //往bug日志表中插入一条线上bug状态变更数据
         BugLogDO bugLogDO = new BugLogDO();
@@ -1240,6 +1377,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setOpenCount(bugOnlineDO.getOpenCount() + 1);
         //线上bug表更新
         bugOnlineMapper.update(bugOnlineDO);
+        // 🔔 发布状态变更事件
+        eventPublisher.publishEvent(new OnlineBugStatusChangeEvent(this, bugOnlineDO, oldStatus, BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus()), operator));
 
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(ButtonActionEnum.OPEN_AGAIN.getText());
@@ -1319,6 +1458,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         //线上bug表更新
         bugOnlineMapper.update(bugOnlineDO);
+        // 🔔 发布状态变更事件
+        eventPublisher.publishEvent(new OnlineBugStatusChangeEvent(this, bugOnlineDO, oldStatus, BugOnlineStatusEnum.BE_CONFIRM.getText(), operator));
 
         // 清空bug原因、关联的线下bug日志
         bugLogComponent.reason(bugId, oldReason, null);
@@ -1451,6 +1592,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         bugOnlineDO.setStatus(BugOnlineStatusEnum.CLOSE.getCode());
         bugOnlineMapper.update(bugOnlineDO);
+        // 🔔 发布状态变更事件
+        eventPublisher.publishEvent(new OnlineBugStatusChangeEvent(this, bugOnlineDO, oldStatus, BugOnlineStatusEnum.CLOSE.getText(), bugOnlineDO.getModifyMan()));
 
         //往bug日志表中插入一条线上bug状态变更数据
         BugLogDO bugLogDO = new BugLogDO();
@@ -1520,6 +1663,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setOpenCount(bugOnlineDO.getOpenCount() + 1);
         //线上bug表更新
         bugOnlineMapper.update(bugOnlineDO);
+
+        // 🔔 发布状态变更事件
+        eventPublisher.publishEvent(new OnlineBugStatusChangeEvent(this, bugOnlineDO, oldStatus, BugOnlineStatusEnum.START_RESPONSE.getText(), bugOnlineDO.getModifyMan()));
 
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(ButtonActionEnum.REFUSED.getText());
@@ -1593,6 +1739,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setHangUp(false);
         //线上bug表更新
         bugOnlineMapper.update(bugOnlineDO);
+        // 🔔 发布状态变更事件
+        eventPublisher.publishEvent(new OnlineBugStatusChangeEvent(this, bugOnlineDO, oldStatus, BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus()), bugOnlineDO.getModifyMan()));
 
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(ButtonActionEnum.REPEAT_CONFIRM.getText());
@@ -1634,6 +1782,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setHangUp(true);
         //线上bug表更新
         bugOnlineMapper.update(bugOnlineDO);
+
+        // 🔔 发布状态变更事件
+        eventPublisher.publishEvent(new OnlineBugStatusChangeEvent(this, bugOnlineDO, oldStatus, BugOnlineStatusEnum.HANG_UP.getText(), bugOnlineDO.getModifyMan()));
 
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(ButtonActionEnum.TEMPORARY_NO_REPAIR.getText());
@@ -1691,6 +1842,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setRepairFailReason(bugOnlineRepairFailedReasonReq.getRepairFailReason());
         //线上bug表更新
         bugOnlineMapper.update(bugOnlineDO);
+
+        // 🔔 发布状态变更事件
+        eventPublisher.publishEvent(new OnlineBugStatusChangeEvent(this, bugOnlineDO, oldStatus, BugOnlineStatusEnum.QUESTION_REPAIR.getText(), bugOnlineDO.getModifyMan()));
 
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(ButtonActionEnum.REPAIR_FAIL.getText());
@@ -1925,6 +2079,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setOperatorId(userInfo.getId());
         bugOnlineDO.setOperator(userInfo.getFullAlias());
         bugOnlineMapper.update(bugOnlineDO);
+        // 🔔 发布状态变更事件
+        eventPublisher.publishEvent(new OnlineBugStatusChangeEvent(this, bugOnlineDO, BugOnlineStatusEnum.getTextByCode(oldStatus), BugOnlineStatusEnum.START_RESPONSE.getText(), bugOnlineDO.getModifyMan()));
 
         //往bug日志表中插入一条线上bug状态变更数据
         BugLogDO bugLogDO = new BugLogDO();
@@ -1954,6 +2110,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
             //线上bug表更新
             bugOnlineMapper.updateStatusByIds(CollUtil.newArrayList(acceptanceReq.getId()), BugOnlineStatusEnum.COMPLETE.getCode());
+            // 🔔 发布状态变更事件
+            eventPublisher.publishEvent(new OnlineBugStatusChangeEvent(this, bugOnlineDO, oldStatus, BugOnlineStatusEnum.COMPLETE.getText(), bugOnlineDO.getModifyMan()));
 
             BugLogDO bugLogDO = new BugLogDO();
             bugLogDO.setAction(ButtonActionEnum.ACCEPTANCE_PASS.getText());
@@ -1992,6 +2150,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
             //线上bug表更新
             bugOnlineMapper.updateStatusByIds(CollUtil.newArrayList(acceptanceReq.getId()), BugOnlineStatusEnum.QUESTION_CONFIRM.getCode());
+
+            // 🔔 发布状态变更事件
+            eventPublisher.publishEvent(new OnlineBugStatusChangeEvent(this, bugOnlineDO, oldStatus, BugOnlineStatusEnum.QUESTION_CONFIRM.getText(), bugOnlineDO.getModifyMan()));
 
             // 打开次数+1
             bugOnlineMapper.updateIncOpenCount(acceptanceReq.getId());

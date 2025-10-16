@@ -9,10 +9,13 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.timevale.crm.sdk.common.constant.enums.EnvEnum;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.condition.ProjectListChildCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
+import com.timevale.forward.dal.condition.TaskListCondition;
+import com.timevale.forward.dal.condition.WorkHoursRecordCondition;
 import com.timevale.forward.dal.dao.BizChangeLogMapper;
 import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.BizDomainMapper;
@@ -38,7 +41,9 @@ import com.timevale.forward.dal.dao.ProjectPbuMapper;
 import com.timevale.forward.dal.dao.ProjectProductDemandMapper;
 import com.timevale.forward.dal.dao.ProjectProductLineMapper;
 import com.timevale.forward.dal.dao.ProjectRiskMapper;
+import com.timevale.forward.dal.dao.TaskMapper;
 import com.timevale.forward.dal.dao.TaskProductDemandMapper;
+import com.timevale.forward.dal.dao.WorkHoursRecordMapper;
 import com.timevale.forward.dal.entity.BaseDO;
 import com.timevale.forward.dal.entity.BizChangeLogDO;
 import com.timevale.forward.dal.entity.BizDemandDO;
@@ -67,7 +72,9 @@ import com.timevale.forward.dal.entity.ProjectPbuDO;
 import com.timevale.forward.dal.entity.ProjectProductDemandDO;
 import com.timevale.forward.dal.entity.ProjectProductLineBizDomain;
 import com.timevale.forward.dal.entity.ProjectProductLineDO;
+import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.dal.entity.TaskProductDemandDO;
+import com.timevale.forward.dal.entity.WorkHoursRecordDO;
 import com.timevale.forward.facade.api.client.ProjectBizDemandService;
 import com.timevale.forward.facade.api.client.ProjectMilestoneService;
 import com.timevale.forward.facade.api.client.ProjectService;
@@ -116,6 +123,7 @@ import com.timevale.forward.facade.api.result.ProjectTabCountVO;
 import com.timevale.forward.facade.api.result.ProjectTreeVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
+import com.timevale.forward.facade.api.result.TaskVO;
 import com.timevale.forward.model.dto.ModifyProjectProcessedBundle;
 import com.timevale.forward.model.enums.AscriptionEnum;
 import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
@@ -139,6 +147,7 @@ import com.timevale.forward.model.enums.ProjectNodeStatusEnum;
 import com.timevale.forward.model.enums.ProjectRiskStatusEnum;
 import com.timevale.forward.model.enums.ProjectStageEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.model.enums.TaskStatusEnum;
 import com.timevale.forward.model.enums.YesOrNoEnum;
 import com.timevale.forward.model.event.ProjectCreateEvent;
 import com.timevale.forward.service.component.BizDemandComponent;
@@ -172,14 +181,21 @@ import com.timevale.forward.service.copy.ProjectGoalCopier;
 import com.timevale.forward.service.copy.ProjectMemberEvaluateCopier;
 import com.timevale.forward.service.copy.ProjectNodeCopier;
 import com.timevale.forward.service.copy.ProjectNodeFlowCopier;
+import com.timevale.forward.service.copy.TaskCopier;
 import com.timevale.forward.service.flow.ForwardFlow;
 import com.timevale.forward.service.flow.model.TargetStatusModel;
+import com.timevale.forward.service.integration.ShortLinkClient;
 import com.timevale.forward.service.integration.dock.CrmProjectClient;
+import com.timevale.forward.service.integration.erp.model.ActionCardMsg;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.manager.MessageRetryManager;
 import com.timevale.forward.service.observer.event.ProjectEstablishDateChangeMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
+import com.timevale.forward.service.utils.EnvUtils;
+import com.timevale.forward.service.utils.JwtGeneratorUtil;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.StringUtil;
+import com.timevale.forward.service.utils.TokenUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateStyle;
 import com.timevale.forward.service.utils.date.DateUtil;
@@ -201,7 +217,11 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -213,6 +233,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -328,6 +350,188 @@ public class ProjectServiceImpl implements ProjectService {
     private BizDomainMapper bizDomainMapper;
     @Resource
     private ProductDemandGroupComponent productDemandGroupComponent;
+
+    @Resource
+    private TaskMapper taskMapper;
+    @Resource
+    private MessageRetryManager messageRetryManager;
+    @Resource
+    private EnvUtils envUtils;
+    @Resource
+    private ShortLinkClient shortLinkClient;
+    @Resource
+    private WorkHoursRecordMapper workHoursRecordMapper;
+
+    private static final List<Integer> PROJECT_STATUSES = Arrays.asList(
+            ProjectStatusEnum.WAITING.getCode(),
+            ProjectStatusEnum.PLANING.getCode(),
+            ProjectStatusEnum.DEVING.getCode(),
+            ProjectStatusEnum.TESTING.getCode(),
+            ProjectStatusEnum.RELEASED.getCode()
+    );
+
+    private static final List<Integer> TASK_STATUSES = Arrays.asList(
+            TaskStatusEnum.WAITING.getCode(),
+            TaskStatusEnum.PROGRESS.getCode()
+    );
+
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    @Override
+    public BaseResult<Void> sendWorkHourNotice(LocalDate today, boolean isExpedite, Long projectId) {
+        String url;
+        if (EnvEnum.PROD.equals(envUtils.getEnv())) {
+            url = "https://forward.esign.cn";
+        } else if (EnvEnum.PRE.equals(envUtils.getEnv())) {
+            url = "https://smlforward.tsign.cn";
+        } else {
+            url = "https://testforward.tsign.cn";
+        }
+
+        // 1. 查询开启通知的项目列表
+        // 通过项目状态和类别查询项目，并过滤出需要工时通知的项目，将其ID与名称映射为Map
+        Map<Long, String> notifyProjectMap = projectMapper.getByWorkHoursNotify(PROJECT_STATUSES, ProjectCategoryEnum.PRODUCT_PROJECT.getCode(), true)
+                .stream()
+                .filter(e -> ProjectKindEnum.PBG_BASE.getCode().equals(e.getKind()))
+                .collect(Collectors.toMap(ProjectDO::getId, ProjectDO::getName, (e1, e2) -> e1));
+
+        // 如果没有找到开启工时通知的项目，则记录日志并结束执行
+        if (notifyProjectMap.isEmpty()) {
+            log.warn("[sendWorkHoursSubmitJob]未找到开启工时通知的项目");
+            return BaseResult.success();
+        }
+
+        List<Long> projectIds;
+        if (projectId != null && notifyProjectMap.containsKey(projectId)) {
+            projectIds = Collections.singletonList(projectId);
+        } else {
+            // 将通知项目的ID收集到列表中
+            projectIds = new ArrayList<>(notifyProjectMap.keySet());
+        }
+
+        // 字符串日期不要时间
+        String dateStr = today.format(DATE_FORMATTER);
+        // 2. 查询项目中待通知的任务
+        // 根据项目ID列表和其他条件查询待处理的任务列表
+        List<TaskDO> progressTaskList = taskMapper.getProgressTaskList(TaskListCondition.builder()
+                .projectIds(projectIds)
+                .status(TASK_STATUSES)
+                .currentDate(dateStr)
+                .build());
+
+        // 登记过的负责人
+        List<String> registerOwnerIds;
+
+        if (isExpedite) {
+            List<Long> taskIds = progressTaskList.stream().map(TaskDO::getId).collect(Collectors.toList());
+            List<WorkHoursRecordDO> hoursRecordDOList = workHoursRecordMapper.list(WorkHoursRecordCondition.builder()
+                    .stratTime(today.atStartOfDay().format(DATE_TIME_FORMATTER))
+                    .endTime(today.atTime(LocalTime.MAX).format(DATE_TIME_FORMATTER))
+                    .workItemType(BizTypeEnum.TASK.getCode())
+                    .workItemIds(taskIds)
+                    .build()
+            );
+            registerOwnerIds = hoursRecordDOList.stream().map(WorkHoursRecordDO::getCreateManId).distinct().collect(Collectors.toList());
+            List<Long> registerTaskIds = hoursRecordDOList.stream().map(WorkHoursRecordDO::getWorkItemId).collect(Collectors.toList());
+            progressTaskList = progressTaskList.stream()
+                    .filter(e -> !registerTaskIds.contains(e.getId()))
+                    .collect(Collectors.toList());
+        } else {
+            registerOwnerIds = new ArrayList<>();
+        }
+
+        // 如果没有找到待通知的任务，则记录日志并结束执行
+        if (progressTaskList.isEmpty()) {
+            log.warn("[sendWorkHoursSubmitJob]未找到待通知的任务");
+            return BaseResult.success();
+        }
+
+        // 将待通知任务的ID收集到列表中
+        List<Long> progressTaskIdList = progressTaskList.stream()
+                .map(TaskDO::getId)
+                .collect(Collectors.toList());
+
+        // 3. 获取执行人信息
+        // 根据任务ID列表查询任务执行人信息，并按执行人ID分组
+        List<PersonDO> personDOS = personMapper.get(progressTaskIdList, PersonTypeEnum.TASK_EXECUTOR.getCode());
+
+        if (isExpedite && !registerOwnerIds.isEmpty()) {
+            personDOS = personDOS.stream()
+                    .filter(e -> !registerOwnerIds.contains(e.getUserId()))
+                    .collect(Collectors.toList());
+        }
+
+        // 如果没有执行人信息，则返回成功
+        if (personDOS.isEmpty()) {
+            return BaseResult.success();
+        }
+        Map<String, List<PersonDO>> executorMap = personDOS
+                .stream()
+                .collect(Collectors.groupingBy(PersonDO::getUserId));
+
+        // 执行人token
+        // 替换原来的token生成逻辑
+        Map<String, String> userTokenMap = personDOS.stream().collect(Collectors.toMap(
+                PersonDO::getUserId,
+                e -> JwtGeneratorUtil.generateJwt(e.getUserId(), e.getUserName().split("-")[0], e.getUserName().split("-")[1]),
+                (v1, v2) -> v2
+        ));
+
+        // 将任务信息转换为任务视图对象并映射为Map
+        Map<Long, TaskVO> taskVOMap = TaskCopier.INSTANCE.convert(progressTaskList).stream()
+                .collect(Collectors.toMap(TaskVO::getId, Function.identity(), (e1, e2) -> e1));
+
+        // 4. 构建并发送消息
+        // 遍历每个执行人，构建并发送行动卡片消息
+        AtomicInteger sentCount = new AtomicInteger(0);
+        executorMap.forEach((userId, executors) -> {
+            List<Long> taskIdList = executors.stream()
+                    .map(PersonDO::getMainId)
+                    .filter(taskVOMap::containsKey)
+                    .collect(Collectors.toList());
+
+            // 如果执行人没有待处理任务，则跳过
+            if (taskIdList.isEmpty()) {
+                return;
+            }
+
+            // url
+            StringBuilder urlBuilder = new StringBuilder();
+            // 真实url地址
+            urlBuilder.append(url).append("/mobileTimeRegistration?dateStr=").append(dateStr);
+            String token = userTokenMap.get(userId);
+            // 存储token
+            TokenUtil.setTokenExpireTime(userId, token, urlBuilder, dateStr);
+            // 生成短链接
+            String shortUrl = shortLinkClient.getShortUrl(urlBuilder.toString()).getShortlink();
+
+            // Markdown 内容包含提示
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("## ").append(dateStr).append("工时填报  \n");
+            stringBuilder.append("请完成以下任务的工时填报：  \n");
+            taskIdList.forEach(taskId -> {
+                TaskVO vo = taskVOMap.get(taskId);
+                stringBuilder.append("- 【").append(notifyProjectMap.get(vo.getProjectId())).append("】").append("-").append(vo.getName()).append("  \n");
+            });
+            stringBuilder.append("  \n👉 [点击跳转填报页面](").append(shortUrl).append(")  \n");
+            stringBuilder.append("⚠️ 如跳转失败，请复制下方链接在浏览器打开：  \n");
+            stringBuilder.append(shortUrl);
+
+            // 创建行动卡片消息对象
+            ActionCardMsg actionCardMsg = ActionCardMsg.builder()
+                    .title("工时填报")
+                    .markdown(stringBuilder.toString())
+                    .receivers(Lists.newArrayList(userId))
+                    .singleTitle("去填报")
+                    .singleUrl(shortUrl)
+                    .build();
+
+            messageRetryManager.sendAsyncMessage("sendWorkHoursSubmitJob", actionCardMsg, userId, sentCount);
+        });
+        return BaseResult.success();
+    }
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {

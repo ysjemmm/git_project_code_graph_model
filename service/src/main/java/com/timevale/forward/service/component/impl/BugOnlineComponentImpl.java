@@ -1,15 +1,45 @@
 package com.timevale.forward.service.component.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import com.timevale.forward.dal.dao.*;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.dao.BizChangeLogMapper;
+import com.timevale.forward.dal.dao.BizDomainMapper;
+import com.timevale.forward.dal.dao.BugLogMapper;
+import com.timevale.forward.dal.dao.BugOnlineBizDemandMapper;
+import com.timevale.forward.dal.dao.BugOnlineMapper;
+import com.timevale.forward.dal.dao.BugOnlineProductLineMapper;
+import com.timevale.forward.dal.dao.ProductLineMapper;
+import com.timevale.forward.dal.entity.BizChangeLogDO;
+import com.timevale.forward.dal.entity.BizDomainDO;
+import com.timevale.forward.dal.entity.BugLogDO;
+import com.timevale.forward.dal.entity.BugOnlineDO;
+import com.timevale.forward.dal.entity.BugOnlineProductLineDO;
+import com.timevale.forward.dal.entity.BugOnlineStatusOperatorDO;
+import com.timevale.forward.dal.entity.ProductLineDO;
 import com.timevale.forward.facade.api.request.BugOnlinePriorityGetReq;
-import com.timevale.forward.model.enums.*;
+import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
+import com.timevale.forward.model.enums.BizProductLineTypeEnum;
+import com.timevale.forward.model.enums.BugFieldEnum;
+import com.timevale.forward.model.enums.BugLogFieldEnum;
+import com.timevale.forward.model.enums.BugLogTypeEnum;
+import com.timevale.forward.model.enums.BugOnlineCategoryEnum;
+import com.timevale.forward.model.enums.BugOnlineEnvEnum;
+import com.timevale.forward.model.enums.BugOnlinePriorityEnum;
+import com.timevale.forward.model.enums.BugOnlineReasonEnum;
+import com.timevale.forward.model.enums.BugOnlineReasonStageEnum;
+import com.timevale.forward.model.enums.BugOnlineRecurrentEnum;
+import com.timevale.forward.model.enums.BugOnlineStatusEnum;
+import com.timevale.forward.model.enums.ButtonActionEnum;
+import com.timevale.forward.model.enums.CustomerCountEnum;
+import com.timevale.forward.model.enums.CustomerGradeEnum;
+import com.timevale.forward.model.enums.ProblemOccurredTimeEnum;
+import com.timevale.forward.model.enums.ProduceLineLevelEnum;
+import com.timevale.forward.model.enums.UserCountEnum;
 import com.timevale.forward.service.component.BugLogComponent;
 import com.timevale.forward.service.component.BugOnlineComponent;
 import com.timevale.forward.service.component.BugOnlineStatusOperatorComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.observer.event.BugOnlineConfirmMsgEvent;
+import com.timevale.forward.service.observer.event.OnlineBugStatusChangeEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
@@ -18,10 +48,19 @@ import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -53,6 +92,9 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
     @Resource
     private BugOnlineStatusOperatorComponent bugOnlineStatusOperatorComponent;
 
+    @Resource
+    private ApplicationEventPublisher eventPublisher;
+
     @Override
     public void autoCloseBugIfBeConfirm(int autoCloseLimitDay) {
         log.info("待确认线上bug自动关闭-开始:{}", autoCloseLimitDay);
@@ -72,8 +114,17 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
             }
         });
         if (CollectionUtils.isNotEmpty(updateBugIds)) {
+            UserInfo operator = LocalSessionUtils.getUserInfo();
+            // 先查询出所有bugOnlineDO
+            List<BugOnlineDO> byIds = bugOnlineMapper.getByIds(updateBugIds, false);
+
             bugOnlineMapper.updateStatusByIds(updateBugIds, BugOnlineStatusEnum.CLOSE.getCode());
             updateBugIds.forEach(this::addLog);
+
+            for (BugOnlineDO bugOnlineDO : byIds) {
+                // 🔔 发布状态变更事件
+                eventPublisher.publishEvent(new OnlineBugStatusChangeEvent(this, bugOnlineDO, BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus()), BugOnlineStatusEnum.CLOSE.getText(), operator.getAlias()));
+            }
         }
         log.info("待确认线上bug自动关闭-完成,更新id:{}", updateBugIds);
     }
@@ -129,6 +180,9 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
         bugOnlineDO.setReason(BugOnlineReasonEnum.PRODUCT_DESIGN_FLAWS.getCode());
         bugOnlineDO.setReasonStage(BugOnlineReasonStageEnum.PRODUCT_DESIGN.getCode());
         bugOnlineMapper.update(bugOnlineDO);
+
+        // 🔔 发布状态变更事件
+        eventPublisher.publishEvent(new OnlineBugStatusChangeEvent(this, bugOnlineDO, oldStatusName, BugOnlineStatusEnum.REQUIRED.getText(), bugOnlineDO.getModifyMan()));
 
         // 新增关联关系
         bugOnlineBizDemandMapper.addRelations(bugOnlineId, bizDemandIds);
