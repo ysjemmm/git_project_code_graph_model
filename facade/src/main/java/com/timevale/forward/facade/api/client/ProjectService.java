@@ -8,6 +8,7 @@ import com.timevale.forward.facade.api.result.*;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -16,6 +17,8 @@ import java.util.List;
  **/
 @RestClient(serviceId = MagicValue.FORWARD_RPC_PREFIX)
 public interface ProjectService {
+    BaseResult<Void> sendWorkHourNotice(LocalDate today, boolean isExpedite, Long projectId);
+
     /**
      * 查列表
      *
