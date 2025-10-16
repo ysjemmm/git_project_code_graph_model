@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Lists;
@@ -664,28 +665,35 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         return productDemands;
     }
 
+    private void batchUpsertProductDemandOwners(Collection<ProductDemandOwnerDO> addOwners, Collection<ProductDemandOwnerDO> updateOwners,@NonNull String operatorId, @NonNull String operator) {
+        if (CollUtil.isEmpty(addOwners) && CollUtil.isEmpty(updateOwners)) {
+            return;
+        }
+
+        List<ProductDemandOwnerDO> upsertOwners = new ArrayList<ProductDemandOwnerDO>(ObjectUtil.defaultIfNull(addOwners, Collections.emptyList())){{
+            addAll(ObjectUtil.defaultIfNull(updateOwners, Collections.emptyList()));
+        }};
+        productDemandMapper.batchUpsertProductDemandOwners(upsertOwners, operatorId, operator);
+
+        if (CollUtil.isNotEmpty(addOwners)) {
+            addOwners.stream().collect(Collectors.groupingBy(ProductDemandOwnerDO::getProductDemandId)).forEach((id, owners)->{
+                List<PersonAddReq> recipients = owners.stream().map(o -> new PersonAddReq().setUserName(o.getOwner()).setUserId(o.getOwnerId()))
+                        .collect(Collectors.toList());
+                recipientThreadPoolExecutor.submit(() -> personComponent.add(recipients, id, PersonTypeEnum.PRODUCT_DEMAND_CC.getCode()));
+            });
+        }
+    }
+
     private void batchDeleteProductDemandOwners(Collection<ProductDemandOwnerDO> owners, @NonNull String operatorId, @NonNull String operator) {
         if (CollUtil.isEmpty(owners)) {
             return;
         }
         Set<Long> ids = owners.stream().map(ProductDemandOwnerDO::getId).collect(Collectors.toSet());
         productDemandMapper.batchDeleteProductDemandOwners(ids, operatorId, operator);
-        asyncUpdateProductDemandRecipients(new PersonAddReq().setUserId(operatorId).setUserName(operator),
-                null,
-                owners.stream().map(ProductDemandOwnerDO::getProductDemandId).collect(Collectors.toList()));
-    }
 
-    private void asyncUpdateProductDemandRecipients (@NonNull PersonAddReq recipient, List<Long> addDemandIds, List<Long> deleteDemandIds) {
-        if (CollUtil.isNotEmpty(addDemandIds)) {
-            addDemandIds.forEach(id -> {
-                recipientThreadPoolExecutor.submit(() -> personComponent.add(Collections.singletonList(recipient), id, PersonTypeEnum.PRODUCT_DEMAND_CC.getCode()));
-            });
-        }
-        if (CollUtil.isNotEmpty(deleteDemandIds)) {
-            deleteDemandIds.forEach(id -> {
-                recipientThreadPoolExecutor.submit(() -> personComponent.remove(recipient.getUserId(), id, PersonTypeEnum.PRODUCT_DEMAND_CC.getCode()));
-            });
-        }
+        owners.forEach(owner -> {
+            recipientThreadPoolExecutor.submit(() -> personComponent.remove(owner.getOwnerId(), owner.getProductDemandId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode()));
+        });
     }
 
     @Override
@@ -706,8 +714,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         final Set<ProductDemandOwnerDO> waitAddOwners = new LinkedHashSet<>();
         final Set<ProductDemandOwnerDO> waitUpdateOwners = new LinkedHashSet<>();
         final Set<ProductDemandOwnerDO> waitDeleteOwners = new LinkedHashSet<>();
-        List<ProductDemandOwnerAddReq> productDemandOwners = productDemands.stream()
-                .flatMap(d -> d.getProductDemandOwners().stream()
+        List<ProductDemandOwnerAddReq> productDemandOwners = productDemands.stream().flatMap(d -> d.getProductDemandOwners().stream()
                         .peek(o -> o.setProductDemandId(d.getProductDemandId()))
                 ).collect(Collectors.toList());
         for (ProductDemandOwnerAddReq productDemandOwner : productDemandOwners) {
@@ -722,17 +729,8 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
             waitDeleteOwners.addAll(existedOwners.stream().filter(item -> !nowOwners.contains(item)).collect(Collectors.toList()));
         }
 
-        if (CollUtil.isNotEmpty(waitUpdateOwners) || CollUtil.isNotEmpty(waitAddOwners)) {
-            productDemandMapper.batchUpsertProductDemandOwners(new ArrayList<ProductDemandOwnerDO>(waitAddOwners){{addAll(waitUpdateOwners);}},
-                    productDemandGroupResourcePlanReq.getOperatorId(), productDemandGroupResourcePlanReq.getOperator());
-        }
+        batchUpsertProductDemandOwners(waitAddOwners, waitUpdateOwners, productDemandGroupResourcePlanReq.getOperatorId(), productDemandGroupResourcePlanReq.getOperator());
         batchDeleteProductDemandOwners(waitDeleteOwners, productDemandGroupResourcePlanReq.getOperatorId(), productDemandGroupResourcePlanReq.getOperator());
-
-        PersonAddReq personAddReq = new PersonAddReq().setUserId(productDemandGroupResourcePlanReq.getOperatorId())
-                .setUserName(productDemandGroupResourcePlanReq.getOperator());
-        asyncUpdateProductDemandRecipients(personAddReq,
-                waitAddOwners.stream().map(ProductDemandOwnerDO::getProductDemandId).collect(Collectors.toList()),
-                null);
 
         return BaseResult.success(true);
     }
