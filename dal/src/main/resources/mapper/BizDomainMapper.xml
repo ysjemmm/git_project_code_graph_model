@@ -138,6 +138,7 @@
                 AND listing_status=#{listingStatus}
             </if>
         </where>
+        order by sort_order desc
     </select>
 
 </mapper>
