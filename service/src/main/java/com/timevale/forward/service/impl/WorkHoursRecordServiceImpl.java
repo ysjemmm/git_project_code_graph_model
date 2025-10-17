@@ -804,6 +804,11 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
                         taskNameMap, projectMap, taskProjectMap, workDays, taskUseTimeMap))
                 .collect(Collectors.toList());
 
+        // 过滤掉任务列表为空的数据
+        workHoursOverviewVOList = workHoursOverviewVOList.stream()
+                .filter(vo -> !vo.getWorkHoursTasks().isEmpty())
+                .collect(Collectors.toList());
+
         // 过滤未登记
         if (Boolean.TRUE.equals(query.getIsUnregistered())) {
             workHoursOverviewVOList = workHoursOverviewVOList.stream()
