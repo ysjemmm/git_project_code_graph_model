@@ -124,6 +124,8 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
             demandDetailVO.setChangeDesc(latestDescFlow.getChangeDesc());
         }
 
+        // 资源评估信息
+        demandDetailVO.setResourcePlans(ProductDemandCopier.INSTANCE.convert(productDemandMapper.listProductDemandOwners(Collections.singletonList(id)), true));
         return demandDetailVO;
     }
 
