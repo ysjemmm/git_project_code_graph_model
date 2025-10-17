@@ -30,6 +30,8 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.forward.service.copy.ProductDemandGroupCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.observer.event.ProductDemandToCopiedMsgEvent;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.duplicate.GroupDuplicateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -56,6 +58,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * 产品需求分组服务实现类
@@ -117,6 +120,9 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
 
     @Resource
     private PersonComponent personComponent;
+
+    @Resource
+    private MessageEventPublisher messageEventPublisher;
 
     /**
      * 查询业务域内的待规划的产品需求
@@ -668,10 +674,20 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         productDemandMapper.batchUpsertProductDemandOwners(upsertOwners, operatorId, operator);
 
         if (CollUtil.isNotEmpty(addOwners)) {
-            addOwners.stream().collect(Collectors.groupingBy(ProductDemandOwnerDO::getProductDemandId)).forEach((id, owners)->{
-                List<PersonAddReq> recipients = owners.stream().map(o -> new PersonAddReq().setUserName(o.getOwner()).setUserId(o.getOwnerId()))
-                        .collect(Collectors.toList());
-                personComponent.add(recipients, id, PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
+            Map<Long, List<ProductDemandOwnerDO>> demandId2Owners = addOwners.stream().collect(Collectors.groupingBy(ProductDemandOwnerDO::getProductDemandId));
+            Map<Long, ProductDemandDO> demandId2Demand = productDemandMapper.selectByIdList(demandId2Owners.keySet()).stream().collect(Collectors.toMap(e->e.getId(), Function.identity(), (e,r)->e));
+            demandId2Owners.forEach((demandId, owners)->{
+                Set<PersonAddReq> recipients = owners.stream().map(o -> new PersonAddReq().setUserName(o.getOwner()).setUserId(o.getOwnerId()))
+                        .collect(Collectors.toSet());
+                personComponent.add(recipients, demandId, PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
+                ProductDemandDO productDemandDO = demandId2Demand.get(demandId);
+                messageEventPublisher.publish(new ProductDemandToCopiedMsgEvent(
+                        this,
+                        demandId,
+                        productDemandDO.getCreateMan(),
+                        recipients.stream().map(r->r.getUserId()).collect(Collectors.toList()),
+                        productDemandDO.getName()
+                ));
             });
         }
     }
@@ -682,40 +698,47 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         }
         Set<Long> ids = owners.stream().map(ProductDemandOwnerDO::getId).collect(Collectors.toSet());
         productDemandMapper.batchDeleteProductDemandOwners(ids, operatorId, operator);
-
-        PersonRemoveCondition removeCondition = PersonRemoveCondition.builder()
-                .type(PersonTypeEnum.PRODUCT_DEMAND_CC.getCode())
-                .mainId2PersonId(owners.stream().map(o -> Pair.of(o.getProductDemandId(), o.getOwnerId())).collect(Collectors.toList()))
-                .build();
-        personComponent.remove(removeCondition, operatorId, operator);
     }
 
-    private void updateDemandResourceTime (List<ResourcePlanProductDemandAddReq> productDemands) {
-        if (CollUtil.isEmpty(productDemands)) {
-            return;
+    private void updateDemandResourceTime (Collection<ProductDemandOwnerDO> waitAddOwners, Collection<ProductDemandOwnerDO> waitUpdateOwners, Collection<ProductDemandOwnerDO> waitDeleteOwners) {
+        Map<Long, ProductDemandDO> toUpdateResourceTime = new LinkedHashMap<>();
+        if (CollUtil.isNotEmpty(waitAddOwners)) {
+            waitAddOwners.forEach(o -> {
+                ProductDemandDO update = toUpdateResourceTime.computeIfAbsent(o.getProductDemandId(), k -> new ProductDemandDO());
+                update.setId(o.getProductDemandId());
+                fillResourceTimeByResourceType(update, o.getResourceType(), o.getResourceTime());
+            });
         }
-        final List<ProductDemandDO> updateDemands = new ArrayList<>();
-        productDemands.stream()
-                .filter(d->CollUtil.isNotEmpty(d.getProductDemandOwners()))
-                .collect(Collectors.toMap(ResourcePlanProductDemandAddReq::getProductDemandId, Function.identity(), (e,r) -> e ))
-                .forEach((productDemandId, d) -> {
-                    ProductDemandDO update = new ProductDemandDO();
-                    update.setId(productDemandId);
-                    d.getProductDemandOwners().stream().collect(Collectors.toMap(ProductDemandOwnerAddReq::getResourceType, Function.identity(), (e, r) -> e))
-                            .values().forEach(o -> {
-                        switch (o.getResourceType()) {
-                            case "frontend": update.setFrontTime(o.getResourceTime()); break;
-                            case "backend": update.setBackTime(o.getResourceTime()); break;
-                            case "test": update.setQaTime(o.getResourceTime()); break;
-                            case "ued": update.setUedTime(o.getResourceTime()); break;
-                            case "product": update.setProductTime(o.getResourceTime()); break;
-                            case "ops": update.setOpsTime(o.getResourceTime()); break;
-                            case "security": update.setSecurityTime(o.getResourceTime()); break;
-                        }
-                    });
-                    updateDemands.add(update);
-                });
-        productDemandMapper.updateResourceTime(updateDemands);
+        if (CollUtil.isNotEmpty(waitUpdateOwners)) {
+            waitUpdateOwners.forEach(o -> {
+                ProductDemandDO update = toUpdateResourceTime.computeIfAbsent(o.getProductDemandId(), k -> new ProductDemandDO());
+                update.setId(o.getProductDemandId());
+                fillResourceTimeByResourceType(update, o.getResourceType(), o.getResourceTime());
+            });
+        }
+        if (CollUtil.isNotEmpty(waitDeleteOwners)) {
+            waitDeleteOwners.forEach(o -> {
+                ProductDemandDO update = toUpdateResourceTime.computeIfAbsent(o.getProductDemandId(), k -> new ProductDemandDO());
+                update.setId(o.getProductDemandId());
+                fillResourceTimeByResourceType(update, o.getResourceType(), null);
+            });
+        }
+        if (MapUtils.isNotEmpty(toUpdateResourceTime)) {
+            productDemandMapper.updateResourceTime(new ArrayList<>(toUpdateResourceTime.values()));
+        }
+    }
+
+    private void fillResourceTimeByResourceType (@NonNull ProductDemandDO demandDO, @NonNull String resourceType, BigDecimal resourceTime) {
+        BigDecimal now = resourceTime == null ? BigDecimal.ZERO : resourceTime;
+        switch (resourceType) {
+            case "frontend": demandDO.setFrontTime(now); break;
+            case "backend": demandDO.setBackTime(now); break;
+            case "test": demandDO.setQaTime(now); break;
+            case "ued": demandDO.setUedTime(now); break;
+            case "product": demandDO.setProductTime(now); break;
+            case "ops": demandDO.setOpsTime(now); break;
+            case "security": demandDO.setSecurityTime(now); break;
+        }
     }
 
     @Override
@@ -727,16 +750,13 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         Map<Long,List<ProductDemandOwnerDO>> existedOwnersMap = productDemandMapper.listProductDemandOwnersByGroupId(productDemandGroupResourcePlanReq.getProductDemandGroupId())
                 .stream().collect(Collectors.groupingBy(ProductDemandOwnerDO::getProductDemandId));
         if (CollectionUtils.isEmpty(productDemands)) {
-            batchDeleteProductDemandOwners(existedOwnersMap.values().stream()
-                    .flatMap(List::stream).collect(Collectors.toSet()),
-                    productDemandGroupResourcePlanReq.getOperatorId(), productDemandGroupResourcePlanReq.getOperator());
             return BaseResult.success(true);
         }
 
         final Set<ProductDemandOwnerDO> waitAddOwners = new LinkedHashSet<>();
         final Set<ProductDemandOwnerDO> waitUpdateOwners = new LinkedHashSet<>();
         final Set<ProductDemandOwnerDO> waitDeleteOwners = new LinkedHashSet<>();
-        // 对于某个需求，删除所有的负责人
+
         productDemands.forEach(d -> {
             if (CollUtil.isEmpty(d.getProductDemandOwners())) {
                 waitDeleteOwners.addAll(existedOwnersMap.getOrDefault(d.getProductDemandId(), Collections.emptyList()));
@@ -757,10 +777,23 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
             waitDeleteOwners.addAll(existedOwners.stream().filter(item -> !nowOwners.contains(item)).collect(Collectors.toList()));
         }
 
-        updateDemandResourceTime(productDemands);
         batchUpsertProductDemandOwners(waitAddOwners, waitUpdateOwners, productDemandGroupResourcePlanReq.getOperatorId(), productDemandGroupResourcePlanReq.getOperator());
         batchDeleteProductDemandOwners(waitDeleteOwners, productDemandGroupResourcePlanReq.getOperatorId(), productDemandGroupResourcePlanReq.getOperator());
+        updateDemandResourceTime(waitAddOwners, waitUpdateOwners, waitDeleteOwners);
 
+        // 一个需求可能存在某个人既是前端又是后端这种情况，而前端移除它负责人身份，后端添加它为负责人，这种交叉情况需要特判
+        List<ProductDemandOwnerDO> realDeletes = waitDeleteOwners.stream().filter(o -> {
+            boolean isAdd = waitAddOwners.stream().anyMatch(e -> e.getOwnerId().equals(o.getOwnerId()) && e.getProductDemandId().equals(o.getProductDemandId()));
+            boolean isUpdate = waitUpdateOwners.stream().anyMatch(e -> e.getOwnerId().equals(o.getOwnerId()) && e.getProductDemandId().equals(o.getProductDemandId()));
+            return !isAdd && !isUpdate;
+        }).collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(realDeletes)) {
+            PersonRemoveCondition removeCondition = PersonRemoveCondition.builder()
+                    .type(PersonTypeEnum.PRODUCT_DEMAND_CC.getCode())
+                    .mainId2PersonId(realDeletes.stream().map(o -> Pair.of(o.getProductDemandId(), o.getOwnerId())).collect(Collectors.toList()))
+                    .build();
+            personComponent.remove(removeCondition, productDemandGroupResourcePlanReq.getOperatorId(), productDemandGroupResourcePlanReq.getOperator());
+        }
         return BaseResult.success(true);
     }
 

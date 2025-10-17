@@ -1,5 +1,6 @@
 package com.timevale.forward.dal.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -37,5 +38,10 @@ public class ProductDemandOwnerDO extends BaseDO {
      */
     @EqualsAndHashCode.Include
     private String resourceType;
+
+    /**
+     * 资源人天，非数据库表字段，中转字段
+     */
+    private BigDecimal resourceTime;
 
 }

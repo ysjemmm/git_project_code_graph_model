@@ -37,7 +37,7 @@ public class ProductDemandOwnerAddReq extends ToString {
     @EqualsAndHashCode.Include
     private String resourceType;
 
-    @NotNull(message = "资源评估人天不能为空")
+    @NotNull(message = "资源评估人天,不能为空")
     @ApiModelProperty(value = "资源评估人天", required = true)
     private BigDecimal resourceTime;
 }
