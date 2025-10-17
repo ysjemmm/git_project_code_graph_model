@@ -708,6 +708,12 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         final Set<ProductDemandOwnerDO> waitAddOwners = new LinkedHashSet<>();
         final Set<ProductDemandOwnerDO> waitUpdateOwners = new LinkedHashSet<>();
         final Set<ProductDemandOwnerDO> waitDeleteOwners = new LinkedHashSet<>();
+        // 对于某个需求，删除所有的负责人
+        productDemands.forEach(d -> {
+            if (CollUtil.isEmpty(d.getProductDemandOwners())) {
+                waitDeleteOwners.addAll(existedOwnersMap.getOrDefault(d.getProductDemandId(), Collections.emptyList()));
+            }
+        });
         List<ProductDemandOwnerAddReq> productDemandOwners = productDemands.stream().flatMap(d -> d.getProductDemandOwners().stream()
                         .peek(o -> o.setProductDemandId(d.getProductDemandId()))
                 ).collect(Collectors.toList());
