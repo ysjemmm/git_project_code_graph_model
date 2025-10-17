@@ -873,6 +873,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         List<Long> taskIdList = executorTaskMap.getOrDefault(userId, Collections.emptyList());
         List<WorkHoursTaskVO> workHoursTaskVOS = new ArrayList<>(taskIdList.size());
         List<String> registeredDateList = new ArrayList<>();
+        List<String> taskDateEmptyList = new ArrayList<>();
 
         for (Long taskId : taskIdList) {
             WorkHoursTaskVO taskVO = new WorkHoursTaskVO();
@@ -906,9 +907,42 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         }
 
         vo.setWorkHoursTasks(workHoursTaskVOS);
-        vo.setUnregisteredDateList(workDays.stream()
+
+        List<String> notRegisteredDateList = workDays.stream()
                 .filter(date -> !registeredDateList.contains(date))
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList());
+
+        // 查询当前用户进行中的任务
+        List<TaskDO> progressTaskList = taskMapper.getProgressTaskList(TaskListCondition.builder()
+                .status(TASK_STATUSES)
+                .currentDates(notRegisteredDateList)
+                .ids(taskIdList)
+                .build());
+
+        // 判断当前用户进行中的任务
+        for (String date : notRegisteredDateList) {
+            if (CollectionUtils.isNotEmpty(progressTaskList)
+                    && progressTaskList.stream().anyMatch(task -> {
+                try {
+                    LocalDate targetDate = LocalDate.parse(date);
+                    if (task.getPlanStartDate() == null || task.getPlanEndDate() == null) {
+                        return false;
+                    }
+
+                    LocalDate startDate = task.getPlanStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                    LocalDate endDate = task.getPlanEndDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+                    return (targetDate.isEqual(startDate) || targetDate.isAfter(startDate))
+                            && (targetDate.isEqual(endDate) || targetDate.isBefore(endDate));
+                } catch (Exception e) {
+                    return false;
+                }
+            })) {
+                taskDateEmptyList.add(date);
+            }
+        }
+
+        vo.setUnregisteredDateList(taskDateEmptyList);
 
         return vo;
     }

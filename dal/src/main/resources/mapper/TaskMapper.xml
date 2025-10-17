@@ -365,6 +365,12 @@
             <if test="currentDate != null">
                 and date(a.plan_start_date) &lt;= #{currentDate} and date(a.plan_end_date) &gt;= #{currentDate}
             </if>
+            <if test="currentDates!=null and currentDates.size()>0">
+                and
+                <foreach collection="currentDates" item="item" separator="or" open="(" close=")">
+                    (date(a.plan_start_date) &lt;= #{item} and date(a.plan_end_date) &gt;= #{item})
+                </foreach>
+            </if>
             <if test="createManIds!=null and createManIds.size()>0">
                 and a.create_man_id in
                 <foreach collection="createManIds" item="item" separator="," open="(" close=")">
