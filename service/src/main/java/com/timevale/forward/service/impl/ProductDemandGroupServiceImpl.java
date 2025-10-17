@@ -636,9 +636,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
             return Collections.emptyList();
         }
         boolean existDistinctResourceType = productDemands.stream().anyMatch(d ->
-                d.getProductDemandOwners().stream()
-                        .map(ProductDemandOwnerAddReq::getResourceType)
-                        .distinct().count() != d.getProductDemandOwners().size());
+                d.getProductDemandOwners().stream().distinct().count() != d.getProductDemandOwners().size());
         if (existDistinctResourceType) {
             AssertUtil.checkState(false, "产品需求-资源规划中每个需求不能存在重复的资源类型");
         }
