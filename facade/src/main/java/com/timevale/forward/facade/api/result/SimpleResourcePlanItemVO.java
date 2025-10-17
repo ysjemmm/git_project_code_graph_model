@@ -6,7 +6,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.*;
 import lombok.experimental.Accessors;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -26,9 +25,6 @@ public class SimpleResourcePlanItemVO extends ToString {
 
     @ApiModelProperty("关联的资源类型")
     private SimpleResourceType resourceType;
-
-    @ApiModelProperty("关联的需求评估（人天）")
-    private BigDecimal resourceTime;
 
     @Getter
     @AllArgsConstructor
@@ -68,14 +64,12 @@ public class SimpleResourcePlanItemVO extends ToString {
     public static List<SimpleResourcePlanItemVO> defaultWithAllType () {
         return Arrays.stream(SimpleResourceType.values()).map(type -> new SimpleResourcePlanItemVO()
                 .setResourceType(type)
-                .setResourceTime(new BigDecimal("0"))
                 .setOwners(new ArrayList<>())).collect(Collectors.toList());
     }
 
     public static SimpleResourcePlanItemVO create (@NonNull String resourceType) {
         return new SimpleResourcePlanItemVO()
                 .setResourceType(SimpleResourceType.fromResourceType(resourceType))
-                .setResourceTime(new BigDecimal("0"))
                 .setOwners(new ArrayList<>());
     }
 

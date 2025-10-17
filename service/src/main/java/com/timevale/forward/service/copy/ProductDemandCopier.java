@@ -195,7 +195,6 @@ public interface ProductDemandCopier {
             SimpleResourcePlanItemVO.SimpleResourceType resourceType = SimpleResourcePlanItemVO.SimpleResourceType.fromResourceType(type);
             SimpleResourcePlanItemVO currentItem = type2Item.computeIfAbsent(resourceType, k -> SimpleResourcePlanItemVO.create(type));
             if (CollUtil.isNotEmpty(owners)) {
-                currentItem.setResourceTime(owners.get(0).getResourceTime());
                 currentItem.setOwners(owners.stream().map(o -> new PersonVO().setUserId(o.getOwnerId()).setUserName(o.getOwner())).collect(Collectors.toList()));
             }
         });

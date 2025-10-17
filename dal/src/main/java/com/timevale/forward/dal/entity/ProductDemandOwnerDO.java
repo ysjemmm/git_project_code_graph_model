@@ -37,9 +37,5 @@ public class ProductDemandOwnerDO extends BaseDO {
      */
     @EqualsAndHashCode.Include
     private String resourceType;
-    /**
-     * 资源评估（人天）
-     */
-    private BigDecimal resourceTime;
 
 }

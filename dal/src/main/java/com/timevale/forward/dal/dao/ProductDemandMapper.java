@@ -114,6 +114,14 @@ public interface ProductDemandMapper {
     int updateByIds(@Param("ids") List<Long> ids,@Param("status") Integer status,@Param("retainModifyDate") boolean retainModifyDate);
 
     /**
+     * 更新产品需求的人天
+     *
+     * @param demands 产品需求DO
+     * @return int
+     */
+    int updateResourceTime(@Param("demands") List<ProductDemandDO> demands);
+
+    /**
      * 查询
      * @param name name
      * @return 产品需求DO
