@@ -127,6 +127,11 @@ public class TaskListCondition extends QueryBase {
     private String currentDate;
 
     /**
+     * 日期集合
+     */
+    private List<String> currentDates;
+
+    /**
      * 任务类型
      */
     private List<Integer> types;
