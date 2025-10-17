@@ -66,16 +66,10 @@
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
         </trim>
         <where>
-            <if test="condition.mainIds != null and condition.mainIds.size() > 0">
-                AND main_id IN
-                <foreach collection="condition.mainIds" item="mainId" open="(" separator="," close=")">
-                    #{mainId}
-                </foreach>
-            </if>
-            <if test="condition.personIds != null and condition.personIds.size() > 0">
-                AND person_id IN
-                <foreach collection="condition.personIds" item="personId" open="(" separator="," close=")">
-                    #{personId}
+            <if test="condition.mainId2PersonId != null and condition.mainId2PersonId.size() > 0">
+                AND
+                <foreach collection="condition.mainId2PersonId" item="pair" open="(" separator=" OR " close=")">
+                    (main_id = #{pair.first} AND user_id = #{pair.second})
                 </foreach>
             </if>
             <if test="condition.type != null">AND type = #{condition.type}</if>
