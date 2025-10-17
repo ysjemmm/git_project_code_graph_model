@@ -7,6 +7,7 @@ import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.condition.PersonRemoveCondition;
 import com.timevale.forward.dal.condition.ProductDemandGroupListCondition;
 import com.timevale.forward.dal.dao.BizDomainGroupMapper;
 import com.timevale.forward.dal.dao.BizDomainGroupRelationMapper;
@@ -45,11 +46,8 @@ import lombok.val;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.util.Pair;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -119,10 +117,6 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
 
     @Resource
     private PersonComponent personComponent;
-
-    @Autowired
-    @Qualifier(value = "productDemandAddRecipientExecutor")
-    private ThreadPoolTaskExecutor recipientThreadPoolExecutor;
 
     /**
      * 查询业务域内的待规划的产品需求
@@ -677,7 +671,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
             addOwners.stream().collect(Collectors.groupingBy(ProductDemandOwnerDO::getProductDemandId)).forEach((id, owners)->{
                 List<PersonAddReq> recipients = owners.stream().map(o -> new PersonAddReq().setUserName(o.getOwner()).setUserId(o.getOwnerId()))
                         .collect(Collectors.toList());
-                recipientThreadPoolExecutor.submit(() -> personComponent.add(recipients, id, PersonTypeEnum.PRODUCT_DEMAND_CC.getCode()));
+                personComponent.add(recipients, id, PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
             });
         }
     }
@@ -689,9 +683,12 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         Set<Long> ids = owners.stream().map(ProductDemandOwnerDO::getId).collect(Collectors.toSet());
         productDemandMapper.batchDeleteProductDemandOwners(ids, operatorId, operator);
 
-        owners.forEach(owner -> {
-            recipientThreadPoolExecutor.submit(() -> personComponent.remove(owner.getOwnerId(), owner.getProductDemandId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode()));
-        });
+        PersonRemoveCondition removeCondition = PersonRemoveCondition.builder()
+                .type(PersonTypeEnum.PRODUCT_DEMAND_CC.getCode())
+                .mainIds(owners.stream().map(ProductDemandOwnerDO::getProductDemandId).collect(Collectors.toList()))
+                .personIds(owners.stream().map(ProductDemandOwnerDO::getOwnerId).collect(Collectors.toList()))
+                .build();
+        personComponent.remove(removeCondition, operatorId, operator);
     }
 
     @Override
@@ -781,7 +778,8 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
             resourcePlanProductDemandVO.setId(productDemandId);
             resourcePlanProductDemandVO.setName(productDemandId2Name.get(productDemandId));
             resourcePlanProductDemandVO.setLabelNames(productDemandId2Label.getOrDefault(productDemandId, Collections.emptyList()));
-            resourcePlanProductDemandVO.setOwners(owners.stream().map(ProductDemandCopier.INSTANCE::convert).collect(Collectors.toList()));
+            resourcePlanProductDemandVO.setOwners(owners.stream().map(ProductDemandCopier.INSTANCE::convert)
+                    .collect(Collectors.groupingBy(ResourcePlanProductDemandOwnerVO::getResourceType)));
             resourcePlanProductDemandVos.add(resourcePlanProductDemandVO);
         });
 

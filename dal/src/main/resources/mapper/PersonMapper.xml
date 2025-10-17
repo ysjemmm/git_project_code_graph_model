@@ -58,6 +58,30 @@
         </where>
     </update>
 
+    <update id="removeByCondition">
+        update person
+        <trim prefix="SET" suffixOverrides=",">
+            is_deleted = 1,
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+        </trim>
+        <where>
+            <if test="condition.mainIds != null and condition.mainIds.size() > 0">
+                AND main_id IN
+                <foreach collection="condition.mainIds" item="mainId" open="(" separator="," close=")">
+                    #{mainId}
+                </foreach>
+            </if>
+            <if test="condition.personIds != null and condition.personIds.size() > 0">
+                AND person_id IN
+                <foreach collection="condition.personIds" item="personId" open="(" separator="," close=")">
+                    #{personId}
+                </foreach>
+            </if>
+            <if test="condition.type != null">AND type = #{condition.type}</if>
+        </where>
+    </update>
+
     <select id="getMainIds" resultType="long">
         select distinct main_id
         from person

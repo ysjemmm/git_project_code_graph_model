@@ -1,5 +1,6 @@
 package com.timevale.forward.service.component;
 
+import com.timevale.forward.dal.condition.PersonRemoveCondition;
 import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.facade.api.request.PersonAddReq;
 
@@ -43,12 +44,12 @@ public interface PersonComponent {
     void update(List<PersonAddReq> list, Long mainId, Integer type, Integer personLevel);
 
     /**
-     * 移除指定业务关联的人员
-     * @param personId 关联人id
-     * @param mainId 所属主体id
-     * @param type 所属主体类型
+     * 按照条件删除
+     * @param condition
+     * @param modifyManId
+     * @param modifyMan
      */
-    void remove(String personId, Long mainId, Integer type);
+    void remove(PersonRemoveCondition condition, String modifyManId, String modifyMan);
 
     /**
      *

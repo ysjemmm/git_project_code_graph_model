@@ -1,6 +1,7 @@
 package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.condition.PersonListCondition;
+import com.timevale.forward.dal.condition.PersonRemoveCondition;
 import com.timevale.forward.dal.entity.PersonDO;
 import org.apache.ibatis.annotations.Param;
 
@@ -45,6 +46,12 @@ public interface PersonMapper {
      * @return int
      */
     int update(PersonDO personDO);
+
+    /**
+     * 指定条件删除
+     * @return int
+     */
+    int removeByCondition(@Param("condition") PersonRemoveCondition condition, @Param("modifyManId") String modifyManId, @Param("modifyMan") String modifyMan);
 
     /**
      * 更新水平

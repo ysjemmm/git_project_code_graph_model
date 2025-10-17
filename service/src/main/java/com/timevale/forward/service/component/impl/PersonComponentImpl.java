@@ -2,6 +2,7 @@ package com.timevale.forward.service.component.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import com.timevale.forward.dal.condition.PersonListCondition;
+import com.timevale.forward.dal.condition.PersonRemoveCondition;
 import com.timevale.forward.dal.dao.PersonMapper;
 import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.facade.api.request.PersonAddReq;
@@ -93,13 +94,11 @@ public class PersonComponentImpl implements PersonComponent {
     }
 
     @Override
-    public void remove(String personId, Long mainId, Integer type) {
-        PersonDO personDO = new PersonDO();
-        personDO.setMainId(mainId);
-        personDO.setUserId(personId);
-        personDO.setType(type);
-        personDO.setIsDeleted(true);
-        personMapper.update(personDO);
+    public void remove(PersonRemoveCondition condition, String modifyManId, String modifyMan) {
+        if (condition == null) {
+            return;
+        }
+        personMapper.removeByCondition(condition, modifyManId, modifyMan);
     }
 
     @Override
