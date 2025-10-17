@@ -643,7 +643,9 @@ public class TaskServiceImpl implements TaskService {
 
         checkNameExisted(taskDos);
         //阶段限制
-        checkTaskStage(taskDos.get(0));
+        for (TaskDO taskDo : taskDos) {
+            checkTaskStage(taskDo);
+        }
 
         ProjectDO projectDO = projectMapper.get(taskDos.get(0).getProjectId());
         checkTimeRange(taskDos, projectDO);
@@ -843,7 +845,7 @@ public class TaskServiceImpl implements TaskService {
 
     private void checkTaskStage(TaskDO taskDO) {
         if (!matchTaskStage(taskDO.getProjectId()) && ProjectStageEnum.DEMAND.getCode().equals(taskDO.getStage())) {
-            throw new BaseBizRuntimeException("项目无需求规划阶段,不能创建该阶段的任务,请修改后重试");
+            throw new BaseBizRuntimeException("任务：" + taskDO.getName() + "，项目无需求规划阶段,不能创建该阶段的任务,请修改后重试");
         }
     }
 
