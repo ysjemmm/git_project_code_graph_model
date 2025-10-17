@@ -2000,11 +2000,14 @@ public class ProjectServiceImpl implements ProjectService {
     public BaseResult<ConclusionFormVO> conclusionForm(ProjectConclusionReq req) {
         final Long projectId = req.getProjectId();
 
-        // 结项预检
-        evaluateComponent.conclusionPreview(projectId);
-
         // 查询项目评价、成员评价数据
         ProjectDO projectDO = projectMapper.get(projectId);
+
+        if (!ProjectKindEnum.PBG_BASE.getCode().equals(projectDO.getKind())) {
+            // 结项预检
+            evaluateComponent.conclusionPreview(projectId);
+        }
+
         List<ProjectEvaluateDO> evaluateDOList = evaluateMapper.getByProjectId(projectId);
         List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.getByProjectId(projectId);
 
