@@ -16,10 +16,7 @@ import com.timevale.forward.facade.api.query.TaskLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.request.ProductDemandAddReq;
 import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
 import com.timevale.forward.facade.api.request.ProductDemandOwnerAddReq;
-import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
-import com.timevale.forward.facade.api.result.ProductDemandDocumentVO;
-import com.timevale.forward.facade.api.result.ProductDemandVO;
-import com.timevale.forward.facade.api.result.ResourcePlanProductDemandOwnerVO;
+import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.ProductDemandTypeEnum;
 import com.timevale.forward.model.middle.ProductDemandMD;
 import org.apache.commons.collections.CollectionUtils;
@@ -28,9 +25,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Mapper(
@@ -179,4 +175,30 @@ public interface ProductDemandCopier {
     @Mapping(target = "notInLabelIds", expression = "java(StringUtils.isNotEmpty(queryList.getNotInLabelIds()) ? Arrays.stream(queryList.getNotInLabelIds().split(\",\")).map(Long::valueOf).collect(Collectors.toList()) : null)")
     @Mapping(target = "notInOwnerIds", expression = "java(StringUtils.isNotEmpty(queryList.getNotInOwnerIds()) ? Arrays.asList(queryList.getNotInOwnerIds().split(\",\")) : null)")
     ProductDemandGroupCondition convert(ProductDemandGroupList queryList);
+
+    /**
+     * ProductDemandOwnerDO list 转换为 SimpleResourcePlanVO
+     *
+     * @param ownerList 对象
+     * @return SimpleResourcePlanVO
+     */
+    default List<SimpleResourcePlanItemVO> convert(List<ProductDemandOwnerDO> ownerList, boolean generateDefault) {
+        List<SimpleResourcePlanItemVO> simpleResourcePlanItems = generateDefault ? SimpleResourcePlanItemVO.defaultWithAllType()
+                : new ArrayList<>();
+        if (CollUtil.isEmpty(ownerList)) {
+            return simpleResourcePlanItems;
+        }
+
+        Map<SimpleResourcePlanItemVO.SimpleResourceType, SimpleResourcePlanItemVO> type2Item = simpleResourcePlanItems.stream()
+                .collect(Collectors.toMap(SimpleResourcePlanItemVO::getResourceType, Function.identity(), (e,r) -> e));
+        ownerList.stream().collect(Collectors.groupingBy(ProductDemandOwnerDO::getResourceType)).forEach((type, owners) -> {
+            SimpleResourcePlanItemVO.SimpleResourceType resourceType = SimpleResourcePlanItemVO.SimpleResourceType.fromResourceType(type);
+            SimpleResourcePlanItemVO currentItem = type2Item.computeIfAbsent(resourceType, k -> SimpleResourcePlanItemVO.create(type));
+            if (CollUtil.isNotEmpty(owners)) {
+                currentItem.setResourceTime(owners.get(0).getResourceTime());
+                currentItem.setOwners(owners.stream().map(o -> new PersonVO().setUserId(o.getOwnerId()).setUserName(o.getOwner())).collect(Collectors.toList()));
+            }
+        });
+        return new ArrayList<>(type2Item.values());
+    }
 }

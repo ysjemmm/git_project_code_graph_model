@@ -108,4 +108,7 @@ public class ProductDemandDetailVO extends ToString {
 
     @ApiModelProperty("客户等级")
     private String customerGrade;
+
+    @ApiModelProperty("资源评估信息")
+    private List<SimpleResourcePlanItemVO> resourcePlans;
 }
