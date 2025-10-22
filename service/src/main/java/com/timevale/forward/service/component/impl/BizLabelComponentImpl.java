@@ -58,6 +58,8 @@ public class BizLabelComponentImpl implements BizLabelComponent {
             logType = BugLogTypeEnum.OFFLINE.getCode();
         } else if (BizTypeEnum.BUG_ONLINE.getCode().equals(type)) {
             logType = BugLogTypeEnum.ONLINE.getCode();
+        } else if (BizTypeEnum.TASK.getCode().equals(type)) {
+            logType = BizChangeLogTypeEnum.TASK.getCode();
         }
         List<BizChangeLogDO> bizChangeLogDOList = new ArrayList<>();
         List<BugLogDO> bugLogDOList = new ArrayList<>();

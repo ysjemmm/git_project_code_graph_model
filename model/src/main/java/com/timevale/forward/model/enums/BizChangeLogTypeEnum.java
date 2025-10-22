@@ -38,7 +38,12 @@ public enum BizChangeLogTypeEnum {
     /**
      * 线上bug
      */
-    ORIGIN_BUG_ONLINE(7, "原线上bug");
+    ORIGIN_BUG_ONLINE(7, "原线上bug"),
+
+    /**
+     * 任务
+     */
+    TASK(8, "任务");
 
     private final Integer code;
     private final String text;

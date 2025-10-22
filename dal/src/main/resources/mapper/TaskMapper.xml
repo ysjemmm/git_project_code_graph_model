@@ -126,6 +126,18 @@
                 actual_end_date &lt;= plan_end_date or (actual_end_date is null and now() &lt;= plan_end_date)
                 )
             </if>
+            <if test="inTaskIds!=null and inTaskIds.size()>0">
+                and a.id in
+                <foreach collection="inTaskIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="notInTaskIds!=null and notInTaskIds.size()>0">
+                and a.id not in
+                <foreach collection="notInTaskIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             and a.is_deleted =false
         </where>
     </select>

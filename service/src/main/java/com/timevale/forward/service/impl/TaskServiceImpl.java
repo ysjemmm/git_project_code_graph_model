@@ -9,6 +9,7 @@ import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.condition.TaskCondition;
 import com.timevale.forward.dal.condition.TaskListCondition;
 import com.timevale.forward.dal.condition.TaskProductDemandCondition;
+import com.timevale.forward.dal.dao.BizLabelMapper;
 import com.timevale.forward.dal.dao.PersonMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
@@ -19,6 +20,7 @@ import com.timevale.forward.dal.dao.TaskProductDemandMapper;
 import com.timevale.forward.dal.dao.TaskTimeMapper;
 import com.timevale.forward.dal.dto.TaskTimeDTO;
 import com.timevale.forward.dal.entity.BaseDO;
+import com.timevale.forward.dal.entity.BizLabelDO;
 import com.timevale.forward.dal.entity.FileDO;
 import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProductDemandListDO;
@@ -52,6 +54,7 @@ import com.timevale.forward.facade.api.result.TaskDetailVO;
 import com.timevale.forward.facade.api.result.TaskListVO;
 import com.timevale.forward.facade.api.result.TaskVO;
 import com.timevale.forward.model.enums.AscriptionEnum;
+import com.timevale.forward.model.enums.BizTypeEnum;
 import com.timevale.forward.model.enums.FileTypeEnum;
 import com.timevale.forward.model.enums.LinkOrUnLinkEnum;
 import com.timevale.forward.model.enums.PersonLevelEnum;
@@ -63,8 +66,10 @@ import com.timevale.forward.model.enums.ProjectNodeEnum;
 import com.timevale.forward.model.enums.ProjectStageEnum;
 import com.timevale.forward.model.enums.TaskStatusEnum;
 import com.timevale.forward.model.enums.TaskTypeEnum;
+import com.timevale.forward.service.component.BizLabelComponent;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.InnerProjectStatusUpdateComponent;
+import com.timevale.forward.service.component.LabelComponent;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.component.ProductDemandComponent;
 import com.timevale.forward.service.component.ProjectEvaluateComponent;
@@ -173,6 +178,15 @@ public class TaskServiceImpl implements TaskService {
 
     public static final String OFF_WORK_HOUR = " 18:30:00";
 
+    @Resource
+    private BizLabelComponent bizLabelComponent;
+
+    @Resource
+    private LabelComponent labelComponent;
+
+    @Resource
+    private BizLabelMapper bizLabelMapper;
+
     @Override
     public BaseResult<PageQueryResult<TaskVO>> list(TaskQueryList taskQueryList) {
 
@@ -181,6 +195,34 @@ public class TaskServiceImpl implements TaskService {
         TaskListCondition condition = TaskCopier.INSTANCE.convert(taskQueryList);
         condition.setPageNum(taskQueryList.getPageNum());
         condition.setPageSize(taskQueryList.getPageSize());
+
+        //是否打标
+        if (CollectionUtils.isNotEmpty(taskQueryList.getLabelIds()) || CollectionUtils.isNotEmpty(taskQueryList.getLabelCategoryIds())) {
+            Boolean containLabel = taskQueryList.getContainLabel();
+
+            List<Long> newLabelIds = labelComponent.getLabelIds(taskQueryList.getLabelIds(), taskQueryList.getLabelCategoryIds());
+
+            // 查询包含且类别下没有标签
+            if (CollectionUtils.isEmpty(newLabelIds) && containLabel) {
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
+
+            // 查询使用这些标签的需求id
+            List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.TASK.getCode());
+            List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+
+            if (containLabel) {
+                if (CollectionUtils.isEmpty(bizIds)) {
+                    return BaseResult.success(ResultUtil.pageEmpty());
+                }
+                condition.setInTaskIds(bizIds);
+            } else {
+                condition.setNotInTaskIds(bizIds);
+            }
+
+        }
+
+
         List<Long> taskIds = new ArrayList<>();
         //1.查找我或我的团队所属任务id
         if (AscriptionEnum.CURRENT_USER.name().equals(taskQueryList.getAscription())) {
@@ -260,6 +302,12 @@ public class TaskServiceImpl implements TaskService {
 
         //关联产品需求
         taskProductDemandComponent.batchInsert(taskDO.getId(), taskAddReq.getProductDemandIds());
+
+        //标签
+        if (CollectionUtils.isNotEmpty(taskAddReq.getLabelIds())) {
+            bizLabelComponent.addLabel(taskDO.getId(), taskAddReq.getLabelIds(), BizTypeEnum.TASK.getCode());
+            bizLabelComponent.addLog(taskDO.getId(), taskAddReq.getLabelIds(), BizTypeEnum.TASK.getCode(), true);
+        }
 
         return BaseResult.success(taskDO.getId());
     }

@@ -136,4 +136,15 @@ public class TaskListCondition extends QueryBase {
      */
     private List<Integer> types;
 
+    /**
+     * 需要包含的任务
+     */
+    private List<Long> inTaskIds;
+
+
+    /**
+     * 不需要包含的任务
+     */
+    private List<Long> notInTaskIds;
+
 }
