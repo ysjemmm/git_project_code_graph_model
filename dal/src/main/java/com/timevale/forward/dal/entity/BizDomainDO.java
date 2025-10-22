@@ -61,4 +61,9 @@ public class BizDomainDO extends BaseDO {
      */
     private Integer listingStatus;
 
+    /**
+     * 自定义顺序
+     */
+    private Integer sortOrder;
+
 }
