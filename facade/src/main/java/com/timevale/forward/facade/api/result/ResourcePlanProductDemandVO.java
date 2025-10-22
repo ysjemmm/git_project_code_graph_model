@@ -30,6 +30,9 @@ public class ResourcePlanProductDemandVO extends ToString {
     @ApiModelProperty("标签名称")
     private List<BizLabelSimpleVO> labelNames;
 
+    @ApiModelProperty("需求详情")
+    private ResourcePlanProductDemandTimeVO productDemandDetail;
+
     @ApiModelProperty("资源类型 -> 需求负责人")
     private Map<String, List<ResourcePlanProductDemandOwnerVO>> owners;
 }

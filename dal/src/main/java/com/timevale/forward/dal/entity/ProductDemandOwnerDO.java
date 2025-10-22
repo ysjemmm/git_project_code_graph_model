@@ -3,8 +3,6 @@ package com.timevale.forward.dal.entity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.math.BigDecimal;
-
 /**
  * @author mayang
  * @date 2025-10-15 16:58
@@ -37,9 +35,5 @@ public class ProductDemandOwnerDO extends BaseDO {
      */
     @EqualsAndHashCode.Include
     private String resourceType;
-    /**
-     * 资源评估（人天）
-     */
-    private BigDecimal resourceTime;
 
 }

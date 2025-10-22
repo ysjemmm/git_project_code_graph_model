@@ -30,6 +30,8 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.forward.service.copy.ProductDemandGroupCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.observer.event.ProductDemandToCopiedMsgEvent;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.duplicate.GroupDuplicateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -117,6 +119,9 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
 
     @Resource
     private PersonComponent personComponent;
+
+    @Resource
+    private MessageEventPublisher messageEventPublisher;
 
     /**
      * 查询业务域内的待规划的产品需求
@@ -668,10 +673,20 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         productDemandMapper.batchUpsertProductDemandOwners(upsertOwners, operatorId, operator);
 
         if (CollUtil.isNotEmpty(addOwners)) {
-            addOwners.stream().collect(Collectors.groupingBy(ProductDemandOwnerDO::getProductDemandId)).forEach((id, owners)->{
-                List<PersonAddReq> recipients = owners.stream().map(o -> new PersonAddReq().setUserName(o.getOwner()).setUserId(o.getOwnerId()))
-                        .collect(Collectors.toList());
-                personComponent.add(recipients, id, PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
+            Map<Long, List<ProductDemandOwnerDO>> demandId2Owners = addOwners.stream().collect(Collectors.groupingBy(ProductDemandOwnerDO::getProductDemandId));
+            Map<Long, ProductDemandDO> demandId2Demand = productDemandMapper.selectByIdList(demandId2Owners.keySet()).stream().collect(Collectors.toMap(e->e.getId(), Function.identity(), (e,r)->e));
+            demandId2Owners.forEach((demandId, owners)->{
+                Set<PersonAddReq> recipients = owners.stream().map(o -> new PersonAddReq().setUserName(o.getOwner()).setUserId(o.getOwnerId()))
+                        .collect(Collectors.toSet());
+                personComponent.add(recipients, demandId, PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
+                ProductDemandDO productDemandDO = demandId2Demand.get(demandId);
+                messageEventPublisher.publish(new ProductDemandToCopiedMsgEvent(
+                        this,
+                        demandId,
+                        productDemandDO.getCreateMan(),
+                        recipients.stream().map(r->r.getUserId()).collect(Collectors.toList()),
+                        productDemandDO.getName()
+                ));
             });
         }
     }
@@ -682,12 +697,28 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         }
         Set<Long> ids = owners.stream().map(ProductDemandOwnerDO::getId).collect(Collectors.toSet());
         productDemandMapper.batchDeleteProductDemandOwners(ids, operatorId, operator);
+    }
 
-        PersonRemoveCondition removeCondition = PersonRemoveCondition.builder()
-                .type(PersonTypeEnum.PRODUCT_DEMAND_CC.getCode())
-                .mainId2PersonId(owners.stream().map(o -> Pair.of(o.getProductDemandId(), o.getOwnerId())).collect(Collectors.toList()))
-                .build();
-        personComponent.remove(removeCondition, operatorId, operator);
+    private void updateDemandResourceTime (@NonNull ProductDemandGroupResourcePlanReq resourcePlanReq) {
+        if (CollUtil.isEmpty(resourcePlanReq.getProductDemands())) {
+            return;
+        }
+        List<ProductDemandDO> toUpdateResourceTime = resourcePlanReq.getProductDemands().stream()
+                .map(e -> ProductDemandCopier.INSTANCE.convertFromResourceDetail(e.getProductDemandTime()))
+                .filter(Objects::nonNull)
+                .peek(e -> e.setTotalTime(
+                        ObjectUtil.defaultIfNull(e.getUedTime(), BigDecimal.ZERO)
+                                .add(ObjectUtil.defaultIfNull(e.getBackTime(), BigDecimal.ZERO))
+                                .add(ObjectUtil.defaultIfNull(e.getFrontTime(), BigDecimal.ZERO))
+                                .add(ObjectUtil.defaultIfNull(e.getQaTime(), BigDecimal.ZERO))
+                                .add(ObjectUtil.defaultIfNull(e.getOpsTime(), BigDecimal.ZERO))
+                                .add(ObjectUtil.defaultIfNull(e.getSecurityTime(), BigDecimal.ZERO))
+                                .add(ObjectUtil.defaultIfNull(e.getProductTime(), BigDecimal.ZERO))
+                ))
+                .collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(toUpdateResourceTime)) {
+            productDemandMapper.updateResourceTime(toUpdateResourceTime);
+        }
     }
 
     @Override
@@ -699,15 +730,18 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         Map<Long,List<ProductDemandOwnerDO>> existedOwnersMap = productDemandMapper.listProductDemandOwnersByGroupId(productDemandGroupResourcePlanReq.getProductDemandGroupId())
                 .stream().collect(Collectors.groupingBy(ProductDemandOwnerDO::getProductDemandId));
         if (CollectionUtils.isEmpty(productDemands)) {
-            batchDeleteProductDemandOwners(existedOwnersMap.values().stream()
-                    .flatMap(List::stream).collect(Collectors.toSet()),
-                    productDemandGroupResourcePlanReq.getOperatorId(), productDemandGroupResourcePlanReq.getOperator());
             return BaseResult.success(true);
         }
 
         final Set<ProductDemandOwnerDO> waitAddOwners = new LinkedHashSet<>();
         final Set<ProductDemandOwnerDO> waitUpdateOwners = new LinkedHashSet<>();
         final Set<ProductDemandOwnerDO> waitDeleteOwners = new LinkedHashSet<>();
+
+        productDemands.forEach(d -> {
+            if (CollUtil.isEmpty(d.getProductDemandOwners())) {
+                waitDeleteOwners.addAll(existedOwnersMap.getOrDefault(d.getProductDemandId(), Collections.emptyList()));
+            }
+        });
         List<ProductDemandOwnerAddReq> productDemandOwners = productDemands.stream().flatMap(d -> d.getProductDemandOwners().stream()
                         .peek(o -> o.setProductDemandId(d.getProductDemandId()))
                 ).collect(Collectors.toList());
@@ -725,7 +759,21 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
 
         batchUpsertProductDemandOwners(waitAddOwners, waitUpdateOwners, productDemandGroupResourcePlanReq.getOperatorId(), productDemandGroupResourcePlanReq.getOperator());
         batchDeleteProductDemandOwners(waitDeleteOwners, productDemandGroupResourcePlanReq.getOperatorId(), productDemandGroupResourcePlanReq.getOperator());
+        updateDemandResourceTime(productDemandGroupResourcePlanReq);
 
+        // 一个需求可能存在某个人既是前端又是后端这种情况，而前端移除它负责人身份，后端添加它为负责人，这种交叉情况需要特判
+        List<ProductDemandOwnerDO> realDeletes = waitDeleteOwners.stream().filter(o -> {
+            boolean isAdd = waitAddOwners.stream().anyMatch(e -> e.getOwnerId().equals(o.getOwnerId()) && e.getProductDemandId().equals(o.getProductDemandId()));
+            boolean isUpdate = waitUpdateOwners.stream().anyMatch(e -> e.getOwnerId().equals(o.getOwnerId()) && e.getProductDemandId().equals(o.getProductDemandId()));
+            return !isAdd && !isUpdate;
+        }).collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(realDeletes)) {
+            PersonRemoveCondition removeCondition = PersonRemoveCondition.builder()
+                    .type(PersonTypeEnum.PRODUCT_DEMAND_CC.getCode())
+                    .mainId2PersonId(realDeletes.stream().map(o -> Pair.of(o.getProductDemandId(), o.getOwnerId())).collect(Collectors.toList()))
+                    .build();
+            personComponent.remove(removeCondition, productDemandGroupResourcePlanReq.getOperatorId(), productDemandGroupResourcePlanReq.getOperator());
+        }
         return BaseResult.success(true);
     }
 
@@ -747,6 +795,19 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         return BaseResult.success(true);
     }
 
+    private BigDecimal getResourceTimeFromDemandDO (@NonNull ResourcePlanProductDemandTimeVO item, @NonNull String resourceType) {
+        switch (resourceType) {
+            case "frontend": return item.getFrontTime();
+            case "backend": return item.getBackTime();
+            case "test": return item.getQaTime();
+            case "ued": return item.getUedTime();
+            case "product": return item.getProductTime();
+            case "ops": return item.getOpsTime();
+            case "security": return item.getSecurityTime();
+            default: return BigDecimal.ZERO;
+        }
+    }
+
     @Override
     public BaseResult<ProductDemandGroupResourcePlanVO> getResourcePlan(@NonNull Long bizDomainGroupId, @NonNull Long productDemandGroupId) {
         ProductDemandGroupResourcePlanVO demandGroupResourcePlanVO = new ProductDemandGroupResourcePlanVO()
@@ -756,22 +817,27 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
                 .setProductDemands(new ArrayList<>());
 
         List<ProductDemandGroupItemDO> groupItems = productDemandGroupItemMapper.getByGroupId(productDemandGroupId);
-        Set<Long> productDemandIds = groupItems.stream().map(ProductDemandGroupItemDO::getProductDemandId).collect(Collectors.toSet());
-        if (CollectionUtils.isEmpty(productDemandIds)) {
+        if (CollectionUtils.isEmpty(groupItems)) {
             return BaseResult.success(demandGroupResourcePlanVO);
         }
+        Map<Long, ResourcePlanProductDemandTimeVO> id2Demands = productDemandMapper.selectByIdList(groupItems.stream()
+                        .map(ProductDemandGroupItemDO::getProductDemandId).collect(Collectors.toSet()))
+                .stream()
+                .map(ProductDemandCopier.INSTANCE::convertToResourceDetail)
+                .collect(Collectors.toMap(ResourcePlanProductDemandTimeVO::getId, Function.identity(), (e, r) -> e));
 
-        final Map<Long,List<ProductDemandOwnerDO>> productDemandId2Owners = productDemandMapper.listProductDemandOwners(productDemandIds).stream()
+        final Map<Long,List<ProductDemandOwnerDO>> productDemandId2Owners = productDemandMapper.listProductDemandOwners(id2Demands.keySet()).stream()
                 .collect(Collectors.groupingBy(ProductDemandOwnerDO::getProductDemandId));
-        Map<Long, List<BizLabelSimpleVO>> productDemandId2Label = bizLabelComponent.getBizLabelMap(new ArrayList<>(productDemandIds), BizTypeEnum.PRODUCT_DEMAND.getCode());
-        Map<Long, String> productDemandId2Name = productDemandMapper.selectByIdList(productDemandIds).stream()
+        Map<Long, List<BizLabelSimpleVO>> productDemandId2Label = bizLabelComponent.getBizLabelMap(new ArrayList<>(id2Demands.keySet()), BizTypeEnum.PRODUCT_DEMAND.getCode());
+        Map<Long, String> productDemandId2Name = productDemandMapper.selectByIdList(id2Demands.keySet()).stream()
                 .collect(Collectors.toMap(ProductDemandDO::getId, ProductDemandDO::getName, (o, n) -> o));
 
-        groupItems.forEach(i -> {
+        id2Demands.forEach((id, item) -> {
             ResourcePlanProductDemandVO resourcePlanProductDemandVO = new ResourcePlanProductDemandVO();
-            resourcePlanProductDemandVO.setId(i.getProductDemandId());
-            resourcePlanProductDemandVO.setName(productDemandId2Name.get(i.getProductDemandId()));
-            resourcePlanProductDemandVO.setLabelNames(productDemandId2Label.getOrDefault(i.getProductDemandId(), Collections.emptyList()));
+            resourcePlanProductDemandVO.setId(id);
+            resourcePlanProductDemandVO.setName(productDemandId2Name.get(id));
+            resourcePlanProductDemandVO.setLabelNames(productDemandId2Label.getOrDefault(id, Collections.emptyList()));
+            resourcePlanProductDemandVO.setProductDemandDetail(item);
             resourcePlanProductDemandVO.setOwners(new HashMap<>());
             demandGroupResourcePlanVO.getProductDemands().add(resourcePlanProductDemandVO);
         });
@@ -783,8 +849,14 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         productDemandId2Owners.forEach((productDemandId, owners) -> {
             Optional<ResourcePlanProductDemandVO> demandOp = demandGroupResourcePlanVO.getProductDemands().stream().filter(d -> d.getId().equals(productDemandId))
                     .findFirst();
-            demandOp.ifPresent(resourcePlanProductDemandVO -> resourcePlanProductDemandVO.setOwners(owners.stream().map(ProductDemandCopier.INSTANCE::convert)
-                    .collect(Collectors.groupingBy(ResourcePlanProductDemandOwnerVO::getResourceType))));
+            demandOp.ifPresent(resourcePlanProductDemandVO -> resourcePlanProductDemandVO.setOwners(owners.stream()
+                    .map(ProductDemandCopier.INSTANCE::convert)
+                    .peek(d -> {
+                        ResourcePlanProductDemandTimeVO productDemandDO = id2Demands.get(d.getProductDemandId());
+                        if (productDemandDO != null) {
+                            d.setResourceTime(getResourceTimeFromDemandDO(productDemandDO, d.getResourceType()));
+                        }
+                    }).collect(Collectors.groupingBy(ResourcePlanProductDemandOwnerVO::getResourceType))));
         });
         return BaseResult.success(demandGroupResourcePlanVO);
     }

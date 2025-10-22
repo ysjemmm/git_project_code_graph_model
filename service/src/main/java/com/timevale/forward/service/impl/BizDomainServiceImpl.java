@@ -68,7 +68,7 @@ public class BizDomainServiceImpl implements BizDomainService {
     @Override
     public BaseResult<PageQueryResult<BizDomainVO>> bizDomainList(BizDomainQueryList bizDomainQueryList) {
         BizDomainCondition condition = BizDomainCopier.INSTANCE.convert(bizDomainQueryList);
-        PageHelper.startPage(bizDomainQueryList.pageNum, bizDomainQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
+        PageHelper.startPage(bizDomainQueryList.pageNum, bizDomainQueryList.pageSize, "sort_order desc, modify_date desc, id desc");
 
         List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectByCondition(condition);
         List<BizDomainVO> bizDomainVOList = BizDomainCopier.INSTANCE.convert(bizDomainDOList);

@@ -38,4 +38,5 @@ public class ResourcePlanProductDemandOwnerVO extends ToString {
 
     @ApiModelProperty("关联的需求评估（人天）")
     private BigDecimal resourceTime;
+
 }

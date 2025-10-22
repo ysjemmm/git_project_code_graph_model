@@ -111,6 +111,22 @@ public interface ProductDemandCopier {
     /**
      * 转换转换DO
      *
+     * @param productDemandDO 对象
+     * @return ProductDemandResourceDetailVO
+     */
+    ResourcePlanProductDemandTimeVO convertToResourceDetail(ProductDemandDO productDemandDO);
+
+    /**
+     * 转换转换VO
+     *
+     * @param resourceTimeVO 对象
+     * @return ProductDemandDO
+     */
+    ProductDemandDO convertFromResourceDetail(ResourcePlanProductDemandTimeVO resourceTimeVO);
+
+    /**
+     * 转换转换DO
+     *
      * @param productDemandOwnerAddReqs 对象
      * @return List<ProductDemandOwnerDO>
      */
@@ -195,7 +211,6 @@ public interface ProductDemandCopier {
             SimpleResourcePlanItemVO.SimpleResourceType resourceType = SimpleResourcePlanItemVO.SimpleResourceType.fromResourceType(type);
             SimpleResourcePlanItemVO currentItem = type2Item.computeIfAbsent(resourceType, k -> SimpleResourcePlanItemVO.create(type));
             if (CollUtil.isNotEmpty(owners)) {
-                currentItem.setResourceTime(owners.get(0).getResourceTime());
                 currentItem.setOwners(owners.stream().map(o -> new PersonVO().setUserId(o.getOwnerId()).setUserName(o.getOwner())).collect(Collectors.toList()));
             }
         });
