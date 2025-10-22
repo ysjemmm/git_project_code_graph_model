@@ -16,13 +16,16 @@ import com.timevale.forward.dal.entity.ProductLineDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.dal.entity.TaskStatusUpdateDO;
+import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.TaskVO;
+import com.timevale.forward.model.enums.BizTypeEnum;
 import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.model.enums.ProjectStageEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.model.enums.TaskStatusEnum;
 import com.timevale.forward.model.enums.TaskTypeEnum;
+import com.timevale.forward.service.component.BizLabelComponent;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.component.TaskComponent;
 import com.timevale.forward.service.component.TaskProductDemandComponent;
@@ -96,6 +99,9 @@ public class TaskComponentImpl implements TaskComponent {
     @Resource
     private TaskProductDemandMapper taskProductDemandMapper;
 
+    @Resource
+    private BizLabelComponent bizLabelComponent;
+
     public static final String TITLE = "您收到了一条任务：%s";
 
     @Override
@@ -156,6 +162,10 @@ public class TaskComponentImpl implements TaskComponent {
                 ));
 
         List<TaskVO> taskVO = TaskCopier.INSTANCE.convert(taskDos);
+        // 获取分组下所有需求的标签
+        List<Long> taskIdList = taskVO.stream().map(TaskVO::getId).collect(Collectors.toList());
+        Map<Long, List<BizLabelSimpleVO>> bizLabelMap = bizLabelComponent.getBizLabelMap(taskIdList, BizTypeEnum.TASK.getCode());
+
         taskVO.forEach(a -> {
             List<PersonDO> executors = executorMap.get(a.getId());
             if (CollectionUtils.isNotEmpty(executors)) {
@@ -188,6 +198,11 @@ public class TaskComponentImpl implements TaskComponent {
             a.setCategory(projectMap.get(a.getProjectId()).getCategory());
 
             a.setProductDemandList(productDemandMap.get(a.getId()));
+
+            List<BizLabelSimpleVO> labelSimpleVOList = bizLabelMap.get(a.getId());
+            if (CollectionUtils.isNotEmpty(labelSimpleVOList)) {
+                a.setLabelNames(labelSimpleVOList);
+            }
         });
         PageQueryResult<TaskVO> pageQueryResult = new PageQueryResult<>();
         PageInfo<TaskDO> pageInfo = new PageInfo<>(taskDos);

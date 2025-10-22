@@ -79,4 +79,13 @@ public class TaskQueryList extends QueryBase {
 
     @ApiModelProperty("任务类型")
     private List<Integer> types;
+
+    @ApiModelProperty("选中为标签类别时填写,类别id")
+    private List<Long> labelCategoryIds;
+
+    @ApiModelProperty("选中为标签时填写,标签id")
+    private List<Long> labelIds;
+
+    @ApiModelProperty("是否包含标签")
+    private Boolean containLabel = true;
 }

@@ -122,4 +122,7 @@ public class TaskVO extends ToString {
     @ApiModelProperty("产品需求集合")
     private List<ProductDemandVO> productDemandList;
 
+    @ApiModelProperty("标签名称")
+    private List<BizLabelSimpleVO> labelNames;
+
 }
