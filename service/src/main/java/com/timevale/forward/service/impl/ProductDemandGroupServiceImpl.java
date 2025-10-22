@@ -820,11 +820,16 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         if (CollectionUtils.isEmpty(groupItems)) {
             return BaseResult.success(demandGroupResourcePlanVO);
         }
-        Map<Long, ResourcePlanProductDemandTimeVO> id2Demands = productDemandMapper.selectByIdList(groupItems.stream()
-                        .map(ProductDemandGroupItemDO::getProductDemandId).collect(Collectors.toSet()))
-                .stream()
-                .map(ProductDemandCopier.INSTANCE::convertToResourceDetail)
-                .collect(Collectors.toMap(ResourcePlanProductDemandTimeVO::getId, Function.identity(), (e, r) -> e));
+
+        // 注意需要报错 demand 结果的顺序和 groupItems 的顺序一致
+        Set<Long> orderedDemandIds = groupItems.stream().map(ProductDemandGroupItemDO::getProductDemandId).collect(Collectors.toCollection(LinkedHashSet::new));
+        Map<Long, ProductDemandDO> demandMap = productDemandMapper.selectByIdList(orderedDemandIds).stream().collect(Collectors.toMap(ProductDemandDO::getId, Function.identity()));
+        Map<Long, ResourcePlanProductDemandTimeVO> id2Demands = new LinkedHashMap<>();
+        for (Long id : orderedDemandIds) {
+            if (demandMap.containsKey(id)) {
+                id2Demands.put(id, ProductDemandCopier.INSTANCE.convertToResourceDetail(demandMap.get(id)));
+            }
+        }
 
         final Map<Long,List<ProductDemandOwnerDO>> productDemandId2Owners = productDemandMapper.listProductDemandOwners(id2Demands.keySet()).stream()
                 .collect(Collectors.groupingBy(ProductDemandOwnerDO::getProductDemandId));
