@@ -363,19 +363,52 @@
     </update>
 
     <update id="updateResourceTime">
-        <foreach collection="demands" item="d" separator=";">
-            UPDATE product_demand
-            <set>
-                ued_time = #{d.uedTime},
-                front_time = #{d.frontTime},
-                back_time = #{d.backTime},
-                qa_time = #{d.qaTime},
-                ops_time = #{d.opsTime},
-                security_time = #{d.securityTime},
-                product_time = #{d.productTime},
-                total_time = #{d.totalTime},
-            </set>
-            WHERE id = #{d.id}
+        UPDATE product_demand
+        <trim prefix="SET" suffixOverrides=",">
+            <trim prefix="ued_time = CASE" suffix="END,">
+                <foreach collection="demands" item="d">
+                    WHEN id = #{d.id} THEN #{d.uedTime}
+                </foreach>
+            </trim>
+            <trim prefix="front_time = CASE" suffix="END,">
+                <foreach collection="demands" item="d">
+                    WHEN id = #{d.id} THEN #{d.frontTime}
+                </foreach>
+            </trim>
+            <trim prefix="back_time = CASE" suffix="END,">
+                <foreach collection="demands" item="d">
+                    WHEN id = #{d.id} THEN #{d.backTime}
+                </foreach>
+            </trim>
+            <trim prefix="qa_time = CASE" suffix="END,">
+                <foreach collection="demands" item="d">
+                    WHEN id = #{d.id} THEN #{d.qaTime}
+                </foreach>
+            </trim>
+            <trim prefix="ops_time = CASE" suffix="END,">
+                <foreach collection="demands" item="d">
+                    WHEN id = #{d.id} THEN #{d.opsTime}
+                </foreach>
+            </trim>
+            <trim prefix="security_time = CASE" suffix="END,">
+                <foreach collection="demands" item="d">
+                    WHEN id = #{d.id} THEN #{d.securityTime}
+                </foreach>
+            </trim>
+            <trim prefix="product_time = CASE" suffix="END,">
+                <foreach collection="demands" item="d">
+                    WHEN id = #{d.id} THEN #{d.productTime}
+                </foreach>
+            </trim>
+            <trim prefix="total_time = CASE" suffix="END,">
+                <foreach collection="demands" item="d">
+                    WHEN id = #{d.id} THEN #{d.totalTime}
+                </foreach>
+            </trim>
+        </trim>
+        WHERE id IN
+        <foreach collection="demands" item="d" open="(" close=")" separator=",">
+            #{d.id}
         </foreach>
     </update>
 
