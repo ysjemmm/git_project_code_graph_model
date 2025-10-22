@@ -200,9 +200,9 @@
             inner join task as t on t.id = whr.work_item_id
         <where>
             t.status > -20
-            <if test="createManId != null">and create_man_id = #{createManId}</if>
+            <if test="createManId != null">and whr.create_man_id = #{createManId}</if>
             <if test="stratTime != null and endTime != null">
-                and registration_date &gt;= #{stratTime} and registration_date &lt;= #{endTime}
+                and whr.registration_date &gt;= #{stratTime} and whr.registration_date &lt;= #{endTime}
             </if>
         </where>
         group by whr.create_man_id
