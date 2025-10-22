@@ -195,15 +195,17 @@
 
     <select id="getDailyWorkingHours" resultType="com.timevale.forward.dal.entity.WorkHoursRecordDO">
         select
-        create_man_id, sum(work_hours) as work_hours
-        from work_hours_record
+        whr.create_man_id, sum(work_hours) as work_hours
+        from work_hours_record as whr
+            inner join task as t on t.id = whr.work_item_id
         <where>
+            t.status > -20
             <if test="createManId != null">and create_man_id = #{createManId}</if>
             <if test="stratTime != null and endTime != null">
                 and registration_date &gt;= #{stratTime} and registration_date &lt;= #{endTime}
             </if>
         </where>
-        group by create_man_id
+        group by whr.create_man_id
     </select>
 
 </mapper>
