@@ -366,14 +366,14 @@
         <foreach collection="demands" item="d" separator=";">
             UPDATE product_demand
             <set>
-                <if test="d.uedTime != null">ued_time = #{d.uedTime},</if>
-                <if test="d.frontTime != null">front_time = #{d.frontTime},</if>
-                <if test="d.backTime != null">back_time = #{d.backTime},</if>
-                <if test="d.qaTime != null">qa_time = #{d.qaTime},</if>
-                <if test="d.opsTime != null">ops_time = #{d.opsTime},</if>
-                <if test="d.securityTime != null">security_time = #{d.securityTime},</if>
-                <if test="d.productTime != null">product_time = #{d.productTime},</if>
-                <if test="d.totalTime != null">total_time = #{d.totalTime},</if>
+                ued_time = #{d.uedTime},
+                front_time = #{d.frontTime},
+                back_time = #{d.backTime},
+                qa_time = #{d.qaTime},
+                ops_time = #{d.opsTime},
+                security_time = #{d.securityTime},
+                product_time = #{d.productTime},
+                total_time = #{d.totalTime},
             </set>
             WHERE id = #{d.id}
         </foreach>

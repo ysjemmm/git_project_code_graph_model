@@ -1,5 +1,6 @@
 package com.timevale.forward.facade.api.request;
 
+import com.timevale.forward.facade.api.result.ResourcePlanProductDemandTimeVO;
 import com.timevale.mandarin.common.result.ToString;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -21,6 +22,9 @@ public class ResourcePlanProductDemandAddReq extends ToString {
     @ApiModelProperty(value = "产品需求id", required = true)
     @NotNull(message = "产品需求id不能为空")
     private Long productDemandId;
+
+    @ApiModelProperty(value = "产品需求人天信息")
+    private ResourcePlanProductDemandTimeVO productDemandTime;
 
     @ApiModelProperty(value = "产品需求负责人集合", required = true)
     private List<ProductDemandOwnerAddReq> productDemandOwners;
