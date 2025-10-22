@@ -111,6 +111,14 @@ public interface ProductDemandCopier {
     /**
      * 转换转换DO
      *
+     * @param productDemandDO 对象
+     * @return ProductDemandResourceDetailVO
+     */
+    ResourcePlanProductDemandVO.ProductDemandResourceDetailVO convertToResourceDetail(ProductDemandDO productDemandDO);
+
+    /**
+     * 转换转换DO
+     *
      * @param productDemandOwnerAddReqs 对象
      * @return List<ProductDemandOwnerDO>
      */

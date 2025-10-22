@@ -815,7 +815,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         return BaseResult.success(true);
     }
 
-    private BigDecimal getResourceTimeFromDemandDO (@NonNull ProductDemandDO item, @NonNull String resourceType) {
+    private BigDecimal getResourceTimeFromDemandDO (@NonNull ResourcePlanProductDemandVO.ProductDemandResourceDetailVO item, @NonNull String resourceType) {
         switch (resourceType) {
             case "frontend": return item.getFrontTime();
             case "backend": return item.getBackTime();
@@ -840,10 +840,11 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         if (CollectionUtils.isEmpty(groupItems)) {
             return BaseResult.success(demandGroupResourcePlanVO);
         }
-        Map<Long, ProductDemandDO> id2Demands = productDemandMapper.selectByIdList(groupItems.stream()
+        Map<Long, ResourcePlanProductDemandVO.ProductDemandResourceDetailVO> id2Demands = productDemandMapper.selectByIdList(groupItems.stream()
                         .map(ProductDemandGroupItemDO::getProductDemandId).collect(Collectors.toSet()))
                 .stream()
-                .collect(Collectors.toMap(ProductDemandDO::getId, Function.identity(), (e, r) -> e));
+                .map(ProductDemandCopier.INSTANCE::convertToResourceDetail)
+                .collect(Collectors.toMap(ResourcePlanProductDemandVO.ProductDemandResourceDetailVO::getId, Function.identity(), (e, r) -> e));
 
         final Map<Long,List<ProductDemandOwnerDO>> productDemandId2Owners = productDemandMapper.listProductDemandOwners(id2Demands.keySet()).stream()
                 .collect(Collectors.groupingBy(ProductDemandOwnerDO::getProductDemandId));
@@ -856,6 +857,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
             resourcePlanProductDemandVO.setId(id);
             resourcePlanProductDemandVO.setName(productDemandId2Name.get(id));
             resourcePlanProductDemandVO.setLabelNames(productDemandId2Label.getOrDefault(id, Collections.emptyList()));
+            resourcePlanProductDemandVO.setProductDemandDetail(item);
             resourcePlanProductDemandVO.setOwners(new HashMap<>());
             demandGroupResourcePlanVO.getProductDemands().add(resourcePlanProductDemandVO);
         });
@@ -870,7 +872,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
             demandOp.ifPresent(resourcePlanProductDemandVO -> resourcePlanProductDemandVO.setOwners(owners.stream()
                     .map(ProductDemandCopier.INSTANCE::convert)
                     .peek(d -> {
-                        ProductDemandDO productDemandDO = id2Demands.get(d.getProductDemandId());
+                        ResourcePlanProductDemandVO.ProductDemandResourceDetailVO productDemandDO = id2Demands.get(d.getProductDemandId());
                         if (productDemandDO != null) {
                             d.setResourceTime(getResourceTimeFromDemandDO(productDemandDO, d.getResourceType()));
                         }
