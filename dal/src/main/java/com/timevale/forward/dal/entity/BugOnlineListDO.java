@@ -122,4 +122,14 @@ public class BugOnlineListDO extends BaseDO {
      * 类别
      */
     private Integer category;
+
+    /**
+     * 是否加急的 bug
+     */
+    private Boolean isUrgent;
+
+    /**
+     * 加急原因
+     */
+    private String urgentReason;
 }

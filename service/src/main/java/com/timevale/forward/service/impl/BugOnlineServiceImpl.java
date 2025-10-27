@@ -47,27 +47,7 @@ import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProductLineDO;
 import com.timevale.forward.facade.api.client.BugOnlineService;
 import com.timevale.forward.facade.api.query.BugOnlineQueryList;
-import com.timevale.forward.facade.api.request.BugOnlineAcceptanceReq;
-import com.timevale.forward.facade.api.request.BugOnlineAddReq;
-import com.timevale.forward.facade.api.request.BugOnlineAttachToBizReq;
-import com.timevale.forward.facade.api.request.BugOnlineConfirmRepairReq;
-import com.timevale.forward.facade.api.request.BugOnlineDetailReq;
-import com.timevale.forward.facade.api.request.BugOnlineGetFieldReq;
-import com.timevale.forward.facade.api.request.BugOnlineGetReq;
-import com.timevale.forward.facade.api.request.BugOnlineIdsReq;
-import com.timevale.forward.facade.api.request.BugOnlineModifyReq;
-import com.timevale.forward.facade.api.request.BugOnlineNoRepairReq;
-import com.timevale.forward.facade.api.request.BugOnlineOnlineReq;
-import com.timevale.forward.facade.api.request.BugOnlineOpenAgainReq;
-import com.timevale.forward.facade.api.request.BugOnlinePriorityGetReq;
-import com.timevale.forward.facade.api.request.BugOnlineRepairFailedReasonReq;
-import com.timevale.forward.facade.api.request.BugOnlineRepairFinishedReq;
-import com.timevale.forward.facade.api.request.BugOnlineReq;
-import com.timevale.forward.facade.api.request.BugOnlineStartRepairReq;
-import com.timevale.forward.facade.api.request.BugOnlineToBizApplyReq;
-import com.timevale.forward.facade.api.request.BugOnlineTransferReq;
-import com.timevale.forward.facade.api.request.FileAddReq;
-import com.timevale.forward.facade.api.request.PersonAddReq;
+import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
 import com.timevale.forward.facade.api.result.BugOnlineDetailVO;
@@ -82,38 +62,11 @@ import com.timevale.forward.facade.api.result.PriorityStatisticsVO;
 import com.timevale.forward.facade.api.result.ProductLineToFieldVO;
 import com.timevale.forward.facade.api.result.ProductLineVO;
 import com.timevale.forward.model.bo.BusinessBO;
-import com.timevale.forward.model.enums.AscriptionEnum;
-import com.timevale.forward.model.enums.BizProductLineTypeEnum;
-import com.timevale.forward.model.enums.BizTypeEnum;
-import com.timevale.forward.model.enums.BugFieldEnum;
-import com.timevale.forward.model.enums.BugLogFieldEnum;
-import com.timevale.forward.model.enums.BugLogTypeEnum;
-import com.timevale.forward.model.enums.BugOnlineConvertBizStatusEnum;
-import com.timevale.forward.model.enums.BugOnlineEnvEnum;
-import com.timevale.forward.model.enums.BugOnlinePriorityEnum;
-import com.timevale.forward.model.enums.BugOnlineReasonEnum;
-import com.timevale.forward.model.enums.BugOnlineStatusEnum;
-import com.timevale.forward.model.enums.ButtonActionEnum;
-import com.timevale.forward.model.enums.CommentTypeEnum;
-import com.timevale.forward.model.enums.FileTypeEnum;
-import com.timevale.forward.model.enums.JobFunctionEnum;
-import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.BugOnlineMD;
 import com.timevale.forward.model.middle.BusinessMD;
 import com.timevale.forward.model.to.PdLineDomainTO;
-import com.timevale.forward.service.component.BizLabelComponent;
-import com.timevale.forward.service.component.BugLogComponent;
-import com.timevale.forward.service.component.BugOnlineComponent;
-import com.timevale.forward.service.component.BugOnlineCustomComponent;
-import com.timevale.forward.service.component.BugOnlineModelComponent;
-import com.timevale.forward.service.component.BugOnlineProductLineComponent;
-import com.timevale.forward.service.component.BugOnlineStatusOperatorComponent;
-import com.timevale.forward.service.component.FileComponent;
-import com.timevale.forward.service.component.LabelComponent;
-import com.timevale.forward.service.component.OutBizDealComponent;
-import com.timevale.forward.service.component.PersonComponent;
-import com.timevale.forward.service.component.ProductLineComponent;
-import com.timevale.forward.service.component.SqlOrderComponent;
+import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.BugOnlineCopier;
@@ -157,6 +110,7 @@ import com.timevale.mandarin.common.result.BusinessResult;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.request.AccountRequest;
 import com.timevale.security.facade.response.BaseInfoResponse;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -704,6 +658,17 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             addReq.setPriority(priority);
         }
 
+        // 加急bug开关未打开，填入加急bug描述是非法的
+        if (BooleanUtil.isFalse(addReq.getIsUrgent())) {
+            addReq.setUrgentDescription(null);
+            addReq.setUrgentFiles(Collections.emptyList());
+        } else {
+            if (StrUtil.isBlank(addReq.getUrgentDescription())) {
+                throw new BaseBizRuntimeException("bug标记为加急时必须指定原因");
+            }
+            addReq.setPriority(PriorityEnum.P0.getCode());
+        }
+
         // req 转换为 do
         BugOnlineDO bugOnlineDO = BugOnlineCopier.INSTANCE.req2do(addReq);
 
@@ -718,6 +683,12 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         List<FileAddReq> files = addReq.getFiles();
         if (CollectionUtils.isNotEmpty(files)) {
             fileComponent.add(files, bugOnlineDO.getId(), FileTypeEnum.BUG_ONLINE.getCode());
+        }
+
+        // 加急bug附件数据
+        List<FileAddReq> urgentFiles = addReq.getUrgentFiles();
+        if (addReq.getIsUrgent() && CollectionUtils.isNotEmpty(urgentFiles)) {
+            fileComponent.add(urgentFiles, bugOnlineDO.getId(), FileTypeEnum.URGENT_ONLINE_BUG.getCode());
         }
 
         // 抄送人数据
@@ -800,6 +771,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //删除附件数据
         fileComponent.update(Collections.emptyList(), deleteReq.getId(), FileTypeEnum.BUG_ONLINE.getCode());
 
+        //删除加急附件数据
+        fileComponent.update(Collections.emptyList(), deleteReq.getId(), FileTypeEnum.URGENT_ONLINE_BUG.getCode());
+
         //查询所有的状态变更id
         List<BugLogDO> bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(bugOnlineDO.getId(), BugLogTypeEnum.ONLINE.getCode(), true);
         List<Long> bugLogStatusIdList = bugLogDOList.stream().map(BugLogDO::getId).collect(Collectors.toList());
@@ -854,6 +828,20 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         List<Long> oldProductLineIdList = bugOnlineProductLineMapper.selectProductLineIds(modifyReq.getId(), BizProductLineTypeEnum.BUG_ONLINE.getCode());
         List<Long> oldModelList = bugOnlineModelMapper.selectModelIds(modifyReq.getId());
 
+        // 订正: 关闭加急的关联信息
+        if (BooleanUtil.isFalse(modifyReq.getIsUrgent())) {
+            modifyReq.setUrgentDescription(null);
+            modifyReq.setUrgentFiles(Collections.emptyList());
+        }
+        else {
+            if (StrUtil.isBlank(modifyReq.getUrgentDescription())) {
+                throw new BaseBizRuntimeException("bug标记为加急时必须指定原因");
+            }
+            // 加急状态下优先级必须为：加急
+            modifyReq.setPriority(PriorityEnum.P0.getCode());
+            modifyReq.setPriorityChangeReason("bug加急自动更新为P0");
+        }
+
         //更新线上bug
         BugOnlineDO bugOnlineConvert = BugOnlineCopier.INSTANCE.change(modifyReq);
 
@@ -862,6 +850,10 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //更新附件表
         List<FileAddReq> files = modifyReq.getFiles();
         fileComponent.update(files, modifyReq.getId(), FileTypeEnum.BUG_ONLINE.getCode());
+
+        //更新加急bug附件表
+        List<FileAddReq> urgentFiles = CollUtil.defaultIfEmpty(modifyReq.getUrgentFiles(), Collections.emptyList());
+        fileComponent.update(urgentFiles, modifyReq.getId(), FileTypeEnum.URGENT_ONLINE_BUG.getCode());
 
         // 更新客户信息
         bugOnlineCustomComponent.update(modifyReq.getCustomList(), modifyReq.getId());
@@ -947,13 +939,22 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             bugOnlineDetailVO.setBizDemands(bizDemandVOList);
         }
 
-        //查询附件
-        List<FileDO> fileDOList = fileMapper.select(bugOnlineId, FileTypeEnum.BUG_ONLINE.getCode());
-        //如果附件不为空，转化附件
-        if (CollectionUtils.isNotEmpty(fileDOList)) {
-            List<FileVO> fileVOList = fileDOList.stream().map(FileCopier.INSTANCE::change).collect(Collectors.toList());
+        ///查询附件
+        Map<Integer, List<FileDO>> type2FileDOList = fileMapper.selectByAttacheIdListAndTypes(bugOnlineId, Lists.newArrayList(FileTypeEnum.BUG_ONLINE.getCode(), FileTypeEnum.URGENT_ONLINE_BUG.getCode()))
+                .stream().collect(Collectors.groupingBy(FileDO::getType));
+        List<FileDO> normalfileDOList = type2FileDOList.get(FileTypeEnum.BUG_ONLINE.getCode());
+        //线上bug附件
+        if (CollectionUtils.isNotEmpty(normalfileDOList)) {
+            List<FileVO> fileVOList = normalfileDOList.stream().map(FileCopier.INSTANCE::change).collect(Collectors.toList());
             //附件信息存储到详情参数里面
             bugOnlineDetailVO.setFiles(fileVOList);
+        }
+
+        //加急bug附件
+        List<FileDO> urgentFileDOList = type2FileDOList.get(FileTypeEnum.URGENT_ONLINE_BUG.getCode());
+        if (CollectionUtils.isNotEmpty(urgentFileDOList)) {
+            List<FileVO> fileVOList = urgentFileDOList.stream().map(FileCopier.INSTANCE::change).collect(Collectors.toList());
+            bugOnlineDetailVO.setUrgentFiles(fileVOList);
         }
 
         //查询抄送人

@@ -35,7 +35,9 @@ public enum FileTypeEnum {
     // 客户需求
     CUSTOM_DEMAND(15),
     // 项目文档
-    PROJECT_DOCUMENT(20)
+    PROJECT_DOCUMENT(20),
+    // 线上加急 bug 描述附件
+    URGENT_ONLINE_BUG(25)
     ;
 
     private final Integer code;

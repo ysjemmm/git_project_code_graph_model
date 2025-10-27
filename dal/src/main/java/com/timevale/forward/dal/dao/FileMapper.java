@@ -43,6 +43,15 @@ public interface FileMapper {
     /**
      * 查询所属附件
      *
+     * @param attacheId 附件所属id
+     * @param types      附件所属类型列表
+     * @return 列表
+     */
+    List<FileDO> selectByAttacheIdListAndTypes(@Param("attacheId") Long attacheId, @Param("types") List<Integer> types);
+
+    /**
+     * 查询所属附件
+     *
      * @param attacheIdList 附件所属id列表
      * @param type      附件所属类型
      * @return 列表

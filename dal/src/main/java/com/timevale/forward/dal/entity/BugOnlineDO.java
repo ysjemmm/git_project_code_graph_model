@@ -274,4 +274,14 @@ public class BugOnlineDO extends BaseDO {
      */
     private String priorityChangeReason;
 
+    /**
+     * 是否bug加急
+     */
+    private Boolean isUrgent;
+
+    /**
+     * 加急bug描述信息
+     */
+    private String urgentDescription;
+
 }

@@ -142,4 +142,13 @@ public class BugOnlineAddReq extends ToString {
 
     @ApiModelProperty("问题产生阶段：10-首次部署（测试阶段），20-对接联调（测试环境），30-首次部署（上线阶段），40-日常使用（试运行），50-日常使用，60-对接联调（正式环境），70-测试环境变更，80-正式环境变更，90-咨询类问题")
     private Integer generationStage;
+
+    @ApiModelProperty("是否bug加急")
+    private Boolean isUrgent;
+
+    @ApiModelProperty("加急bug附件信息")
+    private List<FileAddReq> urgentFiles;
+
+    @ApiModelProperty(value = "加急bug描述信息",notes = "当isUrgent为true时必填")
+    private String urgentDescription;
 }

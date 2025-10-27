@@ -240,4 +240,13 @@ public class BugOnlineDetailVO extends ToString {
     @ApiModelProperty("优先级变更原因")
     private String priorityChangeReason;
 
+    @ApiModelProperty("是否bug加急")
+    private Boolean isUrgent;
+
+    @ApiModelProperty("加急bug附件信息")
+    private List<FileVO> urgentFiles;
+
+    @ApiModelProperty("加急bug描述信息")
+    private String urgentDescription;
+
 }
