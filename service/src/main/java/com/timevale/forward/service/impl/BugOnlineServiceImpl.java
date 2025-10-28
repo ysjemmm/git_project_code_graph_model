@@ -658,15 +658,15 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             addReq.setPriority(priority);
         }
 
-        // 加急bug开关未打开，填入加急bug描述是非法的
-        if (BooleanUtil.isFalse(addReq.getIsUrgent())) {
-            addReq.setUrgentDescription(null);
-            addReq.setUrgentFiles(Collections.emptyList());
-        } else if (BooleanUtil.isTrue(addReq.getIsUrgent())){
+        // 加急bug开关
+        if (BooleanUtil.isTrue(addReq.getIsUrgent())) {
             if (StrUtil.isBlank(addReq.getUrgentDescription())) {
                 throw new BaseBizRuntimeException("bug标记为加急时必须指定原因");
             }
             addReq.setPriority(PriorityEnum.P0.getCode());
+        } else {
+            addReq.setUrgentDescription(null);
+            addReq.setUrgentFiles(Collections.emptyList());
         }
 
         // req 转换为 do
@@ -829,17 +829,17 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         List<Long> oldModelList = bugOnlineModelMapper.selectModelIds(modifyReq.getId());
 
         // 订正: 关闭加急的关联信息
-        if (BooleanUtil.isFalse(modifyReq.getIsUrgent())) {
-            modifyReq.setUrgentDescription(null);
-            modifyReq.setUrgentFiles(Collections.emptyList());
-        }
-        else if (BooleanUtil.isTrue(modifyReq.getIsUrgent())){
+        if (BooleanUtil.isTrue(modifyReq.getIsUrgent())) {
             if (StrUtil.isBlank(modifyReq.getUrgentDescription())) {
                 throw new BaseBizRuntimeException("bug标记为加急时必须指定原因");
             }
             // 加急状态下优先级必须为：加急
             modifyReq.setPriority(PriorityEnum.P0.getCode());
             modifyReq.setPriorityChangeReason("bug加急自动更新为P0");
+        }
+        else {
+            modifyReq.setUrgentDescription(null);
+            modifyReq.setUrgentFiles(Collections.emptyList());
         }
 
         //更新线上bug
