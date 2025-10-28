@@ -659,15 +659,15 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         // 加急bug开关
-        if (BooleanUtil.isTrue(addReq.getIsUrgent())) {
-            if (StrUtil.isBlank(addReq.getUrgentDescription())) {
-                throw new BaseBizRuntimeException("bug标记为加急时必须指定原因");
-            }
-            addReq.setPriority(PriorityEnum.P0.getCode());
-        } else {
-            addReq.setUrgentDescription(null);
-            addReq.setUrgentFiles(Collections.emptyList());
-        }
+//        if (BooleanUtil.isTrue(addReq.getIsUrgent())) {
+//            if (StrUtil.isBlank(addReq.getUrgentDescription())) {
+//                throw new BaseBizRuntimeException("bug标记为加急时必须指定原因");
+//            }
+//            addReq.setPriority(PriorityEnum.P0.getCode());
+//        } else {
+//            addReq.setUrgentDescription(null);
+//            addReq.setUrgentFiles(Collections.emptyList());
+//        }
 
         // req 转换为 do
         BugOnlineDO bugOnlineDO = BugOnlineCopier.INSTANCE.req2do(addReq);
@@ -686,10 +686,10 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         // 加急bug附件数据
-        List<FileAddReq> urgentFiles = addReq.getUrgentFiles();
-        if (addReq.getIsUrgent() && CollectionUtils.isNotEmpty(urgentFiles)) {
-            fileComponent.add(urgentFiles, bugOnlineDO.getId(), FileTypeEnum.URGENT_ONLINE_BUG.getCode());
-        }
+//        List<FileAddReq> urgentFiles = addReq.getUrgentFiles();
+//        if (addReq.getIsUrgent() && CollectionUtils.isNotEmpty(urgentFiles)) {
+//            fileComponent.add(urgentFiles, bugOnlineDO.getId(), FileTypeEnum.URGENT_ONLINE_BUG.getCode());
+//        }
 
         // 抄送人数据
         List<PersonAddReq> recipients = addReq.getRecipients();
@@ -828,19 +828,19 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         List<Long> oldProductLineIdList = bugOnlineProductLineMapper.selectProductLineIds(modifyReq.getId(), BizProductLineTypeEnum.BUG_ONLINE.getCode());
         List<Long> oldModelList = bugOnlineModelMapper.selectModelIds(modifyReq.getId());
 
-        // 订正: 关闭加急的关联信息
-        if (BooleanUtil.isTrue(modifyReq.getIsUrgent())) {
-            if (StrUtil.isBlank(modifyReq.getUrgentDescription())) {
-                throw new BaseBizRuntimeException("bug标记为加急时必须指定原因");
-            }
-            // 加急状态下优先级必须为：加急
-            modifyReq.setPriority(PriorityEnum.P0.getCode());
-            modifyReq.setPriorityChangeReason("bug加急自动更新为P0");
-        }
-        else {
-            modifyReq.setUrgentDescription(null);
-            modifyReq.setUrgentFiles(Collections.emptyList());
-        }
+        // 加急
+//        if (BooleanUtil.isTrue(modifyReq.getIsUrgent())) {
+//            if (StrUtil.isBlank(modifyReq.getUrgentDescription())) {
+//                throw new BaseBizRuntimeException("bug标记为加急时必须指定原因");
+//            }
+//            // 加急状态下优先级必须为：加急
+//            modifyReq.setPriority(PriorityEnum.P0.getCode());
+//            modifyReq.setPriorityChangeReason("bug加急自动更新为P0");
+//        }
+//        else {
+//            modifyReq.setUrgentDescription(null);
+//            modifyReq.setUrgentFiles(Collections.emptyList());
+//        }
 
         //更新线上bug
         BugOnlineDO bugOnlineConvert = BugOnlineCopier.INSTANCE.change(modifyReq);
@@ -852,8 +852,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         fileComponent.update(files, modifyReq.getId(), FileTypeEnum.BUG_ONLINE.getCode());
 
         //更新加急bug附件表
-        List<FileAddReq> urgentFiles = CollUtil.defaultIfEmpty(modifyReq.getUrgentFiles(), Collections.emptyList());
-        fileComponent.update(urgentFiles, modifyReq.getId(), FileTypeEnum.URGENT_ONLINE_BUG.getCode());
+//        List<FileAddReq> urgentFiles = CollUtil.defaultIfEmpty(modifyReq.getUrgentFiles(), Collections.emptyList());
+//        fileComponent.update(urgentFiles, modifyReq.getId(), FileTypeEnum.URGENT_ONLINE_BUG.getCode());
 
         // 更新客户信息
         bugOnlineCustomComponent.update(modifyReq.getCustomList(), modifyReq.getId());
