@@ -662,7 +662,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         if (BooleanUtil.isFalse(addReq.getIsUrgent())) {
             addReq.setUrgentDescription(null);
             addReq.setUrgentFiles(Collections.emptyList());
-        } else {
+        } else if (BooleanUtil.isTrue(addReq.getIsUrgent())){
             if (StrUtil.isBlank(addReq.getUrgentDescription())) {
                 throw new BaseBizRuntimeException("bug标记为加急时必须指定原因");
             }
@@ -833,7 +833,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             modifyReq.setUrgentDescription(null);
             modifyReq.setUrgentFiles(Collections.emptyList());
         }
-        else {
+        else if (BooleanUtil.isTrue(modifyReq.getIsUrgent())){
             if (StrUtil.isBlank(modifyReq.getUrgentDescription())) {
                 throw new BaseBizRuntimeException("bug标记为加急时必须指定原因");
             }
