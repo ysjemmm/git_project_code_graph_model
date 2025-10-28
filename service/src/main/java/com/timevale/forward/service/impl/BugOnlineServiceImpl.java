@@ -687,7 +687,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         // 加急bug附件数据
         List<FileAddReq> urgentFiles = addReq.getUrgentFiles();
-        if (addReq.getIsUrgent() && CollectionUtils.isNotEmpty(urgentFiles)) {
+        if (BooleanUtil.isTrue(addReq.getIsUrgent()) && CollectionUtils.isNotEmpty(urgentFiles)) {
             fileComponent.add(urgentFiles, bugOnlineDO.getId(), FileTypeEnum.URGENT_ONLINE_BUG.getCode());
         }
 

@@ -289,7 +289,7 @@
                 repair_fail_reason = #{repairFailReason},
                 dismiss_cause_stage = #{dismissCauseStage},
                 problem_occurred_time=#{problemOccurredTime},
-                is_urgent = #{isUrgent},
+                is_urgent = IFNULL(#{isUrgent},0),
                 urgent_description = #{urgentDescription},
             </if>
             <if test="name != null">
