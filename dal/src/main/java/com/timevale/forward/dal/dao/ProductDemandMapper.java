@@ -89,6 +89,14 @@ public interface ProductDemandMapper {
     int update(ProductDemandDO productDemandDO);
 
     /**
+     * 更新单条产品需求资源规划
+     *
+     * @param productDemandDO 产品需求DO
+     * @return int
+     */
+    int updateResourcePlan(ProductDemandDO productDemandDO);
+
+    /**
      * 更新负责人 by id列表
      *
      * @param idList  id列表
