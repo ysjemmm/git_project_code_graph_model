@@ -319,6 +319,25 @@
         </where>
     </update>
 
+    <update id="updateResourcePlan" parameterType="com.timevale.forward.dal.entity.ProductDemandDO">
+        update product_demand
+        <set>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+            <if test="uedTime != null">ued_time = #{uedTime},</if>
+            <if test="frontTime != null">front_time = #{frontTime},</if>
+            <if test="backTime != null">back_time = #{backTime},</if>
+            <if test="qaTime != null">qa_time = #{qaTime},</if>
+            <if test="opsTime != null">ops_time = #{opsTime},</if>
+            <if test="securityTime != null">security_time = #{securityTime},</if>
+            <if test="transferTime != null">transfer_time = #{transferTime},</if>
+            <if test="productTime != null">product_time = #{productTime}</if>
+        </set>
+        <where>
+            id = #{id} and is_deleted=false
+        </where>
+    </update>
+
     <select id="get" resultType="com.timevale.forward.dal.entity.ProductDemandDO">
         select *
         from product_demand a

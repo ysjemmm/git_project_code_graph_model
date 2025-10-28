@@ -55,6 +55,7 @@ import com.timevale.forward.facade.api.request.ProductCustomDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProductDemandAddReq;
 import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
 import com.timevale.forward.facade.api.request.ProductDemandTrackEventLinkReq;
+import com.timevale.forward.facade.api.request.ResourcePlanProductDemandAddReq;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.CustomDemandVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
@@ -62,6 +63,7 @@ import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
+import com.timevale.forward.facade.api.result.ResourcePlanProductDemandTimeVO;
 import com.timevale.forward.facade.api.result.TrackEventVO;
 import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
@@ -813,6 +815,24 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
 
         log.info("批量更新产品需求客户成功,更新数量:{}", updateCount.get());
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> updateResourcePlan(ResourcePlanProductDemandAddReq resourcePlanProductDemandAddReq) {
+        Long productDemandId = resourcePlanProductDemandAddReq.getProductDemandId();
+        ProductDemandDO productDemandDO = productDemandMapper.selectById(productDemandId);
+        if (productDemandDO != null) {
+            ResourcePlanProductDemandTimeVO productDemandTime = resourcePlanProductDemandAddReq.getProductDemandTime();
+            productDemandDO.setUedTime(productDemandTime.getUedTime());
+            productDemandDO.setBackTime(productDemandTime.getBackTime());
+            productDemandDO.setOpsTime(productDemandTime.getOpsTime());
+            productDemandDO.setFrontTime(productDemandTime.getFrontTime());
+            productDemandDO.setQaTime(productDemandTime.getQaTime());
+            productDemandDO.setProductTime(productDemandTime.getProductTime());
+            productDemandDO.setSecurityTime(productDemandTime.getSecurityTime());
+            productDemandMapper.updateResourcePlan(productDemandDO);
+        }
         return BaseResult.success(true);
     }
 

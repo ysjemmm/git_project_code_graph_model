@@ -165,4 +165,6 @@ public interface ProductDemandService {
     BaseResult<PageQueryResult<CustomDemandVO>> linkCustomDemandList(ProductCustomDemandQueryList customDemandQueryList);
 
     BaseResult<Boolean> batchUpdateTargetCustomer();
+
+    BaseResult<Boolean> updateResourcePlan(ResourcePlanProductDemandAddReq resourcePlanProductDemandAddReq);
 }
