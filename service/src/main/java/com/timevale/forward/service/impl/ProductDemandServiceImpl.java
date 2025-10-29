@@ -40,6 +40,7 @@ import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectProductDemandDO;
 import com.timevale.forward.dal.entity.TrackEventDO;
 import com.timevale.forward.facade.api.client.ProductDemandService;
+import com.timevale.forward.facade.api.client.UseCasePlatFormCallService;
 import com.timevale.forward.facade.api.query.ProductBizDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductCustomDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandLinkBizDemandQueryList;
@@ -54,11 +55,14 @@ import com.timevale.forward.facade.api.request.ProductBizDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProductCustomDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProductDemandAddReq;
 import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
+import com.timevale.forward.facade.api.request.ProductDemandStatusUpdateReq;
 import com.timevale.forward.facade.api.request.ProductDemandTrackEventLinkReq;
 import com.timevale.forward.facade.api.request.ResourcePlanProductDemandAddReq;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.CustomDemandVO;
+import com.timevale.forward.facade.api.result.DemandCaseExecInfoVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
+import com.timevale.forward.facade.api.result.ProductDemandStatusVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
@@ -123,6 +127,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -233,6 +238,11 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Resource
     private CrmClient crmClient;
+
+    @Resource
+    private UseCasePlatFormCallService useCasePlatFormCallService;
+
+    private static final String ONE_HUNDRED_PERCENT = "100.00%";
 
     @Override
     public BaseResult<QueryResultVO<ProductDemandVO>> list(ProductDemandQueryList productDemandQueryList) {
@@ -834,6 +844,91 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             productDemandMapper.updateResourcePlan(productDemandDO);
         }
         return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> updateDemandStatus(ProductDemandStatusUpdateReq productDemandStatusUpdateReq) {
+        ProductDemandDO productDemandDO = productDemandMapper.get(productDemandStatusUpdateReq.getId());
+        AssertUtil.notNull(productDemandDO, "产品需求不存在");
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        productDemandDO.setModifyManId(userInfo.getId());
+        productDemandDO.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+        productDemandDO.setModifyDate(new Date());
+        Integer status = productDemandStatusUpdateReq.getStatus();
+        if (ProductDemandStatusEnum.SUSPEND.getCode().equals(status) || ProductDemandStatusEnum.INVALID.getCode().equals(status)) {
+            return updateStatus(productDemandDO.getId(), status);
+        } else if (ProductDemandStatusEnum.DEVELOPING.getCode().equals(status)) {
+            productDemandDO.setStatus(status);
+            productDemandMapper.updateStatus(productDemandDO);
+            // 验证
+        } else if (ProductDemandStatusEnum.DEV_COMPLETED.getCode().equals(status) || ProductDemandStatusEnum.ONLINE.getCode().equals(status)) {
+            // 验证
+            Map<String, Object> paramsMap = new HashMap<>(1);
+            paramsMap.put("demandId", productDemandDO.getId());
+            BaseResult baseResult = useCasePlatFormCallService.queryDemandCaseTurnInfo(paramsMap);
+            if (!baseResult.ifSuccess()) {
+                throw new BaseBizRuntimeException("获取用例平台需求用例执行信息错误");
+            }
+            Object res = Optional.of(baseResult).map(BaseResult::getData).orElse(new ArrayList<>());
+            List<DemandCaseExecInfoVO> demandCaseExecInfoVOS = JSON.parseArray(JSON.toJSONString(res), DemandCaseExecInfoVO.class);
+            if (!CollUtil.isEmpty(demandCaseExecInfoVOS) && ProductDemandStatusEnum.DEV_COMPLETED.getCode().equals(status)) {
+                DemandCaseExecInfoVO nonProInfo = demandCaseExecInfoVOS.stream().filter(demandCaseExecInfoVO -> demandCaseExecInfoVO.getTurnType() == 0).findFirst().get();
+                AssertUtil.checkState(ONE_HUNDRED_PERCENT.equals(nonProInfo.getPassRate()), "该需求关联的非生产测试用例通过率为: " + nonProInfo.getPassRate() + "，不能变更状态到研发完成");
+            } else if (ProductDemandStatusEnum.ONLINE.getCode().equals(status)) {
+                DemandCaseExecInfoVO proInfo = demandCaseExecInfoVOS.stream().filter(demandCaseExecInfoVO -> demandCaseExecInfoVO.getTurnType() == 1).findFirst().get();
+                AssertUtil.checkState(ONE_HUNDRED_PERCENT.equals(proInfo.getPassRate()), "该需求关联的生产测试用例通过率为: " + proInfo.getPassRate() + "，不能变更状态到已完成上线");
+            }
+            // 更新
+            productDemandDO.setStatus(status);
+            productDemandMapper.updateStatus(productDemandDO);
+        }
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<List<ProductDemandStatusVO>> queryNextDemandStatus(Long id) {
+        ProductDemandDO productDemandDO = productDemandMapper.get(id);
+        AssertUtil.notNull(productDemandDO, "产品需求不存在");
+        List<ProductDemandStatusVO> statusVOS = new ArrayList<>();
+        if (ProductDemandStatusEnum.SUSPEND.getCode().equals(productDemandDO.getStatus())) {
+            ProductDemandStatusVO suspendStatusVO = new ProductDemandStatusVO();
+            suspendStatusVO.setStatus(ProductDemandStatusEnum.INVALID.getCode());
+            suspendStatusVO.setStatusText(ProductDemandStatusEnum.INVALID.getText());
+            statusVOS.add(suspendStatusVO);
+            return BaseResult.success(statusVOS);
+        }
+
+        if (ProductDemandStatusEnum.INCLUDED.getCode().equals(productDemandDO.getStatus())) {
+            ProductDemandStatusVO devStatusVO = new ProductDemandStatusVO();
+            devStatusVO.setStatus(ProductDemandStatusEnum.DEVELOPING.getCode());
+            devStatusVO.setStatusText(ProductDemandStatusEnum.DEVELOPING.getText());
+            statusVOS.add(devStatusVO);
+        } else if (ProductDemandStatusEnum.DEVELOPING.getCode().equals(productDemandDO.getStatus())) {
+            ProductDemandStatusVO devCompleteStatusVO = new ProductDemandStatusVO();
+            devCompleteStatusVO.setStatus(ProductDemandStatusEnum.DEV_COMPLETED.getCode());
+            devCompleteStatusVO.setStatusText(ProductDemandStatusEnum.DEV_COMPLETED.getText());
+            statusVOS.add(devCompleteStatusVO);
+        } else if (ProductDemandStatusEnum.DEV_COMPLETED.getCode().equals(productDemandDO.getStatus())) {
+            ProductDemandStatusVO onlineStatusVO = new ProductDemandStatusVO();
+            onlineStatusVO.setStatus(ProductDemandStatusEnum.ONLINE.getCode());
+            onlineStatusVO.setStatusText(ProductDemandStatusEnum.ONLINE.getText());
+            statusVOS.add(onlineStatusVO);
+        } else {
+            return BaseResult.success(new ArrayList<>());
+        }
+
+        // 暂停
+        ProductDemandStatusVO pauseStatusVO = new ProductDemandStatusVO();
+        pauseStatusVO.setStatus(ProductDemandStatusEnum.SUSPEND.getCode());
+        pauseStatusVO.setStatusText(ProductDemandStatusEnum.SUSPEND.getText());
+        statusVOS.add(pauseStatusVO);
+
+        // 作废
+        ProductDemandStatusVO cancelStatusVO = new ProductDemandStatusVO();
+        cancelStatusVO.setStatus(ProductDemandStatusEnum.INVALID.getCode());
+        cancelStatusVO.setStatusText(ProductDemandStatusEnum.INVALID.getText());
+        statusVOS.add(cancelStatusVO);
+        return BaseResult.success(statusVOS);
     }
 
     @Override

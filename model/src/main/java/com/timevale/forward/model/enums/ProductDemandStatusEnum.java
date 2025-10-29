@@ -23,7 +23,11 @@ public enum ProductDemandStatusEnum {
 
     SUSPEND(-10, "已暂停"),
 
-    INVALID(-20, "已作废");
+    INVALID(-20, "已作废"),
+
+    DEVELOPING(15, "研发中"),
+
+    DEV_COMPLETED(25, "研发完成");
 
     final private Integer code;
 

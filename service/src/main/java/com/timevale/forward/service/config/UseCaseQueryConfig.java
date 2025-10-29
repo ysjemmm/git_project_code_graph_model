@@ -63,4 +63,7 @@ public class UseCaseQueryConfig implements Serializable {
     private String addCaseUrl;
 
     private String deleteDemandCaseListUrl;
+
+    private String queryDemandCaseTurnInfoUrl;
+
 }
