@@ -16,12 +16,15 @@ import com.timevale.forward.facade.api.request.ProductBizDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProductCustomDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProductDemandAddReq;
 import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
+import com.timevale.forward.facade.api.request.ProductDemandStatusUpdateReq;
 import com.timevale.forward.facade.api.request.ProductDemandTrackEventLinkReq;
 import com.timevale.forward.facade.api.request.RecipientAddReq;
+import com.timevale.forward.facade.api.request.ResourcePlanProductDemandAddReq;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.CustomDemandVO;
 import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
+import com.timevale.forward.facade.api.result.ProductDemandStatusVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
@@ -59,6 +62,24 @@ public class ProductDemandController {
 
     @Resource
     private PersonService personService;
+
+    @ApiOperation("查询下一个需求状态")
+    @GetMapping("/queryNextDemandStatus")
+    public BusinessResult<List<ProductDemandStatusVO>> queryNextDemandStatus(@RequestParam Long id) {
+        return ResultUtils.result(productDemandService.queryNextDemandStatus(id));
+    }
+
+    @ApiOperation("产品需求状态变更")
+    @PostMapping("/updateDemandStatus")
+    public BusinessResult<Boolean> updateDemandStatus(@RequestBody @Valid ProductDemandStatusUpdateReq productDemandStatusUpdateReq) {
+        return ResultUtils.result(productDemandService.updateDemandStatus(productDemandStatusUpdateReq));
+    }
+
+    @ApiOperation("产品需求资源规划变更")
+    @PostMapping("/updateResourcePlan")
+    public BusinessResult<Boolean> upsertResourcePlan(@RequestBody @Valid ResourcePlanProductDemandAddReq resourcePlanProductDemandAddReq) {
+        return ResultUtils.result(productDemandService.updateResourcePlan(resourcePlanProductDemandAddReq));
+    }
 
     @ApiOperation("批量更新产品需求客户等级")
     @GetMapping("/batchUpdateTargetCustomer")

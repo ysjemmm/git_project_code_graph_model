@@ -8,6 +8,8 @@ import com.timevale.forward.facade.api.result.*;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
+import java.util.List;
+
 /**
  * @author: xingyun
  * @create: 2021-12-13 13:44
@@ -167,4 +169,8 @@ public interface ProductDemandService {
     BaseResult<Boolean> batchUpdateTargetCustomer();
 
     BaseResult<Boolean> updateResourcePlan(ResourcePlanProductDemandAddReq resourcePlanProductDemandAddReq);
+
+    BaseResult<Boolean> updateDemandStatus(ProductDemandStatusUpdateReq productDemandStatusUpdateReq);
+
+    BaseResult<List<ProductDemandStatusVO>> queryNextDemandStatus(Long id);
 }

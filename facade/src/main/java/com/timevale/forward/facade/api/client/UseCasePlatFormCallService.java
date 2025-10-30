@@ -57,5 +57,7 @@ public interface UseCasePlatFormCallService {
 
     BaseResult addCase(Map<String, Object> params);
 
+    BaseResult queryDemandCaseTurnInfo(Map<String, Object> params);
+
     BaseResult deleteDemandCaseList(Map<String, Object> params);
 }

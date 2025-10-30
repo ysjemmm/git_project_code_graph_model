@@ -287,7 +287,9 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
             productDemandGroupItemVO.setProductDemandId(productDemandGroupItemListDO.getProductDemandId());
             productDemandGroupItemVO.setPosition(productDemandGroupItemListDO.getPosition());
             productDemandGroupItemVO.setVersion(productDemandGroupItemListDO.getVersion());
-            productDemandGroupItemVO.setProductDemand(ProductDemandCopier.INSTANCE.convert(productDemandGroupItemListDO));
+            ProductDemandVO convert = ProductDemandCopier.INSTANCE.convert(productDemandGroupItemListDO);
+            convert.setStatusName(ProductDemandStatusEnum.getTextByCode(convert.getStatus()));
+            productDemandGroupItemVO.setProductDemand(convert);
             productDemandGroupItemVO.setUedTime(productDemandGroupItemListDO.getUedTime());
             productDemandGroupItemVO.setBackTime(productDemandGroupItemListDO.getBackTime());
             productDemandGroupItemVO.setFrontTime(productDemandGroupItemListDO.getFrontTime());

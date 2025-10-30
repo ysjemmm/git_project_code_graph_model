@@ -319,6 +319,19 @@
         </where>
     </update>
 
+    <update id="updateStatus" parameterType="com.timevale.forward.dal.entity.ProductDemandDO">
+        update product_demand
+        <set>
+            <if test="status != null">status = #{status},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+            <if test="modifyDate != null">modify_date = #{modifyDate}</if>
+        </set>
+        <where>
+            id = #{id} and is_deleted=false
+        </where>
+    </update>
+
     <update id="updateResourcePlan" parameterType="com.timevale.forward.dal.entity.ProductDemandDO">
         update product_demand
         <set>

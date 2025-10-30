@@ -331,6 +331,12 @@ public class UseCasePlatFormCallServiceImpl implements UseCasePlatFormCallServic
     }
 
     @Override
+    public BaseResult queryDemandCaseTurnInfo(Map<String, Object> params) {
+        String res = HttpUtil.doGet(queryConfigUtil.queryDemandCaseTurnInfoUrl(), params);
+        return JsonUtils.fromJson(res, BaseResult.class);
+    }
+
+    @Override
     public BaseResult deleteDemandCaseList(Map<String, Object> params) {
         String res = HttpUtil.doPost(queryConfigUtil.deleteDemandCaseListUrl(), params);
         return JsonUtils.fromJson(res, BaseResult.class);
