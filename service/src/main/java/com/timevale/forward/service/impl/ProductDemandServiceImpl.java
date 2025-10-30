@@ -517,17 +517,19 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     }
 
     private void onlyUpdateResourcePlan(ProductDemandAddReq productDemandAddReq, ProductDemandDO productDemand) {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        ProductDemandGroupResourcePlanReq resourcePlanReq = new ProductDemandGroupResourcePlanReq();
-        List<ResourcePlanProductDemandAddReq> planAddReqs = new ArrayList<>();
-        ResourcePlanProductDemandAddReq planAddReq = new ResourcePlanProductDemandAddReq();
-        planAddReq.setProductDemandId(productDemand.getId());
-        planAddReq.setProductDemandOwners(productDemandAddReq.getProductDemandOwners());
-        planAddReqs.add(planAddReq);
-        resourcePlanReq.setProductDemands(planAddReqs);
-        resourcePlanReq.setOperatorId(userInfo.getId());
-        resourcePlanReq.setOperator(userInfo.getAlias());
-        productDemandGroupService.upsertResourcePlan(resourcePlanReq,true, false);
+        if (CollUtil.isNotEmpty(productDemandAddReq.getProductDemandOwners())) {
+            UserInfo userInfo = LocalSessionUtils.getUserInfo();
+            ProductDemandGroupResourcePlanReq resourcePlanReq = new ProductDemandGroupResourcePlanReq();
+            List<ResourcePlanProductDemandAddReq> planAddReqs = new ArrayList<>();
+            ResourcePlanProductDemandAddReq planAddReq = new ResourcePlanProductDemandAddReq();
+            planAddReq.setProductDemandId(productDemand.getId());
+            planAddReq.setProductDemandOwners(productDemandAddReq.getProductDemandOwners());
+            planAddReqs.add(planAddReq);
+            resourcePlanReq.setProductDemands(planAddReqs);
+            resourcePlanReq.setOperatorId(userInfo.getId());
+            resourcePlanReq.setOperator(userInfo.getAlias());
+            productDemandGroupService.upsertResourcePlan(resourcePlanReq,true, false);
+        }
     }
 
     @Override
