@@ -779,9 +779,6 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> upsertResourcePlan(ProductDemandGroupResourcePlanReq productDemandGroupResourcePlanReq, boolean isAloneUpdate) {
         List<ResourcePlanProductDemandAddReq> productDemands = distinctResourceTypeAndOwner(productDemandGroupResourcePlanReq);
-        if (!isAloneUpdate) {
-            checkOperationPermission(productDemandGroupResourcePlanReq.getBizDomainGroupId());
-        }
 
         Map<Long, List<ProductDemandOwnerDO>> existedOwnersMap = new HashMap<>();
         if (!isAloneUpdate) {
@@ -877,8 +874,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
     public BaseResult<ProductDemandGroupResourcePlanVO> getResourcePlan(@NonNull Long bizDomainGroupId, @NonNull Long productDemandGroupId) {
         ProductDemandGroupResourcePlanVO demandGroupResourcePlanVO = new ProductDemandGroupResourcePlanVO()
                 .setProductDemandGroupId(productDemandGroupId)
-                .setEditable(bizDomainGroupMapper.countBizGroup(bizDomainGroupId, LocalSessionUtils.getUserInfo().getId()) > 0
-                        || bizDomainGroupMapper.countProductLine(bizDomainGroupId, LocalSessionUtils.getUserInfo().getId()) > 0)
+                .setEditable(true)
                 .setProductDemands(new ArrayList<>());
 
         List<ProductDemandGroupItemDO> groupItems = productDemandGroupItemMapper.getByGroupId(productDemandGroupId);
