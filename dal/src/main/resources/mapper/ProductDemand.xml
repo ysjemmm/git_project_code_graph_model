@@ -1097,4 +1097,17 @@
         where pdo.is_deleted = 0
         and pdgi.product_demand_group_id = ${productDemandGroupId};
     </select>
+
+    <select id="listProductDemandOwnersByIds"
+            resultType="com.timevale.forward.dal.entity.ProductDemandOwnerDO">
+        select pdo.id, pdo.product_demand_id, pdo.owner_id, pdo.owner, pdo.resource_type
+        from product_demand_owner pdo
+        where pdo.is_deleted = 0
+        <if test="productDemandIds != null and !productDemandIds.isEmpty()">
+            AND product_demand_id IN
+            <foreach collection="productDemandIds" item="demandId" open="(" close=")" separator=",">
+                #{demandId}
+            </foreach>
+        </if>
+    </select>
 </mapper>

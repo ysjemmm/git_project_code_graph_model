@@ -217,4 +217,7 @@ public interface ProductDemandMapper {
      * @return List<ProductDemandOwnerDO>
      */
     List<ProductDemandOwnerDO> listProductDemandOwnersByGroupId(@Param("productDemandGroupId") Long productDemandGroupId);
+
+
+    List<ProductDemandOwnerDO> listProductDemandOwnersByIds(@Param("productDemandIds") List<Long> productDemandGroupIds);
 }

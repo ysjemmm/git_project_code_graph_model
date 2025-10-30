@@ -77,7 +77,7 @@ public class ProductDemandController {
 
     @ApiOperation("产品需求资源规划变更")
     @PostMapping("/updateResourcePlan")
-    public BusinessResult<Boolean> upsertResourcePlan(@RequestBody @Valid ResourcePlanProductDemandAddReq resourcePlanProductDemandAddReq) {
+    public BusinessResult<Boolean> updateResourcePlan(@RequestBody @Valid ResourcePlanProductDemandAddReq resourcePlanProductDemandAddReq) {
         return ResultUtils.result(productDemandService.updateResourcePlan(resourcePlanProductDemandAddReq));
     }
 

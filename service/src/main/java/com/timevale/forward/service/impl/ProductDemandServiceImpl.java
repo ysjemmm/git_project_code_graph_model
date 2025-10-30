@@ -39,6 +39,7 @@ import com.timevale.forward.dal.entity.ProductDemandTrackEventDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectProductDemandDO;
 import com.timevale.forward.dal.entity.TrackEventDO;
+import com.timevale.forward.facade.api.client.ProductDemandGroupService;
 import com.timevale.forward.facade.api.client.ProductDemandService;
 import com.timevale.forward.facade.api.client.UseCasePlatFormCallService;
 import com.timevale.forward.facade.api.query.ProductBizDemandQueryList;
@@ -54,6 +55,7 @@ import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.request.ProductBizDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProductCustomDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProductDemandAddReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupResourcePlanReq;
 import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
 import com.timevale.forward.facade.api.request.ProductDemandStatusUpdateReq;
 import com.timevale.forward.facade.api.request.ProductDemandTrackEventLinkReq;
@@ -67,7 +69,6 @@ import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
-import com.timevale.forward.facade.api.result.ResourcePlanProductDemandTimeVO;
 import com.timevale.forward.facade.api.result.TrackEventVO;
 import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
@@ -241,6 +242,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Resource
     private UseCasePlatFormCallService useCasePlatFormCallService;
+
+    @Resource
+    private ProductDemandGroupService productDemandGroupService;
 
     private static final String ONE_HUNDRED_PERCENT = "100.00%";
 
@@ -830,20 +834,14 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Override
     public BaseResult<Boolean> updateResourcePlan(ResourcePlanProductDemandAddReq resourcePlanProductDemandAddReq) {
-        Long productDemandId = resourcePlanProductDemandAddReq.getProductDemandId();
-        ProductDemandDO productDemandDO = productDemandMapper.selectById(productDemandId);
-        if (productDemandDO != null) {
-            ResourcePlanProductDemandTimeVO productDemandTime = resourcePlanProductDemandAddReq.getProductDemandTime();
-            productDemandDO.setUedTime(productDemandTime.getUedTime());
-            productDemandDO.setBackTime(productDemandTime.getBackTime());
-            productDemandDO.setOpsTime(productDemandTime.getOpsTime());
-            productDemandDO.setFrontTime(productDemandTime.getFrontTime());
-            productDemandDO.setQaTime(productDemandTime.getQaTime());
-            productDemandDO.setProductTime(productDemandTime.getProductTime());
-            productDemandDO.setSecurityTime(productDemandTime.getSecurityTime());
-            productDemandMapper.updateResourcePlan(productDemandDO);
-        }
-        return BaseResult.success(true);
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        ProductDemandGroupResourcePlanReq planReq = new ProductDemandGroupResourcePlanReq();
+        List<ResourcePlanProductDemandAddReq> reqList = new ArrayList<>(1);
+        reqList.add(resourcePlanProductDemandAddReq);
+        planReq.setProductDemands(reqList);
+        planReq.setOperatorId(userInfo.getId());
+        planReq.setOperator(userInfo.getAlias());
+        return productDemandGroupService.upsertResourcePlan(planReq, true);
     }
 
     @Override

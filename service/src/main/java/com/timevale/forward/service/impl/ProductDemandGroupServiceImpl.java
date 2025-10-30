@@ -18,14 +18,56 @@ import com.timevale.forward.dal.dao.ProductDemandMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectProductDemandMapper;
 import com.timevale.forward.dal.dto.ProductDemandMoveDTO;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.entity.BizDomainGroupRelationDO;
+import com.timevale.forward.dal.entity.BizLabelDO;
+import com.timevale.forward.dal.entity.ProductDemandDO;
+import com.timevale.forward.dal.entity.ProductDemandGroupDO;
+import com.timevale.forward.dal.entity.ProductDemandGroupItemDO;
+import com.timevale.forward.dal.entity.ProductDemandGroupItemListDO;
+import com.timevale.forward.dal.entity.ProductDemandListDO;
+import com.timevale.forward.dal.entity.ProductDemandOwnerDO;
+import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.entity.ProjectProductDemandDO;
 import com.timevale.forward.facade.api.client.ProductDemandGroupService;
 import com.timevale.forward.facade.api.client.ProductDemandService;
 import com.timevale.forward.facade.api.query.ProductDemandGroupQueryList;
-import com.timevale.forward.facade.api.request.*;
-import com.timevale.forward.facade.api.result.*;
-import com.timevale.forward.model.enums.*;
-import com.timevale.forward.service.component.*;
+import com.timevale.forward.facade.api.request.PersonAddReq;
+import com.timevale.forward.facade.api.request.ProductDemandAddReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupAddReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupInnerAddReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupItemMoveReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupModifyReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupMoveReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupProjectLinkReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupResourcePlanReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupTransferReq;
+import com.timevale.forward.facade.api.request.ProductDemandOwnerAddReq;
+import com.timevale.forward.facade.api.request.ProjectProductDemandLinkReq;
+import com.timevale.forward.facade.api.request.ResourcePlanProductDemandAddReq;
+import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
+import com.timevale.forward.facade.api.result.ProductDemandGroupItemVO;
+import com.timevale.forward.facade.api.result.ProductDemandGroupResourcePlanVO;
+import com.timevale.forward.facade.api.result.ProductDemandGroupVO;
+import com.timevale.forward.facade.api.result.ProductDemandVO;
+import com.timevale.forward.facade.api.result.ResourcePlanProductDemandOwnerVO;
+import com.timevale.forward.facade.api.result.ResourcePlanProductDemandTimeVO;
+import com.timevale.forward.facade.api.result.ResourcePlanProductDemandVO;
+import com.timevale.forward.model.enums.AscriptionEnum;
+import com.timevale.forward.model.enums.BizTypeEnum;
+import com.timevale.forward.model.enums.LinkOrUnLinkEnum;
+import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.model.enums.PriorityEnum;
+import com.timevale.forward.model.enums.ProductDemandGroupMoveModeEnum;
+import com.timevale.forward.model.enums.ProductDemandStatusEnum;
+import com.timevale.forward.model.enums.ProductDemandTypeEnum;
+import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.service.component.BizLabelComponent;
+import com.timevale.forward.service.component.LabelComponent;
+import com.timevale.forward.service.component.PersonComponent;
+import com.timevale.forward.service.component.ProductDemandGroupComponent;
+import com.timevale.forward.service.component.ProductDemandGroupItemComponent;
+import com.timevale.forward.service.component.ProjectProductDemandComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.forward.service.copy.ProductDemandGroupCopier;
@@ -54,7 +96,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -725,12 +777,22 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> upsertResourcePlan(ProductDemandGroupResourcePlanReq productDemandGroupResourcePlanReq) {
+    public BaseResult<Boolean> upsertResourcePlan(ProductDemandGroupResourcePlanReq productDemandGroupResourcePlanReq, boolean isAloneUpdate) {
         List<ResourcePlanProductDemandAddReq> productDemands = distinctResourceTypeAndOwner(productDemandGroupResourcePlanReq);
-        checkOperationPermission(productDemandGroupResourcePlanReq.getBizDomainGroupId());
+        if (!isAloneUpdate) {
+            checkOperationPermission(productDemandGroupResourcePlanReq.getBizDomainGroupId());
+        }
 
-        Map<Long,List<ProductDemandOwnerDO>> existedOwnersMap = productDemandMapper.listProductDemandOwnersByGroupId(productDemandGroupResourcePlanReq.getProductDemandGroupId())
-                .stream().collect(Collectors.groupingBy(ProductDemandOwnerDO::getProductDemandId));
+        Map<Long, List<ProductDemandOwnerDO>> existedOwnersMap = new HashMap<>();
+        if (!isAloneUpdate) {
+            existedOwnersMap = productDemandMapper.listProductDemandOwnersByGroupId(productDemandGroupResourcePlanReq.getProductDemandGroupId())
+                    .stream().collect(Collectors.groupingBy(ProductDemandOwnerDO::getProductDemandId));
+        } else {
+            List<Long> productDemandIds = productDemands.stream().map(ResourcePlanProductDemandAddReq::getProductDemandId).collect(Collectors.toList());
+            if (CollUtil.isNotEmpty(productDemandIds)) {
+                existedOwnersMap = productDemandMapper.listProductDemandOwnersByIds(productDemandIds).stream().collect(Collectors.groupingBy(ProductDemandOwnerDO::getProductDemandId));
+            }
+        }
         if (CollectionUtils.isEmpty(productDemands)) {
             return BaseResult.success(true);
         }
@@ -739,9 +801,10 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         final Set<ProductDemandOwnerDO> waitUpdateOwners = new LinkedHashSet<>();
         final Set<ProductDemandOwnerDO> waitDeleteOwners = new LinkedHashSet<>();
 
+        Map<Long, List<ProductDemandOwnerDO>> finalExistedOwnersMap = existedOwnersMap;
         productDemands.forEach(d -> {
             if (CollUtil.isEmpty(d.getProductDemandOwners())) {
-                waitDeleteOwners.addAll(existedOwnersMap.getOrDefault(d.getProductDemandId(), Collections.emptyList()));
+                waitDeleteOwners.addAll(finalExistedOwnersMap.getOrDefault(d.getProductDemandId(), Collections.emptyList()));
             }
         });
         List<ProductDemandOwnerAddReq> productDemandOwners = productDemands.stream().flatMap(d -> d.getProductDemandOwners().stream()

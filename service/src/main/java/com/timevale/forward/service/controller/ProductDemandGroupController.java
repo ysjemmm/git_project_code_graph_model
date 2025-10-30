@@ -94,7 +94,7 @@ public class ProductDemandGroupController {
     @ApiOperation("产品需求分组资源规划变更")
     @PostMapping("/upsertResourcePlan")
     public BusinessResult<Boolean> upsertResourcePlan(@RequestBody @Valid ProductDemandGroupResourcePlanReq productDemandGroupResourcePlanReq) {
-        return ResultUtils.result(productDemandGroupService.upsertResourcePlan(productDemandGroupResourcePlanReq));
+        return ResultUtils.result(productDemandGroupService.upsertResourcePlan(productDemandGroupResourcePlanReq, false));
     }
 
     @ApiOperation("获取产品需求分组资源规划")
