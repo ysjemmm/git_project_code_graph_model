@@ -510,7 +510,24 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             bizLabelComponent.addLog(productDemand.getId(), productDemandAddReq.getLabelIds(), BizTypeEnum.PRODUCT_DEMAND.getCode(), true);
         }
 
+        // 资源计划
+        onlyUpdateResourcePlan(productDemandAddReq, productDemand);
+
         return BaseResult.success(true);
+    }
+
+    private void onlyUpdateResourcePlan(ProductDemandAddReq productDemandAddReq, ProductDemandDO productDemand) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        ProductDemandGroupResourcePlanReq resourcePlanReq = new ProductDemandGroupResourcePlanReq();
+        List<ResourcePlanProductDemandAddReq> planAddReqs = new ArrayList<>();
+        ResourcePlanProductDemandAddReq planAddReq = new ResourcePlanProductDemandAddReq();
+        planAddReq.setProductDemandId(productDemand.getId());
+        planAddReq.setProductDemandOwners(productDemandAddReq.getProductDemandOwners());
+        planAddReqs.add(planAddReq);
+        resourcePlanReq.setProductDemands(planAddReqs);
+        resourcePlanReq.setOperatorId(userInfo.getId());
+        resourcePlanReq.setOperator(userInfo.getAlias());
+        productDemandGroupService.upsertResourcePlan(resourcePlanReq,true, false);
     }
 
     @Override
@@ -554,6 +571,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                     newProductDemand.getName()
             ));
         }
+
+        // 资源计划
+        onlyUpdateResourcePlan(productDemandModifyReq, newProductDemand);
 
         // 日志
         productDemandLogComponent.addLogWhenModifyData(oldProductDemand, newProductDemand);
@@ -841,7 +861,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         planReq.setProductDemands(reqList);
         planReq.setOperatorId(userInfo.getId());
         planReq.setOperator(userInfo.getAlias());
-        return productDemandGroupService.upsertResourcePlan(planReq, true);
+        return productDemandGroupService.upsertResourcePlan(planReq, true, true);
     }
 
     @Override

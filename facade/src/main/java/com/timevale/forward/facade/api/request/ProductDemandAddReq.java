@@ -100,4 +100,7 @@ public class ProductDemandAddReq extends BaseReq {
 
     @ApiModelProperty("客户等级")
     private String customerGrade;
+
+    @ApiModelProperty("产品需求负责人集合")
+    private List<ProductDemandOwnerAddReq> productDemandOwners;
 }

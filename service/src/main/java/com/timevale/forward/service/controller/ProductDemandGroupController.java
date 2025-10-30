@@ -2,7 +2,14 @@ package com.timevale.forward.service.controller;
 
 import com.timevale.forward.facade.api.client.ProductDemandGroupService;
 import com.timevale.forward.facade.api.query.ProductDemandGroupQueryList;
-import com.timevale.forward.facade.api.request.*;
+import com.timevale.forward.facade.api.request.ProductDemandGroupAddReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupInnerAddReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupItemMoveReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupModifyReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupMoveReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupProjectLinkReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupResourcePlanReq;
 import com.timevale.forward.facade.api.result.ProductDemandGroupResourcePlanVO;
 import com.timevale.forward.facade.api.result.ProductDemandGroupVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
@@ -12,7 +19,12 @@ import com.timevale.mandarin.common.result.PageQueryResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
@@ -94,7 +106,7 @@ public class ProductDemandGroupController {
     @ApiOperation("产品需求分组资源规划变更")
     @PostMapping("/upsertResourcePlan")
     public BusinessResult<Boolean> upsertResourcePlan(@RequestBody @Valid ProductDemandGroupResourcePlanReq productDemandGroupResourcePlanReq) {
-        return ResultUtils.result(productDemandGroupService.upsertResourcePlan(productDemandGroupResourcePlanReq, false));
+        return ResultUtils.result(productDemandGroupService.upsertResourcePlan(productDemandGroupResourcePlanReq, false, true));
     }
 
     @ApiOperation("获取产品需求分组资源规划")

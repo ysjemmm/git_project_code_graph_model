@@ -95,7 +95,7 @@ public interface ProductDemandGroupService {
      * @param productDemandGroupResourcePlanReq 产品需求分组资源规划请求
      * @return 是否成功
      */
-    BaseResult<Boolean> upsertResourcePlan(ProductDemandGroupResourcePlanReq productDemandGroupResourcePlanReq, boolean isAloneUpdate);
+    BaseResult<Boolean> upsertResourcePlan(ProductDemandGroupResourcePlanReq productDemandGroupResourcePlanReq, boolean isAloneUpdate, boolean isUpdateTime);
 
 
     BaseResult<Boolean> addDemand(ProductDemandGroupInnerAddReq productDemandGroupInnerAddReq);

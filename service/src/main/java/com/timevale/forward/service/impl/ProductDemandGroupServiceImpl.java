@@ -777,7 +777,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> upsertResourcePlan(ProductDemandGroupResourcePlanReq productDemandGroupResourcePlanReq, boolean isAloneUpdate) {
+    public BaseResult<Boolean> upsertResourcePlan(ProductDemandGroupResourcePlanReq productDemandGroupResourcePlanReq, boolean isAloneUpdate, boolean isUpdateTime) {
         List<ResourcePlanProductDemandAddReq> productDemands = distinctResourceTypeAndOwner(productDemandGroupResourcePlanReq);
 
         Map<Long, List<ProductDemandOwnerDO>> existedOwnersMap = new HashMap<>();
@@ -821,7 +821,9 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
 
         batchUpsertProductDemandOwners(waitAddOwners, waitUpdateOwners, productDemandGroupResourcePlanReq.getOperatorId(), productDemandGroupResourcePlanReq.getOperator());
         batchDeleteProductDemandOwners(waitDeleteOwners, productDemandGroupResourcePlanReq.getOperatorId(), productDemandGroupResourcePlanReq.getOperator());
-        updateDemandResourceTime(productDemandGroupResourcePlanReq);
+        if (isUpdateTime) {
+            updateDemandResourceTime(productDemandGroupResourcePlanReq);
+        }
 
         // 一个需求可能存在某个人既是前端又是后端这种情况，而前端移除它负责人身份，后端添加它为负责人，这种交叉情况需要特判
         List<ProductDemandOwnerDO> realDeletes = waitDeleteOwners.stream().filter(o -> {
