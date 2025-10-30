@@ -813,8 +813,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
     public BaseResult<ProductDemandGroupResourcePlanVO> getResourcePlan(@NonNull Long bizDomainGroupId, @NonNull Long productDemandGroupId) {
         ProductDemandGroupResourcePlanVO demandGroupResourcePlanVO = new ProductDemandGroupResourcePlanVO()
                 .setProductDemandGroupId(productDemandGroupId)
-                .setEditable(bizDomainGroupMapper.countBizGroup(bizDomainGroupId, LocalSessionUtils.getUserInfo().getId()) > 0
-                        || bizDomainGroupMapper.countProductLine(bizDomainGroupId, LocalSessionUtils.getUserInfo().getId()) > 0)
+                .setEditable(true)
                 .setProductDemands(new ArrayList<>());
 
         List<ProductDemandGroupItemDO> groupItems = productDemandGroupItemMapper.getByGroupId(productDemandGroupId);
