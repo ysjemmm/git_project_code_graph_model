@@ -381,7 +381,9 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
                     .orElse(null);
             // startTime 时间部分设为09:00:00，endTime 时间部分设为23:59:59
             startTime = Date.from(startTime.toInstant().atZone(ZoneId.systemDefault()).with(LocalTime.of(9, 0, 0)).toInstant());
-            endTime = Date.from(endTime.toInstant().atZone(ZoneId.systemDefault()).with(LocalTime.of(18, 30, 0)).toInstant());
+            if (endTime != null) {
+                endTime = Date.from(endTime.toInstant().atZone(ZoneId.systemDefault()).with(LocalTime.of(18, 30, 0)).toInstant());
+            }
             taskDO.setActualStartDate(startTime);
             taskDO.setActualEndDate(endTime);
             taskMapper.updateActualStartAndEndDate(taskDO);
