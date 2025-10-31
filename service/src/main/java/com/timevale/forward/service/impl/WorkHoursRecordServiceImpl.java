@@ -58,6 +58,7 @@ import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.framework.tedis.util.TedisUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.base.util.DateUtils;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -185,6 +186,9 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             throw new BaseBizRuntimeException("非任务执行人不能删除该任务工时");
         }
         workHoursRecordMapper.deleteById(workHoursRecordId);
+
+        // 更新实际开始时间和结束时间
+        updateActualStartAndEndDate(workHoursRecordDO);
         return BaseResult.success(true);
     }
 
@@ -246,6 +250,9 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
 
             // 如果任务没有开启执行，则登记工时直接开启任务
             updateTaskStatus(workHoursRecordDO, taskDO);
+
+            // 更新任务实际开始和结束日期
+            updateActualStartAndEndDate(workHoursRecordDO);
         }
     }
 
@@ -345,7 +352,41 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         updateBeforeCheckTask(workHoursRecordDO);
         workHoursRecordMapper.update(workHoursRecordDO);
 
+        // 更新实际开始时间和实际完成时间
+        updateActualStartAndEndDate(workHoursRecordDO);
+
         return BaseResult.success(true);
+    }
+
+    private void updateActualStartAndEndDate(WorkHoursRecordDO workHoursRecordDO) {
+        List<WorkHoursRecordDO> hoursRecordDOList = workHoursRecordMapper.list(WorkHoursRecordCondition.builder()
+                .workItemType(BizTypeEnum.TASK.getCode())
+                .workItemId(workHoursRecordDO.getWorkItemId())
+                .projectId(workHoursRecordDO.getProjectId())
+                .build());
+
+        TaskDO taskDO = taskMapper.getById(workHoursRecordDO.getWorkItemId());
+        AssertUtil.notNull(taskDO, "任务不存在");
+        if (CollUtil.isNotEmpty(hoursRecordDOList)) {
+            // 获取hoursRecordDOList中最早的时间
+            Date startTime = hoursRecordDOList.stream()
+                    .map(WorkHoursRecordDO::getRegistrationDate)
+                    .min(Date::compareTo)
+                    .orElse(null);
+            // 获取hoursRecordDOList中进度达到100的最晚的时间
+            Date endTime = hoursRecordDOList.stream()
+                    .filter(hours -> hours.getProgress() >= 100)
+                    .map(WorkHoursRecordDO::getRegistrationDate)
+                    .max(Date::compareTo)
+                    .orElse(null);
+            taskDO.setActualStartDate(startTime);
+            taskDO.setActualEndDate(endTime);
+            taskMapper.updateActualStartAndEndDate(taskDO);
+        } else {
+            taskDO.setActualStartDate(null);
+            taskDO.setActualEndDate(null);
+            taskMapper.updateActualStartAndEndDate(taskDO);
+        }
     }
 
     @Override

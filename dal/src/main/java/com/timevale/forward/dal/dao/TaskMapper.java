@@ -89,6 +89,13 @@ public interface TaskMapper {
     int update(TaskDO taskDO);
 
     /**
+     * 更新任务实际开始时间、结束时间
+     * @param taskDO
+     * @return
+     */
+    int updateActualStartAndEndDate(TaskDO taskDO);
+
+    /**
      * @param id id
      * @return TaskDO
      */

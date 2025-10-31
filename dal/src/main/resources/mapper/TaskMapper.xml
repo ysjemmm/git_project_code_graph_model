@@ -196,6 +196,17 @@
         </where>
     </update>
 
+    <update id="updateActualStartAndEndDate" parameterType="com.timevale.forward.dal.entity.TaskDO">
+        update task
+        <set>
+            <if test="actualStartDate != null">actual_start_date = #{actualStartDate},</if>
+            <if test="actualEndDate != null">actual_end_date = #{actualEndDate},</if>
+        </set>
+        <where>
+            id = #{id} and is_deleted=false
+        </where>
+    </update>
+
     <select id="getByProjectId" resultType="com.timevale.forward.dal.entity.TaskDO">
         select a.id,a.project_id,product_line_id, a.name, a.stage ,a.status,a.todo, a.todo_id,
             a.plan_start_date,a.plan_end_date, a.plan_use_time,a.task_use_time,
