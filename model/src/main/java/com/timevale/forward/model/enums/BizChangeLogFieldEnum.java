@@ -58,6 +58,8 @@ public enum BizChangeLogFieldEnum {
 
     PRODUCT_DEMAND_STATUS("产品需求状态"),
 
+    PRODUCT_DEMAND_RESOURCE_PLAN("产品需求资源规划"),
+
     PRODUCT_DEMAND_TYPE("产品需求类型"),
 
     TRACK_EVENT("埋点事件"),
