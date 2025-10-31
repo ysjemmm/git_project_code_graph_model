@@ -9,7 +9,7 @@ public class AutomationRuleDO extends BaseDO {
 
     private String name;
 
-    private Long projectId;
+    private String bizDomainIds;
 
     private Integer bizType;
 

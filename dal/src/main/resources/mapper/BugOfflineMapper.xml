@@ -398,14 +398,22 @@
         SELECT *
         FROM bug_offline
         WHERE ${timeFieldName} &gt;= CURDATE()
-          AND CURDATE() &gt;= DATE_SUB(DATE(${timeFieldName}), INTERVAL #{remindDays} DAY)
-          AND (status = 0 OR status = 1)
+        AND CURDATE() &gt;= DATE_SUB(DATE(${timeFieldName}), INTERVAL #{remindDays} DAY)
+        AND (status = 0 OR status = 1)
+        AND product_line_id IN
+        <foreach collection="productLineIds" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
     </select>
 
     <select id="findBugsOverdue" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
         SELECT *
         FROM bug_offline
         WHERE ${timeFieldName} &lt;= CURDATE()
-            AND (status = 0 OR status = 1)
+        AND (status = 0 OR status = 1)
+        AND product_line_id IN
+        <foreach collection="productLineIds" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
     </select>
 </mapper>

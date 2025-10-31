@@ -135,7 +135,7 @@ public interface BugOfflineMapper {
 
     void updateProposer(@Param("ids") Collection<Long> ids, @Param("proposer") String proposer,  @Param("proposerId") String proposerId);
 
-    List<BugOfflineDO> findBugsApproachingResolveTime(String timeFieldName, int remindDays, LocalTime remindTime);
+    List<BugOfflineDO> findBugsApproachingResolveTime(@Param("productLineIds") List<Long> productLineIds, @Param("timeFieldName") String timeFieldName, @Param("remindDays") int remindDays, @Param("remindTime") LocalTime remindTime);
 
-    List<BugOfflineDO> findBugsOverdue(@Param("timeFieldName") String timeFieldName);
+    List<BugOfflineDO> findBugsOverdue(@Param("productLineIds") List<Long> productLineIds, @Param("timeFieldName") String timeFieldName);
 }
