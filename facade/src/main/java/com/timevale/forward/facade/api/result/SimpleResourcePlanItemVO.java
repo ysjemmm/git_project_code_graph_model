@@ -45,7 +45,7 @@ public class SimpleResourcePlanItemVO extends ToString {
                     return FRONTEND;
                 case "backend":
                     return BACKEND;
-                case "test":
+                case "qa":
                     return QA;
                 case "ued":
                     return UED;
