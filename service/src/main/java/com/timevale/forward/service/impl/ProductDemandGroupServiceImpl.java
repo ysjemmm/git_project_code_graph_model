@@ -863,7 +863,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         switch (resourceType) {
             case "frontend": return item.getFrontTime();
             case "backend": return item.getBackTime();
-            case "test": return item.getQaTime();
+            case "qa": return item.getQaTime();
             case "ued": return item.getUedTime();
             case "product": return item.getProductTime();
             case "ops": return item.getOpsTime();
