@@ -315,7 +315,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         // 获取任务开始时间
         Date actualStartDate = Date.from(registrationDate.atTime(9, 0, 0).atZone(ZoneId.systemDefault()).toInstant());
         // 获取任务结束时间
-        Date actualEndDate = Date.from(registrationDate.atTime(18, 0, 0).atZone(ZoneId.systemDefault()).toInstant());
+        Date actualEndDate = Date.from(registrationDate.atTime(18, 30, 0).atZone(ZoneId.systemDefault()).toInstant());
 
         if (TaskStatusEnum.WAITING.getCode().equals(taskDO.getStatus())) {
             TaskExecuteReq taskExecuteReq = new TaskExecuteReq();
@@ -379,6 +379,9 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
                     .map(WorkHoursRecordDO::getRegistrationDate)
                     .max(Date::compareTo)
                     .orElse(null);
+            // startTime 时间部分设为09:00:00，endTime 时间部分设为23:59:59
+            startTime = Date.from(startTime.toInstant().atZone(ZoneId.systemDefault()).with(LocalTime.of(9, 0, 0)).toInstant());
+            endTime = Date.from(endTime.toInstant().atZone(ZoneId.systemDefault()).with(LocalTime.of(18, 30, 0)).toInstant());
             taskDO.setActualStartDate(startTime);
             taskDO.setActualEndDate(endTime);
             taskMapper.updateActualStartAndEndDate(taskDO);
