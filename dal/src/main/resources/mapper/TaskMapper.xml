@@ -199,8 +199,8 @@
     <update id="updateActualStartAndEndDate" parameterType="com.timevale.forward.dal.entity.TaskDO">
         update task
         <set>
-            <if test="actualStartDate != null">actual_start_date = #{actualStartDate},</if>
-            <if test="actualEndDate != null">actual_end_date = #{actualEndDate},</if>
+            actual_start_date = #{actualStartDate},
+            actual_end_date = #{actualEndDate}
         </set>
         <where>
             id = #{id} and is_deleted=false

@@ -222,6 +222,9 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         saveBeforeCheckTask(workHoursRecordDO, false);
         // 入库
         workHoursRecordMapper.insert(workHoursRecordDO);
+
+        // 更新任务实际开始和结束日期
+        updateActualStartAndEndDate(workHoursRecordDO);
         return BaseResult.success(workHoursRecordDO.getId());
     }
 
@@ -250,9 +253,6 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
 
             // 如果任务没有开启执行，则登记工时直接开启任务
             updateTaskStatus(workHoursRecordDO, taskDO);
-
-            // 更新任务实际开始和结束日期
-            updateActualStartAndEndDate(workHoursRecordDO);
         }
     }
 
@@ -481,7 +481,6 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             if (accumulateWorkHours.add(dateWorkHoursMap.getOrDefault(doRegistrationDate, BigDecimal.ZERO)).compareTo(new BigDecimal(24)) > 0) {
                 throw new BaseBizRuntimeException(registrationDate + "工时超出24小时，请重新填写");
             }
-            saveBeforeCheckTask(workHoursRecordDO, true);
             recordsToInsert.add(workHoursRecordDO);
         }
 
@@ -489,6 +488,11 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         // 批量插入所有记录（在同一个事务中）
         for (WorkHoursRecordDO workHoursRecordDO : recordsToInsert) {
             workHoursRecordMapper.insert(workHoursRecordDO);
+        }
+
+        for (WorkHoursRecordDO workHoursRecordDO : recordsToInsert) {
+            // 更新任务实际开始和结束日期
+            updateActualStartAndEndDate(workHoursRecordDO);
         }
 
         return BaseResult.success(true);
