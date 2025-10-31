@@ -24,6 +24,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.springframework.web.multipart.MultipartFile;
+import org.apache.http.entity.mime.content.ByteArrayBody;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
