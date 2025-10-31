@@ -18,7 +18,6 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.entity.mime.content.ByteArrayBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -120,7 +119,7 @@ public class HttpUtils {
             httpResponse = httpClient.execute(httpPost);
             // 从响应对象中获取响应内容
             HttpEntity entity = httpResponse.getEntity();
-            result = EntityUtils.toString(entity);
+            result = EntityUtils.toString(entity, StandardCharsets.UTF_8);
         } catch (IOException e) {
             log.error("doPost error", e);
         } finally {
@@ -184,7 +183,7 @@ public class HttpUtils {
             // httpClient对象执行post请求,并返回响应参数对象
             httpResponse = httpClient.execute(httpPost);
             // 从响应对象中获取响应内容
-            result = EntityUtils.toString(httpResponse.getEntity());
+            result = EntityUtils.toString(httpResponse.getEntity(), StandardCharsets.UTF_8);
         } catch (IOException e) {
             log.error("doPostMultipart error", e);
         } finally {
@@ -231,7 +230,7 @@ public class HttpUtils {
             httpResponse = httpClient.execute(httpPut);
             // 从响应对象中获取响应内容
             HttpEntity entity = httpResponse.getEntity();
-            result = EntityUtils.toString(entity);
+            result = EntityUtils.toString(entity, StandardCharsets.UTF_8);
         } catch (IOException e) {
             log.error("doPut error", e);
         } finally {
@@ -277,7 +276,7 @@ public class HttpUtils {
             httpResponse = httpClient.execute(httpDelete);
             // 从响应对象中获取响应内容
             HttpEntity entity = httpResponse.getEntity();
-            result = EntityUtils.toString(entity);
+            result = EntityUtils.toString(entity, StandardCharsets.UTF_8);
         } catch (IOException e) {
             log.error("doDelete error", e);
         } finally {
@@ -326,7 +325,7 @@ public class HttpUtils {
             httpResponse = httpClient.execute(httpGet);
             // 从响应对象中获取响应内容
             HttpEntity entity = httpResponse.getEntity();
-            result = EntityUtils.toString(entity);
+            result = EntityUtils.toString(entity, StandardCharsets.UTF_8);
         } finally {
             // 关闭资源
             try {
