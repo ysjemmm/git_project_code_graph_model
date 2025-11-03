@@ -68,7 +68,10 @@ public class ModelServiceImpl implements ModelService {
     @Override
     public BaseResult<List<ModelVO>> modelList() {
         List<ModelDO> modelDOList = modelMapper.selectAllModel();
-        Map<Long, String> fieldMap = modelDOList.stream().collect(Collectors.toMap(ModelDO::getId, ModelDO::getFormField));
+        Map<Long, String> fieldMap = modelDOList.stream()
+                .filter(model -> model.getFormField() != null)
+                .collect(Collectors.toMap(ModelDO::getId, ModelDO::getFormField));
+
         List<ModelVO> modelVOList = ModelCopier.INSTANCE.convert(modelDOList);
         // 动态字段
         modelVOList.forEach(e -> {
@@ -91,7 +94,9 @@ public class ModelServiceImpl implements ModelService {
         PageHelper.startPage(modelQueryList.pageNum, modelQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
         List<ModelDO> modelDOList = modelMapper.selectByCondition(condition);
 
-        Map<Long, String> fieldMap = modelDOList.stream().collect(Collectors.toMap(ModelDO::getId, ModelDO::getFormField));
+        Map<Long, String> fieldMap = modelDOList.stream()
+                .filter(model -> model.getFormField() != null)
+                .collect(Collectors.toMap(ModelDO::getId, ModelDO::getFormField));
 
         List<ModelVO> modelVOList = ModelCopier.INSTANCE.convert(modelDOList);
         modelVOList.forEach(e -> {
