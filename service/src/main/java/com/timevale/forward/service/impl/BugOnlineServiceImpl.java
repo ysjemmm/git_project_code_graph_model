@@ -57,6 +57,7 @@ import com.timevale.forward.facade.api.result.BugOnlineSimpleVO;
 import com.timevale.forward.facade.api.result.BugOnlineVO;
 import com.timevale.forward.facade.api.result.CommentVO;
 import com.timevale.forward.facade.api.result.FileVO;
+import com.timevale.forward.facade.api.result.ModelFormFieldVO;
 import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.forward.facade.api.result.PriorityStatisticsVO;
 import com.timevale.forward.facade.api.result.ProductLineToFieldVO;

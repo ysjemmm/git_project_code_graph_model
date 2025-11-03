@@ -1,5 +1,8 @@
 package com.timevale.forward.service.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
@@ -12,10 +15,14 @@ import com.timevale.forward.facade.api.client.ModelService;
 import com.timevale.forward.facade.api.query.ModelQueryList;
 import com.timevale.forward.facade.api.request.ModelAddReq;
 import com.timevale.forward.facade.api.request.ModelModifyReq;
+import com.timevale.forward.facade.api.result.ModelFormFieldVO;
 import com.timevale.forward.facade.api.result.ModelVO;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ModelCopier;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.AssertUtil;
+import com.timevale.mandarin.base.util.StringUtils;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
@@ -39,10 +46,37 @@ public class ModelServiceImpl implements ModelService {
     @Resource
     ProductLineMapper productLineMapper;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Override
+    public BaseResult<List<ModelFormFieldVO>> getFormFieldList(Long id) {
+        ModelDO modelDO = modelMapper.get(id);
+        AssertUtil.notNull(modelDO, "模块不能为空");
+        String formField = modelDO.getFormField();
+        if (StringUtils.isNotBlank(formField)) {
+            try {
+                List<ModelFormFieldVO> modelFormFieldVOS = objectMapper.readValue(formField, new TypeReference<List<ModelFormFieldVO>>(){});
+                modelFormFieldVOS.forEach(e -> e.setModelId(id));
+                return BaseResult.success(modelFormFieldVOS);
+            } catch (Exception e) {
+                throw new BaseBizRuntimeException("反序列化模块字段配置失败");
+            }
+        }
+        return BaseResult.success();
+    }
+
     @Override
     public BaseResult<List<ModelVO>> modelList() {
         List<ModelDO> modelDOList = modelMapper.selectAllModel();
+        Map<Long, String> fieldMap = modelDOList.stream().collect(Collectors.toMap(ModelDO::getId, ModelDO::getFormField));
         List<ModelVO> modelVOList = ModelCopier.INSTANCE.convert(modelDOList);
+        // 动态字段
+        modelVOList.forEach(e -> {
+            String s = fieldMap.get(e.getId());
+            if (StringUtils.isNotBlank(s)) {
+                e.setDynamicFormFields(JSON.parseArray(s, ModelFormFieldVO.class));
+            }
+        });
         return BaseResult.success(modelVOList);
     }
 
@@ -57,10 +91,17 @@ public class ModelServiceImpl implements ModelService {
         PageHelper.startPage(modelQueryList.pageNum, modelQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
         List<ModelDO> modelDOList = modelMapper.selectByCondition(condition);
 
+        Map<Long, String> fieldMap = modelDOList.stream().collect(Collectors.toMap(ModelDO::getId, ModelDO::getFormField));
+
         List<ModelVO> modelVOList = ModelCopier.INSTANCE.convert(modelDOList);
         modelVOList.forEach(e -> {
             ProductLineDO productLineDO = productLineMap.get(e.getProductLineId());
             e.setProductLineName(productLineDO.getName());
+            // 动态字段
+            String s = fieldMap.get(e.getId());
+            if (StringUtils.isNotBlank(s)) {
+                e.setDynamicFormFields(JSON.parseArray(s, ModelFormFieldVO.class));
+            }
         });
         PageInfo<ModelDO> pageInfo = new PageInfo<>(modelDOList);
         PageQueryResult<ModelVO> pageQueryResult = new PageQueryResult<>();

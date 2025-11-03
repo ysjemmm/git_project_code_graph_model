@@ -190,4 +190,7 @@ public class BugOnlineModifyReq extends ToString {
     @ApiModelProperty(value = "加急bug描述信息",notes = "当isUrgent为true时必填")
     private String urgentDescription;
 
+    @ApiModelProperty("动态表单字段")
+    private List<ModelFormFieldAddReq> dynamicFormFields;
+
 }

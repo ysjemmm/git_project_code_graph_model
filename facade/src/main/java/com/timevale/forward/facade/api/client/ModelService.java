@@ -5,6 +5,7 @@ import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.ModelQueryList;
 import com.timevale.forward.facade.api.request.ModelAddReq;
 import com.timevale.forward.facade.api.request.ModelModifyReq;
+import com.timevale.forward.facade.api.result.ModelFormFieldVO;
 import com.timevale.forward.facade.api.result.ModelVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -18,6 +19,12 @@ import java.util.List;
 @RestClient(serviceId = MagicValue.FORWARD_RPC_PREFIX)
 public interface ModelService {
 
+    /**
+     * 获取表单字段列表
+     *
+     * @return 列表
+     */
+    BaseResult<List<ModelFormFieldVO>> getFormFieldList(Long id);
 
     /**
      * 列表

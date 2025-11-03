@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 /**
  * @author xingyun
@@ -32,5 +33,8 @@ public class ModelAddReq extends BaseReq {
     @ApiModelProperty("负责人id")
     @NotBlank(message = "负责人id不能为空")
     private String ownerId;
+
+    @ApiModelProperty("动态表单字段")
+    private List<ModelFormFieldAddReq> dynamicFormFields;
 
 }
