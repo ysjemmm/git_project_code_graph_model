@@ -481,6 +481,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             if (accumulateWorkHours.add(dateWorkHoursMap.getOrDefault(doRegistrationDate, BigDecimal.ZERO)).compareTo(new BigDecimal(24)) > 0) {
                 throw new BaseBizRuntimeException(registrationDate + "工时超出24小时，请重新填写");
             }
+            saveBeforeCheckTask(workHoursRecordDO, true);
             recordsToInsert.add(workHoursRecordDO);
         }
 
