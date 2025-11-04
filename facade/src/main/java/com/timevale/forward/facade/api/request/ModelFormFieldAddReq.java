@@ -25,7 +25,6 @@ import javax.validation.constraints.NotBlank;
 public class ModelFormFieldAddReq extends ToString {
 
     @ApiModelProperty(value = "模块id", required = true)
-    @NotBlank(message = "模块id不能为空")
     private String modelId;
 
     @ApiModelProperty(value = "字段名称", required = true)
@@ -37,6 +36,5 @@ public class ModelFormFieldAddReq extends ToString {
     private String field;
 
     @ApiModelProperty(value = "字段值", required = true)
-    @NotBlank(message = "字段值不能为空")
     private String fieldValue;
 }

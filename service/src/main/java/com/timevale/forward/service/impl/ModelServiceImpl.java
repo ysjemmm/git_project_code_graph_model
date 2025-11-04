@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson.JSON;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,6 +15,7 @@ import com.timevale.forward.dal.entity.ProductLineDO;
 import com.timevale.forward.facade.api.client.ModelService;
 import com.timevale.forward.facade.api.query.ModelQueryList;
 import com.timevale.forward.facade.api.request.ModelAddReq;
+import com.timevale.forward.facade.api.request.ModelFormFieldAddReq;
 import com.timevale.forward.facade.api.request.ModelModifyReq;
 import com.timevale.forward.facade.api.result.ModelFormFieldVO;
 import com.timevale.forward.facade.api.result.ModelVO;
@@ -117,13 +119,27 @@ public class ModelServiceImpl implements ModelService {
 
     @Override
     public BaseResult<Boolean> add(ModelAddReq modelAddReq) {
+        // 校验字段
+        checkFieldEmpty(modelAddReq);
         ModelDO modelDO = ModelCopier.INSTANCE.convert(modelAddReq);
         modelMapper.insert(modelDO);
         return BaseResult.success(true);
     }
 
+    private void checkFieldEmpty(ModelAddReq modelAddReq) {
+        if (CollUtil.isNotEmpty(modelAddReq.getDynamicFormFields())) {
+            for (ModelFormFieldAddReq dynamicFormField : modelAddReq.getDynamicFormFields()) {
+                if (StringUtils.isEmpty(dynamicFormField.getFieldName()) || StringUtils.isEmpty(dynamicFormField.getField())) {
+                    throw new BaseBizRuntimeException("动态表单字段名称和字段不能为空");
+                }
+            }
+        }
+    }
+
     @Override
     public BaseResult<Boolean> update(ModelModifyReq modelModifyReq) {
+        // 校验字段
+        checkFieldEmpty(modelModifyReq);
         ModelDO modelDO = ModelCopier.INSTANCE.convert(modelModifyReq);
         modelMapper.update(modelDO);
         return BaseResult.success(true);
