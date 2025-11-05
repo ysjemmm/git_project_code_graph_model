@@ -894,7 +894,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             if (!CollUtil.isEmpty(demandCaseExecInfoVOS) && ProductDemandStatusEnum.DEV_COMPLETED.getCode().equals(status)) {
                 DemandCaseExecInfoVO nonProInfo = demandCaseExecInfoVOS.stream().filter(demandCaseExecInfoVO -> demandCaseExecInfoVO.getTurnType() == 0).findFirst().get();
                 AssertUtil.checkState(ONE_HUNDRED_PERCENT.equals(nonProInfo.getPassRate()), "该需求关联的非生产测试用例通过率为: " + nonProInfo.getPassRate() + "，不能变更状态到研发完成");
-            } else if (ProductDemandStatusEnum.ONLINE.getCode().equals(status)) {
+            } else if (!CollUtil.isEmpty(demandCaseExecInfoVOS) && ProductDemandStatusEnum.ONLINE.getCode().equals(status)) {
                 DemandCaseExecInfoVO proInfo = demandCaseExecInfoVOS.stream().filter(demandCaseExecInfoVO -> demandCaseExecInfoVO.getTurnType() == 1).findFirst().get();
                 AssertUtil.checkState(ONE_HUNDRED_PERCENT.equals(proInfo.getPassRate()), "该需求关联的生产测试用例通过率为: " + proInfo.getPassRate() + "，不能变更状态到已完成上线");
             }
