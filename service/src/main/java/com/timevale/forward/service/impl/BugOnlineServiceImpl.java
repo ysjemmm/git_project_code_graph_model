@@ -673,6 +673,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         // req 转换为 do
         BugOnlineDO bugOnlineDO = BugOnlineCopier.INSTANCE.req2do(addReq);
 
+        AssertUtil.checkState(bugOnlineDO.getDynamicFormFields().length() <= 1000, "动态表单数据总长度不能超过1000字符");
         // 线上bug落库
         bugOnlineMapper.insert(bugOnlineDO);
         // 关联产品线
@@ -844,6 +845,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         //更新线上bug
+        AssertUtil.checkState(bugOnlineDO.getDynamicFormFields().length() <= 1000, "动态表单数据总长度不能超过1000字符");
         BugOnlineDO bugOnlineConvert = BugOnlineCopier.INSTANCE.change(modifyReq);
 
         bugOnlineMapper.update(bugOnlineConvert);

@@ -132,6 +132,9 @@ public class ModelServiceImpl implements ModelService {
                 if (StringUtils.isEmpty(dynamicFormField.getFieldName()) || StringUtils.isEmpty(dynamicFormField.getField())) {
                     throw new BaseBizRuntimeException("动态表单字段名称和字段不能为空");
                 }
+                if (dynamicFormField.getFieldName().length() > 20 || dynamicFormField.getField().length() > 20) {
+                    throw new BaseBizRuntimeException("动态表单字段名称和字段长度不能超过20个字符");
+                }
             }
         }
     }
