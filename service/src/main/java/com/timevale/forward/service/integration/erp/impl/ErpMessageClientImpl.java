@@ -29,6 +29,9 @@ public class ErpMessageClientImpl implements ErpMessageClient {
 
     @Override
     public ErpResult sendActionCardMsg(ActionCardMsg actionCardMsg) {
+        if (CollectionUtils.isEmpty(actionCardMsg.getReceivers())) {
+            throw new BaseBizRuntimeException("消息接收人不能为空");
+        }
         final ErpActionCardMsgSendInput input = new ErpActionCardMsgSendInput();
         input.setReceivers(actionCardMsg.getReceivers());
         input.setTitle(actionCardMsg.getTitle());
@@ -40,8 +43,9 @@ public class ErpMessageClientImpl implements ErpMessageClient {
         if (erpResult.isSuccess()) {
             return erpResult;
         }
-        log.error("[erpMessage]调用钉钉通知接口失败  error: " + erpResult.getMessage() + " 发送通知信息：" + actionCardMsg);
-        throw new BaseBizRuntimeException("调用钉钉通知接口失败! " + actionCardMsg);
+        log.warn("[erpMessage]调用钉钉通知接口失败  error: {} 发送通知信息：{}",
+                erpResult.getMessage(), actionCardMsg);
+        throw new BaseBizRuntimeException("调用钉钉通知接口失败! 错误信息: " + erpResult.getMessage());
     }
 
     @Override
