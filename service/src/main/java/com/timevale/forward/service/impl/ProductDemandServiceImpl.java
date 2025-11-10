@@ -569,13 +569,12 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         List<PersonAddReq> newRecipients = recipients.stream()
                 .filter(r -> !originalRecipients.contains(r))
                 .collect(Collectors.toList());
-
+        // 更新抄送人
+        personComponent.update(recipients, newProductDemand.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
+        // 发送消息
         if (CollUtil.isNotEmpty(newRecipients)) {
-            personComponent.update(newRecipients, newProductDemand.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
-        }
-
-        if (!CollectionUtils.isEmpty(recipients)) {
-            List<String> copiers = recipients.stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
+            // 发送消息
+            List<String> copiers = newRecipients.stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
             messageEventPublisher.publish(new ProductDemandToCopiedMsgEvent(
                     this,
                     newProductDemand.getId(),

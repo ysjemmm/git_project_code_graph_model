@@ -678,11 +678,20 @@ public class BizDemandServiceImpl implements BizDemandService {
         newBizDemandDO.setProjectEndDate(oldBizDemandDO.getProjectEndDate());
         bizDemandMapper.fullUpdate(newBizDemandDO);
 
-        // 添加抄送人数据
+        // 抄送人
+        List<PersonDO> personDO = personComponent.select(newBizDemandDO.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
+        List<PersonAddReq> originalRecipients = PersonCopier.INSTANCE.do2req(personDO);
+
         List<PersonAddReq> recipientInfoList = bizDemandModifyReq.getRecipientInfoList();
-        if (!CollectionUtils.isEmpty(recipientInfoList)) {
-            personComponent.update(recipientInfoList, bizDemandModifyReq.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
-            List<String> copiers = recipientInfoList.stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
+        // 创建新集合来存储需要新增的抄送人
+        List<PersonAddReq> newRecipients = recipientInfoList.stream()
+                .filter(r -> !originalRecipients.contains(r))
+                .collect(Collectors.toList());
+        // 更新抄送人
+        personComponent.update(recipientInfoList, bizDemandModifyReq.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
+        // 添加抄送人数据
+        if (!CollectionUtils.isEmpty(newRecipients)) {
+            List<String> copiers = newRecipients.stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
             messageEventPublisher.publish(new BizDemandToCopiedMsgEvent(
                     this,
                     newBizDemandDO.getId(),
