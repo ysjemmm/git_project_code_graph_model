@@ -62,7 +62,6 @@ import com.timevale.forward.facade.api.request.ProductDemandTrackEventLinkReq;
 import com.timevale.forward.facade.api.request.ResourcePlanProductDemandAddReq;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.CustomDemandVO;
-import com.timevale.forward.facade.api.result.DemandCaseExecInfoVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.facade.api.result.ProductDemandStatusVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
@@ -877,28 +876,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         Integer status = productDemandStatusUpdateReq.getStatus();
         if (ProductDemandStatusEnum.SUSPEND.getCode().equals(status) || ProductDemandStatusEnum.INVALID.getCode().equals(status)) {
             return updateStatus(productDemandDO.getId(), status);
-        } else if (ProductDemandStatusEnum.DEVELOPING.getCode().equals(status)) {
-            productDemandDO.setStatus(status);
-            productDemandMapper.updateStatus(productDemandDO);
-            // 验证
-        } else if (ProductDemandStatusEnum.DEV_COMPLETED.getCode().equals(status) || ProductDemandStatusEnum.ONLINE.getCode().equals(status)) {
-            // 验证
-            Map<String, Object> paramsMap = new HashMap<>(1);
-            paramsMap.put("demandId", productDemandDO.getId());
-            BaseResult baseResult = useCasePlatFormCallService.queryDemandCaseTurnInfo(paramsMap);
-            if (!baseResult.ifSuccess()) {
-                throw new BaseBizRuntimeException("获取用例平台需求用例执行信息错误");
-            }
-            Object res = Optional.of(baseResult).map(BaseResult::getData).orElse(new ArrayList<>());
-            List<DemandCaseExecInfoVO> demandCaseExecInfoVOS = JSON.parseArray(JSON.toJSONString(res), DemandCaseExecInfoVO.class);
-            if (!CollUtil.isEmpty(demandCaseExecInfoVOS) && ProductDemandStatusEnum.DEV_COMPLETED.getCode().equals(status)) {
-                DemandCaseExecInfoVO nonProInfo = demandCaseExecInfoVOS.stream().filter(demandCaseExecInfoVO -> demandCaseExecInfoVO.getTurnType() == 0).findFirst().get();
-                AssertUtil.checkState(ONE_HUNDRED_PERCENT.equals(nonProInfo.getPassRate()), "该需求关联的非生产测试用例通过率为: " + nonProInfo.getPassRate() + "，不能变更状态到研发完成");
-            } else if (!CollUtil.isEmpty(demandCaseExecInfoVOS) && ProductDemandStatusEnum.ONLINE.getCode().equals(status)) {
-                DemandCaseExecInfoVO proInfo = demandCaseExecInfoVOS.stream().filter(demandCaseExecInfoVO -> demandCaseExecInfoVO.getTurnType() == 1).findFirst().get();
-                AssertUtil.checkState(ONE_HUNDRED_PERCENT.equals(proInfo.getPassRate()), "该需求关联的生产测试用例通过率为: " + proInfo.getPassRate() + "，不能变更状态到已完成上线");
-            }
-            // 更新
+        } else if (ProductDemandStatusEnum.DEVELOPING.getCode().equals(status)
+                || ProductDemandStatusEnum.DEV_COMPLETED.getCode().equals(status)
+                || ProductDemandStatusEnum.ONLINE.getCode().equals(status)) {
             productDemandDO.setStatus(status);
             productDemandMapper.updateStatus(productDemandDO);
         }
@@ -918,7 +898,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             return BaseResult.success(statusVOS);
         }
 
-        if (ProductDemandStatusEnum.INCLUDED.getCode().equals(productDemandDO.getStatus())) {
+        if (ProductDemandStatusEnum.INCLUDED.getCode().equals(productDemandDO.getStatus())
+                || ProductDemandStatusEnum.WAITING.getCode().equals(productDemandDO.getStatus())) {
             ProductDemandStatusVO devStatusVO = new ProductDemandStatusVO();
             devStatusVO.setStatus(ProductDemandStatusEnum.DEVELOPING.getCode());
             devStatusVO.setStatusText(ProductDemandStatusEnum.DEVELOPING.getText());
