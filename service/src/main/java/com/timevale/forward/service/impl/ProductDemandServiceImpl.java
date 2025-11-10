@@ -31,6 +31,7 @@ import com.timevale.forward.dal.entity.BizDemandDO;
 import com.timevale.forward.dal.entity.BizDemandListDO;
 import com.timevale.forward.dal.entity.BizLabelDO;
 import com.timevale.forward.dal.entity.CustomDemandDO;
+import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProductBizDemandDO;
 import com.timevale.forward.dal.entity.ProductCustomDemandDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
@@ -103,6 +104,7 @@ import com.timevale.forward.service.component.impl.ProductDemandDescFlowComponen
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.CustomDemandCopier;
+import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.copy.TrackEventCopier;
@@ -559,8 +561,18 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         // 附件
         fileComponent.update(productDemandModifyReq.getFiles(), newProductDemand.getId(), FileTypeEnum.PRODUCT_DEMAND.getCode());
         // 抄送人
+        List<PersonDO> personDO = personComponent.select(newProductDemand.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
+        List<PersonAddReq> originalRecipients = PersonCopier.INSTANCE.do2req(personDO);
+
         List<PersonAddReq> recipients = productDemandModifyReq.getRecipients();
-        personComponent.update(recipients, newProductDemand.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
+        // 创建新集合来存储需要新增的抄送人
+        List<PersonAddReq> newRecipients = recipients.stream()
+                .filter(r -> !originalRecipients.contains(r))
+                .collect(Collectors.toList());
+
+        if (CollUtil.isNotEmpty(newRecipients)) {
+            personComponent.update(newRecipients, newProductDemand.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
+        }
 
         if (!CollectionUtils.isEmpty(recipients)) {
             List<String> copiers = recipients.stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
