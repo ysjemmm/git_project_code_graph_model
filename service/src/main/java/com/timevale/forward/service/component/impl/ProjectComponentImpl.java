@@ -949,7 +949,7 @@ public class ProjectComponentImpl implements ProjectComponent {
                 }
             });
         }
-        if (released && Objects.equals(newProject.getIsPlatformPublish(), 1)) {
+        if (released && Objects.equals(newProject.getIsPlatformPublish(), 1) && !ProjectKindEnum.PBG_BASE.getCode().equals(oldProject.getKind())) {
             if (!projectPublishPlanComponent.linkPublishPlan(newProject.getId())) {
                 dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.PUBLISH, true,
                         "请关联发布计划。"));
