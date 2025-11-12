@@ -14,7 +14,11 @@ import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -48,6 +52,17 @@ public class PersonComponentImpl implements PersonComponent {
                     .map(e -> PersonCopier.INSTANCE.req2do(e, mainId, type, personLevel))
                     .collect(Collectors.toList());
             personMapper.inserts(personDOList);
+        } else {
+            // 去除list中已经存在的existPersons，使用新的list接收
+            List<PersonAddReq> addReqList = list.stream()
+                    .filter(e -> !existPersons.contains(PersonCopier.INSTANCE.req2do(e, mainId, type, personLevel)))
+                    .collect(Collectors.toList());
+            if (!CollUtil.isEmpty(addReqList)) {
+                List<PersonDO> personDOList = addReqList.stream()
+                        .map(e -> PersonCopier.INSTANCE.req2do(e, mainId, type, personLevel))
+                        .collect(Collectors.toList());
+                personMapper.inserts(personDOList);
+            }
         }
     }
 
