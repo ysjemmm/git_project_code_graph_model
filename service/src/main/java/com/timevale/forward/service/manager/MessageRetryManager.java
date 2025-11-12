@@ -2,6 +2,7 @@ package com.timevale.forward.service.manager;
 
 import com.timevale.forward.service.integration.erp.ErpMessageClient;
 import com.timevale.forward.service.integration.erp.model.ActionCardMsg;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -28,12 +29,12 @@ public class MessageRetryManager {
                 sentCount.getAndIncrement();
                 success = true;
                 break;
-            } catch (Exception e) {
-                log.warn("[{}]第 {} 次发送失败，用户ID: {}, 原因: {}", jobName, attempt, userId, e.getMessage());
+            } catch (BaseBizRuntimeException e) {
+                log.warn("[{}]第 {} 次发送失败，用户ID: {}", jobName, attempt, userId, e);
                 if (attempt < MAX_RETRIES) {
                     try {
-                        // 等待一秒后重试
-                        Thread.sleep(1000);
+                        // 等待3秒后重试
+                        Thread.sleep(3000);
                     } catch (InterruptedException ie) {
                         Thread.currentThread().interrupt();
                     }

@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
+import java.util.List;
 
 
 /**
@@ -48,5 +49,8 @@ public class ModelVO extends ToString {
 
     @ApiModelProperty("修改时间")
     private Date modifyDate;
+
+    @ApiModelProperty("模块字段配置")
+    private List<ModelFormFieldVO> dynamicFormFields;
 
 }

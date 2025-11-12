@@ -6,8 +6,13 @@ import com.timevale.forward.dal.dao.BizChangeLogMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.entity.BizChangeLogDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
+import com.timevale.forward.dal.entity.ProductDemandOwnerDO;
 import com.timevale.forward.dal.entity.ProductLineDO;
-import com.timevale.forward.model.enums.*;
+import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
+import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
+import com.timevale.forward.model.enums.ButtonActionEnum;
+import com.timevale.forward.model.enums.ProductDemandStatusEnum;
+import com.timevale.forward.model.enums.ProductDemandTypeEnum;
 import com.timevale.forward.model.middle.ProductDemandMD;
 import com.timevale.forward.service.component.ProductDemandLogComponent;
 import com.timevale.forward.service.constant.CommonConstant;
@@ -79,6 +84,23 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
         });
         if (CollectionUtil.isNotEmpty(logs)) {
             bizChangeLogMapper.batchInsert(logs);
+        }
+    }
+
+    @Override
+    public void addLogWhenModifyResourcePlan(Long productDemandId, List<ProductDemandOwnerDO> oldOwners, List<ProductDemandOwnerDO> newOwners) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        //{操作人} 把{字段名称} 从{原内容}改为{最新内容}
+        if (CollectionUtil.isEmpty(oldOwners) && CollectionUtil.isEmpty(newOwners)) {
+            return;
+        }
+        String oldOwner = oldOwners.stream().map(demand -> demand.getOwner().split(CommonConstant.JOIN_LINE)[0]).distinct().sorted().collect(Collectors.joining(","));
+        String newOwner = newOwners.stream().map(demand -> demand.getOwner().split(CommonConstant.JOIN_LINE)[0]).distinct().sorted().collect(Collectors.joining(","));
+        if (!StringUtils.equals(oldOwner, newOwner)) {
+            BizChangeLogDO logDO = createLog(productDemandId, BizChangeLogFieldEnum.PRODUCT_DEMAND_RESOURCE_PLAN.getText(), oldOwner, newOwner, null);
+            logDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+            logDO.setCreateManId(userInfo.getId());
+            bizChangeLogMapper.insert(logDO);
         }
     }
 

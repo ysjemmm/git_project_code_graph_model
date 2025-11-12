@@ -17,6 +17,8 @@ public class ProductDemandToCopiedMsgEvent extends MessageEvent {
     private final List<String> receivers;
     private final String name;
 
+    protected final String PARAM = "%s/list?id=%d&type=check";
+
     private static final String PRODUCT_DEMAND_TO_RECEIVE_MSG = "### %s  \n  您收到了**%s**抄送的产品需求 **%s**  \n\n  ***  \n  [查看详情](%s)";
 
     public ProductDemandToCopiedMsgEvent(Object source, Long productDemandId, String operator, List<String> receivers, String name) {

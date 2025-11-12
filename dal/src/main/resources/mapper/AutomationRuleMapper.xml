@@ -5,9 +5,9 @@
     <!-- 新增一条自动化规则 -->
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.AutomationRuleDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
         INSERT INTO automation_rule
-        (id, name, project_id, biz_type, trigger_type, status_condition, time_field, remind_days_before, remind_time, receiver_type, receiver_ids, action_type, action_config, is_active)
+        (id, name, biz_domain_ids, biz_type, trigger_type, status_condition, time_field, remind_days_before, remind_time, receiver_type, receiver_ids, action_type, action_config, is_active)
         VALUES
-        (#{id}, #{name}, #{projectId}, #{bizType}, #{triggerType}, #{statusCondition}, #{timeField}, #{remindDaysBefore}, #{remindTime}, #{receiverType}, #{receiverIds}, #{actionType}, #{actionConfig}, #{isActive})
+        (#{id}, #{name}, #{bizDomainIds}, #{bizType}, #{triggerType}, #{statusCondition}, #{timeField}, #{remindDaysBefore}, #{remindTime}, #{receiverType}, #{receiverIds}, #{actionType}, #{actionConfig}, #{isActive})
     </insert>
 
     <!-- 根据主键id获取自动化规则 -->
@@ -17,7 +17,7 @@
 
     <!-- 根据项目id和业务类型查询自动化规则 -->
     <select id="listByProjectIdAndBizType" resultType="com.timevale.forward.dal.entity.AutomationRuleDO">
-        SELECT * FROM automation_rule WHERE project_id=#{projectId} AND biz_type=#{bizType} AND is_enabled = 1
+        SELECT * FROM automation_rule WHERE biz_domain_ids=#{bizDomainIds} AND biz_type=#{bizType} AND is_enabled = 1
     </select>
 
     <select id="findByTriggerTypeAndIsEnabled" resultType="com.timevale.forward.dal.entity.AutomationRuleDO">
@@ -34,7 +34,7 @@
         UPDATE automation_rule
         <set>
             <if test="name != null">name = #{name},</if>
-            <if test="projectId != null">project_id = #{projectId},</if>
+            <if test="bizDomainIds != null">biz_domain_ids = #{bizDomainIds},</if>
             <if test="bizType != null">biz_type = #{bizType},</if>
             <if test="triggerType != null">trigger_type = #{triggerType},</if>
             <if test="statusCondition != null">status_condition = #{statusCondition},</if>

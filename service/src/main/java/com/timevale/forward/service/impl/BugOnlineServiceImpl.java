@@ -57,6 +57,7 @@ import com.timevale.forward.facade.api.result.BugOnlineSimpleVO;
 import com.timevale.forward.facade.api.result.BugOnlineVO;
 import com.timevale.forward.facade.api.result.CommentVO;
 import com.timevale.forward.facade.api.result.FileVO;
+import com.timevale.forward.facade.api.result.ModelFormFieldVO;
 import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.forward.facade.api.result.PriorityStatisticsVO;
 import com.timevale.forward.facade.api.result.ProductLineToFieldVO;
@@ -672,6 +673,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         // req 转换为 do
         BugOnlineDO bugOnlineDO = BugOnlineCopier.INSTANCE.req2do(addReq);
 
+        AssertUtil.checkState(bugOnlineDO.getDynamicFormFields().length() <= 1000, "动态表单数据总长度不能超过1000字符");
         // 线上bug落库
         bugOnlineMapper.insert(bugOnlineDO);
         // 关联产品线
@@ -842,6 +844,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         //更新线上bug
+        AssertUtil.checkState(bugOnlineDO.getDynamicFormFields().length() <= 1000, "动态表单数据总长度不能超过1000字符");
         BugOnlineDO bugOnlineConvert = BugOnlineCopier.INSTANCE.change(modifyReq);
 
         bugOnlineMapper.update(bugOnlineConvert);

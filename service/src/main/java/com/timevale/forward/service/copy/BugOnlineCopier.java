@@ -1,5 +1,6 @@
 package com.timevale.forward.service.copy;
 
+import com.alibaba.fastjson.JSON;
 import com.timevale.forward.dal.condition.BugOnlineListCondition;
 import com.timevale.forward.dal.entity.BugOnlineDO;
 import com.timevale.forward.dal.entity.BugOnlineListDO;
@@ -10,6 +11,7 @@ import com.timevale.forward.facade.api.request.BugOnlinePriorityGetReq;
 import com.timevale.forward.facade.api.result.BugOnlineDetailVO;
 import com.timevale.forward.facade.api.result.BugOnlineSimpleVO;
 import com.timevale.forward.facade.api.result.BugOnlineVO;
+import com.timevale.forward.facade.api.result.ModelFormFieldVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.BugOnlineMD;
 import com.timevale.forward.service.utils.date.DateUtil;
@@ -39,7 +41,9 @@ import java.util.List;
                 CustomerCountEnum.class,
                 UserCountEnum.class,
                 ProblemOccurredTimeEnum.class,
-                BugOnlineGenerationStageEnum.class
+                BugOnlineGenerationStageEnum.class,
+                JSON.class,
+                ModelFormFieldVO.class
         }
 )
 public interface BugOnlineCopier {
@@ -66,6 +70,7 @@ public interface BugOnlineCopier {
     @Mapping(target = "userCountName", expression = "java(UserCountEnum.getTextByCode(bugDO.getUserCount()))")
     @Mapping(target = "problemOccurredTimeName", expression = "java(ProblemOccurredTimeEnum.getTextByCode(bugDO.getProblemOccurredTime()))")
     @Mapping(target = "generationStageName", expression = "java(BugOnlineGenerationStageEnum.getTextByCode(bugDO.getGenerationStage()))")
+    @Mapping(target = "dynamicFormFields", expression = "java(JSON.parseArray(bugDO.getDynamicFormFields(), ModelFormFieldVO.class))")
     BugOnlineDetailVO convert(BugOnlineDO bugDO);
 
     /**
@@ -113,6 +118,7 @@ public interface BugOnlineCopier {
      * @param bugOnlineAddReq 对象
      * @return BugOnlineDO
      */
+    @Mapping(target = "dynamicFormFields", expression = "java(JSON.toJSONString(bugOnlineAddReq.getDynamicFormFields()))")
     BugOnlineDO req2do(BugOnlineAddReq bugOnlineAddReq);
 
     /**
@@ -121,6 +127,7 @@ public interface BugOnlineCopier {
      * @param bugOnlineModifyReq 参数
      * @return 返回参数
      */
+    @Mapping(target = "dynamicFormFields", expression = "java(JSON.toJSONString(bugOnlineModifyReq.getDynamicFormFields()))")
     BugOnlineDO change(BugOnlineModifyReq bugOnlineModifyReq);
 
     /**

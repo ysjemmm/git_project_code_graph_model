@@ -31,6 +31,7 @@ import com.timevale.forward.dal.entity.BizDemandDO;
 import com.timevale.forward.dal.entity.BizDemandListDO;
 import com.timevale.forward.dal.entity.BizLabelDO;
 import com.timevale.forward.dal.entity.CustomDemandDO;
+import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProductBizDemandDO;
 import com.timevale.forward.dal.entity.ProductCustomDemandDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
@@ -62,7 +63,6 @@ import com.timevale.forward.facade.api.request.ProductDemandTrackEventLinkReq;
 import com.timevale.forward.facade.api.request.ResourcePlanProductDemandAddReq;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.CustomDemandVO;
-import com.timevale.forward.facade.api.result.DemandCaseExecInfoVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.facade.api.result.ProductDemandStatusVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
@@ -104,6 +104,7 @@ import com.timevale.forward.service.component.impl.ProductDemandDescFlowComponen
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.CustomDemandCopier;
+import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.copy.TrackEventCopier;
@@ -517,19 +518,17 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     }
 
     private void onlyUpdateResourcePlan(ProductDemandAddReq productDemandAddReq, ProductDemandDO productDemand) {
-        if (CollUtil.isNotEmpty(productDemandAddReq.getProductDemandOwners())) {
-            UserInfo userInfo = LocalSessionUtils.getUserInfo();
-            ProductDemandGroupResourcePlanReq resourcePlanReq = new ProductDemandGroupResourcePlanReq();
-            List<ResourcePlanProductDemandAddReq> planAddReqs = new ArrayList<>();
-            ResourcePlanProductDemandAddReq planAddReq = new ResourcePlanProductDemandAddReq();
-            planAddReq.setProductDemandId(productDemand.getId());
-            planAddReq.setProductDemandOwners(productDemandAddReq.getProductDemandOwners());
-            planAddReqs.add(planAddReq);
-            resourcePlanReq.setProductDemands(planAddReqs);
-            resourcePlanReq.setOperatorId(userInfo.getId());
-            resourcePlanReq.setOperator(userInfo.getAlias());
-            productDemandGroupService.upsertResourcePlan(resourcePlanReq,true, false);
-        }
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        ProductDemandGroupResourcePlanReq resourcePlanReq = new ProductDemandGroupResourcePlanReq();
+        List<ResourcePlanProductDemandAddReq> planAddReqs = new ArrayList<>();
+        ResourcePlanProductDemandAddReq planAddReq = new ResourcePlanProductDemandAddReq();
+        planAddReq.setProductDemandId(productDemand.getId());
+        planAddReq.setProductDemandOwners(productDemandAddReq.getProductDemandOwners());
+        planAddReqs.add(planAddReq);
+        resourcePlanReq.setProductDemands(planAddReqs);
+        resourcePlanReq.setOperatorId(userInfo.getId());
+        resourcePlanReq.setOperator(userInfo.getAlias());
+        productDemandGroupService.upsertResourcePlan(resourcePlanReq, true, false);
     }
 
     @Override
@@ -560,11 +559,20 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         // 附件
         fileComponent.update(productDemandModifyReq.getFiles(), newProductDemand.getId(), FileTypeEnum.PRODUCT_DEMAND.getCode());
         // 抄送人
-        List<PersonAddReq> recipients = productDemandModifyReq.getRecipients();
-        personComponent.update(recipients, newProductDemand.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
+        List<PersonDO> personDO = personComponent.select(newProductDemand.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
+        List<PersonAddReq> originalRecipients = PersonCopier.INSTANCE.do2req(personDO);
 
-        if (!CollectionUtils.isEmpty(recipients)) {
-            List<String> copiers = recipients.stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
+        List<PersonAddReq> recipients = productDemandModifyReq.getRecipients();
+        // 创建新集合来存储需要新增的抄送人
+        List<PersonAddReq> newRecipients = recipients.stream()
+                .filter(r -> !originalRecipients.contains(r))
+                .collect(Collectors.toList());
+        // 更新抄送人
+        personComponent.update(recipients, newProductDemand.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
+        // 发送消息
+        if (CollUtil.isNotEmpty(newRecipients)) {
+            // 发送消息
+            List<String> copiers = newRecipients.stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
             messageEventPublisher.publish(new ProductDemandToCopiedMsgEvent(
                     this,
                     newProductDemand.getId(),
@@ -877,28 +885,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         Integer status = productDemandStatusUpdateReq.getStatus();
         if (ProductDemandStatusEnum.SUSPEND.getCode().equals(status) || ProductDemandStatusEnum.INVALID.getCode().equals(status)) {
             return updateStatus(productDemandDO.getId(), status);
-        } else if (ProductDemandStatusEnum.DEVELOPING.getCode().equals(status)) {
-            productDemandDO.setStatus(status);
-            productDemandMapper.updateStatus(productDemandDO);
-            // 验证
-        } else if (ProductDemandStatusEnum.DEV_COMPLETED.getCode().equals(status) || ProductDemandStatusEnum.ONLINE.getCode().equals(status)) {
-            // 验证
-            Map<String, Object> paramsMap = new HashMap<>(1);
-            paramsMap.put("demandId", productDemandDO.getId());
-            BaseResult baseResult = useCasePlatFormCallService.queryDemandCaseTurnInfo(paramsMap);
-            if (!baseResult.ifSuccess()) {
-                throw new BaseBizRuntimeException("获取用例平台需求用例执行信息错误");
-            }
-            Object res = Optional.of(baseResult).map(BaseResult::getData).orElse(new ArrayList<>());
-            List<DemandCaseExecInfoVO> demandCaseExecInfoVOS = JSON.parseArray(JSON.toJSONString(res), DemandCaseExecInfoVO.class);
-            if (!CollUtil.isEmpty(demandCaseExecInfoVOS) && ProductDemandStatusEnum.DEV_COMPLETED.getCode().equals(status)) {
-                DemandCaseExecInfoVO nonProInfo = demandCaseExecInfoVOS.stream().filter(demandCaseExecInfoVO -> demandCaseExecInfoVO.getTurnType() == 0).findFirst().get();
-                AssertUtil.checkState(ONE_HUNDRED_PERCENT.equals(nonProInfo.getPassRate()), "该需求关联的非生产测试用例通过率为: " + nonProInfo.getPassRate() + "，不能变更状态到研发完成");
-            } else if (ProductDemandStatusEnum.ONLINE.getCode().equals(status)) {
-                DemandCaseExecInfoVO proInfo = demandCaseExecInfoVOS.stream().filter(demandCaseExecInfoVO -> demandCaseExecInfoVO.getTurnType() == 1).findFirst().get();
-                AssertUtil.checkState(ONE_HUNDRED_PERCENT.equals(proInfo.getPassRate()), "该需求关联的生产测试用例通过率为: " + proInfo.getPassRate() + "，不能变更状态到已完成上线");
-            }
-            // 更新
+        } else if (ProductDemandStatusEnum.DEVELOPING.getCode().equals(status)
+                || ProductDemandStatusEnum.DEV_COMPLETED.getCode().equals(status)
+                || ProductDemandStatusEnum.ONLINE.getCode().equals(status)) {
             productDemandDO.setStatus(status);
             productDemandMapper.updateStatus(productDemandDO);
         }
@@ -918,7 +907,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             return BaseResult.success(statusVOS);
         }
 
-        if (ProductDemandStatusEnum.INCLUDED.getCode().equals(productDemandDO.getStatus())) {
+        if (ProductDemandStatusEnum.INCLUDED.getCode().equals(productDemandDO.getStatus())
+                || ProductDemandStatusEnum.WAITING.getCode().equals(productDemandDO.getStatus())) {
             ProductDemandStatusVO devStatusVO = new ProductDemandStatusVO();
             devStatusVO.setStatus(ProductDemandStatusEnum.DEVELOPING.getCode());
             devStatusVO.setStatusText(ProductDemandStatusEnum.DEVELOPING.getText());

@@ -3,18 +3,18 @@
 <mapper namespace="com.timevale.forward.dal.dao.ModelMapper">
 
     <select id="selectAllModel" resultType="com.timevale.forward.dal.entity.ModelDO">
-        select id, product_line_id, name, owner, owner_id, is_deleted,create_man ,create_date ,modify_man ,modify_date
+        select id, product_line_id, name, owner, owner_id, is_deleted,create_man ,create_date ,modify_man ,modify_date, form_field
         from model
     </select>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.ModelDO">
-        select id, product_line_id, name, owner, owner_id, is_deleted,create_man ,create_date ,modify_man ,modify_date
+        select id, product_line_id, name, owner, owner_id, is_deleted,create_man ,create_date ,modify_man ,modify_date, form_field
         from model
         where id = #{id}
     </select>
 
     <select id="getByIds" resultType="com.timevale.forward.dal.entity.ModelDO">
-        select id, product_line_id, name, owner, owner_id, is_deleted,create_man ,create_date ,modify_man ,modify_date
+        select id, product_line_id, name, owner, owner_id, is_deleted,create_man ,create_date ,modify_man ,modify_date, form_field
         from model
         <where>
             <if test="ids!=null and ids.size()>0">
@@ -27,7 +27,7 @@
     </select>
 
     <select id="getByProductLineId" resultType="com.timevale.forward.dal.entity.ModelDO">
-        select id, product_line_id, name, owner, owner_id, is_deleted,create_man ,create_date ,modify_man ,modify_date
+        select id, product_line_id, name, owner, owner_id, is_deleted,create_man ,create_date ,modify_man ,modify_date, form_field
         from model
         <where>
             <if test="productLineIds!=null and productLineIds.size()>0">
@@ -41,9 +41,9 @@
     </select>
 
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.ModelDO">
-        insert into model (product_line_id, name, owner, owner_id)
+        insert into model (product_line_id, name, owner, owner_id, form_field)
         values
-        (#{productLineId}, #{name},#{owner},#{ownerId})
+        (#{productLineId}, #{name},#{owner},#{ownerId},#{formField})
     </insert>
 
     <update id="update" parameterType="com.timevale.forward.dal.entity.ModelDO">
@@ -53,6 +53,7 @@
             <if test="name != null">name = #{name},</if>
             <if test="owner != null">owner = #{owner},</if>
             <if test="ownerId != null">owner_id = #{ownerId},</if>
+            <if test="formField != null">form_field = #{formField},</if>
         </set>
         <where>
             id = #{id}
@@ -60,7 +61,7 @@
     </update>
 
     <select id="selectByCondition" resultType="com.timevale.forward.dal.entity.ModelDO">
-        select a.id, a.product_line_id, a.name, a.owner, a.owner_id, a.is_deleted,a.create_man ,a.create_date ,a.modify_man ,a.modify_date
+        select a.id, a.product_line_id, a.name, a.owner, a.owner_id, a.is_deleted,a.create_man ,a.create_date ,a.modify_man ,a.modify_date, a.form_field
         from model a
         left join product_line b on a.product_line_id=b.id
         <where>

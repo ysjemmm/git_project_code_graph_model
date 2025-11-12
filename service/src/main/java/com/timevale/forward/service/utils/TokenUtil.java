@@ -61,7 +61,8 @@ public class TokenUtil {
 
             return new String(decryptedBytes);
         } catch (Exception e) {
-            log.error("AES解密失败", e);
+            log.warn("AES解密失败", e.getMessage());
+            log.info("AES解密失败，encryptedToken:{}", encryptedToken);
             // 解密失败时返回null
             return null;
         }

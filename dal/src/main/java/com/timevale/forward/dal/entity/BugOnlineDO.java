@@ -284,4 +284,9 @@ public class BugOnlineDO extends BaseDO {
      */
     private String urgentDescription;
 
+    /**
+     * 动态表单字段集合
+     */
+    private String dynamicFormFields;
+
 }

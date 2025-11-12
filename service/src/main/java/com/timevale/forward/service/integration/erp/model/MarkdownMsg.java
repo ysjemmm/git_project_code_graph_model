@@ -2,6 +2,7 @@ package com.timevale.forward.service.integration.erp.model;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.util.List;
 
@@ -11,6 +12,7 @@ import java.util.List;
  */
 @Getter
 @Builder
+@ToString
 public class MarkdownMsg {
     /**
      * 花名拼音

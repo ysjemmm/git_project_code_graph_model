@@ -1,12 +1,17 @@
 package com.timevale.forward.service.job;
 
+import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson.JSON;
 import com.timevale.forward.dal.dao.AutomationRuleMapper;
 import com.timevale.forward.dal.dao.BugOfflineMapper;
 import com.timevale.forward.dal.dao.BugOnlineMapper;
+import com.timevale.forward.dal.dao.BugOnlineProductLineMapper;
+import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.entity.AutomationRuleDO;
 import com.timevale.forward.dal.entity.BugOfflineDO;
 import com.timevale.forward.dal.entity.BugOnlineDO;
+import com.timevale.forward.dal.entity.BugOnlineProductLineDO;
+import com.timevale.forward.model.enums.BizProductLineTypeEnum;
 import com.timevale.forward.model.enums.BizTypeEnum;
 import com.timevale.forward.model.enums.ReceiverTypeEnum;
 import com.timevale.forward.model.enums.TriggerTypeEnum;
@@ -16,11 +21,17 @@ import com.timevale.framework.schedulerT.client.annotaion.JobHandler;
 import com.timevale.framework.schedulerT.core.biz.model.ReturnT;
 import com.timevale.framework.schedulerT.core.handler.IJobHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Resource;
 import java.time.LocalTime;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @JobHandler(value = "automationRuleScannerJob")
 @Slf4j
@@ -37,6 +48,12 @@ public class AutomationRuleScannerJob extends IJobHandler {
 
     @Resource
     private AutomationTaskExecutor executor;
+
+    @Resource
+    private ProductLineMapper productLineMapper;
+
+    @Resource
+    private BugOnlineProductLineMapper bugOnlineProductLineMapper;
 
     @Override
     public ReturnT<String> execute(String s) throws Exception {
@@ -59,9 +76,25 @@ public class AutomationRuleScannerJob extends IJobHandler {
         String remindTimeStr = rule.getRemindTime();
         Integer bizType = rule.getBizType();
 
+        String bizDomainIds = rule.getBizDomainIds();
+        if (StringUtils.isEmpty(bizDomainIds)) {
+            return;
+        }
+        List<Long> bizDomainIdList = Arrays.stream(bizDomainIds.split(","))
+                .map(String::trim)
+                .filter(StringUtils::isNotEmpty)
+                .map(Long::valueOf)
+                .collect(Collectors.toList());
+
+        List<Long> productLineIds = productLineMapper.getByBizDomainIds(bizDomainIdList);
+        if (CollUtil.isEmpty(productLineIds)) {
+            return;
+        }
+
         LocalTime remindTime = LocalTime.parse(remindTimeStr);
 
         if (BizTypeEnum.BUG_ONLINE.getCode().equals(bizType)) {
+
             // 2. 查询所有符合条件的业务对象，线上 Bug
             List<BugOnlineDO> bugs;
             if (rule.getIsOverdueNotify()) {
@@ -69,7 +102,26 @@ public class AutomationRuleScannerJob extends IJobHandler {
             } else {
                 bugs = bugOnlineMapper.findBugsApproachingResolveTime(timeFieldName, remindDays, remindTime);
             }
-            for (BugOnlineDO bug : bugs) {
+
+            // 判断是否有bugs
+            if (CollUtil.isEmpty(bugs)) {
+                return;
+            }
+
+            // 将线上bug列表转换为Map，key为bug ID，value为BugOnlineDO对象，便于快速查找
+            Map<Long, BugOnlineDO> onlineBugMap = bugs.stream().collect(Collectors.toMap(BugOnlineDO::getId, Function.identity()));
+            // 提取所有bug的ID列表
+            List<Long> bugIds = bugs.stream().map(BugOnlineDO::getId).collect(Collectors.toList());
+            // 根据bug ID列表查询关联的产品线信息
+            List<BugOnlineProductLineDO> byBugOnlineIdList = bugOnlineProductLineMapper.getByBugOnlineIdList(bugIds, BizProductLineTypeEnum.BUG_ONLINE.getCode());
+            // 创建筛选后的bug列表
+            List<BugOnlineDO> linkBugs = byBugOnlineIdList.stream()
+                    .filter(bugOnlineProductLineDO -> productLineIds.contains(bugOnlineProductLineDO.getProductLineId()))
+                    .map(bugOnlineProductLineDO -> onlineBugMap.get(bugOnlineProductLineDO.getBugOnlineId()))
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
+            for (BugOnlineDO bug : linkBugs) {
                 // 3. 构造执行上下文，触发执行器
                 AutomationExecutionContext context = buildBugOnlineContext(rule, bug);
                 executor.execute(context);
@@ -78,9 +130,9 @@ public class AutomationRuleScannerJob extends IJobHandler {
             // 4. 查询所有符合条件的业务对象，线下 Bug
             List<BugOfflineDO> offlineBugs;
             if (rule.getIsOverdueNotify()) {
-                offlineBugs = bugOfflineMapper.findBugsOverdue(timeFieldName);
+                offlineBugs = bugOfflineMapper.findBugsOverdue(productLineIds, timeFieldName);
             } else {
-                offlineBugs = bugOfflineMapper.findBugsApproachingResolveTime(timeFieldName, remindDays, remindTime);
+                offlineBugs = bugOfflineMapper.findBugsApproachingResolveTime(productLineIds, timeFieldName, remindDays, remindTime);
             }
 
             for (BugOfflineDO bug : offlineBugs) {

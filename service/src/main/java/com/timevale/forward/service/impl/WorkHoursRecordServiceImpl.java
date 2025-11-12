@@ -58,6 +58,7 @@ import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.framework.tedis.util.TedisUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.base.util.DateUtils;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -185,6 +186,9 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             throw new BaseBizRuntimeException("非任务执行人不能删除该任务工时");
         }
         workHoursRecordMapper.deleteById(workHoursRecordId);
+
+        // 更新实际开始时间和结束时间
+        updateActualStartAndEndDate(workHoursRecordDO);
         return BaseResult.success(true);
     }
 
@@ -218,6 +222,9 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         saveBeforeCheckTask(workHoursRecordDO, false);
         // 入库
         workHoursRecordMapper.insert(workHoursRecordDO);
+
+        // 更新任务实际开始和结束日期
+        updateActualStartAndEndDate(workHoursRecordDO);
         return BaseResult.success(workHoursRecordDO.getId());
     }
 
@@ -308,7 +315,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         // 获取任务开始时间
         Date actualStartDate = Date.from(registrationDate.atTime(9, 0, 0).atZone(ZoneId.systemDefault()).toInstant());
         // 获取任务结束时间
-        Date actualEndDate = Date.from(registrationDate.atTime(18, 0, 0).atZone(ZoneId.systemDefault()).toInstant());
+        Date actualEndDate = Date.from(registrationDate.atTime(18, 30, 0).atZone(ZoneId.systemDefault()).toInstant());
 
         if (TaskStatusEnum.WAITING.getCode().equals(taskDO.getStatus())) {
             TaskExecuteReq taskExecuteReq = new TaskExecuteReq();
@@ -345,7 +352,46 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         updateBeforeCheckTask(workHoursRecordDO);
         workHoursRecordMapper.update(workHoursRecordDO);
 
+        // 更新实际开始时间和实际完成时间
+        updateActualStartAndEndDate(workHoursRecordDO);
+
         return BaseResult.success(true);
+    }
+
+    private void updateActualStartAndEndDate(WorkHoursRecordDO workHoursRecordDO) {
+        List<WorkHoursRecordDO> hoursRecordDOList = workHoursRecordMapper.list(WorkHoursRecordCondition.builder()
+                .workItemType(BizTypeEnum.TASK.getCode())
+                .workItemId(workHoursRecordDO.getWorkItemId())
+                .projectId(workHoursRecordDO.getProjectId())
+                .build());
+
+        TaskDO taskDO = taskMapper.getById(workHoursRecordDO.getWorkItemId());
+        AssertUtil.notNull(taskDO, "任务不存在");
+        if (CollUtil.isNotEmpty(hoursRecordDOList)) {
+            // 获取hoursRecordDOList中最早的时间
+            Date startTime = hoursRecordDOList.stream()
+                    .map(WorkHoursRecordDO::getRegistrationDate)
+                    .min(Date::compareTo)
+                    .orElse(null);
+            // 获取hoursRecordDOList中进度达到100的最晚的时间
+            Date endTime = hoursRecordDOList.stream()
+                    .filter(hours -> hours.getProgress() >= 100)
+                    .map(WorkHoursRecordDO::getRegistrationDate)
+                    .max(Date::compareTo)
+                    .orElse(null);
+            // startTime 时间部分设为09:00:00，endTime 时间部分设为23:59:59
+            startTime = Date.from(startTime.toInstant().atZone(ZoneId.systemDefault()).with(LocalTime.of(9, 0, 0)).toInstant());
+            if (endTime != null) {
+                endTime = Date.from(endTime.toInstant().atZone(ZoneId.systemDefault()).with(LocalTime.of(18, 30, 0)).toInstant());
+            }
+            taskDO.setActualStartDate(startTime);
+            taskDO.setActualEndDate(endTime);
+            taskMapper.updateActualStartAndEndDate(taskDO);
+        } else {
+            taskDO.setActualStartDate(null);
+            taskDO.setActualEndDate(null);
+            taskMapper.updateActualStartAndEndDate(taskDO);
+        }
     }
 
     @Override
@@ -443,6 +489,11 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
         // 批量插入所有记录（在同一个事务中）
         for (WorkHoursRecordDO workHoursRecordDO : recordsToInsert) {
             workHoursRecordMapper.insert(workHoursRecordDO);
+        }
+
+        for (WorkHoursRecordDO workHoursRecordDO : recordsToInsert) {
+            // 更新任务实际开始和结束日期
+            updateActualStartAndEndDate(workHoursRecordDO);
         }
 
         return BaseResult.success(true);

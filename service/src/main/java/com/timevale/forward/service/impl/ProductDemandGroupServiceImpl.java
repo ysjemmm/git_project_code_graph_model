@@ -67,6 +67,7 @@ import com.timevale.forward.service.component.LabelComponent;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.component.ProductDemandGroupComponent;
 import com.timevale.forward.service.component.ProductDemandGroupItemComponent;
+import com.timevale.forward.service.component.ProductDemandLogComponent;
 import com.timevale.forward.service.component.ProjectProductDemandComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProductDemandCopier;
@@ -174,6 +175,9 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
 
     @Resource
     private MessageEventPublisher messageEventPublisher;
+
+    @Resource
+    private ProductDemandLogComponent productDemandLogComponent;
 
     /**
      * 查询业务域内的待规划的产品需求
@@ -800,9 +804,15 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
 
         Map<Long, List<ProductDemandOwnerDO>> finalExistedOwnersMap = existedOwnersMap;
         productDemands.forEach(d -> {
+            List<ProductDemandOwnerDO> demandOwnerDOList = finalExistedOwnersMap.getOrDefault(d.getProductDemandId(), Collections.emptyList());
             if (CollUtil.isEmpty(d.getProductDemandOwners())) {
-                waitDeleteOwners.addAll(finalExistedOwnersMap.getOrDefault(d.getProductDemandId(), Collections.emptyList()));
+                waitDeleteOwners.addAll(demandOwnerDOList);
             }
+
+            List<ProductDemandOwnerAddReq> productDemandOwners = d.getProductDemandOwners();
+            List<ProductDemandOwnerDO> newOwners = productDemandOwners.stream().map(o -> ProductDemandCopier.INSTANCE.convert(o)).collect(Collectors.toList());
+            // 单个产品需求资源变更日志
+            productDemandLogComponent.addLogWhenModifyResourcePlan(d.getProductDemandId(), demandOwnerDOList, newOwners);
         });
         List<ProductDemandOwnerAddReq> productDemandOwners = productDemands.stream().flatMap(d -> d.getProductDemandOwners().stream()
                         .peek(o -> o.setProductDemandId(d.getProductDemandId()))

@@ -30,4 +30,9 @@ public class ModelDO extends BaseDO {
      * 负责人id
      */
     private String ownerId;
+
+    /**
+     * 表单字段
+     */
+    private String formField;
 }

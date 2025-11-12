@@ -1,5 +1,6 @@
 package com.timevale.forward.facade.api.result;
 
+import com.timevale.forward.facade.api.request.ModelFormFieldAddReq;
 import com.timevale.mandarin.common.result.ToString;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -248,5 +249,8 @@ public class BugOnlineDetailVO extends ToString {
 
     @ApiModelProperty("加急bug描述信息")
     private String urgentDescription;
+
+    @ApiModelProperty("动态表单字段")
+    private List<ModelFormFieldVO> dynamicFormFields;
 
 }
