@@ -54,9 +54,14 @@ public class PersonComponentImpl implements PersonComponent {
             personMapper.inserts(personDOList);
         } else {
             // 去除list中已经存在的existPersons，使用新的list接收
+            Set<String> existUserIds = existPersons.stream()
+                    .map(PersonDO::getUserId)
+                    .collect(Collectors.toSet());
+
             List<PersonAddReq> addReqList = list.stream()
-                    .filter(e -> !existPersons.contains(PersonCopier.INSTANCE.req2do(e, mainId, type, personLevel)))
+                    .filter(e -> !existUserIds.contains(e.getUserId()))
                     .collect(Collectors.toList());
+
             if (!CollUtil.isEmpty(addReqList)) {
                 List<PersonDO> personDOList = addReqList.stream()
                         .map(e -> PersonCopier.INSTANCE.req2do(e, mainId, type, personLevel))
