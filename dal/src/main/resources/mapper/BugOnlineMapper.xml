@@ -226,6 +226,8 @@
                 <if test="userCount !=null">user_count,</if>
                 <if test="problemOccurredTime !=null">problem_occurred_time,</if>
                 <if test="fixedPriority !=null">fixed_priority,</if>
+                <if test="isUrgent != null">is_urgent,</if>
+                <if test="urgentDescription != null">urgent_description,</if>
                 <if test="generationStage != null">generation_stage,</if>
                 <if test="createMan != null"> create_man,</if>
                 <if test="createManId != null"> create_man_id,</if>
@@ -266,6 +268,8 @@
                 <if test="userCount !=null">#{userCount},</if>
                 <if test="problemOccurredTime !=null">#{problemOccurredTime},</if>
                 <if test="fixedPriority !=null">#{fixedPriority},</if>
+                <if test="isUrgent != null">#{isUrgent},</if>
+                <if test="urgentDescription != null">#{urgentDescription},</if>
                 <if test="generationStage != null">#{generationStage},</if>
                 <if test="createMan != null"> #{createMan},</if>
                 <if test="createManId != null"> #{createManId},</if>

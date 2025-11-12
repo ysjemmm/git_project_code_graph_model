@@ -664,7 +664,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             if (StrUtil.isBlank(addReq.getUrgentDescription())) {
                 throw new BaseBizRuntimeException("bug标记为加急时必须指定原因");
             }
-            addReq.setPriority(PriorityEnum.P0.getCode());
+            addReq.setPriority(BugOnlinePriorityEnum.URGENT.getCode());
         } else {
             addReq.setUrgentDescription(null);
             addReq.setUrgentFiles(Collections.emptyList());
@@ -835,8 +835,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             if (StrUtil.isBlank(modifyReq.getUrgentDescription())) {
                 throw new BaseBizRuntimeException("bug标记为加急时必须指定原因");
             }
-            // 加急状态下优先级必须为：加急
-            modifyReq.setPriority(PriorityEnum.P0.getCode());
+            modifyReq.setPriority(BugOnlinePriorityEnum.URGENT.getCode());
             modifyReq.setPriorityChangeReason("bug加急自动更新为P0");
         }
         else {
