@@ -20,6 +20,7 @@ import com.timevale.forward.dal.dao.ProjectProductDemandMapper;
 import com.timevale.forward.dal.dto.ProductDemandMoveDTO;
 import com.timevale.forward.dal.entity.BizDomainGroupRelationDO;
 import com.timevale.forward.dal.entity.BizLabelDO;
+import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.dal.entity.ProductDemandGroupDO;
 import com.timevale.forward.dal.entity.ProductDemandGroupItemDO;
@@ -56,6 +57,7 @@ import com.timevale.forward.facade.api.result.ResourcePlanProductDemandVO;
 import com.timevale.forward.model.enums.AscriptionEnum;
 import com.timevale.forward.model.enums.BizTypeEnum;
 import com.timevale.forward.model.enums.LinkOrUnLinkEnum;
+import com.timevale.forward.model.enums.PersonLevelEnum;
 import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.model.enums.PriorityEnum;
 import com.timevale.forward.model.enums.ProductDemandGroupMoveModeEnum;
@@ -736,15 +738,26 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
             demandId2Owners.forEach((demandId, owners)->{
                 Set<PersonAddReq> recipients = owners.stream().map(o -> new PersonAddReq().setUserName(o.getOwner()).setUserId(o.getOwnerId()))
                         .collect(Collectors.toSet());
+                List<PersonDO> existPersons = personComponent.select(demandId, PersonTypeEnum.PRODUCT_DEMAND_CC.getCode(), PersonLevelEnum.CORE.getCode());
                 personComponent.add(recipients, demandId, PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
                 ProductDemandDO productDemandDO = demandId2Demand.get(demandId);
-                messageEventPublisher.publish(new ProductDemandToCopiedMsgEvent(
-                        this,
-                        demandId,
-                        productDemandDO.getCreateMan(),
-                        recipients.stream().map(r->r.getUserId()).collect(Collectors.toList()),
-                        productDemandDO.getName()
-                ));
+                // 去掉recipients中存在的existPersons
+                Set<String> existUserIds = existPersons.stream()
+                        .map(PersonDO::getUserId)
+                        .collect(Collectors.toSet());
+
+                List<PersonAddReq> addReqList = recipients.stream()
+                        .filter(e -> !existUserIds.contains(e.getUserId()))
+                        .collect(Collectors.toList());
+                if (!CollUtil.isEmpty(addReqList)) {
+                    messageEventPublisher.publish(new ProductDemandToCopiedMsgEvent(
+                            this,
+                            demandId,
+                            productDemandDO.getCreateMan(),
+                            addReqList.stream().map(r -> r.getUserId()).collect(Collectors.toList()),
+                            productDemandDO.getName()
+                    ));
+                }
             });
         }
     }
