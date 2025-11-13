@@ -565,7 +565,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         List<PersonAddReq> recipients = productDemandModifyReq.getRecipients();
         // 创建新集合来存储需要新增的抄送人
         List<PersonAddReq> newRecipients = recipients.stream()
-                .filter(r -> !originalRecipients.contains(r))
+                .filter(r -> originalRecipients.stream()
+                        .noneMatch(or -> or.getUserId().equals(r.getUserId())))
                 .collect(Collectors.toList());
         // 更新抄送人
         personComponent.update(recipients, newProductDemand.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
