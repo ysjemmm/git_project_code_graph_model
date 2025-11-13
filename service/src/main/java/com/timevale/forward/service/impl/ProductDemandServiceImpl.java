@@ -891,6 +891,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                 || ProductDemandStatusEnum.ONLINE.getCode().equals(status)) {
             productDemandDO.setStatus(status);
             productDemandMapper.updateStatus(productDemandDO);
+            // 更新关联的业务需求状态
+            productDemandComponent.updateDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandDO.getId()), false);
         }
         return BaseResult.success(true);
     }
