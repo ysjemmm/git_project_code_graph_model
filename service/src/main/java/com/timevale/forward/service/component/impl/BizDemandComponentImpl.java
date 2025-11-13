@@ -685,6 +685,12 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         if (Objects.equals(ProductDemandStatusEnum.ONLINE.getCode(), pdStatus)) {
             return BizDemandStatusEnum.AVAILABLE.getCode();
         }
+        if (Objects.equals(ProductDemandStatusEnum.DEVELOPING.getCode(), pdStatus)) {
+            return BizDemandStatusEnum.PROJECTING.getCode();
+        }
+        if (Objects.equals(ProductDemandStatusEnum.DEV_COMPLETED.getCode(), pdStatus)) {
+            return BizDemandStatusEnum.AVAILABLE.getCode();
+        }
 
         return BizDemandStatusEnum.RECEIVED.getCode();
     }
