@@ -3,17 +3,54 @@ package com.timevale.forward.service.component.impl;
 import com.alibaba.fastjson.JSON;
 import com.timevale.forward.dal.condition.ProductDemandGroupQueryCondition;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
-import com.timevale.forward.dal.dao.*;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.dao.BizDemandMapper;
+import com.timevale.forward.dal.dao.BizDomainMapper;
+import com.timevale.forward.dal.dao.CustomDemandMapper;
+import com.timevale.forward.dal.dao.ProductBizDemandMapper;
+import com.timevale.forward.dal.dao.ProductCustomDemandMapper;
+import com.timevale.forward.dal.dao.ProductDemandDescFlowMapper;
+import com.timevale.forward.dal.dao.ProductDemandDescRecordMapper;
+import com.timevale.forward.dal.dao.ProductDemandMapper;
+import com.timevale.forward.dal.dao.ProductLineMapper;
+import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.dao.ProjectProductDemandMapper;
+import com.timevale.forward.dal.entity.BizDemandDO;
+import com.timevale.forward.dal.entity.BizDomainDO;
+import com.timevale.forward.dal.entity.CustomDemandDO;
+import com.timevale.forward.dal.entity.FileDO;
+import com.timevale.forward.dal.entity.PersonDO;
+import com.timevale.forward.dal.entity.ProductBizDemandDO;
+import com.timevale.forward.dal.entity.ProductCustomDemandDO;
+import com.timevale.forward.dal.entity.ProductDemandDO;
+import com.timevale.forward.dal.entity.ProductDemandDescFlowDO;
+import com.timevale.forward.dal.entity.ProductDemandGroupFieldDO;
+import com.timevale.forward.dal.entity.ProductDemandListDO;
+import com.timevale.forward.dal.entity.ProductLineDO;
+import com.timevale.forward.dal.entity.ProjectProductDemandDO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.facade.api.result.ProductLineVO;
-import com.timevale.forward.model.enums.*;
-import com.timevale.forward.service.component.*;
+import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
+import com.timevale.forward.model.enums.BizDemandStatusEnum;
+import com.timevale.forward.model.enums.FileTypeEnum;
+import com.timevale.forward.model.enums.ForwardFlowStatusEnum;
+import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.model.enums.PriorityEnum;
+import com.timevale.forward.model.enums.ProductDemandStatusEnum;
+import com.timevale.forward.model.enums.ProductDemandTypeEnum;
+import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.service.component.BizDemandComponent;
+import com.timevale.forward.service.component.BizDemandLogComponent;
+import com.timevale.forward.service.component.FileComponent;
+import com.timevale.forward.service.component.PersonComponent;
+import com.timevale.forward.service.component.ProductDemandComponent;
+import com.timevale.forward.service.component.ProductDemandLogComponent;
+import com.timevale.forward.service.component.ProjectLogComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.forward.service.copy.ProductLineCopier;
+import com.timevale.forward.service.observer.event.BizDemandStatusAloneChangeMsgEvent;
 import com.timevale.forward.service.observer.event.BizDemandStatusChangeMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.StringUtil;
@@ -27,7 +64,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -299,6 +342,15 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
                         BizDemandStatusEnum.getTextByCode(newStatus),
                         projectEndDate)
                 );
+            } else {
+                log.info("业务需求没有关联项目，发送钉钉消息");
+                messageEventPublisher.publish(new BizDemandStatusAloneChangeMsgEvent(
+                        this,
+                        bizDemandId,
+                        bizDemandDO.getSubmitManId(),
+                        bizDemandDO.getName(),
+                        BizDemandStatusEnum.getTextByCode(newStatus)
+                ));
             }
         }
     }
