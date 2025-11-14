@@ -694,6 +694,11 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         if (CollUtil.isEmpty(productDemands)) {
             return Collections.emptyList();
         }
+        // 特判可能存在的null
+        productDemands.forEach(d -> {
+            d.setProductDemandOwners(CollUtil.defaultIfEmpty(d.getProductDemandOwners(), new ArrayList<>()));
+        });
+
         boolean existDistinctResourceType = productDemands.stream().anyMatch(d ->
                 d.getProductDemandOwners().stream().distinct().count() != d.getProductDemandOwners().size());
         if (existDistinctResourceType) {
