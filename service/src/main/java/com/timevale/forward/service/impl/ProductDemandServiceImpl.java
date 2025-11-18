@@ -916,7 +916,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             devStatusVO.setStatus(ProductDemandStatusEnum.DEVELOPING.getCode());
             devStatusVO.setStatusText(ProductDemandStatusEnum.DEVELOPING.getText());
             statusVOS.add(devStatusVO);
-        } else if (ProductDemandStatusEnum.DEVELOPING.getCode().equals(productDemandDO.getStatus())) {
+        } else if (ProductDemandStatusEnum.DEVELOPING.getCode().equals(productDemandDO.getStatus())
+        || ProductDemandStatusEnum.PROGRESS.getCode().equals(productDemandDO.getStatus())) {
             ProductDemandStatusVO devCompleteStatusVO = new ProductDemandStatusVO();
             devCompleteStatusVO.setStatus(ProductDemandStatusEnum.DEV_COMPLETED.getCode());
             devCompleteStatusVO.setStatusText(ProductDemandStatusEnum.DEV_COMPLETED.getText());
