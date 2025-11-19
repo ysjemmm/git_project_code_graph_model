@@ -90,7 +90,7 @@
         where biz_domain_id = #{bizDomainId} and is_deleted = false
     </select>
 
-    <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProductLineDO">
+    <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProductLineDO" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO info_forward.product_line
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="bizDomainId!=null">biz_domain_id,</if>

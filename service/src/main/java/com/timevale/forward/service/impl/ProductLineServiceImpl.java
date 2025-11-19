@@ -214,7 +214,7 @@ public class ProductLineServiceImpl implements ProductLineService {
         return BaseResult.success(true);
     }
 
-    private void upsertProductLineOtherOwners (@NonNull List<Long> permissionTypes, @NonNull String permissionScope, @NonNull Long bizId, @NonNull Collection<BizPermissionOwnerDO> onlyOwners) {
+    private void upsertProductLineOtherOwners (@NonNull List<Long> permissionTypes, @NonNull String permissionScope, @NonNull Long bizId, Collection<BizPermissionOwnerDO> onlyOwners) {
         if (permissionTypes.isEmpty()) {
             return;
         }
