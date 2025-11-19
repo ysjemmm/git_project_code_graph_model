@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 /**
  * @author xingyun
@@ -32,6 +33,9 @@ public class ProductLineAddReq extends BaseReq {
     @ApiModelProperty("负责人id")
     @NotBlank(message = "负责人id不能为空")
     private String ownerId;
+
+    @ApiModelProperty("其他负责人信息")
+    private List<PersonAddReq> otherOwners;
 
     @ApiModelProperty("线上bug负责人")
     @NotBlank(message = "线上bug负责人不能为空")

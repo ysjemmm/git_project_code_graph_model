@@ -38,4 +38,7 @@ public class ProductLineQueryList extends QueryBase {
     @ApiModelProperty("上架状态：0-未上架，1-已上架")
     private Integer listingStatus;
 
+    @ApiModelProperty("其他负责人id")
+    private List<String> otherOwnerIds;
+
 }

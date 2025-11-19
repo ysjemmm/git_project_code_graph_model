@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -46,4 +47,8 @@ public class ProductLineCondition {
      */
     private Integer listingStatus;
 
+    /**
+     * 关联的其他负责人id
+     */
+    private List<String> otherOwnerIds;
 }

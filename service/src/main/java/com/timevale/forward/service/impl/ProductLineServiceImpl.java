@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
@@ -9,11 +10,16 @@ import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.UpdateProductLineListingStatusReq;
 import com.timevale.forward.facade.api.client.ProductLineService;
 import com.timevale.forward.facade.api.query.ProductLineQueryList;
+import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.request.ProductLineAddReq;
 import com.timevale.forward.facade.api.request.ProductLineModifyReq;
 import com.timevale.forward.facade.api.result.ModelVO;
+import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.forward.facade.api.result.ProductLineModelVO;
 import com.timevale.forward.facade.api.result.ProductLineVO;
+import com.timevale.forward.service.BizPermissionOwnerService;
+import com.timevale.forward.service.constant.BizPermissionScopeEnum;
+import com.timevale.forward.service.constant.BizPermissionTypeEnum;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ModelCopier;
 import com.timevale.forward.service.copy.ProductLineCopier;
@@ -22,13 +28,13 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -70,6 +76,9 @@ public class ProductLineServiceImpl implements ProductLineService {
     @Resource
     private TroubleTicketMapper troubleTicketMapper;
 
+    @Resource
+    private BizPermissionOwnerService permissionOwnerService;
+
     @Override
     public BaseResult<List<ProductLineVO>> listBizDomainProductLines(Long bizDomainId) {
         List<ProductLineDO> productLineDOList = productLineMapper.getBizDomainId(bizDomainId);
@@ -102,11 +111,36 @@ public class ProductLineServiceImpl implements ProductLineService {
         List<ProductLineDO> productLineDOList = productLineMapper.selectByCondition(condition);
 
         List<ProductLineVO> productLineVOList = build(productLineDOList, bizDomainDOList);
+        // 补充其他负责人信息
+        fillOtherOwners(productLineVOList);
+
         PageInfo<ProductLineDO> pageInfo = new PageInfo<>(productLineDOList);
         PageQueryResult<ProductLineVO> pageQueryResult = new PageQueryResult<>();
         pageQueryResult.setResultList(productLineVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
         return BaseResult.success(pageQueryResult);
+    }
+
+    private void fillOtherOwners (List<ProductLineVO> productLineVOList) {
+        Map<Long, ProductLineVO> lineMap = productLineVOList.stream()
+                .filter(e -> e.getId() != null)
+                .collect(Collectors.toMap(ProductLineVO::getId, Function.identity(), (o, n) -> o));
+        if (lineMap.isEmpty()) {
+            return;
+        }
+        permissionOwnerService.listPermissionOwners(null, null, BizPermissionScopeEnum.PRODUCT_LINE_SCOPE.name(), lineMap.keySet())
+                .stream()
+                .collect(Collectors.groupingBy(
+                        BizPermissionOwnerDO::getScopeBizId,
+                        Collectors.mapping(
+                                v -> new PersonVO().setUserId(v.getOwnerId()).setUserName(v.getOwner()),
+                                Collectors.toList()
+                        )
+                )).forEach((lineId, otherOwners) -> {
+                    if (lineMap.containsKey(lineId)) {
+                        lineMap.get(lineId).setOtherOwners(otherOwners);
+                    }
+                });
     }
 
     @Override
@@ -142,15 +176,23 @@ public class ProductLineServiceImpl implements ProductLineService {
     }
 
     @Override
+    @Transactional
     public BaseResult<Boolean> add(ProductLineAddReq productLineAddReq) {
         ProductLineDO exists = productLineMapper.selectByName(productLineAddReq.getName());
         AssertUtil.checkState(exists == null, "产品线名称已存在");
         ProductLineDO productLineDO = ProductLineCopier.INSTANCE.convert(productLineAddReq);
         productLineMapper.insert(productLineDO);
+        // 添加其他负责人信息
+        List<BizPermissionOwnerDO> needUpsertOtherOwners = CollUtil.defaultIfEmpty(productLineAddReq.getOtherOwners(), Collections.emptyList())
+                .stream()
+                .map(v -> new BizPermissionOwnerDO().setOwnerId(v.getUserId()).setOwner(v.getUserName()))
+                .collect(Collectors.toList());
+        upsertProductLineOtherOwners(Collections.singletonList(BizPermissionTypeEnum.PRODUCT_DEMAND_MODIFY.getValue()), BizPermissionScopeEnum.PRODUCT_LINE_SCOPE.name(), productLineDO.getId(), needUpsertOtherOwners);
         return BaseResult.success(true);
     }
 
     @Override
+    @Transactional
     public BaseResult<Boolean> update(ProductLineModifyReq productLineModifyReq) {
         if (productLineModifyReq.getName() != null) {
             ProductLineDO exists = productLineMapper.selectByName(productLineModifyReq.getName());
@@ -163,8 +205,20 @@ public class ProductLineServiceImpl implements ProductLineService {
         if (productLineDO.getProductLineLevel() == null) {
             productLineMapper.updateProductLineLevel(productLineDO.getId(), null);
         }
-
+        // 更新其他负责人信息
+        List<BizPermissionOwnerDO> needUpsertOtherOwners = CollUtil.defaultIfEmpty(productLineModifyReq.getOtherOwners(), Collections.emptyList())
+                .stream()
+                .map(v -> new BizPermissionOwnerDO().setOwnerId(v.getUserId()).setOwner(v.getUserName()))
+                .collect(Collectors.toList());
+        upsertProductLineOtherOwners(Collections.singletonList(BizPermissionTypeEnum.PRODUCT_DEMAND_MODIFY.getValue()), BizPermissionScopeEnum.PRODUCT_LINE_SCOPE.name(), productLineDO.getId(), needUpsertOtherOwners);
         return BaseResult.success(true);
+    }
+
+    private void upsertProductLineOtherOwners (@NonNull List<Long> permissionTypes, @NonNull String permissionScope, @NonNull Long bizId, @NonNull Collection<BizPermissionOwnerDO> onlyOwners) {
+        if (permissionTypes.isEmpty()) {
+            return;
+        }
+        permissionOwnerService.upsertPermissions(permissionTypes.get(0), BizPermissionScopeEnum.PRODUCT_LINE_SCOPE.name(), bizId, onlyOwners);
     }
 
     private List<ProductLineVO> build(List<ProductLineDO> productLineDOList, List<BizDomainDO> bizDomainDOList) {

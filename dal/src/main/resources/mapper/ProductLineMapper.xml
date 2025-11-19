@@ -194,6 +194,18 @@
             <if test="listingStatus != null">
                 AND a.listing_status=#{listingStatus}
             </if>
+            <if test="otherOwnerIds != null and otherOwnerIds.size() > 0">
+                AND EXISTS (
+                    SELECT 1 FROM biz_permission_owner bpo
+                    WHERE bpo.scope_biz_id = a.id
+                    AND bpo.is_deleted = false
+                    AND bpo.permission_scope = 'PRODUCT_LINE_SCOPE'
+                    AND bpo.owner_id IN
+                    <foreach collection="otherOwnerIds" item="ownerId" separator="," open="(" close=")">
+                        #{ownerId}
+                    </foreach>
+                )
+            </if>
             AND a.is_deleted = false
         </where>
     </select>

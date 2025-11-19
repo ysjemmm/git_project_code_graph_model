@@ -135,5 +135,6 @@
         <mapper resource="mapper/BizDomainGroupMapper.xml"/>
         <mapper resource="mapper/BizDomainGroupRelationMapper.xml"/>
         <mapper resource="mapper/AutomationRuleMapper.xml"/>
+        <mapper resource="mapper/BizPermissionOwnerMapper.xml"/>
     </mappers>
 </configuration>

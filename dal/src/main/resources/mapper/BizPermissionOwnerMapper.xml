@@ -1,0 +1,104 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.BizPermissionOwnerMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO biz_permission_owner
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="permissionType != null">permission_type,</if>
+            <if test="permissionScope != null">permission_scope,</if>
+            <if test="ownerId != null">owner_id,</if>
+            <if test="owner != null">owner,</if>
+            <if test="scopeBizId != null">scope_biz_id,</if>
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="permissionType != null">#{permissionType},</if>
+            <if test="permissionScope != null">#{permissionScope},</if>
+            <if test="ownerId != null">#{ownerId},</if>
+            <if test="owner != null">#{owner},</if>
+            <if test="scopeBizId != null">#{scopeBizId},</if>
+        </trim>
+        ON DUPLICATE KEY UPDATE is_deleted = false
+    </insert>
+
+    <insert id="batchInsert">
+        INSERT INTO biz_permission_owner
+        (
+            permission_type,
+            permission_scope,
+            owner_id,
+            owner,
+            scope_biz_id
+        )
+        VALUES
+        <foreach collection="bizPermissionOwners" item="item" separator=",">
+        (
+            #{item.permissionType},
+            #{item.permissionScope},
+            #{item.ownerId},
+            #{item.owner},
+            #{item.scopeBizId}
+        )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        is_deleted = false
+    </insert>
+
+    <update id="batchDeleteByIds">
+        UPDATE biz_permission_owner
+        SET is_deleted = false
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND is_deleted = 0
+    </update>
+
+    <select id="listByPermissionScopes" resultType="com.timevale.forward.dal.entity.BizPermissionOwnerDO">
+        SELECT * FROM biz_permission_owner
+        WHERE is_deleted = false
+            <if test="permissionScopes != null and permissionScopes.size() > 0">
+                AND permission_scope IN
+                <foreach collection="permissionScopes" item="scope" open="(" separator="," close=")">
+                    #{scope}
+                </foreach>
+            </if>
+    </select>
+
+    <select id="listByPermissionTypeAndScopeAndOwnerIdIn" resultType="com.timevale.forward.dal.entity.BizPermissionOwnerDO">
+        SELECT * FROM biz_permission_owner
+        WHERE is_deleted = false
+        <if test="permissionType != null">
+            AND permission_type = #{permissionType}
+        </if>
+        <if test="permissionScope != null">
+            AND permission_scope = #{permissionScope}
+        </if>
+        <if test="ownerId != null">
+            AND owner_id = #{ownerId}
+        </if>
+        <if test="scopeBizIds != null and scopeBizIds.size() > 0">
+            AND scope_biz_id IN
+            <foreach collection="scopeBizIds" item="scopeBizId" open="(" separator="," close=")">
+                #{scopeBizId}
+            </foreach>
+        </if>
+    </select>
+
+    <update id="batchDeletePermissionOwners">
+        UPDATE biz_permission_owner
+        SET is_deleted = true
+        WHERE is_deleted = false
+            AND owner_id IN
+            <foreach collection="ownerIds" item="ownerId" open="(" separator="," close=")">
+                #{ownerId}
+            </foreach>
+            <if test="permissionType != null">
+                AND permission_type = #{permissionType}
+            </if>
+            <if test="permissionScope != null">
+                AND permission_scope = #{permissionScope}
+            </if>
+    </update>
+</mapper>

@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
+import java.util.List;
 
 
 /**
@@ -36,6 +37,9 @@ public class ProductLineVO extends ToString {
 
     @ApiModelProperty("产品线负责人id")
     private String productLineOwnerId;
+
+    @ApiModelProperty("其他负责人信息")
+    private List<PersonVO> otherOwners;
 
     @ApiModelProperty("业务域名称")
     private String bizDomainName;
