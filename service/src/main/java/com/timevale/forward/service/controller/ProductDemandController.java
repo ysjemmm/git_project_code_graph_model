@@ -11,15 +11,7 @@ import com.timevale.forward.facade.api.query.ProductDemandLinkTrackEventQueryLis
 import com.timevale.forward.facade.api.query.ProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandTrackEventQueryList;
 import com.timevale.forward.facade.api.query.ProductLinkCustomDemandQueryList;
-import com.timevale.forward.facade.api.request.BatchTransferReq;
-import com.timevale.forward.facade.api.request.ProductBizDemandLinkReq;
-import com.timevale.forward.facade.api.request.ProductCustomDemandLinkReq;
-import com.timevale.forward.facade.api.request.ProductDemandAddReq;
-import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
-import com.timevale.forward.facade.api.request.ProductDemandStatusUpdateReq;
-import com.timevale.forward.facade.api.request.ProductDemandTrackEventLinkReq;
-import com.timevale.forward.facade.api.request.RecipientAddReq;
-import com.timevale.forward.facade.api.request.ResourcePlanProductDemandAddReq;
+import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.CustomDemandVO;
 import com.timevale.forward.facade.api.result.PersonVO;
@@ -36,16 +28,12 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author xingyun
@@ -117,6 +105,12 @@ public class ProductDemandController {
     @PostMapping("/modify")
     public BusinessResult<Boolean> modify(@RequestBody @Valid ProductDemandModifyReq productDemandModifyReq) {
         return ResultUtils.result(productDemandService.modify(productDemandModifyReq));
+    }
+
+    @ApiOperation("产品需求优先级更新")
+    @PostMapping("/updateDemandPriority")
+    public BusinessResult<Boolean> modify(@RequestBody @Valid ProductDemandPriorityUpdateReq productDemandPriorityUpdateReq) {
+        return ResultUtils.result(productDemandService.updatePriority(productDemandPriorityUpdateReq));
     }
 
     @ApiOperation("产品需求详情")

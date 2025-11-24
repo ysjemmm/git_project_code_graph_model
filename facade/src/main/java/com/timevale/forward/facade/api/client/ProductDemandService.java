@@ -33,6 +33,14 @@ public interface ProductDemandService {
      */
     BaseResult<Boolean> updateStatus(Long productDemandId, Integer type);
 
+    /**
+     * 修改优先级
+     *
+     * @param productDemandPriorityUpdateReq 产品需求信息
+     * @return 数量
+     */
+    BaseResult<Boolean> updatePriority(ProductDemandPriorityUpdateReq productDemandPriorityUpdateReq);
+
 
     /**
      * 开启产品需求

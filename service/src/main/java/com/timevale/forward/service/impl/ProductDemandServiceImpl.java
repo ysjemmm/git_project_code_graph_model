@@ -51,16 +51,7 @@ import com.timevale.forward.facade.api.query.ProductDemandLinkTrackEventQueryLis
 import com.timevale.forward.facade.api.query.ProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandTrackEventQueryList;
 import com.timevale.forward.facade.api.query.ProductLinkCustomDemandQueryList;
-import com.timevale.forward.facade.api.request.BatchTransferReq;
-import com.timevale.forward.facade.api.request.PersonAddReq;
-import com.timevale.forward.facade.api.request.ProductBizDemandLinkReq;
-import com.timevale.forward.facade.api.request.ProductCustomDemandLinkReq;
-import com.timevale.forward.facade.api.request.ProductDemandAddReq;
-import com.timevale.forward.facade.api.request.ProductDemandGroupResourcePlanReq;
-import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
-import com.timevale.forward.facade.api.request.ProductDemandStatusUpdateReq;
-import com.timevale.forward.facade.api.request.ProductDemandTrackEventLinkReq;
-import com.timevale.forward.facade.api.request.ResourcePlanProductDemandAddReq;
+import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.CustomDemandVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
@@ -393,6 +384,21 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         //解除任务关联
         taskProductDemandComponent.update(null, productDemandId);
 
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> updatePriority(ProductDemandPriorityUpdateReq productDemandPriorityUpdateReq) {
+        Integer priority = productDemandPriorityUpdateReq.getPriority();
+        if (priority == null || priority < 0) {
+            throw new BaseBizRuntimeException("非法优先级");
+        }
+        if (StrUtil.isBlank(PriorityEnum.getTextByCode(priority))) {
+            throw new BaseBizRuntimeException("未知优先级");
+        }
+        ProductDemandDO pdo = new ProductDemandDO().setPriority(productDemandPriorityUpdateReq.getPriority());
+        pdo.setId(productDemandPriorityUpdateReq.getId());
+        productDemandComponent.update(pdo);
         return BaseResult.success(true);
     }
 
