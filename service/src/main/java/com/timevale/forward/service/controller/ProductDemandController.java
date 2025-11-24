@@ -109,7 +109,7 @@ public class ProductDemandController {
 
     @ApiOperation("产品需求优先级更新")
     @PostMapping("/updateDemandPriority")
-    public BusinessResult<Boolean> modify(@RequestBody @Valid ProductDemandPriorityUpdateReq productDemandPriorityUpdateReq) {
+    public BusinessResult<Boolean> updatePriority(@RequestBody @Valid ProductDemandPriorityUpdateReq productDemandPriorityUpdateReq) {
         return ResultUtils.result(productDemandService.updatePriority(productDemandPriorityUpdateReq));
     }
 
