@@ -912,8 +912,13 @@ public class TaskServiceImpl implements TaskService {
                         || Objects.equals(projectDO.getOtnPrincipalId(), userInfo.getId());
                 AssertUtil.checkState(authority, "仅项目经理、1-N产研团队负责人允许修改任务的计划时间");
             }
+        }
 
-            // PBG的实际开始实际是根据工时填报情况来的
+        // PBG的实际开始实际是根据工时填报情况来的
+        if ((Objects.nonNull(taskDO.getActualStartDate()) ||
+                Objects.nonNull(newTaskDO.getActualStartDate()))
+                && !Objects.equals(taskDO.getActualStartDate(), newTaskDO.getActualStartDate())) {
+            ProjectDO projectDO = projectMapper.get(taskDO.getProjectId());
             if (ProjectKindEnum.PBG_BASE.getCode().equals(projectDO.getKind())) {
                 newTaskDO.setActualStartDate(taskDO.getActualStartDate());
             }
