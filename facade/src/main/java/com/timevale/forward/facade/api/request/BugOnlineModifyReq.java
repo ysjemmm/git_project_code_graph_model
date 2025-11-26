@@ -193,4 +193,10 @@ public class BugOnlineModifyReq extends ToString {
     @ApiModelProperty("动态表单字段")
     private List<ModelFormFieldAddReq> dynamicFormFields;
 
+    @ApiModelProperty("群id")
+    private String groupId;
+
+    @ApiModelProperty("群名称")
+    private String groupName;
+
 }

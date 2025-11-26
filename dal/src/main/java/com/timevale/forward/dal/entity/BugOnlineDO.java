@@ -289,4 +289,13 @@ public class BugOnlineDO extends BaseDO {
      */
     private String dynamicFormFields;
 
+    /**
+     * 群id
+     */
+    private String groupId;
+
+    /**
+     * 群名称
+     */
+    private String groupName;
 }
