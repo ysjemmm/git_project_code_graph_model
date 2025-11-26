@@ -7,12 +7,6 @@
           and is_deleted = 0
     </select>
 
-    <select id="getContainDeleted" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
-        select *
-        from bug_online
-        where id = #{id}
-    </select>
-
     <select id="selectListByCondition" resultType="com.timevale.forward.dal.entity.BugOnlineListDO">
         select bo.*
         from bug_online bo
@@ -235,6 +229,8 @@
                 <if test="createMan != null"> create_man,</if>
                 <if test="createManId != null"> create_man_id,</if>
                 <if test="dynamicFormFields != null">dynamic_form_fields,</if>
+                <if test="groupId != null">group_id,</if>
+                <if test="groupName != null">group_name,</if>
             </trim>
             VALUES
             <trim prefix="(" suffix=")" suffixOverrides=",">
@@ -277,6 +273,8 @@
                 <if test="createMan != null"> #{createMan},</if>
                 <if test="createManId != null"> #{createManId},</if>
                 <if test="dynamicFormFields != null">#{dynamicFormFields},</if>
+                <if test="groupId != null">#{groupId},</if>
+                <if test="groupName != null">#{groupName},</if>
             </trim>
     </insert>
 
@@ -391,7 +389,13 @@
                 modify_man = #{modifyMan},
             </if>
             <if test="dynamicFormFields != null">
-                dynamic_form_fields = #{dynamicFormFields}
+                dynamic_form_fields = #{dynamicFormFields},
+            </if>
+            <if test="groupId != null">
+                group_id = #{groupId},
+            </if>
+            <if test="groupName != null">
+                group_name = #{groupName}
             </if>
         </set>
         <where>
@@ -424,6 +428,8 @@
              , detail_version_id
              , link_bug_id
              , dynamic_form_fields
+             , group_id
+             , group_name
         FROM bug_online
         WHERE link_bug_id = #{linkBugId}
           and is_deleted = false
