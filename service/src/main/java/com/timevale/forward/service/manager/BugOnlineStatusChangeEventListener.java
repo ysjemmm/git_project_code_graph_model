@@ -5,7 +5,9 @@ import com.alibaba.fastjson.JSONObject;
 import com.timevale.forward.dal.dao.AutomationRuleMapper;
 import com.timevale.forward.dal.entity.AutomationRuleDO;
 import com.timevale.forward.dal.entity.BugOnlineDO;
+import com.timevale.forward.model.enums.BizTypeEnum;
 import com.timevale.forward.model.enums.ReceiverTypeEnum;
+import com.timevale.forward.model.enums.TriggerTypeEnum;
 import com.timevale.forward.service.context.AutomationExecutionContext;
 import com.timevale.forward.service.observer.event.OnlineBugStatusChangeEvent;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +38,7 @@ public class BugOnlineStatusChangeEventListener {
 
         // 1. 查询所有启用的、针对该业务类型的、触发类型为 status_change 的规则
         List<AutomationRuleDO> rules = automationRuleMapper
-                .findByBizTypeAndTriggerTypeAndIsActive("online_bug", "status_change");
+                .findByBizTypeAndTriggerTypeAndIsActive(BizTypeEnum.BUG_ONLINE.getCode(), TriggerTypeEnum.STATUS_CHANGE.getCode());
 
         for (AutomationRuleDO rule : rules) {
             // 2. 解析状态条件 JSON：{ "from": "处理中", "to": "已关闭" }

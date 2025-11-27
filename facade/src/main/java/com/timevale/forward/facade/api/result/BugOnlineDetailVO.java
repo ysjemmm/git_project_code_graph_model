@@ -1,6 +1,5 @@
 package com.timevale.forward.facade.api.result;
 
-import com.timevale.forward.facade.api.request.ModelFormFieldAddReq;
 import com.timevale.mandarin.common.result.ToString;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -259,4 +258,9 @@ public class BugOnlineDetailVO extends ToString {
     @ApiModelProperty("群名称")
     private String groupName;
 
+    @ApiModelProperty("客户问题现象描述")
+    private String phenomenonDesc;
+
+    @ApiModelProperty("客户id")
+    private String customerId;
 }
