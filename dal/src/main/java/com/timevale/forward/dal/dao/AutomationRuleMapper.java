@@ -65,5 +65,5 @@ public interface AutomationRuleMapper {
      */
     int delete(@Param("id") Long id, @Param("modifyManId") String modifyManId, @Param("modifyMan") String modifyMan);
 
-    List<AutomationRuleDO> findByBizTypeAndTriggerTypeAndIsActive(@Param("bizType") String bizType, @Param("triggerType") String triggerType);
+    List<AutomationRuleDO> findByBizTypeAndTriggerTypeAndIsActive(@Param("bizType") Integer bizType, @Param("triggerType") String triggerType);
 }

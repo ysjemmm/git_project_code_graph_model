@@ -678,6 +678,10 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
         // 线上bug落库
         bugOnlineMapper.insert(bugOnlineDO);
+
+        // 🔔 发布状态变更事件
+        eventPublisher.publishEvent(new OnlineBugStatusChangeEvent(this, bugOnlineDO, null, BugOnlineStatusEnum.QUESTION_CONFIRM.getText(), bugOnlineDO.getModifyMan()));
+
         // 关联产品线
         bugOnlineProductLineComponent.add(addReq.getProductLineIdList(), bugOnlineDO.getId(), BizProductLineTypeEnum.BUG_ONLINE.getCode());
         // 关联模块

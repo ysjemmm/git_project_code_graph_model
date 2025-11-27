@@ -228,6 +228,8 @@
                 <if test="dynamicFormFields != null">dynamic_form_fields,</if>
                 <if test="groupId != null">group_id,</if>
                 <if test="groupName != null">group_name,</if>
+                <if test="phenomenonDesc != null">phenomenon_desc,</if>
+                <if test="customerId != null">customer_id,</if>
             </trim>
             VALUES
             <trim prefix="(" suffix=")" suffixOverrides=",">
@@ -272,6 +274,8 @@
                 <if test="dynamicFormFields != null">#{dynamicFormFields},</if>
                 <if test="groupId != null">#{groupId},</if>
                 <if test="groupName != null">#{groupName},</if>
+                <if test="phenomenonDesc != null">#{phenomenonDesc},</if>
+                <if test="customerId != null">#{customerId},</if>
             </trim>
     </insert>
 
@@ -394,6 +398,12 @@
             <if test="groupName != null">
                 group_name = #{groupName}
             </if>
+            <if test="phenomenonDesc != null">
+                phenomenon_desc = #{phenomenonDesc}
+            </if>
+            <if test="customerId != null">
+                customer_id = #{customerId}
+            </if>
         </set>
         <where>
             id = #{id}
@@ -427,6 +437,8 @@
              , dynamic_form_fields
              , group_id
              , group_name
+             , `phenomenon_desc`
+             , customer_id
         FROM bug_online
         WHERE link_bug_id = #{linkBugId}
           and is_deleted = false

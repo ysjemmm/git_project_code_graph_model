@@ -1,6 +1,8 @@
 package com.timevale.forward.service.manager;
 
 import cn.hutool.core.collection.CollUtil;
+import com.timevale.crm.custom.provider.facade.api.CustomWecomRoomTaskClient;
+import com.timevale.crm.custom.provider.service.vo.WecomRoomTextMsgTaskRequest;
 import com.timevale.forward.dal.entity.AutomationRuleDO;
 import com.timevale.forward.dal.entity.BugOfflineDO;
 import com.timevale.forward.dal.entity.BugOnlineDO;
@@ -14,9 +16,11 @@ import com.timevale.forward.service.observer.event.BugOfflineRemindMsgEvent;
 import com.timevale.forward.service.observer.event.BugOnlineRemindMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.sql.Time;
 import java.util.List;
 
 @Component
@@ -25,6 +29,9 @@ public class AutomationTaskExecutor {
 
     @Resource
     private MessageEventPublisher messageEventPublisher;
+
+    @Resource
+    private CustomWecomRoomTaskClient customWecomRoomTaskClient;
 
     public void execute(AutomationExecutionContext context) {
         AutomationRuleDO rule = context.getRule();
@@ -44,7 +51,23 @@ public class AutomationTaskExecutor {
     private void sendNotificationToChatGroup(AutomationRuleDO rule, AutomationExecutionContext context) {
         if (BizTypeEnum.BUG_ONLINE.getCode().equals(rule.getBizType())) {
             BugOnlineDO bug = (BugOnlineDO) context.getTarget();
-            // 1. 调用通知服务：发送到钉钉群
+            if (StringUtils.isNotEmpty(bug.getCustomerId()) && StringUtils.isNotEmpty(bug.getGroupId())) {
+                // 1. 调用通知服务：发送到钉钉群
+                WecomRoomTextMsgTaskRequest request = new WecomRoomTextMsgTaskRequest();
+                request.setTaskName(rule.getName());
+                request.setCid(Long.valueOf(bug.getCustomerId()));
+                request.setRoomId(bug.getGroupId());
+                request.setRoomName(bug.getGroupName());
+                request.setText(String.format(rule.getActionConfig(), bug.getPhenomenonDesc(), bug.getId(), BugOnlineStatusEnum.getTextByCode(bug.getStatus())));
+                // 00:00:00
+                request.setExecuteStartTime(Time.valueOf("00:00:00"));
+                // 23:59:59
+                request.setExecuteEndTime(Time.valueOf("23:59:59"));
+                request.setPriorityLevel(6);
+                request.setBusinessType(3);
+                request.setBusinessParam(String.valueOf(bug.getId()));
+                customWecomRoomTaskClient.pushTextContent(request);
+            }
         }
     }
 

@@ -298,4 +298,14 @@ public class BugOnlineDO extends BaseDO {
      * 群名称
      */
     private String groupName;
+
+    /**
+     * 客户问题现象描述
+     */
+    private String phenomenonDesc;
+
+    /**
+     * 客户id
+     */
+    private String customerId;
 }
