@@ -14,37 +14,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class UseCaseQueryConfigUtil {
 
-    @Value("${test.case.url: http://test-case-platform.timevale.cn}")
+    @Value("${test.case.url: https://testmanage.esign.cn/metersphere}")
     private String testCaseUrl;
 
     public static final String USE_CASE_QUERY_CONFIG = "{\n" +
-            "\t\"useCaseHost\": \"http://test-case-platform-backend-testcase-platform-test.projectk8s.tsign.cn\",\n" +
-            "\t\"queryProjectGroupListUrl\": \"/tmsdefender/queryGroup\",\n" +
-            "\t\"queryCasePlatformProjectListUrl\": \"/tmsdefender/queryProjectByPage\",\n" +
-            "\t\"addUseCasePlatformVersionUrl\": \"/tmsdefender/addVersion\",\n" +
-            "\t\"queryVersionListUrl\": \"/tmsdefender/queryVersionList\",\n" +
-            "\t\"queryTurnListUrl\": \"/tmsdefender/queryTurnList\",\n" +
-            "\t\"queryDemandCaseListUrl\": \"/tmsdefender/queryDemandCaseList\",\n" +
-            "\t\"queryCaseListUrl\": \"/tmsdefender/queryCaseList\",\n" +
-            "\t\"queryVersionLinkCaseCountUrl\": \"/tmsdefender/queryVersionLinkCount\",\n" +
-            "\t\"queryTurnTreeListUrl\": \"/tmsdefender/getNeedExecuteCase\",\n" +
-            "\t\"queryTurnNameUrl\": \"/tmsdefender/queryTurnName\",\n" +
-            "\t\"addTurnUrl\": \"/tmsdefender/addTurn\",\n" +
-            "\t\"deleteTurnUrl\": \"/tmsdefender/delTurn\",\n" +
-            "\t\"linkOrUnLinkDemandUrl\": \"/tmsdefender/linkOrUnLinkDemand\",\n" +
-            "\t\"signCaseResultUrl\": \"/tmsdefender/signCaseResult\",\n" +
-            "\t\"queryTurnProgressUrl\": \"/tmsdefender/getTurnProgress\",\n" +
-            "\t\"queryCaseUrl\": \"/tmsdefender/queryCaseInfo\",\n" +
-            "\t\"editCaseUrl\": \"/tmsdefender/editCase\",\n" +
-            "\t\"deleteCaseUrl\": \"/tmsdefender/deleteCase\",\n" +
-            "\t\"queryGroupProjectVersionListUrl\": \"/tmsdefender/queryGroupProjectVersionList\",\n" +
-            "\t\"queryCheckCaseOverTimeUrl\": \"/tmsdefender/checkCaseOverTime\",\n" +
-            "\t\"queryQueryCaseOverTimeUrl\": \"/tmsdefender/queryCaseOverTime\",\n" +
-            "\t\"caseImageUploadUrl\": \"/tmsdefender/imageUpload\",\n" +
-            "\t\"caseDocumentDeleteUrl\": \"/tmsdefender/caseDocumentDelete\",\n" +
-            "\t\"addCaseUrl\": \"/tmsdefender/addCase\",\n" +
-            "\t\"deleteDemandCaseListUrl\": \"/tmsdefender/deleteDemandCaseList\",\n" +
-            "\t\"queryDemandCaseTurnInfoUrl\": \"/tmsdefender/queryDemandCaseTurnInfo\"\n" +
+            "\t\"useCaseHost\": \"https://testmanage.esign.cn/metersphere\",\n" +
+            "\t\"addTestPlanModuleUrl\": \"/test-plan/module/add\",\n" +
+            "\t\"addTestPlanUrl\": \"/test-plan/add\"\n" +
             "}";
 
     public UseCaseQueryConfig getConfigMap() {
@@ -53,9 +29,9 @@ public class UseCaseQueryConfigUtil {
         return useCaseQueryConfig;
     }
 
-    public String getQueryProjectGroupListUrl() {
+    public String getAddTestPlanModuleUrl() {
         UseCaseQueryConfig config = getConfigMap();
-        String res = config.getQueryProjectGroupListUrl();
+        String res = config.getAddTestPlanModuleUrl();
         String host = config.getUseCaseHost();
         if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
             return host + res;
@@ -63,250 +39,10 @@ public class UseCaseQueryConfigUtil {
         return null;
     }
 
-    public String getQueryCasePlatformProjectListUrl() {
+    public String getAddTestPlanUrl() {
         UseCaseQueryConfig config = getConfigMap();
-        String res = config.getQueryCasePlatformProjectListUrl();
+        String res = config.getAddTestPlanUrl();
         String host = config.getUseCaseHost();
-        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
-            return host + res;
-        }
-        return null;
-    }
-
-    public String getAddUseCasePlatformVersionUrl() {
-        UseCaseQueryConfig config = getConfigMap();
-        String res = config.getAddUseCasePlatformVersionUrl();
-        String host = config.getUseCaseHost();
-        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
-            return host + res;
-        }
-        return null;
-    }
-
-    public String getQueryVersionListUrl() {
-        UseCaseQueryConfig config = getConfigMap();
-        String host = config.getUseCaseHost();
-        String res = getConfigMap().getQueryVersionListUrl();
-        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
-            return host + res;
-        }
-        return null;
-    }
-
-    public String getQueryTurnListUrl() {
-        UseCaseQueryConfig config = getConfigMap();
-        String host = config.getUseCaseHost();
-        String res = config.getQueryTurnListUrl();
-        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
-            return host + res;
-        }
-        return null;
-    }
-
-    public String getQueryDemandCaseListUrl() {
-        UseCaseQueryConfig config = getConfigMap();
-        String host = config.getUseCaseHost();
-        String res = config.getQueryDemandCaseListUrl();
-        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
-            return host + res;
-        }
-        return null;
-    }
-
-    public String getQueryCaseListUrl() {
-        UseCaseQueryConfig config = getConfigMap();
-        String host = config.getUseCaseHost();
-        String res = config.getQueryCaseListUrl();
-        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
-            return host + res;
-        }
-        return null;
-    }
-
-    public String getQueryVersionLinkCaseCountUrl() {
-        UseCaseQueryConfig config = getConfigMap();
-        String host = config.getUseCaseHost();
-        String res = config.getQueryVersionLinkCaseCountUrl();
-        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
-            return host + res;
-        }
-        return null;
-    }
-
-    public String getQueryTurnTreeListUrl() {
-        UseCaseQueryConfig config = getConfigMap();
-        String host = config.getUseCaseHost();
-        String res = config.getQueryTurnTreeListUrl();
-        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
-            return host + res;
-        }
-        return null;
-    }
-
-    public String getQueryTurnNameUrl() {
-        UseCaseQueryConfig config = getConfigMap();
-        String host = config.getUseCaseHost();
-        String res = config.getQueryTurnNameUrl();
-        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
-            return host + res;
-        }
-        return null;
-    }
-
-    public String getAddTurnUrl() {
-        UseCaseQueryConfig config = getConfigMap();
-        String host = config.getUseCaseHost();
-        String res = config.getAddTurnUrl();
-        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
-            return host + res;
-        }
-        return null;
-    }
-
-    public String getDeleteTurnUrl() {
-        UseCaseQueryConfig config = getConfigMap();
-        String host = config.getUseCaseHost();
-        String res = config.getDeleteTurnUrl();
-        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
-            return host + res;
-        }
-        return null;
-    }
-
-    public String getLinkOrUnLinkDemandUrl() {
-        UseCaseQueryConfig config = getConfigMap();
-        String host = config.getUseCaseHost();
-        String res = config.getLinkOrUnLinkDemandUrl();
-        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
-            return host + res;
-        }
-        return null;
-    }
-
-    public String getSignCaseResultUrl() {
-        UseCaseQueryConfig config = getConfigMap();
-        String host = config.getUseCaseHost();
-        String res = config.getSignCaseResultUrl();
-        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
-            return host + res;
-        }
-        return null;
-    }
-
-    public String getQueryTurnProgressUrl() {
-        UseCaseQueryConfig config = getConfigMap();
-        String host = config.getUseCaseHost();
-        String res = config.getQueryTurnProgressUrl();
-        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
-            return host + res;
-        }
-        return null;
-    }
-
-    public String getQueryCaseUrl() {
-        UseCaseQueryConfig config = getConfigMap();
-        String host = config.getUseCaseHost();
-        String res = config.getQueryCaseUrl();
-        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
-            return host + res;
-        }
-        return null;
-    }
-
-    public String getEditCaseUrl() {
-        UseCaseQueryConfig config = getConfigMap();
-        String host = config.getUseCaseHost();
-        String res = config.getEditCaseUrl();
-        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
-            return host + res;
-        }
-        return null;
-    }
-
-    public String getDeleteCaseUrl() {
-        UseCaseQueryConfig config = getConfigMap();
-        String host = config.getUseCaseHost();
-        String res = config.getDeleteCaseUrl();
-        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
-            return host + res;
-        }
-        return null;
-    }
-
-    public String queryGroupProjectVersionListUrl() {
-        UseCaseQueryConfig config = getConfigMap();
-        String host = config.getUseCaseHost();
-        String res = config.getQueryGroupProjectVersionListUrl();
-        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
-            return host + res;
-        }
-        return null;
-    }
-
-    public String queryCheckCaseOverTimeUrl() {
-        UseCaseQueryConfig config = getConfigMap();
-        String host = config.getUseCaseHost();
-        String res = config.getQueryCheckCaseOverTimeUrl();
-        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
-            return host + res;
-        }
-        return null;
-    }
-
-    public String queryQueryCaseOverTimeUrl() {
-        UseCaseQueryConfig config = getConfigMap();
-        String host = config.getUseCaseHost();
-        String res = config.getQueryQueryCaseOverTimeUrl();
-        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
-            return host + res;
-        }
-        return null;
-    }
-
-    public String caseImageUploadUrl() {
-        UseCaseQueryConfig config = getConfigMap();
-        String host = config.getUseCaseHost();
-        String res = config.getCaseImageUploadUrl();
-        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
-            return host + res;
-        }
-        return null;
-    }
-
-    public String caseDocumentDeleteUrl() {
-        UseCaseQueryConfig config = getConfigMap();
-        String host = config.getUseCaseHost();
-        String res = config.getCaseDocumentDeleteUrl();
-        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
-            return host + res;
-        }
-        return null;
-    }
-
-    public String addCaseUrl() {
-        UseCaseQueryConfig config = getConfigMap();
-        String host = config.getUseCaseHost();
-        String res = config.getAddCaseUrl();
-        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
-            return host + res;
-        }
-        return null;
-    }
-
-    public String deleteDemandCaseListUrl() {
-        UseCaseQueryConfig config = getConfigMap();
-        String host = config.getUseCaseHost();
-        String res = config.getDeleteDemandCaseListUrl();
-        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
-            return host + res;
-        }
-        return null;
-    }
-
-    public String queryDemandCaseTurnInfoUrl() {
-        UseCaseQueryConfig config = getConfigMap();
-        String host = config.getUseCaseHost();
-        String res = config.getQueryDemandCaseTurnInfoUrl();
         if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
             return host + res;
         }

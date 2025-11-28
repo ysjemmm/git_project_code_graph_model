@@ -3,61 +3,12 @@ package com.timevale.forward.facade.api.client;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.mandarin.common.annotation.RestClient;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
 @RestClient(serviceId = MagicValue.FORWARD_RPC_PREFIX)
 public interface UseCasePlatFormCallService {
-    BaseResult queryProjectGroupList(Map<String, Object> params);
+    BaseResult addTestPlanModule(Map<String, Object> params);
 
-    BaseResult queryCasePlatformProjectList(Map<String, Object> params);
-
-    BaseResult addUseCasePlatformVersion(Map<String, Object> params);
-
-    BaseResult queryVersionList(Map<String, Object> params);
-
-    BaseResult queryTurnList(Map<String, Object> params);
-
-    BaseResult queryDemandCaseList(Map<String, Object> params);
-
-    BaseResult queryCaseList(Map<String, Object> params);
-
-    BaseResult queryVersionLinkCaseCount(Map<String, Object> params);
-
-    BaseResult queryTurnTreeList(Map<String, Object> params);
-
-    BaseResult queryTurnProgress(Map<String, Object> params);
-
-    BaseResult queryCase(Map<String, Object> params);
-
-    BaseResult editCase(Map<String, Object> params);
-
-    BaseResult deleteCase(Map<String, Object> params);
-
-    BaseResult linkOrUnLinkDemand(Map<String, Object> params);
-
-    BaseResult signCaseResult(Map<String, Object> params);
-
-    BaseResult addTurn(Map<String, Object> params);
-
-    BaseResult deleteTurn(Map<String, Object> params);
-
-    BaseResult queryTurnName(Map<String, Object> params);
-
-    BaseResult queryGroupProjectVersionList(Map<String, Object> params);
-
-    BaseResult checkCaseOverTime(Map<String, Object> params);
-
-    BaseResult queryCaseOverTime(Map<String, Object> params);
-
-    BaseResult caseImageUpload(Map<String, Object> params, MultipartFile file);
-
-    BaseResult caseDocumentDelete(Map<String, Object> params);
-
-    BaseResult addCase(Map<String, Object> params);
-
-    BaseResult queryDemandCaseTurnInfo(Map<String, Object> params);
-
-    BaseResult deleteDemandCaseList(Map<String, Object> params);
+    BaseResult addTestPlan(Map<String, Object> params);
 }
