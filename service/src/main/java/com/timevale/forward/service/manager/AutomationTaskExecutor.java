@@ -60,9 +60,9 @@ public class AutomationTaskExecutor {
                 request.setRoomName(bug.getGroupName());
                 request.setText(String.format(rule.getActionConfig(), bug.getId(), bug.getPhenomenonDesc()));
                 // 00:00:00
-                request.setExecuteStartTime(Time.valueOf("00:00:00"));
+                request.setExecuteStartTime(Time.valueOf("08:00:00"));
                 // 23:59:59
-                request.setExecuteEndTime(Time.valueOf("23:59:59"));
+                request.setExecuteEndTime(Time.valueOf("18:00:00"));
                 request.setPriorityLevel(6);
                 request.setBusinessType(3);
                 request.setBusinessParam(String.valueOf(bug.getId()));
