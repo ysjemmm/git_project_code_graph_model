@@ -5,9 +5,9 @@
     <!-- 新增一条自动化规则 -->
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.AutomationRuleDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
         INSERT INTO automation_rule
-        (id, name, biz_domain_ids, biz_type, trigger_type, status_condition, time_field, remind_days_before, remind_time, receiver_type, receiver_ids, action_type, action_config, is_active)
+        (id, name, biz_domain_ids, biz_type, trigger_type, trigger_condition, time_field, remind_days_before, remind_time, receiver_type, receiver_ids, action_type, action_config, is_active)
         VALUES
-        (#{id}, #{name}, #{bizDomainIds}, #{bizType}, #{triggerType}, #{statusCondition}, #{timeField}, #{remindDaysBefore}, #{remindTime}, #{receiverType}, #{receiverIds}, #{actionType}, #{actionConfig}, #{isActive})
+        (#{id}, #{name}, #{bizDomainIds}, #{bizType}, #{triggerType}, #{triggerCondition}, #{timeField}, #{remindDaysBefore}, #{remindTime}, #{receiverType}, #{receiverIds}, #{actionType}, #{actionConfig}, #{isActive})
     </insert>
 
     <!-- 根据主键id获取自动化规则 -->
@@ -37,7 +37,7 @@
             <if test="bizDomainIds != null">biz_domain_ids = #{bizDomainIds},</if>
             <if test="bizType != null">biz_type = #{bizType},</if>
             <if test="triggerType != null">trigger_type = #{triggerType},</if>
-            <if test="statusCondition != null">status_condition = #{statusCondition},</if>
+            <if test="triggerCondition != null">trigger_condition = #{triggerCondition},</if>
             <if test="timeField != null">time_field = #{timeField},</if>
             <if test="remindDaysBefore != null">remind_days_before = #{remindDaysBefore},</if>
             <if test="remindTime != null">remind_time = #{remindTime},</if>
