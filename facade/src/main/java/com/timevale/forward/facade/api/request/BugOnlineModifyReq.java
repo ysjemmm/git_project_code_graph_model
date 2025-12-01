@@ -194,11 +194,8 @@ public class BugOnlineModifyReq extends ToString {
     @ApiModelProperty("动态表单字段")
     private List<ModelFormFieldAddReq> dynamicFormFields;
 
-    @ApiModelProperty("群id")
-    private String groupId;
-
-    @ApiModelProperty("群名称")
-    private String groupName;
+    @ApiModelProperty("群信息")
+    private BugOnlineGroupAddReq group;
 
     @ApiModelProperty("客户问题现象描述")
     @Length(max = 1000, message = "客户问题现象描述长度不能超过1000")

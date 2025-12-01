@@ -396,10 +396,10 @@
                 group_id = #{groupId},
             </if>
             <if test="groupName != null">
-                group_name = #{groupName}
+                group_name = #{groupName},
             </if>
             <if test="phenomenonDesc != null">
-                phenomenon_desc = #{phenomenonDesc}
+                phenomenon_desc = #{phenomenonDesc},
             </if>
             <if test="customerId != null">
                 customer_id = #{customerId}
