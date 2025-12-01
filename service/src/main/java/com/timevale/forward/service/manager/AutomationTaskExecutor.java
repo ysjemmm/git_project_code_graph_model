@@ -58,7 +58,7 @@ public class AutomationTaskExecutor {
                 request.setCid(Long.valueOf(bug.getCustomerId()));
                 request.setRoomId(bug.getGroupId());
                 request.setRoomName(bug.getGroupName());
-                request.setText(String.format(rule.getActionConfig(), bug.getPhenomenonDesc(), bug.getId(), BugOnlineStatusEnum.getTextByCode(bug.getStatus())));
+                request.setText(String.format(rule.getActionConfig(), bug.getId(), bug.getPhenomenonDesc()));
                 // 00:00:00
                 request.setExecuteStartTime(Time.valueOf("00:00:00"));
                 // 23:59:59
@@ -66,6 +66,8 @@ public class AutomationTaskExecutor {
                 request.setPriorityLevel(6);
                 request.setBusinessType(3);
                 request.setBusinessParam(String.valueOf(bug.getId()));
+
+                log.info("推送客户群消息：{}", request);
                 customWecomRoomTaskClient.pushTextContent(request);
             }
         }
