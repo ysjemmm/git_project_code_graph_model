@@ -11,13 +11,13 @@ import com.timevale.forward.model.enums.TriggerTypeEnum;
 import com.timevale.forward.service.context.AutomationExecutionContext;
 import com.timevale.forward.service.observer.event.OnlineBugStatusChangeEvent;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 @Slf4j
@@ -50,9 +50,7 @@ public class BugOnlineStatusChangeEventListener {
                 String toStatus = condition.getString("to");
 
                 // 3. 判断是否匹配：oldStatus == from && newStatus == to
-                boolean fromMatch = (StringUtils.isEmpty(fromStatus) && StringUtils.isEmpty(oldStatus)) || fromStatus.equals(oldStatus);
-                boolean toMatch = toStatus.equals(newStatus);
-                if (fromMatch && toMatch) {
+                if (Objects.equals(fromStatus, oldStatus) && Objects.equals(toStatus, newStatus)) {
                     log.info("规则 [{}] 匹配成功，准备执行", rule.getName());
 
                     // 4. 构造执行上下文
