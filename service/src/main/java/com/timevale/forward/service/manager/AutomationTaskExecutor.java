@@ -58,7 +58,8 @@ public class AutomationTaskExecutor {
                 request.setCid(Long.valueOf(bug.getCustomerId()));
                 request.setRoomId(bug.getGroupId());
                 request.setRoomName(bug.getGroupName());
-                request.setText(String.format(rule.getActionConfig(), bug.getId(), bug.getPhenomenonDesc()));
+                String formattedText = String.format(rule.getActionConfig(), bug.getId(), bug.getPhenomenonDesc());
+                request.setText(formattedText.replace("\\n", "\n"));
                 // 00:00:00
                 request.setExecuteStartTime(Time.valueOf("08:00:00"));
                 // 23:59:59
