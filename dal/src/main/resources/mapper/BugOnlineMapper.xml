@@ -186,6 +186,9 @@
                     #{item}
                 </foreach>)
             </if>
+            <if test="isUrgent != null">
+                and bo.is_urgent = #{isUrgent}
+            </if>
         </where>
         group by bo.id
     </select>

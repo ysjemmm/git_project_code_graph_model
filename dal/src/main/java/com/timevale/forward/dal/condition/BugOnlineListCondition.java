@@ -176,4 +176,9 @@ public class BugOnlineListCondition {
      * 打开次数
      */
     private Integer openCount;
+
+    /**
+     * 是否加急 bug
+     */
+    private Boolean isUrgent;
 }
