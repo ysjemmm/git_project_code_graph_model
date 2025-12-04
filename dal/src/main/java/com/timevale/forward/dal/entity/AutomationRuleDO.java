@@ -22,7 +22,7 @@ public class AutomationRuleDO extends BaseDO {
      * 状态变更相关
      * {"from":"处理中","to":"已关闭"}（仅 status_change 时有效）
      */
-    private String statusCondition;
+    private String triggerCondition;
 
     /**
      * 时间到达相关

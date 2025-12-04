@@ -11,21 +11,21 @@ public enum ProductDemandStatusEnum {
     /**
      * 0待排期,5项目已暂停,10已列入项目,20项目进行中,30已完成上线,-10已暂停,-20已作废
      */
-    WAITING(0, "待排期"),
+    WAITING(0, "等待排期"),
 
-    PJ_SUSPEND(5, "项目已暂停"),
+    PJ_SUSPEND(5, "项目暂停"),
 
-    INCLUDED(10, "已列入项目"),
+    INCLUDED(10, "已列项目"),
 
-    PROGRESS(20, "项目进行中"),
+    PROGRESS(20, "项目进行"),
 
-    ONLINE(30, "已完成上线"),
+    ONLINE(30, "完成上线"),
 
-    SUSPEND(-10, "已暂停"),
+    SUSPEND(-10, "需求暂停"),
 
-    INVALID(-20, "已作废"),
+    INVALID(-20, "需求作废"),
 
-    DEVELOPING(15, "研发中"),
+    DEVELOPING(15, "研发进行"),
 
     DEV_COMPLETED(25, "研发完成");
 
