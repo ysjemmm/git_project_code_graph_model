@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -154,4 +155,15 @@ public class BugOnlineAddReq extends ToString {
 
     @ApiModelProperty("动态表单字段")
     private List<ModelFormFieldAddReq> dynamicFormFields;
+
+    @ApiModelProperty("客户问题现象描述")
+    @Length(max = 1000, message = "客户问题现象描述长度不能超过1000")
+    private String phenomenonDesc;
+
+    @ApiModelProperty("客户id")
+    @Length(max = 50, message = "客户id长度不能超过50")
+    private String customerId;
+
+    @ApiModelProperty("群信息")
+    private BugOnlineGroupAddReq group;
 }

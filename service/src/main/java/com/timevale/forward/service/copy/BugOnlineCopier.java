@@ -12,7 +12,19 @@ import com.timevale.forward.facade.api.result.BugOnlineDetailVO;
 import com.timevale.forward.facade.api.result.BugOnlineSimpleVO;
 import com.timevale.forward.facade.api.result.BugOnlineVO;
 import com.timevale.forward.facade.api.result.ModelFormFieldVO;
-import com.timevale.forward.model.enums.*;
+import com.timevale.forward.model.enums.BugOnlineBeloneEnum;
+import com.timevale.forward.model.enums.BugOnlineCategoryEnum;
+import com.timevale.forward.model.enums.BugOnlineEnvEnum;
+import com.timevale.forward.model.enums.BugOnlineGenerationStageEnum;
+import com.timevale.forward.model.enums.BugOnlinePriorityEnum;
+import com.timevale.forward.model.enums.BugOnlineReasonEnum;
+import com.timevale.forward.model.enums.BugOnlineReasonStageEnum;
+import com.timevale.forward.model.enums.BugOnlineRecurrentEnum;
+import com.timevale.forward.model.enums.BugOnlineSourceEnum;
+import com.timevale.forward.model.enums.BugOnlineStatusEnum;
+import com.timevale.forward.model.enums.CustomerCountEnum;
+import com.timevale.forward.model.enums.ProblemOccurredTimeEnum;
+import com.timevale.forward.model.enums.UserCountEnum;
 import com.timevale.forward.model.middle.BugOnlineMD;
 import com.timevale.forward.service.utils.date.DateUtil;
 import org.mapstruct.Mapper;
@@ -21,6 +33,7 @@ import org.mapstruct.factory.Mappers;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @Date 2022/3/18 13:54
@@ -43,7 +56,8 @@ import java.util.List;
                 ProblemOccurredTimeEnum.class,
                 BugOnlineGenerationStageEnum.class,
                 JSON.class,
-                ModelFormFieldVO.class
+                ModelFormFieldVO.class,
+                Objects.class
         }
 )
 public interface BugOnlineCopier {
@@ -119,6 +133,8 @@ public interface BugOnlineCopier {
      * @return BugOnlineDO
      */
     @Mapping(target = "dynamicFormFields", expression = "java(JSON.toJSONString(bugOnlineAddReq.getDynamicFormFields()))")
+    @Mapping(target = "groupId", expression = "java(!Objects.isNull(bugOnlineAddReq.getGroup()) ? bugOnlineAddReq.getGroup().getGroupId() : null)")
+    @Mapping(target = "groupName", expression = "java(!Objects.isNull(bugOnlineAddReq.getGroup()) ? bugOnlineAddReq.getGroup().getGroupName() : null)")
     BugOnlineDO req2do(BugOnlineAddReq bugOnlineAddReq);
 
     /**
@@ -128,6 +144,8 @@ public interface BugOnlineCopier {
      * @return 返回参数
      */
     @Mapping(target = "dynamicFormFields", expression = "java(JSON.toJSONString(bugOnlineModifyReq.getDynamicFormFields()))")
+    @Mapping(target = "groupId", expression = "java(!Objects.isNull(bugOnlineModifyReq.getGroup()) ? bugOnlineModifyReq.getGroup().getGroupId() : null)")
+    @Mapping(target = "groupName", expression = "java(!Objects.isNull(bugOnlineModifyReq.getGroup()) ? bugOnlineModifyReq.getGroup().getGroupName() : null)")
     BugOnlineDO change(BugOnlineModifyReq bugOnlineModifyReq);
 
     /**
