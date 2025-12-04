@@ -134,6 +134,6 @@ public class BugOnlineQueryList extends QueryBase {
     private Boolean currentOperatorOnly = true;
 
     @ApiModelProperty("是否加急bug")
-    private Boolean isUrgent = true;
+    private Boolean isUrgent;
 
 }
