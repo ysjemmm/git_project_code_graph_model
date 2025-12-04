@@ -125,6 +125,32 @@
         from biz_domain
         <where>
             is_deleted = false
+            <if test="id != null">
+                AND `id` = #{id}
+            </if>
+            <if test="name != null and name!=''">
+                AND `name` like concat('%',#{name},'%')
+            </if>
+            <if test="ownerIds != null and ownerIds.size() > 0">
+                AND owner_id IN
+                <foreach collection="ownerIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="listingStatus != null">
+                AND listing_status=#{listingStatus}
+            </if>
+        </where>
+    </select>
+
+    <select id="simpleList" resultType="com.timevale.forward.dal.entity.BizDomainDO">
+        select `id`, `name`
+        from biz_domain
+        <where>
+            is_deleted = false
+            <if test="id != null">
+                AND `id` = #{id}
+            </if>
             <if test="name != null and name!=''">
                 AND `name` like concat('%',#{name},'%')
             </if>

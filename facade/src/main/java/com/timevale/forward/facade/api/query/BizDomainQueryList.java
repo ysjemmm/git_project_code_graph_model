@@ -17,6 +17,9 @@ import java.util.List;
 @ApiModel("业务域查询")
 public class BizDomainQueryList extends QueryBase {
 
+    @ApiModelProperty("id（精确搜索）")
+    private Long id;
+
     @ApiModelProperty("名称")
     private String name;
 

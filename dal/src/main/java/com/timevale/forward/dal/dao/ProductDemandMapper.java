@@ -220,4 +220,6 @@ public interface ProductDemandMapper {
 
 
     List<ProductDemandOwnerDO> listProductDemandOwnersByIds(@Param("productDemandIds") List<Long> productDemandGroupIds);
+
+    List<ProductDemandListDO> simpleList(ProductDemandListCondition productDemandListCondition);
 }

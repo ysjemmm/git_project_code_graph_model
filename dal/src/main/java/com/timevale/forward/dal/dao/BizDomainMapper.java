@@ -73,4 +73,6 @@ public interface BizDomainMapper {
      */
     List<BizDomainDO> selectByCondition(BizDomainCondition condition);
 
+    List<BizDomainDO> simpleList(BizDomainCondition condition);
+
 }

@@ -7,9 +7,12 @@ import com.timevale.forward.facade.api.request.BizDomainAddReq;
 import com.timevale.forward.facade.api.request.BizDomainModifyReq;
 import com.timevale.forward.facade.api.request.UpdateBizDomainListingStatusReq;
 import com.timevale.forward.facade.api.result.BizDomainVO;
+import com.timevale.forward.facade.api.result.ProductDemandVO;
+import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
+import javax.validation.Valid;
 import java.util.List;
 
 /**
@@ -80,4 +83,5 @@ public interface BizDomainService {
      */
     BaseResult<Boolean> deleteBizDomain(Long bizDomainId);
 
+    BaseResult<PageQueryResult<BizDomainVO>> simpleList(@Valid BizDomainQueryList bizDomainQueryList);
 }

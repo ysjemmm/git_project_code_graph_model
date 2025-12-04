@@ -16,6 +16,11 @@ import java.util.List;
 public class BizDomainCondition{
 
     /**
+     * id
+     */
+    private Long id;
+
+    /**
      * names
      */
     @WildcardEscape

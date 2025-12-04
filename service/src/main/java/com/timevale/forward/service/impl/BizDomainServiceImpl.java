@@ -162,4 +162,18 @@ public class BizDomainServiceImpl implements BizDomainService {
         return BaseResult.success(true);
     }
 
+    @Override
+    public BaseResult<PageQueryResult<BizDomainVO>> simpleList(BizDomainQueryList bizDomainQueryList) {
+        BizDomainCondition condition = BizDomainCopier.INSTANCE.convert(bizDomainQueryList);
+        PageHelper.startPage(bizDomainQueryList.pageNum, bizDomainQueryList.pageSize);
+
+        List<BizDomainDO> bizDomainDOList = bizDomainMapper.simpleList(condition);
+        List<BizDomainVO> bizDomainVOList = BizDomainCopier.INSTANCE.convert(bizDomainDOList);
+        PageInfo<BizDomainDO> pageInfo = new PageInfo<>(bizDomainDOList);
+        PageQueryResult<BizDomainVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(bizDomainVOList);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+        return BaseResult.success(pageQueryResult);
+    }
+
 }
