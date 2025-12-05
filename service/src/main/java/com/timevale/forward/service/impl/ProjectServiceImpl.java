@@ -1516,6 +1516,8 @@ public class ProjectServiceImpl implements ProjectService {
                 , ProductDemandStatusEnum.PJ_SUSPEND.getCode()
                 , ProductDemandStatusEnum.INCLUDED.getCode()
                 , ProductDemandStatusEnum.PROGRESS.getCode()
+                , ProductDemandStatusEnum.DEVELOPING.getCode()
+                , ProductDemandStatusEnum.DEV_COMPLETED.getCode()
                 , ProductDemandStatusEnum.ONLINE.getCode()));
 
         //是否打标
