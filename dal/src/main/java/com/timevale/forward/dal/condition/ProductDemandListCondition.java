@@ -117,4 +117,20 @@ public class ProductDemandListCondition extends QueryBase {
     private String targetCustomer;
 
     private String customerGrade;
+
+    /**
+     *  实现 id 与 name 双向查询
+     */
+
+    private List<Long> ids;
+
+    /**
+     * 需求负责人名称-模糊匹配
+     */
+    private String ownerName;
+
+    /**
+     * 产品线名称-模糊匹配
+     */
+    private String productLineName;
 }

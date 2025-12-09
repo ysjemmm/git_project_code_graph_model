@@ -170,10 +170,10 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
             request.setAccounts(new ArrayList<>(accountIds));
             request.setIsLeave(isLeave);
             BaseResult<List<BaseInfoResponse>> personByAccountNew = rpcPersonService.batchGetStaffs(request);
-            if (personByAccountNew.ifSuccess() && !CollUtil.isEmpty(personByAccountNew.getData())) {
+            if (personByAccountNew.ifSuccess() && CollUtil.isNotEmpty(personByAccountNew.getData())) {
                 return personByAccountNew.getData();
             }
-            log.error("调用内部用户中心失败 getPersonByAccountNew account: " + accountIds + " error: " + personByAccountNew);
+            return new ArrayList<>();
         } catch (Exception e) {
             log.error("调用内部用户中心失败 getPersonByAccountNew account: " + accountIds + " error: " + e.getMessage(), e);
         }

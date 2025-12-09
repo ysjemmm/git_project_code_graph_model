@@ -252,11 +252,8 @@ public class BugOnlineDetailVO extends ToString {
     @ApiModelProperty("动态表单字段")
     private List<ModelFormFieldVO> dynamicFormFields;
 
-    @ApiModelProperty("群id")
-    private String groupId;
-
     @ApiModelProperty("群名称")
-    private String groupName;
+    private GroupVO group;
 
     @ApiModelProperty("客户问题现象描述")
     private String phenomenonDesc;

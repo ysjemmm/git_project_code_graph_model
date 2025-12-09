@@ -119,14 +119,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -317,6 +310,30 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         QueryResultVO<ProductDemandVO> queryResultVO = new QueryResultVO<>();
         queryResultVO.setPageQueryResult(pageQueryResult);
         queryResultVO.setAnalyseVOList(analyseVOList);
+
+        return BaseResult.success(queryResultVO);
+    }
+
+    @Override
+    public BaseResult<QueryResultVO<ProductDemandVO>> simpleList(ProductDemandQueryList productDemandQueryList) {
+        log.info("产品需求对接metersphere平台-接收参数:{}", productDemandQueryList);
+        ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
+        condition.setName(productDemandQueryList.getName());
+        condition.setId(productDemandQueryList.getId());
+
+        PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize());
+        List<ProductDemandListDO> productDemandListDO = CollUtil.defaultIfEmpty(productDemandMapper.simpleList(condition), Collections.emptyList());
+
+        List<ProductDemandVO> productDemandVOList = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
+
+        PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
+        PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(productDemandVOList);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+
+        QueryResultVO<ProductDemandVO> queryResultVO = new QueryResultVO<>();
+        queryResultVO.setPageQueryResult(pageQueryResult);
+        queryResultVO.setAnalyseVOList(Collections.emptyList());
 
         return BaseResult.success(queryResultVO);
     }

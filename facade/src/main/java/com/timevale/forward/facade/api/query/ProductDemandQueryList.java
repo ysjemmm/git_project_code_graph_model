@@ -73,4 +73,12 @@ public class ProductDemandQueryList extends QueryBase {
 
     @ApiModelProperty("客户等级")
     private String customerGrade;
+
+    ///  metersphere 专用
+    @ApiModelProperty(value = "批量查询的需求Id", hidden = true)
+    private List<Long> ids;
+    @ApiModelProperty(value = "需求负责人名称-模糊匹配", hidden = true)
+    private String ownerName;
+    @ApiModelProperty(value = "产品线名称-模糊匹配", hidden = true)
+    private String productLineName;
 }

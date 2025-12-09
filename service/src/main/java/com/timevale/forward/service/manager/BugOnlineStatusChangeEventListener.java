@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 @Slf4j
@@ -42,14 +43,14 @@ public class BugOnlineStatusChangeEventListener {
 
         for (AutomationRuleDO rule : rules) {
             // 2. 解析状态条件 JSON：{ "from": "处理中", "to": "已关闭" }
-            String statusConditionJson = rule.getStatusCondition();
+            String statusConditionJson = rule.getTriggerCondition();
             try {
                 JSONObject condition = JSON.parseObject(statusConditionJson);
                 String fromStatus = condition.getString("from");
                 String toStatus = condition.getString("to");
 
                 // 3. 判断是否匹配：oldStatus == from && newStatus == to
-                if (fromStatus.equals(oldStatus) && toStatus.equals(newStatus)) {
+                if (Objects.equals(fromStatus, oldStatus) && Objects.equals(toStatus, newStatus)) {
                     log.info("规则 [{}] 匹配成功，准备执行", rule.getName());
 
                     // 4. 构造执行上下文

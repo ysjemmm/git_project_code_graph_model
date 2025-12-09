@@ -25,6 +25,14 @@ public interface ProductDemandService {
     BaseResult<QueryResultVO<ProductDemandVO>> list(ProductDemandQueryList productDemandQueryList);
 
     /**
+     * 查列表, 只简单查询数据
+     *
+     * @param productDemandQueryList 产品需求信息
+     * @return 列表
+     */
+    BaseResult<QueryResultVO<ProductDemandVO>> simpleList(ProductDemandQueryList productDemandQueryList);
+
+    /**
      * 修改状态
      *
      * @param productDemandId 产品需求id
