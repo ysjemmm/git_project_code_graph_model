@@ -20,7 +20,11 @@ public class UseCaseQueryConfigUtil {
     public static final String USE_CASE_QUERY_CONFIG = "{\n" +
             "\t\"useCaseHost\": \"https://testmanage.esign.cn/metersphere\",\n" +
             "\t\"addTestPlanModuleUrl\": \"/test-plan/module/add\",\n" +
-            "\t\"addTestPlanUrl\": \"/test-plan/add\"\n" +
+            "\t\"addTestPlanUrl\": \"/test-plan/add\",\n" +
+            "\t\"statisticsUrl\": \"/test-plan/module/statistics\",\n" +
+            "\t\"queryProjectListUrl\": \"/system/project/page\",\n" +
+            "\t\"searchProjectsUrl\": \"/test-plan/module/search-projects\",\n" +
+            "\t\"testplanDetailsUrl\": \"/test-plan/module/test-plan-details\"\n" +
             "}";
 
     public UseCaseQueryConfig getConfigMap() {
@@ -42,6 +46,46 @@ public class UseCaseQueryConfigUtil {
     public String getAddTestPlanUrl() {
         UseCaseQueryConfig config = getConfigMap();
         String res = config.getAddTestPlanUrl();
+        String host = config.getUseCaseHost();
+        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
+            return host + res;
+        }
+        return null;
+    }
+
+    public String getTestplanDetailsUrl() {
+        UseCaseQueryConfig config = getConfigMap();
+        String res = config.getTestplanDetailsUrl();
+        String host = config.getUseCaseHost();
+        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
+            return host + res;
+        }
+        return null;
+    }
+
+    public String getSearchProjectsUrl() {
+        UseCaseQueryConfig config = getConfigMap();
+        String res = config.getSearchProjectsUrl();
+        String host = config.getUseCaseHost();
+        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
+            return host + res;
+        }
+        return null;
+    }
+
+    public String getQueryProjectListUrl() {
+        UseCaseQueryConfig config = getConfigMap();
+        String res = config.getQueryProjectListUrl();
+        String host = config.getUseCaseHost();
+        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
+            return host + res;
+        }
+        return null;
+    }
+
+    public String getStatisticsUrl() {
+        UseCaseQueryConfig config = getConfigMap();
+        String res = config.getStatisticsUrl();
         String host = config.getUseCaseHost();
         if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
             return host + res;

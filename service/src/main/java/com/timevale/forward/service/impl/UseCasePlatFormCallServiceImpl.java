@@ -47,4 +47,28 @@ public class UseCasePlatFormCallServiceImpl implements UseCasePlatFormCallServic
         String res = HttpUtil.doPost(queryConfigUtil.getAddTestPlanUrl(), params);
         return JsonUtils.fromJson(res, BaseResult.class);
     }
+
+    @Override
+    public BaseResult queryProjectList(Map<String, Object> params) {
+        String res = HttpUtil.doPost(queryConfigUtil.getQueryProjectListUrl(), params);
+        return JsonUtils.fromJson(res, BaseResult.class);
+    }
+
+    @Override
+    public BaseResult statistics(Map<String, Object> params) {
+        String res = HttpUtil.doPost(queryConfigUtil.getStatisticsUrl(), params);
+        return JsonUtils.fromJson(res, BaseResult.class);
+    }
+
+    @Override
+    public BaseResult searchProjects(Map<String, Object> params) {
+        String res = HttpUtil.doPost(queryConfigUtil.getSearchProjectsUrl(), params);
+        return JsonUtils.fromJson(res, BaseResult.class);
+    }
+
+    @Override
+    public BaseResult testplanDetails(Map<String, Object> params) {
+        String res = HttpUtil.doPost(queryConfigUtil.getTestplanDetailsUrl(), params);
+        return JsonUtils.fromJson(res, BaseResult.class);
+    }
 }

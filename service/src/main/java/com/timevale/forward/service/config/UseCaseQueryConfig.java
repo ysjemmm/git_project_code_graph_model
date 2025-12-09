@@ -17,4 +17,12 @@ public class UseCaseQueryConfig implements Serializable {
     private String addTestPlanModuleUrl;
 
     private String addTestPlanUrl;
+
+    public String statisticsUrl;
+
+    public String queryProjectListUrl;
+
+    public String searchProjectsUrl;
+
+    public String testplanDetailsUrl;
 }
