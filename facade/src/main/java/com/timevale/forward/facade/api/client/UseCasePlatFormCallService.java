@@ -12,11 +12,13 @@ public interface UseCasePlatFormCallService {
 
     BaseResult addTestPlan(Map<String, Object> params);
 
-    BaseResult queryProjectList(Map<String, Object> params);
+    BaseResult queryProject(Map<String, Object> params);
 
     BaseResult statistics(Map<String, Object> params);
 
     BaseResult searchProjects(Map<String, Object> params);
 
     BaseResult testplanDetails(Map<String, Object> params);
+
+    BaseResult checkModuleExist(Map<String, Object> params);
 }

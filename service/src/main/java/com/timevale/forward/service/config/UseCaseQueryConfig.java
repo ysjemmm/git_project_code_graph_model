@@ -20,7 +20,9 @@ public class UseCaseQueryConfig implements Serializable {
 
     public String statisticsUrl;
 
-    public String queryProjectListUrl;
+    public String checkModuleExistUrl;
+
+    public String queryProjectUrl;
 
     public String searchProjectsUrl;
 

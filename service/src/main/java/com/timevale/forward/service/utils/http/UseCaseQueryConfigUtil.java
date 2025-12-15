@@ -22,9 +22,10 @@ public class UseCaseQueryConfigUtil {
             "\t\"addTestPlanModuleUrl\": \"/test-plan/module/add\",\n" +
             "\t\"addTestPlanUrl\": \"/test-plan/add\",\n" +
             "\t\"statisticsUrl\": \"/test-plan/module/statistics\",\n" +
-            "\t\"queryProjectListUrl\": \"/system/project/page\",\n" +
+            "\t\"queryProjectUrl\": \"/project-api/getProjectByNum\",\n" +
             "\t\"searchProjectsUrl\": \"/test-plan/module/search-projects\",\n" +
-            "\t\"testplanDetailsUrl\": \"/test-plan/module/test-plan-details\"\n" +
+            "\t\"testplanDetailsUrl\": \"/test-plan/module/test-plan-details\",\n" +
+            "\t\"checkModuleExistUrl\": \"/test-plan/module/checkModuleExist\"\n" +
             "}";
 
     public UseCaseQueryConfig getConfigMap() {
@@ -73,9 +74,9 @@ public class UseCaseQueryConfigUtil {
         return null;
     }
 
-    public String getQueryProjectListUrl() {
+    public String getQueryProjectUrl() {
         UseCaseQueryConfig config = getConfigMap();
-        String res = config.getQueryProjectListUrl();
+        String res = config.getQueryProjectUrl();
         String host = config.getUseCaseHost();
         if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
             return host + res;
@@ -86,6 +87,16 @@ public class UseCaseQueryConfigUtil {
     public String getStatisticsUrl() {
         UseCaseQueryConfig config = getConfigMap();
         String res = config.getStatisticsUrl();
+        String host = config.getUseCaseHost();
+        if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
+            return host + res;
+        }
+        return null;
+    }
+
+    public String getCheckModuleExistUrl() {
+        UseCaseQueryConfig config = getConfigMap();
+        String res = config.getCheckModuleExistUrl();
         String host = config.getUseCaseHost();
         if (StringUtils.isNotBlank(host) && StringUtils.isNotBlank(res)) {
             return host + res;
