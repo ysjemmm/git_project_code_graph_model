@@ -92,7 +92,7 @@ public class UseCasePlatFormCallServiceImpl implements UseCasePlatFormCallServic
         map.put("moduleId", projectDO.getId());
         map.put("type", "TEST_PLAN");
         map.put("name", planName);
-        map.put("turnType", testTurnType);
+        map.put("planType", testTurnType);
         // 添加测试计划
         return addTestPlan(map);
     }
