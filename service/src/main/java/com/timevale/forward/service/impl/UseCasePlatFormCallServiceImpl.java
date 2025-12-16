@@ -47,19 +47,26 @@ public class UseCasePlatFormCallServiceImpl implements UseCasePlatFormCallServic
         Long productLineId = MapUtils.getLong(params, "productLineId");
         String planName = MapUtils.getString(params, "planName");
         if (productLineId == null) {
-            return BaseResult.fail(BaseResultCodeEnum.DATA_ERROR.getNCode(),"产品线不存在");
+            return BaseResult.fail(BaseResultCodeEnum.DATA_ERROR.getNCode(),"产品线id不能为空");
         }
         if (StringUtils.isEmpty(planName)) {
             return BaseResult.fail(BaseResultCodeEnum.DATA_ERROR.getNCode(),"测试计划名称不能为空");
         }
         // 根据产品线获取到业务域
         ProductLineDO productLineDO = productLineComponent.getById(productLineId);
+        if (productLineDO == null) {
+            return BaseResult.fail(BaseResultCodeEnum.DATA_ERROR.getNCode(),"产品线不存在");
+        }
         Map<String, Object> queryProjectParams = new HashMap<>();
         queryProjectParams.put("projectNum", productLineDO.getBizDomainId());
         String projectRes = HttpUtil.doGet(queryConfigUtil.getQueryProjectUrl(), queryProjectParams);
         Map<String, Object> project;
         try {
-            project = (Map<String, Object>) Optional.of(JsonUtils.fromJson(projectRes, BaseResult.class)).map(BaseResult::getData).get();
+            BaseResult projectResult = JsonUtils.fromJson(projectRes, BaseResult.class);
+            if (projectResult == null || projectResult.getData() == null) {
+                return BaseResult.fail(BaseResultCodeEnum.DATA_ERROR.getNCode(), "业务域不存在");
+            }
+            project = (Map<String, Object>) projectResult.getData();
         } catch (Exception e) {
             throw new BaseBizRuntimeException("获取用例平台项目信息失败");
         }
@@ -71,7 +78,8 @@ public class UseCasePlatFormCallServiceImpl implements UseCasePlatFormCallServic
             addTestPlanModuleParams.put("parentId", "NONE");
             addTestPlanModuleParams.put("devProjectId", projectDO.getId());
             // 检查是否已经存在模块
-            String existModuleId = (String) Optional.of(checkModuleExist(addTestPlanModuleParams)).map(BaseResult::getData).get();
+            BaseResult checkResult = checkModuleExist(addTestPlanModuleParams);
+            String existModuleId = checkResult != null ? (String) checkResult.getData() : null;
             if (StringUtils.isNotBlank(existModuleId)) {
                 return addTestPlanAndGetResult(projectId, existModuleId, planName, testTurnType);
             } else {
