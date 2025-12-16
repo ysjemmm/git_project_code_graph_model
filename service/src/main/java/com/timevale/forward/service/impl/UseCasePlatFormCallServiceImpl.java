@@ -38,7 +38,7 @@ public class UseCasePlatFormCallServiceImpl implements UseCasePlatFormCallServic
     @Override
     public BaseResult addTestPlanModule(Map<String, Object> params) {
         Long devProjectId = MapUtils.getLong(params, "devProjectId");
-        Integer testTurnType = MapUtils.getInteger(params, "testTurnType");
+        Integer testTurnType = MapUtils.getInteger(params, "turnType");
         if (devProjectId == null) {
             return BaseResult.fail(BaseResultCodeEnum.DATA_ERROR.getNCode(),"项目不存在");
         }
@@ -71,14 +71,15 @@ public class UseCasePlatFormCallServiceImpl implements UseCasePlatFormCallServic
             addTestPlanModuleParams.put("parentId", "NONE");
             addTestPlanModuleParams.put("devProjectId", projectDO.getId());
             // 检查是否已经存在模块
-            Boolean isExistModule = (Boolean) Optional.of(checkModuleExist(addTestPlanModuleParams)).map(BaseResult::getData).get();
-            if (isExistModule != null && isExistModule) {
-                return addTestPlanAndGetResult(projectId, projectDO, planName, testTurnType);
+            String existModuleId = (String) Optional.of(checkModuleExist(addTestPlanModuleParams)).map(BaseResult::getData).get();
+            if (StringUtils.isNotBlank(existModuleId)) {
+                return addTestPlanAndGetResult(projectId, existModuleId, planName, testTurnType);
             } else {
                 String addModuleRes = HttpUtil.doPost(queryConfigUtil.getAddTestPlanModuleUrl(), addTestPlanModuleParams);
                 BaseResult baseResult = JsonUtils.fromJson(addModuleRes, BaseResult.class);
                 if (baseResult != null && baseResult.getData() != null) {
-                    return addTestPlanAndGetResult(projectId, projectDO, planName, testTurnType);
+                    String moduleId = (String) baseResult.getData();
+                    return addTestPlanAndGetResult(projectId, moduleId, planName, testTurnType);
                 }
             }
         }
@@ -86,10 +87,10 @@ public class UseCasePlatFormCallServiceImpl implements UseCasePlatFormCallServic
         return BaseResult.success();
     }
 
-    private BaseResult addTestPlanAndGetResult(String projectId, ProjectDO projectDO, String planName, Integer testTurnType) {
+    private BaseResult addTestPlanAndGetResult(String projectId, String moduleId, String planName, Integer testTurnType) {
         Map<String, Object> map = new HashMap<>();
         map.put("projectId", projectId);
-        map.put("moduleId", projectDO.getId());
+        map.put("moduleId", moduleId);
         map.put("type", "TEST_PLAN");
         map.put("name", planName);
         map.put("planType", testTurnType);
