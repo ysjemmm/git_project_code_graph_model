@@ -358,7 +358,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                 }
                 condition.setProposerIdList(teamMemberIdList);
             } else if (AscriptionEnum.TEAM_RECEIVE.toString().equals(ascription)) {
-                Set<String> operatorSet = Sets.newHashSet(condition.getOperatorIdList());
+                List<String> operatorIdList = condition.getOperatorIdList();
+                Set<String> operatorSet = operatorIdList == null ? Sets.newHashSet() : Sets.newHashSet(operatorIdList);
                 if (!operatorSet.isEmpty()) {
                     teamMemberIdList = teamMemberIdList.stream().filter(operatorSet::contains).collect(Collectors.toList());
                     resultIsEmpty = teamMemberIdList.isEmpty();
