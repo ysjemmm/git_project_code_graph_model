@@ -56,7 +56,7 @@ public class MeterSphereIntegrationController {
     }
 
     @ApiOperation("填充用例完成/发布完成时间")
-    @GetMapping("/project/autoCompleteTime")
+    @PostMapping("/project/autoCompleteTime")
     public BusinessResult<Boolean> autoCompleteTime(@RequestBody ProjectNodeAddReq projectNodeAddReq) {
         return ResultUtils.result(projectService.autoCompleteTime(projectNodeAddReq));
     }
