@@ -1924,7 +1924,8 @@ public class ProjectServiceImpl implements ProjectService {
             throw new BaseBizRuntimeException("节点不存在");
         }
         if (projectNodeDO.getPlanDate() == null) {
-            throw new BaseBizRuntimeException("请先填写节点计划时间");
+            // 节点计划时间未填写赋值实际开始时间
+            projectNodeAddReq.setPlanDate(projectNodeAddReq.getActualDate());
         }
         if (ProjectNodeEnum.PUBLISH_OFFICIAL.getText().equals(projectNodeDO.getName())) {
             if (ProjectStatusEnum.SUSPEND.getCode().equals(projectDO.getStatus())) {
@@ -1938,7 +1939,7 @@ public class ProjectServiceImpl implements ProjectService {
             }
         }
 
-        projectNodeMapper.updateEndDateByProjectIdAndName(projectNodeDO.getProjectId(), projectNodeDO.getName(),
+        projectNodeMapper.updateEndDateByProjectIdAndName(projectNodeDO.getProjectId(), projectNodeDO.getName(), projectNodeAddReq.getPlanDate(),
                 projectNodeAddReq.getActualDate(), projectNodeAddReq.getActualEndDate());
 
         return BaseResult.success(true);

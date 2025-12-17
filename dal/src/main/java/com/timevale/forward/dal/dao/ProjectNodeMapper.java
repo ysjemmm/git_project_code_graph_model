@@ -75,7 +75,7 @@ public interface ProjectNodeMapper {
      * @param projectId  projectId
      * @param actualDate 实际时间
      */
-    void updateEndDateByProjectIdAndName(@Param("projectId") Long projectId, @Param("name") String name, @Param("actualDate") Date actualDate, @Param("actualEndDate") Date actualEndDate);
+    void updateEndDateByProjectIdAndName(@Param("projectId") Long projectId, @Param("name") String name, @Param("planDate") Date planDate, @Param("actualDate") Date actualDate, @Param("actualEndDate") Date actualEndDate);
 
     /**
      * 更新计划时间

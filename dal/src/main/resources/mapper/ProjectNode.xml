@@ -54,7 +54,7 @@
 
     <update id="updateEndDateByProjectIdAndName">
         update project_node
-        set actual_date=#{actualDate},actual_end_date=#{actualEndDate}
+        set plan_date=#{planDate}, actual_date=#{actualDate},actual_end_date=#{actualEndDate}
         where project_id = #{projectId} AND
             name = #{name}
     </update>
