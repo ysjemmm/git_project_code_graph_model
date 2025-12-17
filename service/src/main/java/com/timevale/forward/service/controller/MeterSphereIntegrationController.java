@@ -2,15 +2,24 @@ package com.timevale.forward.service.controller;
 
 import com.timevale.forward.facade.api.client.BizDomainService;
 import com.timevale.forward.facade.api.client.ProductDemandService;
-import com.timevale.forward.facade.api.query.*;
-import com.timevale.forward.facade.api.result.*;
+import com.timevale.forward.facade.api.client.ProjectService;
+import com.timevale.forward.facade.api.query.BizDomainQueryList;
+import com.timevale.forward.facade.api.query.ProductDemandQueryList;
+import com.timevale.forward.facade.api.request.ProjectNodeAddReq;
+import com.timevale.forward.facade.api.result.BizDomainVO;
+import com.timevale.forward.facade.api.result.ProductDemandVO;
+import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.service.utils.ResultUtils;
 import com.timevale.mandarin.common.result.BusinessResult;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
@@ -31,6 +40,9 @@ public class MeterSphereIntegrationController {
     @Resource
     private BizDomainService bizDomainService;
 
+    @Resource
+    private ProjectService projectService;
+
     @ApiOperation("产品需求列表")
     @PostMapping("/productDemand/list")
     public BusinessResult<QueryResultVO<ProductDemandVO>> listProductDemands(@RequestBody @Valid ProductDemandQueryList productDemandQueryList) {
@@ -41,6 +53,12 @@ public class MeterSphereIntegrationController {
     @PostMapping("/bizDomain/list")
     public BusinessResult<PageQueryResult<BizDomainVO>> listBizDomains(@RequestBody @Valid BizDomainQueryList bizDomainQueryList) {
         return ResultUtils.result(bizDomainService.simpleList(bizDomainQueryList));
+    }
+
+    @ApiOperation("填充用例完成/发布完成时间")
+    @GetMapping("/project/autoCompleteTime")
+    public BusinessResult<Boolean> autoCompleteTime(@RequestBody ProjectNodeAddReq projectNodeAddReq) {
+        return ResultUtils.result(projectService.autoCompleteTime(projectNodeAddReq));
     }
 
 }
