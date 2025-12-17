@@ -72,4 +72,11 @@ public interface BizDomainGroupMapper {
     int countProductLine(@Param("bizDomainGroupId") Long bizDomainGroupId, @Param("ownerId") String ownerId);
     int countBizGroup(@Param("bizDomainGroupId") Long bizDomainGroupId, @Param("ownerId") String ownerId);
 
+    /**
+     * 根据业务域ID列表查询存在需求的业务域组
+     *
+     * @param bizDomainIds 业务域ID列表
+     * @return 业务域组DO列表
+     */
+    List<BizDomainGroupDO> selectGroupsWithDemandsByBizDomainIds(@Param("bizDomainIds") List<Long> bizDomainIds);
 }

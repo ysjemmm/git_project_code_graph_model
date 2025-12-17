@@ -4,7 +4,9 @@ import com.timevale.forward.facade.api.client.BizDomainService;
 import com.timevale.forward.facade.api.query.BizDomainQueryList;
 import com.timevale.forward.facade.api.request.BizDomainAddReq;
 import com.timevale.forward.facade.api.request.BizDomainModifyReq;
+import com.timevale.forward.facade.api.request.GetBizDomainGroupsByNamesReq;
 import com.timevale.forward.facade.api.request.UpdateBizDomainListingStatusReq;
+import com.timevale.forward.facade.api.result.BizDomainGroupSimpleVO;
 import com.timevale.forward.facade.api.result.BizDomainVO;
 import com.timevale.forward.service.utils.ResultUtils;
 import com.timevale.mandarin.common.result.BusinessResult;
@@ -74,6 +76,12 @@ public class BizDomainController {
     public BusinessResult<Boolean> delete(
             @ApiParam(value = "业务域ID", required = true) @RequestParam(value = "bizDomainId") Long bizDomainId) {
         return ResultUtils.result(bizDomainService.deleteBizDomain(bizDomainId));
+    }
+
+    @ApiOperation("根据业务域名称集合查询业务域组")
+    @PostMapping("/getBizDomainGroupsByNames")
+    public BusinessResult<List<BizDomainGroupSimpleVO>> getBizDomainGroupsByNames(@RequestBody @Valid GetBizDomainGroupsByNamesReq req) {
+        return ResultUtils.result(bizDomainService.getBizDomainGroupsByNames(req));
     }
 
 }

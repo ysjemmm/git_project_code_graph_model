@@ -4,15 +4,19 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDomainCondition;
+import com.timevale.forward.dal.dao.BizDomainGroupMapper;
 import com.timevale.forward.dal.dao.BizDomainMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.entity.BizDomainDO;
+import com.timevale.forward.dal.entity.BizDomainGroupDO;
 import com.timevale.forward.dal.entity.ProductLineDO;
 import com.timevale.forward.facade.api.client.BizDomainService;
 import com.timevale.forward.facade.api.query.BizDomainQueryList;
 import com.timevale.forward.facade.api.request.BizDomainAddReq;
 import com.timevale.forward.facade.api.request.BizDomainModifyReq;
+import com.timevale.forward.facade.api.request.GetBizDomainGroupsByNamesReq;
 import com.timevale.forward.facade.api.request.UpdateBizDomainListingStatusReq;
+import com.timevale.forward.facade.api.result.BizDomainGroupSimpleVO;
 import com.timevale.forward.facade.api.result.BizDomainVO;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDomainCopier;
@@ -44,6 +48,8 @@ public class BizDomainServiceImpl implements BizDomainService {
     private BizDomainMapper bizDomainMapper;
     @Resource
     private ProductLineMapper productLineMapper;
+    @Resource
+    private BizDomainGroupMapper bizDomainGroupMapper;
 
     @Override
     public BaseResult<PageQueryResult<BizDomainVO>> bizDomainListWithOrder(BizDomainQueryList bizDomainQueryList) {
@@ -174,6 +180,43 @@ public class BizDomainServiceImpl implements BizDomainService {
         pageQueryResult.setResultList(bizDomainVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
         return BaseResult.success(pageQueryResult);
+    }
+
+    @Override
+    public BaseResult<List<BizDomainGroupSimpleVO>> getBizDomainGroupsByNames(GetBizDomainGroupsByNamesReq req) {
+        List<String> bizDomainNames = req.getBizDomainNames();
+        if (CollectionUtils.isEmpty(bizDomainNames)) {
+            return BaseResult.success(java.util.Collections.emptyList());
+        }
+
+        // 1. 根据业务域名称查询业务域
+        List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectByName(bizDomainNames);
+        if (CollectionUtils.isEmpty(bizDomainDOList)) {
+            return BaseResult.success(java.util.Collections.emptyList());
+        }
+
+        // 2. 获取业务域ID列表
+        List<Long> bizDomainIds = bizDomainDOList.stream()
+                .map(BizDomainDO::getId)
+                .collect(Collectors.toList());
+
+        // 3. 查询业务域组(只返回存在需求的业务域组)
+        List<BizDomainGroupDO> bizDomainGroupDOList = bizDomainGroupMapper.selectGroupsWithDemandsByBizDomainIds(bizDomainIds);
+        if (CollectionUtils.isEmpty(bizDomainGroupDOList)) {
+            return BaseResult.success(java.util.Collections.emptyList());
+        }
+
+        // 4. 转换为VO
+        List<BizDomainGroupSimpleVO> result = bizDomainGroupDOList.stream()
+                .map(group -> {
+                    BizDomainGroupSimpleVO vo = new BizDomainGroupSimpleVO();
+                    vo.setId(group.getId());
+                    vo.setName(group.getName());
+                    return vo;
+                })
+                .collect(Collectors.toList());
+
+        return BaseResult.success(result);
     }
 
 }

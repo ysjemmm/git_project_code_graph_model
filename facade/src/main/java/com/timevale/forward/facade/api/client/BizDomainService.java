@@ -5,10 +5,10 @@ import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.BizDomainQueryList;
 import com.timevale.forward.facade.api.request.BizDomainAddReq;
 import com.timevale.forward.facade.api.request.BizDomainModifyReq;
+import com.timevale.forward.facade.api.request.GetBizDomainGroupsByNamesReq;
 import com.timevale.forward.facade.api.request.UpdateBizDomainListingStatusReq;
+import com.timevale.forward.facade.api.result.BizDomainGroupSimpleVO;
 import com.timevale.forward.facade.api.result.BizDomainVO;
-import com.timevale.forward.facade.api.result.ProductDemandVO;
-import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
@@ -84,4 +84,13 @@ public interface BizDomainService {
     BaseResult<Boolean> deleteBizDomain(Long bizDomainId);
 
     BaseResult<PageQueryResult<BizDomainVO>> simpleList(@Valid BizDomainQueryList bizDomainQueryList);
+
+    /**
+     * 根据业务域名称集合查询业务域组
+     * 只返回存在需求的业务域组
+     *
+     * @param req 请求对象
+     * @return 业务域组集合(包含id和name)
+     */
+    BaseResult<List<BizDomainGroupSimpleVO>> getBizDomainGroupsByNames(GetBizDomainGroupsByNamesReq req);
 }

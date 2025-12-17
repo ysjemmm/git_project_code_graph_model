@@ -145,4 +145,25 @@
         </where>
     </select>
 
+    <!-- 根据业务域ID列表查询存在需求的业务域组 -->
+    <select id="selectGroupsWithDemandsByBizDomainIds" resultType="com.timevale.forward.dal.entity.BizDomainGroupDO">
+        SELECT DISTINCT bdg.*
+        FROM biz_domain_group bdg
+        INNER JOIN biz_domain_group_relation bdgr ON bdg.id = bdgr.biz_domain_group_id
+        INNER JOIN product_demand_group pdg ON bdg.id = pdg.biz_domain_group_id
+        INNER JOIN product_demand_group_item pdgi ON pdg.id = pdgi.product_demand_group_id
+        <where>
+            bdg.is_deleted = false
+            AND bdgr.is_deleted = false
+            AND pdg.is_deleted = false
+            AND pdgi.is_deleted = false
+            <if test="bizDomainIds != null and bizDomainIds.size() > 0">
+                AND bdgr.biz_domain_id IN
+                <foreach collection="bizDomainIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
 </mapper>
