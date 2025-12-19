@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotNull;
+import java.util.Set;
 
 /**
  * @auther: yuhua
@@ -18,10 +19,12 @@ import javax.validation.constraints.NotNull;
 public class ProductDemandStatusUpdateReq extends BaseReq {
 
     @ApiModelProperty("产品需求id")
-    @NotNull(message = "产品需求id不能为空")
     private Long id;
 
     @ApiModelProperty("产品需求状态")
     @NotNull(message = "状态不能为空")
     private Integer status;
+
+    @ApiModelProperty("待批量更新的产品需求id,与[id]参数仅能只填一种")
+    private Set<Long> ids;
 }

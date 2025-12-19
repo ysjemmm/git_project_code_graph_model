@@ -97,6 +97,14 @@ public interface ProductDemandMapper {
     int updateStatus(ProductDemandDO productDemandDO);
 
     /**
+     * 批量更新产品需求状态
+     * @param ids ids
+     * @param demand 需求
+     * @return int
+     */
+    int batchUpdateStatus(@NonNull @Param("ids") Collection<Long> ids, @NonNull @Param("demand") ProductDemandDO demand);
+
+    /**
      * 更新单条产品需求资源规划
      *
      * @param productDemandDO 产品需求DO

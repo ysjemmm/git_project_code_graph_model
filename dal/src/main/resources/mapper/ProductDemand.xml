@@ -444,6 +444,22 @@
         </foreach>
     </update>
 
+    <update id="batchUpdateStatus">
+        update product_demand
+        <set>
+            <if test="demand.status != null">status = #{demand.status}</if>
+            <if test="demand.modifyMan != null">modify_man = #{demand.modifyMan}</if>
+            <if test="demand.modifyManId != null">modify_man_id = #{demand.modifyManId}</if>
+            <if test="demand.modifyDate != null">modify_date = #{demand.modifyDate}</if>
+        </set>
+        <where>
+            id IN
+            <foreach collection="ids" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </where>
+    </update>
+
     <select id="getByName" resultType="com.timevale.forward.dal.entity.ProductDemandDO">
         select *
         from product_demand a

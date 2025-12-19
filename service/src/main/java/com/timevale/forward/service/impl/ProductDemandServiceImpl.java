@@ -109,6 +109,7 @@ import com.timevale.forward.service.utils.duplicate.GroupDuplicateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.exception.BaseIllegalArgumentException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.base.util.StringUtils;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -899,23 +900,44 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> updateDemandStatus(ProductDemandStatusUpdateReq productDemandStatusUpdateReq) {
-        ProductDemandDO productDemandDO = productDemandMapper.get(productDemandStatusUpdateReq.getId());
-        AssertUtil.notNull(productDemandDO, "产品需求不存在");
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        productDemandDO.setModifyManId(userInfo.getId());
-        productDemandDO.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
-        productDemandDO.setModifyDate(new Date());
+        Set<Long> demandIds = CollUtil.defaultIfEmpty(productDemandStatusUpdateReq.getIds(), Collections.emptySet());
+        if (productDemandStatusUpdateReq.getId() != null) {
+            demandIds.add(productDemandStatusUpdateReq.getId());
+        }
+        List<ProductDemandDO> demands = productDemandMapper.selectByIdList(demandIds);
+        // 传 id 的情况错误信息特判
+        if (productDemandStatusUpdateReq.getId() != null && demands.isEmpty()) {
+            throw new BaseIllegalArgumentException("产品需求不存在");
+        }
+
         Integer status = productDemandStatusUpdateReq.getStatus();
-        if (ProductDemandStatusEnum.SUSPEND.getCode().equals(status) || ProductDemandStatusEnum.INVALID.getCode().equals(status)) {
-            return updateStatus(productDemandDO.getId(), status);
-        } else if (ProductDemandStatusEnum.DEVELOPING.getCode().equals(status)
-                || ProductDemandStatusEnum.DEV_COMPLETED.getCode().equals(status)
-                || ProductDemandStatusEnum.ONLINE.getCode().equals(status)) {
-            productDemandDO.setStatus(status);
-            productDemandMapper.updateStatus(productDemandDO);
-            // 更新关联的业务需求状态
-            productDemandComponent.updateDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandDO.getId()), false);
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        Set<Long> suspendOrInvalidDemandIds = new HashSet<>();
+        Set<Long> ids = new HashSet<>();
+
+        demands.forEach(productDemandDO -> {
+            if (ProductDemandStatusEnum.SUSPEND.getCode().equals(status) || ProductDemandStatusEnum.INVALID.getCode().equals(status)) {
+                suspendOrInvalidDemandIds.add(productDemandDO.getId());
+            } else if (ProductDemandStatusEnum.DEVELOPING.getCode().equals(status)
+                    || ProductDemandStatusEnum.DEV_COMPLETED.getCode().equals(status)
+                    || ProductDemandStatusEnum.ONLINE.getCode().equals(status)) {
+                ids.add(productDemandDO.getId());
+            }
+        });
+        for (Long demandId : suspendOrInvalidDemandIds) {
+            updateStatus(demandId, status);
+        }
+        if (!ids.isEmpty()) {
+            ProductDemandDO waitUpdate = new ProductDemandDO();
+            waitUpdate.setStatus(status);
+            waitUpdate.setModifyManId(userInfo.getId());
+            waitUpdate.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+            waitUpdate.setModifyDate(new Date());
+            productDemandMapper.batchUpdateStatus(ids, waitUpdate);
+            // 批量更新关联的业务需求状态
+            productDemandComponent.updateDemandStatusAsProductStatusChange(new ArrayList<>(ids), false);
         }
         return BaseResult.success(true);
     }
