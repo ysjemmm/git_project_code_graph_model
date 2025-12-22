@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.entity.ProductLineDO;
@@ -18,9 +19,9 @@ import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 @LogPoint
 @RestService
@@ -38,20 +39,20 @@ public class UseCasePlatFormCallServiceImpl implements UseCasePlatFormCallServic
     @Override
     public BaseResult addTestPlanModule(Map<String, Object> params) {
         Long devProjectId = MapUtils.getLong(params, "devProjectId");
-        Integer testTurnType = MapUtils.getInteger(params, "turnType");
+        List<Map<String, Integer>> testPlans = (List<Map<String, Integer>>) MapUtils.getObject(params, "testPlans");
+        if (CollUtil.isEmpty(testPlans)) {
+            return BaseResult.fail(BaseResultCodeEnum.DATA_ERROR.getNCode(),"请选择测试计划");
+        }
         if (devProjectId == null) {
             return BaseResult.fail(BaseResultCodeEnum.DATA_ERROR.getNCode(),"项目不存在");
         }
         ProjectDO projectDO = projectMapper.get(devProjectId);
         // 获取产品线
         Long productLineId = MapUtils.getLong(params, "productLineId");
-        String planName = MapUtils.getString(params, "planName");
         if (productLineId == null) {
             return BaseResult.fail(BaseResultCodeEnum.DATA_ERROR.getNCode(),"产品线id不能为空");
         }
-        if (StringUtils.isEmpty(planName)) {
-            return BaseResult.fail(BaseResultCodeEnum.DATA_ERROR.getNCode(),"测试计划名称不能为空");
-        }
+
         // 根据产品线获取到业务域
         ProductLineDO productLineDO = productLineComponent.getById(productLineId);
         if (productLineDO == null) {
@@ -81,18 +82,31 @@ public class UseCasePlatFormCallServiceImpl implements UseCasePlatFormCallServic
             BaseResult checkResult = checkModuleExist(addTestPlanModuleParams);
             String existModuleId = checkResult != null ? (String) checkResult.getData() : null;
             if (StringUtils.isNotBlank(existModuleId)) {
-                return addTestPlanAndGetResult(projectId, existModuleId, planName, testTurnType);
+                return getBaseResult(testPlans, projectId, existModuleId);
             } else {
                 String addModuleRes = HttpUtil.doPost(queryConfigUtil.getAddTestPlanModuleUrl(), addTestPlanModuleParams);
                 BaseResult baseResult = JsonUtils.fromJson(addModuleRes, BaseResult.class);
                 if (baseResult != null && baseResult.getData() != null) {
                     String moduleId = (String) baseResult.getData();
-                    return addTestPlanAndGetResult(projectId, moduleId, planName, testTurnType);
+                    return getBaseResult(testPlans, projectId, moduleId);
                 }
             }
         }
 
         return BaseResult.success();
+    }
+
+    private BaseResult getBaseResult(List<Map<String, Integer>> testPlans, String projectId, String existModuleId) {
+        BaseResult baseResult = new BaseResult();
+        for (Map<String, Integer> testPlan : testPlans) {
+            Integer testTurnType = MapUtils.getInteger(testPlan, "turnType");
+            String planName = MapUtils.getString(testPlan, "planName");
+            if (StringUtils.isEmpty(planName)) {
+                return BaseResult.fail(BaseResultCodeEnum.DATA_ERROR.getNCode(), "测试计划名称不能为空");
+            }
+            baseResult = addTestPlanAndGetResult(projectId, existModuleId, planName, testTurnType);
+        }
+        return baseResult;
     }
 
     private BaseResult addTestPlanAndGetResult(String projectId, String moduleId, String planName, Integer testTurnType) {
