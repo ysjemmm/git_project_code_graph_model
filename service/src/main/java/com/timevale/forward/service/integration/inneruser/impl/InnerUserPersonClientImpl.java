@@ -151,7 +151,6 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
             if (personByAccountNew.ifSuccess() && !CollectionUtils.isEmpty(personByAccountNew.getData())) {
                 return personByAccountNew.getData();
             }
-            log.error("调用内部用户中心失败 getPersonByAccountNew account: " + accountIds + " error: " + personByAccountNew);
             return Lists.emptyList();
         } catch (Exception e) {
             log.error("调用内部用户中心失败 getPersonByAccountNew account: " + accountIds + " error: " + e.getMessage(), e);
@@ -196,7 +195,6 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
                 personInGroup.getData().forEach(t -> accountIds.add(t.getAccount()));
                 return accountIds;
             }
-            log.error("调用内部用户中心失败 getAllStaffsByGroupId groupId: " + groupId + " error: " + personInGroup);
             return Lists.emptyList();
         } catch (Exception e) {
             log.error("调用内部用户中心失败 getAllStaffsByGroupId groupId: " + groupId + " error: " + e.getMessage(), e);
@@ -221,7 +219,6 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
             if (personInGroup.ifSuccess() && CollUtil.isNotEmpty(personInGroup.getData())) {
                 return personInGroup.getData();
             }
-            log.error("调用内部用户中心失败 getAllStaffsByGroupId groupId: " + groupId + " error: " + personInGroup);
             return Lists.emptyList();
         } catch (Exception e) {
             log.error("调用内部用户中心失败 getAllStaffsByGroupId groupId: " + groupId + " error: " + e.getMessage(), e);
@@ -259,7 +256,6 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
                 return personByAccountNew.getData().stream().filter(a -> StringUtils.isNotEmpty(a.getUnionId()))
                         .collect(Collectors.toMap(BaseInfoResponse::getAccount, BaseInfoResponse::getUnionId, (v1, v2) -> v1));
             }
-            log.error("调用内部用户中心失败 getPersonByAccountNew account: " + accountIds + " error: " + personByAccountNew);
             return Maps.newHashMap();
         } catch (Exception e) {
             log.error("调用内部用户中心失败 getPersonByAccountNew account: " + accountIds + " error: " + e.getMessage(), e);
@@ -359,7 +355,6 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
                 batchGetStaffs.getData().forEach(t -> accountIds.add(t.getAccount()));
                 return accountIds;
             }
-            log.error("调用内部用户中心失败 batchGetStaffs accounts: " + accounts + " error: " + batchGetStaffs);
             return Lists.emptyList();
         } catch (Exception e) {
             log.error("调用内部用户中心失败 batchGetStaffs accounts: " + accounts + " error: " + e.getMessage(), e);
