@@ -63,6 +63,7 @@ import com.timevale.forward.service.copy.TaskCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
+import com.timevale.mandarin.base.enums.BaseResultCodeEnum;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -231,6 +232,9 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
     @Override
     public BaseResult<List<BugOfflineTrendVO>> getBoardBugOfflineTrend(Long projectId) {
         ProjectDO projectDO = projectMapper.get(projectId);
+        if (projectDO == null) {
+            return BaseResult.fail(BaseResultCodeEnum.DATA_ERROR.getNCode(),"项目不存在");
+        }
 
         // 线下bug
         List<BugOfflineDO> bugOfflineDOList = bugOfflineMapper.selectByProjectId(projectId);
