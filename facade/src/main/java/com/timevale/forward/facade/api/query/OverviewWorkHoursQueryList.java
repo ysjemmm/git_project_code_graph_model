@@ -23,8 +23,8 @@ public class OverviewWorkHoursQueryList extends QueryBase {
     @ApiModelProperty("所属项目Id集合")
     private List<Long> projectIds;
 
-    @ApiModelProperty("投入日期开始时间不能为空")
-    @NotNull(message = "所属项目Id集合")
+    @ApiModelProperty("投入日期开始时间")
+    @NotNull(message = "投入日期开始时间不能为空")
     private Date startDate;
 
     @ApiModelProperty("投入日期结束时间")

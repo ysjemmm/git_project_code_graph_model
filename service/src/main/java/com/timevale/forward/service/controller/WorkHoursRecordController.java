@@ -22,6 +22,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -49,7 +50,7 @@ public class WorkHoursRecordController {
 
     @ApiOperation("工作台任务工时概览")
     @PostMapping("/overview")
-    public BusinessResult<PageQueryResult<WorkHoursOverviewVO>> overview(@RequestBody OverviewWorkHoursQueryList query) {
+    public BusinessResult<PageQueryResult<WorkHoursOverviewVO>> overview(@Validated @RequestBody OverviewWorkHoursQueryList query) {
         return ResultUtils.result(workHoursRecordService.overview(query));
     }
 
