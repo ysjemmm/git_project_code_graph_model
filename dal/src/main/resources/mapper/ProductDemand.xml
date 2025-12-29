@@ -447,10 +447,10 @@
     <update id="batchUpdateStatus">
         update product_demand
         <set>
-            <if test="demand.status != null">status = #{demand.status}</if>
-            <if test="demand.modifyMan != null">modify_man = #{demand.modifyMan}</if>
-            <if test="demand.modifyManId != null">modify_man_id = #{demand.modifyManId}</if>
-            <if test="demand.modifyDate != null">modify_date = #{demand.modifyDate}</if>
+            <if test="demand.status != null">status = #{demand.status},</if>
+            <if test="demand.modifyMan != null">modify_man = #{demand.modifyMan},</if>
+            <if test="demand.modifyManId != null">modify_man_id = #{demand.modifyManId},</if>
+            <if test="demand.modifyDate != null">modify_date = #{demand.modifyDate},</if>
         </set>
         <where>
             id IN
