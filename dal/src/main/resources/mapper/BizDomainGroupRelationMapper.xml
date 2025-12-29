@@ -16,6 +16,14 @@
             AND is_deleted = false
         </where>
     </select>
+    <select id="selectByBizDomainId" resultType="com.timevale.forward.dal.entity.BizDomainGroupRelationDO">
+        SELECT *
+        FROM biz_domain_group_relation
+        <where>
+            biz_domain_id = #{bizDomainId}
+            AND is_deleted = false
+        </where>
+    </select>
 
     <insert id="batchInsert">
         insert into biz_domain_group_relation (biz_domain_group_id, biz_domain_id, create_man_id, create_man)

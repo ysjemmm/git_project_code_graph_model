@@ -93,4 +93,6 @@ public interface BizDomainService {
      * @return 业务域组集合(包含id和name)
      */
     BaseResult<List<BizDomainGroupSimpleVO>> getBizDomainGroupsByNames(GetBizDomainGroupsByNamesReq req);
+
+    BaseResult<Boolean> isEsignBizDomainGroup(String bizDomainName);
 }

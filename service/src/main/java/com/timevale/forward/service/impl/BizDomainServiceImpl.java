@@ -5,10 +5,12 @@ import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDomainCondition;
 import com.timevale.forward.dal.dao.BizDomainGroupMapper;
+import com.timevale.forward.dal.dao.BizDomainGroupRelationMapper;
 import com.timevale.forward.dal.dao.BizDomainMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.entity.BizDomainDO;
 import com.timevale.forward.dal.entity.BizDomainGroupDO;
+import com.timevale.forward.dal.entity.BizDomainGroupRelationDO;
 import com.timevale.forward.dal.entity.ProductLineDO;
 import com.timevale.forward.facade.api.client.BizDomainService;
 import com.timevale.forward.facade.api.query.BizDomainQueryList;
@@ -18,7 +20,6 @@ import com.timevale.forward.facade.api.request.GetBizDomainGroupsByNamesReq;
 import com.timevale.forward.facade.api.request.UpdateBizDomainListingStatusReq;
 import com.timevale.forward.facade.api.result.BizDomainGroupSimpleVO;
 import com.timevale.forward.facade.api.result.BizDomainVO;
-import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDomainCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
@@ -30,8 +31,10 @@ import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Resource;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -50,6 +53,9 @@ public class BizDomainServiceImpl implements BizDomainService {
     private ProductLineMapper productLineMapper;
     @Resource
     private BizDomainGroupMapper bizDomainGroupMapper;
+
+    @Resource
+    private BizDomainGroupRelationMapper bizDomainGroupRelationMapper;
 
     @Override
     public BaseResult<PageQueryResult<BizDomainVO>> bizDomainListWithOrder(BizDomainQueryList bizDomainQueryList) {
@@ -217,6 +223,54 @@ public class BizDomainServiceImpl implements BizDomainService {
                 .collect(Collectors.toList());
 
         return BaseResult.success(result);
+    }
+
+    @Override
+    public BaseResult<Boolean> isEsignBizDomainGroup(String bizDomainName) {
+        // 1. 参数校验
+        if (StringUtils.isBlank(bizDomainName)) {
+            return BaseResult.success(false);
+        }
+
+        // 2. 根据业务域名称查询业务域
+        List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectByName(Collections.singletonList(bizDomainName));
+        if (CollectionUtils.isEmpty(bizDomainDOList)) {
+            return BaseResult.success(false);
+        }
+
+        BizDomainDO bizDomainDO = bizDomainDOList.get(0);
+        if (bizDomainDO == null || bizDomainDO.getId() == null) {
+            return BaseResult.success(false);
+        }
+
+        // 3. 查询业务域组关系
+        List<BizDomainGroupRelationDO> bizDomainGroupRelationDOS = bizDomainGroupRelationMapper.selectByBizDomainId(bizDomainDO.getId());
+        if (CollectionUtils.isEmpty(bizDomainGroupRelationDOS)) {
+            return BaseResult.success(false);
+        }
+
+        // 4. 提取业务域组ID并过滤null值
+        List<Long> bizDomainGroupIds = bizDomainGroupRelationDOS.stream()
+                .filter(relation -> relation != null && relation.getBizDomainGroupId() != null)
+                .map(BizDomainGroupRelationDO::getBizDomainGroupId)
+                .collect(Collectors.toList());
+
+        if (CollectionUtils.isEmpty(bizDomainGroupIds)) {
+            return BaseResult.success(false);
+        }
+
+        // 5. 查询业务域组信息
+        List<BizDomainGroupDO> bizDomainGroupDOList = bizDomainGroupMapper.getByIds(bizDomainGroupIds);
+        if (CollectionUtils.isEmpty(bizDomainGroupDOList)) {
+            return BaseResult.success(false);
+        }
+
+        // 6. 检查是否存在e签宝业务域集
+        boolean anyMatch = bizDomainGroupDOList.stream()
+                .filter(group -> group != null && group.getName() != null)
+                .anyMatch(group -> "e签宝业务域集".equals(group.getName()));
+
+        return BaseResult.success(anyMatch);
     }
 
 }

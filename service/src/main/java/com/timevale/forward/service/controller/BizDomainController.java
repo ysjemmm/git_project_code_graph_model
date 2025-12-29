@@ -15,7 +15,12 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
@@ -82,6 +87,12 @@ public class BizDomainController {
     @PostMapping("/getBizDomainGroupsByNames")
     public BusinessResult<List<BizDomainGroupSimpleVO>> getBizDomainGroupsByNames(@RequestBody @Valid GetBizDomainGroupsByNamesReq req) {
         return ResultUtils.result(bizDomainService.getBizDomainGroupsByNames(req));
+    }
+
+    @ApiOperation("根据业务域名称查询是否是e签宝业务域集")
+    @GetMapping("/isEsignBizDomainGroup")
+    public BusinessResult<Boolean> isEsignBizDomainGroup(@RequestParam String bizDomainName) {
+        return ResultUtils.result(bizDomainService.isEsignBizDomainGroup(bizDomainName));
     }
 
 }
