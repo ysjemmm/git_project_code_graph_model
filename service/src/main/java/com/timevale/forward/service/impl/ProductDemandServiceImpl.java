@@ -902,7 +902,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> updateDemandStatus(ProductDemandStatusUpdateReq productDemandStatusUpdateReq) {
-        Set<Long> demandIds = CollUtil.defaultIfEmpty(productDemandStatusUpdateReq.getIds(), Collections.emptySet());
+        Set<Long> demandIds = CollUtil.defaultIfEmpty(productDemandStatusUpdateReq.getIds(), new HashSet<>());
         if (productDemandStatusUpdateReq.getId() != null) {
             demandIds.add(productDemandStatusUpdateReq.getId());
         }
