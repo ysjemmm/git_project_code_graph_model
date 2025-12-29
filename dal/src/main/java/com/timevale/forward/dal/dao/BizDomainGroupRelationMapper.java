@@ -22,6 +22,14 @@ public interface BizDomainGroupRelationMapper {
     List<BizDomainGroupRelationDO> selectByBizDomainGroupId(@Param("bizDomainGroupId") Long bizDomainGroupId);
 
     /**
+     * 通过业务域id选择
+     *
+     * @param bizDomainId bizDomainId
+     * @return 业务域集关系DO
+     */
+    List<BizDomainGroupRelationDO> selectByBizDomainId(@Param("bizDomainId") Long bizDomainId);
+
+    /**
      * @param bizDomainGroupRelationDOS bizDomainGroupRelationDOS
      * @return int
      */
