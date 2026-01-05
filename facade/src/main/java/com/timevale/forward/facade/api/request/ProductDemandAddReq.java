@@ -22,7 +22,7 @@ public class ProductDemandAddReq extends BaseReq {
 
     @ApiModelProperty("名称")
     @NotNull(message = "需求名称不能为空")
-    @Length(max = 200, message = "需求名称长度不能超过200,请重新输入")
+    @Length(max = 100, message = "需求名称长度不能超过100,请重新输入")
     private String name;
 
     @ApiModelProperty("优先级:0(P0),10(P1),20(P2),30(P3)")
