@@ -324,7 +324,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             taskService.execute(taskExecuteReq);
         }
         // 如果任务进度是100，则任务直接完成
-        if (TaskStatusEnum.PROGRESS.getCode().equals(taskDO.getStatus()) && workHoursRecordDO.getProgress() >= 100) {
+        if (TaskStatusEnum.PROGRESS.getCode().equals(taskDO.getStatus()) && workHoursRecordDO.getProgress() != null && workHoursRecordDO.getProgress() >= 100) {
             TaskDoneReq taskDoneReq = new TaskDoneReq();
             taskDoneReq.setId(taskDO.getId());
             taskDoneReq.setActualEndDate(actualEndDate);
