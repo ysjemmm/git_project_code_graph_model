@@ -57,6 +57,12 @@ public class ProductDemandController {
         return ResultUtils.result(productDemandService.queryNextDemandStatus(id));
     }
 
+    @ApiOperation("批量查询下一个需求状态")
+    @PostMapping("/batchQueryNextDemandStatus")
+    public BusinessResult<List<ProductDemandStatusVO>> batchQueryNextDemandStatus(@RequestBody @Valid ProductDemandBatchQueryReq request) {
+        return ResultUtils.result(productDemandService.batchQueryNextDemandStatus(request.getIds()));
+    }
+
     @ApiOperation("产品需求状态变更")
     @PostMapping("/updateDemandStatus")
     public BusinessResult<Boolean> updateDemandStatus(@RequestBody @Valid ProductDemandStatusUpdateReq productDemandStatusUpdateReq) {

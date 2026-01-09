@@ -189,4 +189,6 @@ public interface ProductDemandService {
     BaseResult<Boolean> updateDemandStatus(ProductDemandStatusUpdateReq productDemandStatusUpdateReq);
 
     BaseResult<List<ProductDemandStatusVO>> queryNextDemandStatus(Long id);
+
+    BaseResult<List<ProductDemandStatusVO>> batchQueryNextDemandStatus(List<Long> ids);
 }

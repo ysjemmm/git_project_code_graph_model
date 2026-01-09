@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -118,6 +119,11 @@ import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -1117,6 +1123,40 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     private void checkDescLength(String desc) {
         Integer descLength = StrUtil.length(desc);
         AssertUtil.checkState(CommonConstant.DESC_MAX_LENGTH.compareTo(descLength) >= 0, "需求描述字数过大,请重新输入");
+    }
+
+    @Override
+    public BaseResult<List<ProductDemandStatusVO>> batchQueryNextDemandStatus(List<Long> ids) {
+        if (CollectionUtil.isEmpty(ids)) {
+            return BaseResult.success(new ArrayList<>());
+        }
+
+        // 批量查询需求状态
+        List<ProductDemandDO> productDemands = productDemandMapper.selectByIdList(ids);
+        if (CollectionUtil.isEmpty(productDemands)) {
+            return BaseResult.success(new ArrayList<>());
+        }
+
+        // 过滤掉负值状态，获取正数状态的最大值
+        Integer maxPositiveStatus = productDemands.stream()
+                .map(ProductDemandDO::getStatus)
+                .filter(status -> status != null && status > 0)
+                .max(Integer::compareTo)
+                .orElse(0);
+
+        // 获取所有可能的状态枚举，过滤出大于等于最大状态值的状态
+        List<ProductDemandStatusVO> result = Arrays.stream(ProductDemandStatusEnum.values())
+                .filter(statusEnum -> statusEnum.getCode() >= maxPositiveStatus)
+                .map(statusEnum -> {
+                    ProductDemandStatusVO statusVO = new ProductDemandStatusVO();
+                    statusVO.setStatus(statusEnum.getCode());
+                    statusVO.setStatusText(statusEnum.getText());
+                    return statusVO;
+                })
+                .sorted(Comparator.comparing(ProductDemandStatusVO::getStatus))
+                .collect(Collectors.toList());
+
+        return BaseResult.success(result);
     }
 
 }
