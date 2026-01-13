@@ -43,7 +43,6 @@ import com.timevale.forward.dal.entity.ProjectProductDemandDO;
 import com.timevale.forward.dal.entity.TrackEventDO;
 import com.timevale.forward.facade.api.client.ProductDemandGroupService;
 import com.timevale.forward.facade.api.client.ProductDemandService;
-import com.timevale.forward.facade.api.client.UseCasePlatFormCallService;
 import com.timevale.forward.facade.api.query.ProductBizDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductCustomDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandLinkBizDemandQueryList;
@@ -249,7 +248,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     private CrmClient crmClient;
 
     @Resource
-    private UseCasePlatFormCallService useCasePlatFormCallService;
+    private ProductDemandService productDemandService;
 
     @Resource
     private ProductDemandGroupService productDemandGroupService;
@@ -946,6 +945,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                     || ProductDemandStatusEnum.DEV_COMPLETED.getCode().equals(status)
                     || ProductDemandStatusEnum.ONLINE.getCode().equals(status)) {
                 ids.add(productDemandDO.getId());
+            } else if (ProductDemandStatusEnum.WAITING.getCode().equals(status)) {
+                productDemandService.enable(productDemandDO.getId());
             }
         });
         for (Long demandId : suspendOrInvalidDemandIds) {
