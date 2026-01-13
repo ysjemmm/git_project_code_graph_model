@@ -24,4 +24,8 @@ public class ProductDemandStatusUpdateReq extends BaseReq {
     @ApiModelProperty("产品需求状态")
     @NotNull(message = "状态不能为空")
     private Integer status;
+
+    @ApiModelProperty("业务域集ID")
+    @NotNull(message = "业务域集ID不能为空")
+    private Long bizDomainGroupId;
 }

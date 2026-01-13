@@ -64,6 +64,7 @@ import com.timevale.forward.model.enums.ProductDemandGroupMoveModeEnum;
 import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.model.enums.ProductDemandTypeEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.service.component.BizDomainGroupPermissionComponent;
 import com.timevale.forward.service.component.BizLabelComponent;
 import com.timevale.forward.service.component.LabelComponent;
 import com.timevale.forward.service.component.PersonComponent;
@@ -168,6 +169,9 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
 
     @Resource
     private BizDomainGroupMapper bizDomainGroupMapper;
+
+    @Resource
+    private BizDomainGroupPermissionComponent bizDomainGroupPermissionComponent;
 
     @Resource
     private BizDomainGroupRelationMapper bizDomainGroupRelationMapper;
@@ -361,14 +365,6 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         return productDemandGroupItemVOList;
     }
 
-    private void checkOperationPermission(Long bizDomainGroupId) {
-        // 只有业务域集有里的产品经理才能新增
-        if (bizDomainGroupMapper.countBizGroup(bizDomainGroupId, LocalSessionUtils.getUserInfo().getId()) <= 0
-                && bizDomainGroupMapper.countProductLine(bizDomainGroupId, LocalSessionUtils.getUserInfo().getId()) <= 0) {
-            throw new BaseBizRuntimeException("只有业务域集里的产品经理才能操作");
-        }
-    }
-
     /**
      * 新增产品需求分组
      *
@@ -382,7 +378,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         if (productDemandGroupAddReq.getName().contains(CommonConstant.BLANK)) {
             throw new BaseBizRuntimeException("产品需求分组名称中请勿包含空格");
         }
-        checkOperationPermission(productDemandGroupAddReq.getBizDomainGroupId());
+        bizDomainGroupPermissionComponent.checkOperationPermission(productDemandGroupAddReq.getBizDomainGroupId());
         ProductDemandGroupDO productDemandGroupDO = ProductDemandGroupCopier.INSTANCE.toDO(productDemandGroupAddReq);
         ProductDemandGroupDO productDemandGroup = productDemandGroupMapper.getByBizDomainGroupIdAndName(productDemandGroupDO.getBizDomainGroupId(), productDemandGroupDO.getName());
         if (productDemandGroup != null) {
@@ -409,7 +405,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         if (productDemandGroupModifyReq.getName().contains(CommonConstant.BLANK)) {
             throw new BaseBizRuntimeException("产品需求分组名称中请勿包含空格");
         }
-        checkOperationPermission(productDemandGroupModifyReq.getBizDomainGroupId());
+        bizDomainGroupPermissionComponent.checkOperationPermission(productDemandGroupModifyReq.getBizDomainGroupId());
 
         ProductDemandGroupDO productDemandGroupDO = ProductDemandGroupCopier.INSTANCE.toDO(productDemandGroupModifyReq);
         ProductDemandGroupDO productDemandGroup = productDemandGroupMapper.get(productDemandGroupDO.getId());
@@ -435,7 +431,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         String modifyManId = userInfo.getId();
         String modifyMan = userInfo.getFullAlias();
         ProductDemandGroupDO productDemandGroupDO = productDemandGroupMapper.get(productDemandGroupReq.getId());
-        checkOperationPermission(productDemandGroupDO.getBizDomainGroupId());
+        bizDomainGroupPermissionComponent.checkOperationPermission(productDemandGroupDO.getBizDomainGroupId());
         // 删除产品需求分组
         productDemandGroupMapper.delete(productDemandGroupReq.getId(), modifyManId, modifyMan);
         // 删除产品需求分组下的产品需求
@@ -460,7 +456,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> moveProductDemandGroup(ProductDemandGroupMoveReq productDemandGroupMoveReq) {
         log.info("产品需求拖动分组接收参数:{}", productDemandGroupMoveReq);
-        checkOperationPermission(productDemandGroupMoveReq.getBizDomainGroupId());
+        bizDomainGroupPermissionComponent.checkOperationPermission(productDemandGroupMoveReq.getBizDomainGroupId());
         ProductDemandGroupDO targetGroupDO = productDemandGroupMapper.getByIdAndBizDomainGroupId(productDemandGroupMoveReq.getBizDomainGroupId(), productDemandGroupMoveReq.getId());
         if (targetGroupDO == null) {
             throw new BaseBizRuntimeException("产品需求分组不存在, 请刷新后重试");
@@ -549,7 +545,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
     public BaseResult<Boolean> moveProductDemand(ProductDemandGroupItemMoveReq productDemandGroupItemMoveReq) {
         log.info("产品需求拖动接收参数:{}", productDemandGroupItemMoveReq);
         // 校验操作权限
-        checkOperationPermission(productDemandGroupItemMoveReq.getBizDomainGroupId());
+        bizDomainGroupPermissionComponent.checkOperationPermission(productDemandGroupItemMoveReq.getBizDomainGroupId());
         // 拖动产品需求到分组
         ProductDemandMoveDTO productDemandMoveDTO = productDemandGroupItemComponent.moveProductDemand(productDemandGroupItemMoveReq);
         if (productDemandMoveDTO.isIgnore()) {
@@ -665,7 +661,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
             return BaseResult.success(true);
         }
         // 校验操作权限
-        checkOperationPermission(productDemandGroupDO.getBizDomainGroupId());
+        bizDomainGroupPermissionComponent.checkOperationPermission(productDemandGroupDO.getBizDomainGroupId());
         // 校验业务域集范围
         List<BizDomainGroupRelationDO> sourceBizDomainGroupRelationDOS = bizDomainGroupRelationMapper.selectByBizDomainGroupId(productDemandGroupDO.getBizDomainGroupId());
         List<BizDomainGroupRelationDO> targetBizDomainGroupRelationDOS = bizDomainGroupRelationMapper.selectByBizDomainGroupId(productDemandGroupTransferReq.getBizDomainGroupId());

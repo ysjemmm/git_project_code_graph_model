@@ -76,6 +76,7 @@ import com.timevale.forward.model.enums.PriorityEnum;
 import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.BizDemandComponent;
+import com.timevale.forward.service.component.BizDomainGroupPermissionComponent;
 import com.timevale.forward.service.component.BizLabelComponent;
 import com.timevale.forward.service.component.CustomDemandComponent;
 import com.timevale.forward.service.component.FileComponent;
@@ -230,6 +231,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Resource
     private ProductDemandGroupService productDemandGroupService;
+
+    @Resource
+    private BizDomainGroupPermissionComponent bizDomainGroupPermissionComponent;
 
     private static final String ONE_HUNDRED_PERCENT = "100.00%";
 
@@ -900,6 +904,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Override
     public BaseResult<Boolean> updateDemandStatus(ProductDemandStatusUpdateReq productDemandStatusUpdateReq) {
+        // 校验操作权限
+        bizDomainGroupPermissionComponent.checkOperationPermission(productDemandStatusUpdateReq.getBizDomainGroupId());
+
         ProductDemandDO productDemandDO = productDemandMapper.get(productDemandStatusUpdateReq.getId());
         AssertUtil.notNull(productDemandDO, "产品需求不存在");
         UserInfo userInfo = LocalSessionUtils.getUserInfo();

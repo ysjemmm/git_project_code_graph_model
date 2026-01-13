@@ -126,11 +126,14 @@
         select count(*)
         from product_line pl
         left join biz_domain_group_relation bdgr on pl.biz_domain_id  = bdgr.biz_domain_id
+        left join biz_permission_owner bpo on bpo.scope_biz_id = pl.id
+            and bpo.permission_scope = 'PRODUCT_LINE_SCOPE'
+            and bpo.is_deleted = false
         <where>
             pl.is_deleted = false
             AND bdgr.is_deleted = false
             AND bdgr.biz_domain_group_id = #{bizDomainGroupId}
-            AND (pl.owner_id = #{ownerId} or pl.bug_online_owner_id = #{ownerId})
+            AND (pl.owner_id = #{ownerId} or pl.bug_online_owner_id = #{ownerId} or bpo.owner_id = #{ownerId})
         </where>
     </select>
 
