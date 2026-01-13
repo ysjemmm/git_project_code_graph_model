@@ -974,6 +974,10 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             suspendStatusVO.setStatus(ProductDemandStatusEnum.INVALID.getCode());
             suspendStatusVO.setStatusText(ProductDemandStatusEnum.INVALID.getText());
             statusVOS.add(suspendStatusVO);
+            ProductDemandStatusVO waitingStatusVO = new ProductDemandStatusVO();
+            waitingStatusVO.setStatus(ProductDemandStatusEnum.WAITING.getCode());
+            waitingStatusVO.setStatusText(ProductDemandStatusEnum.WAITING.getText());
+            statusVOS.add(waitingStatusVO);
             return BaseResult.success(statusVOS);
         }
 
