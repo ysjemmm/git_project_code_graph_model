@@ -52,7 +52,17 @@ import com.timevale.forward.facade.api.query.ProductDemandLinkTrackEventQueryLis
 import com.timevale.forward.facade.api.query.ProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandTrackEventQueryList;
 import com.timevale.forward.facade.api.query.ProductLinkCustomDemandQueryList;
-import com.timevale.forward.facade.api.request.*;
+import com.timevale.forward.facade.api.request.BatchTransferReq;
+import com.timevale.forward.facade.api.request.PersonAddReq;
+import com.timevale.forward.facade.api.request.ProductBizDemandLinkReq;
+import com.timevale.forward.facade.api.request.ProductCustomDemandLinkReq;
+import com.timevale.forward.facade.api.request.ProductDemandAddReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupResourcePlanReq;
+import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
+import com.timevale.forward.facade.api.request.ProductDemandPriorityUpdateReq;
+import com.timevale.forward.facade.api.request.ProductDemandStatusUpdateReq;
+import com.timevale.forward.facade.api.request.ProductDemandTrackEventLinkReq;
+import com.timevale.forward.facade.api.request.ResourcePlanProductDemandAddReq;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.CustomDemandVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
@@ -120,13 +130,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.stream.Collectors;
-
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -1144,9 +1160,12 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                 .max(Integer::compareTo)
                 .orElse(0);
 
-        // 获取所有可能的状态枚举，过滤出大于等于最大状态值的状态
+        // 获取所有可能的状态枚举，过滤出大于等于最大状态值且排除特定状态的状态
         List<ProductDemandStatusVO> result = Arrays.stream(ProductDemandStatusEnum.values())
-                .filter(statusEnum -> statusEnum.getCode() >= maxPositiveStatus)
+                .filter(statusEnum -> statusEnum.getCode() >= maxPositiveStatus && 
+                        !ProductDemandStatusEnum.PJ_SUSPEND.getCode().equals(statusEnum.getCode()) &&
+                        !ProductDemandStatusEnum.INCLUDED.getCode().equals(statusEnum.getCode()) &&
+                        !ProductDemandStatusEnum.PROGRESS.getCode().equals(statusEnum.getCode()))
                 .map(statusEnum -> {
                     ProductDemandStatusVO statusVO = new ProductDemandStatusVO();
                     statusVO.setStatus(statusEnum.getCode());
