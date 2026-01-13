@@ -947,6 +947,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                 ids.add(productDemandDO.getId());
             } else if (ProductDemandStatusEnum.WAITING.getCode().equals(status)) {
                 productDemandService.enable(productDemandDO.getId());
+                ids.add(productDemandDO.getId());
             }
         });
         for (Long demandId : suspendOrInvalidDemandIds) {
