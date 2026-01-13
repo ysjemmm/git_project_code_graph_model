@@ -86,6 +86,7 @@ import com.timevale.forward.model.enums.PriorityEnum;
 import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.BizDemandComponent;
+import com.timevale.forward.service.component.BizDomainGroupPermissionComponent;
 import com.timevale.forward.service.component.BizLabelComponent;
 import com.timevale.forward.service.component.CustomDemandComponent;
 import com.timevale.forward.service.component.FileComponent;
@@ -252,6 +253,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Resource
     private ProductDemandGroupService productDemandGroupService;
+
+    @Resource
+    private BizDomainGroupPermissionComponent bizDomainGroupPermissionComponent;
 
     private static final String ONE_HUNDRED_PERCENT = "100.00%";
 
@@ -923,6 +927,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> updateDemandStatus(ProductDemandStatusUpdateReq productDemandStatusUpdateReq) {
+        // 校验操作权限
+        bizDomainGroupPermissionComponent.checkOperationPermission(productDemandStatusUpdateReq.getBizDomainGroupId());
+
         Set<Long> demandIds = CollUtil.defaultIfEmpty(productDemandStatusUpdateReq.getIds(), new HashSet<>());
         if (productDemandStatusUpdateReq.getId() != null) {
             demandIds.add(productDemandStatusUpdateReq.getId());
@@ -1168,7 +1175,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
         // 获取所有可能的状态枚举，过滤出大于等于最大状态值且排除特定状态的状态
         List<ProductDemandStatusVO> result = Arrays.stream(ProductDemandStatusEnum.values())
-                .filter(statusEnum -> statusEnum.getCode() >= maxPositiveStatus && 
+                .filter(statusEnum -> statusEnum.getCode() >= maxPositiveStatus &&
                         !ProductDemandStatusEnum.PJ_SUSPEND.getCode().equals(statusEnum.getCode()) &&
                         !ProductDemandStatusEnum.INCLUDED.getCode().equals(statusEnum.getCode()) &&
                         !ProductDemandStatusEnum.PROGRESS.getCode().equals(statusEnum.getCode()))

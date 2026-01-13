@@ -19,6 +19,7 @@ import java.util.Set;
 public class ProductDemandStatusUpdateReq extends BaseReq {
 
     @ApiModelProperty("产品需求id")
+    @NotNull(message = "产品需求id不能为空")
     private Long id;
 
     @ApiModelProperty("产品需求状态")
@@ -27,4 +28,8 @@ public class ProductDemandStatusUpdateReq extends BaseReq {
 
     @ApiModelProperty("待批量更新的产品需求id,与[id]参数仅能只填一种")
     private Set<Long> ids;
+
+    @ApiModelProperty("业务域集ID")
+    @NotNull(message = "业务域集ID不能为空")
+    private Long bizDomainGroupId;
 }
