@@ -14,11 +14,4 @@ public interface BizDomainGroupPermissionComponent {
      * @param bizDomainGroupId 业务域集ID
      */
     void checkOperationPermission(Long bizDomainGroupId);
-
-    /**
-     * 通过产品线ID校验操作权限
-     *
-     * @param productLineId 产品线ID
-     */
-    void checkOperationPermissionByProductLineId(Long productLineId);
 }

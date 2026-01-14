@@ -39,25 +39,4 @@ public class BizDomainGroupPermissionComponentImpl implements BizDomainGroupPerm
             throw new BaseBizRuntimeException("只有业务域集里的产品经理才能操作");
         }
     }
-
-    @Override
-    public void checkOperationPermissionByProductLineId(Long productLineId) {
-        ProductLineDO productLineDO = productLineMapper.get(productLineId);
-        if (productLineDO == null || productLineDO.getBizDomainId() == null) {
-            throw new BaseBizRuntimeException("产品线不存在");
-        }
-        // 通过业务域ID查询所属的业务域集
-        List<BizDomainGroupRelationDO> relations = bizDomainGroupRelationMapper.selectByBizDomainId(productLineDO.getBizDomainId());
-        if (CollectionUtils.isEmpty(relations)) {
-            throw new BaseBizRuntimeException("产品线未关联业务域集");
-        }
-        // 检查用户是否有任一业务域集的权限
-        for (BizDomainGroupRelationDO relation : relations) {
-            if (bizDomainGroupMapper.countBizGroup(relation.getBizDomainGroupId(), LocalSessionUtils.getUserInfo().getId()) > 0
-                    || bizDomainGroupMapper.countProductLine(relation.getBizDomainGroupId(), LocalSessionUtils.getUserInfo().getId()) > 0) {
-                return;
-            }
-        }
-        throw new BaseBizRuntimeException("只有业务域集里的产品经理才能操作");
-    }
 }

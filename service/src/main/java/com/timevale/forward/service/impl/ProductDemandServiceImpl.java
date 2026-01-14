@@ -927,6 +927,10 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> updateDemandStatus(ProductDemandStatusUpdateReq productDemandStatusUpdateReq) {
+        // 校验 id 和 ids 至少传一个
+        if (productDemandStatusUpdateReq.getId() == null && CollUtil.isEmpty(productDemandStatusUpdateReq.getIds())) {
+            throw new BaseBizRuntimeException("产品需求id不能为空");
+        }
         // 校验操作权限
         bizDomainGroupPermissionComponent.checkOperationPermission(productDemandStatusUpdateReq.getBizDomainGroupId());
 
