@@ -566,6 +566,12 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
                 productDemandGroupComponent.linkOrUnLinkProductDemand(productDemandGroupDO.getProjectId(), productDemandMoveDTO.getProductDemandId(), LinkOrUnLinkEnum.UN_LINK);
             }
         } else {
+            // 同一个分组内拖动，不需要修改项目关联关系和需求状态
+            if (Objects.equals(productDemandMoveDTO.getMoveGroupId(), productDemandMoveDTO.getTargetGroupId())) {
+                log.info("同一个分组内拖动需求，不修改项目关联关系和需求状态");
+                return BaseResult.success(true);
+            }
+            
             // 如果拖出分组已经绑定了项目， 需要将产品需求取消关联原项目
             final ProductDemandGroupDO moveProductDemandGroupDO = productDemandGroupComponent.getById(productDemandMoveDTO.getMoveGroupId());
             if (moveProductDemandGroupDO != null && moveProductDemandGroupDO.getProjectId() != null) {
