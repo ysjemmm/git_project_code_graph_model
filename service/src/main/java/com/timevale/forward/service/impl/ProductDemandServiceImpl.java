@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -42,7 +43,6 @@ import com.timevale.forward.dal.entity.ProjectProductDemandDO;
 import com.timevale.forward.dal.entity.TrackEventDO;
 import com.timevale.forward.facade.api.client.ProductDemandGroupService;
 import com.timevale.forward.facade.api.client.ProductDemandService;
-import com.timevale.forward.facade.api.client.UseCasePlatFormCallService;
 import com.timevale.forward.facade.api.query.ProductBizDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductCustomDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandLinkBizDemandQueryList;
@@ -51,7 +51,17 @@ import com.timevale.forward.facade.api.query.ProductDemandLinkTrackEventQueryLis
 import com.timevale.forward.facade.api.query.ProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandTrackEventQueryList;
 import com.timevale.forward.facade.api.query.ProductLinkCustomDemandQueryList;
-import com.timevale.forward.facade.api.request.*;
+import com.timevale.forward.facade.api.request.BatchTransferReq;
+import com.timevale.forward.facade.api.request.PersonAddReq;
+import com.timevale.forward.facade.api.request.ProductBizDemandLinkReq;
+import com.timevale.forward.facade.api.request.ProductCustomDemandLinkReq;
+import com.timevale.forward.facade.api.request.ProductDemandAddReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupResourcePlanReq;
+import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
+import com.timevale.forward.facade.api.request.ProductDemandPriorityUpdateReq;
+import com.timevale.forward.facade.api.request.ProductDemandStatusUpdateReq;
+import com.timevale.forward.facade.api.request.ProductDemandTrackEventLinkReq;
+import com.timevale.forward.facade.api.request.ResourcePlanProductDemandAddReq;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.CustomDemandVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
@@ -76,6 +86,7 @@ import com.timevale.forward.model.enums.PriorityEnum;
 import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.BizDemandComponent;
+import com.timevale.forward.service.component.BizDomainGroupPermissionComponent;
 import com.timevale.forward.service.component.BizLabelComponent;
 import com.timevale.forward.service.component.CustomDemandComponent;
 import com.timevale.forward.service.component.FileComponent;
@@ -120,7 +131,18 @@ import org.apache.commons.collections.CollectionUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -227,10 +249,13 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     private CrmClient crmClient;
 
     @Resource
-    private UseCasePlatFormCallService useCasePlatFormCallService;
+    private ProductDemandService productDemandService;
 
     @Resource
     private ProductDemandGroupService productDemandGroupService;
+
+    @Resource
+    private BizDomainGroupPermissionComponent bizDomainGroupPermissionComponent;
 
     private static final String ONE_HUNDRED_PERCENT = "100.00%";
 
@@ -902,6 +927,13 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> updateDemandStatus(ProductDemandStatusUpdateReq productDemandStatusUpdateReq) {
+        // 校验 id 和 ids 至少传一个
+        if (productDemandStatusUpdateReq.getId() == null && CollUtil.isEmpty(productDemandStatusUpdateReq.getIds())) {
+            throw new BaseBizRuntimeException("产品需求id不能为空");
+        }
+        // 校验操作权限
+        bizDomainGroupPermissionComponent.checkOperationPermission(productDemandStatusUpdateReq.getBizDomainGroupId());
+
         Set<Long> demandIds = CollUtil.defaultIfEmpty(productDemandStatusUpdateReq.getIds(), new HashSet<>());
         if (productDemandStatusUpdateReq.getId() != null) {
             demandIds.add(productDemandStatusUpdateReq.getId());
@@ -923,6 +955,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             } else if (ProductDemandStatusEnum.DEVELOPING.getCode().equals(status)
                     || ProductDemandStatusEnum.DEV_COMPLETED.getCode().equals(status)
                     || ProductDemandStatusEnum.ONLINE.getCode().equals(status)) {
+                ids.add(productDemandDO.getId());
+            } else if (ProductDemandStatusEnum.WAITING.getCode().equals(status)) {
+                productDemandService.enable(productDemandDO.getId());
                 ids.add(productDemandDO.getId());
             }
         });
@@ -952,6 +987,10 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             suspendStatusVO.setStatus(ProductDemandStatusEnum.INVALID.getCode());
             suspendStatusVO.setStatusText(ProductDemandStatusEnum.INVALID.getText());
             statusVOS.add(suspendStatusVO);
+            ProductDemandStatusVO waitingStatusVO = new ProductDemandStatusVO();
+            waitingStatusVO.setStatus(ProductDemandStatusEnum.WAITING.getCode());
+            waitingStatusVO.setStatusText(ProductDemandStatusEnum.WAITING.getText());
+            statusVOS.add(waitingStatusVO);
             return BaseResult.success(statusVOS);
         }
 
@@ -1117,6 +1156,43 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     private void checkDescLength(String desc) {
         Integer descLength = StrUtil.length(desc);
         AssertUtil.checkState(CommonConstant.DESC_MAX_LENGTH.compareTo(descLength) >= 0, "需求描述字数过大,请重新输入");
+    }
+
+    @Override
+    public BaseResult<List<ProductDemandStatusVO>> batchQueryNextDemandStatus(List<Long> ids) {
+        if (CollectionUtil.isEmpty(ids)) {
+            return BaseResult.success(new ArrayList<>());
+        }
+
+        // 批量查询需求状态
+        List<ProductDemandDO> productDemands = productDemandMapper.selectByIdList(ids);
+        if (CollectionUtil.isEmpty(productDemands)) {
+            return BaseResult.success(new ArrayList<>());
+        }
+
+        // 过滤掉负值状态，获取正数状态的最大值
+        Integer maxPositiveStatus = productDemands.stream()
+                .map(ProductDemandDO::getStatus)
+                .filter(status -> status != null && status > 0)
+                .max(Integer::compareTo)
+                .orElse(0);
+
+        // 获取所有可能的状态枚举，过滤出大于等于最大状态值且排除特定状态的状态
+        List<ProductDemandStatusVO> result = Arrays.stream(ProductDemandStatusEnum.values())
+                .filter(statusEnum -> statusEnum.getCode() >= maxPositiveStatus &&
+                        !ProductDemandStatusEnum.PJ_SUSPEND.getCode().equals(statusEnum.getCode()) &&
+                        !ProductDemandStatusEnum.INCLUDED.getCode().equals(statusEnum.getCode()) &&
+                        !ProductDemandStatusEnum.PROGRESS.getCode().equals(statusEnum.getCode()))
+                .map(statusEnum -> {
+                    ProductDemandStatusVO statusVO = new ProductDemandStatusVO();
+                    statusVO.setStatus(statusEnum.getCode());
+                    statusVO.setStatusText(statusEnum.getText());
+                    return statusVO;
+                })
+                .sorted(Comparator.comparing(ProductDemandStatusVO::getStatus))
+                .collect(Collectors.toList());
+
+        return BaseResult.success(result);
     }
 
 }
