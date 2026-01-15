@@ -28,6 +28,5 @@ public class ProductDemandStatusUpdateReq extends BaseReq {
     private Set<Long> ids;
 
     @ApiModelProperty("业务域集ID")
-    @NotNull(message = "业务域集ID不能为空")
     private Long bizDomainGroupId;
 }
