@@ -10,6 +10,7 @@ import com.timevale.forward.facade.api.request.ProductDemandGroupMoveReq;
 import com.timevale.forward.facade.api.request.ProductDemandGroupProjectLinkReq;
 import com.timevale.forward.facade.api.request.ProductDemandGroupReq;
 import com.timevale.forward.facade.api.request.ProductDemandGroupResourcePlanReq;
+import com.timevale.forward.facade.api.result.ProductDemandGroupItemVO;
 import com.timevale.forward.facade.api.result.ProductDemandGroupResourcePlanVO;
 import com.timevale.forward.facade.api.result.ProductDemandGroupVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
@@ -51,7 +52,7 @@ public class ProductDemandGroupController {
 
     @ApiOperation("查询待排序的产品需求")
     @PostMapping("/listProductDemandBacklog")
-    public BusinessResult<PageQueryResult<ProductDemandVO>> listProductDemandBacklog(@RequestBody @Valid ProductDemandGroupQueryList productDemandGroupQueryList) {
+    public BusinessResult<PageQueryResult<ProductDemandGroupItemVO>> listProductDemandBacklog(@RequestBody @Valid ProductDemandGroupQueryList productDemandGroupQueryList) {
         return ResultUtils.result(productDemandGroupService.listProductDemandBacklog(productDemandGroupQueryList));
     }
 
