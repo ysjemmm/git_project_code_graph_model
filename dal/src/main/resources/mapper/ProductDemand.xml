@@ -1130,8 +1130,8 @@
     <select id="simpleList" resultType="com.timevale.forward.dal.entity.ProductDemandListDO">
         select a.`id`, a.`name`, a.`desc`, c.`name` as productLineName, a.`owner`, a.`owner_id`
         from product_demand as a
+        left join product_line c on a.product_line_id=c.id
         <if test="bizDomainIds != null and bizDomainIds.size() > 0">
-            left join product_line c on a.product_line_id=c.id
             left join biz_domain d on c.biz_domain_id=d.id
         </if>
         <where>

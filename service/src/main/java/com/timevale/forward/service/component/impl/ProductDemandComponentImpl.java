@@ -184,43 +184,104 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
     public void updateProductDemandStatus(Long projectId, Integer status, List<Long> productDemandIds) {
         List<ProjectProductDemandDO> exists = projectProductDemandMapper.getByProjectId(projectId);
         List<Long> existProductDemandIds = exists.stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
-        existProductDemandIds.addAll(productDemandIds);
-        if (CollectionUtils.isEmpty(existProductDemandIds)) {
+        
+        // 计算目标状态
+        Integer targetStatus = calculateTargetStatus(status);
+        
+        // 收集所有需要检查的需求ID
+        List<Long> allDemandIds = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(productDemandIds)) {
+            allDemandIds.addAll(productDemandIds);
+        }
+        if (!CollectionUtils.isEmpty(existProductDemandIds)) {
+            // 去重添加
+            for (Long id : existProductDemandIds) {
+                if (!allDemandIds.contains(id)) {
+                    allDemandIds.add(id);
+                }
+            }
+        }
+        
+        if (CollectionUtils.isEmpty(allDemandIds)) {
             log.info("更新产品需求,没有找到产品需求");
             return;
         }
+        
+        // 查询所有需求的当前状态
+        List<ProductDemandDO> allDemands = productDemandMapper.selectByIdList(allDemandIds);
+        
+        // 筛选出可以更新的需求（状态只能前进，不能回退）
+        List<Long> needUpdateIds = new ArrayList<>();
+        for (ProductDemandDO demand : allDemands) {
+            if (canUpdateStatus(demand.getStatus(), targetStatus)) {
+                needUpdateIds.add(demand.getId());
+            } else {
+                log.info("需求{}当前状态{}已经高于目标状态{}，跳过更新", 
+                    demand.getId(), demand.getStatus(), targetStatus);
+            }
+        }
+        
+        if (CollectionUtils.isEmpty(needUpdateIds)) {
+            log.info("更新产品需求,没有需要更新的产品需求（所有需求状态都已经高于目标状态）");
+            return;
+        }
 
-        List<ProductDemandDO> productDemands = productDemandMapper.selectByIdList(existProductDemandIds);
+        List<ProductDemandDO> productDemands = productDemandMapper.selectByIdList(needUpdateIds);
 
         Map<Long, Integer> statusMap = productDemands.stream().collect(Collectors.toMap(ProductDemandDO::getId, ProductDemandDO::getStatus, (v1, v2) -> v2));
         Map<Long, String> nameMap = productDemands.stream().collect(Collectors.toMap(ProductDemandDO::getId, ProductDemandDO::getName, (v1, v2) -> v2));
 
-        // 更新项目状态
-        Integer pdStatus = ProductDemandStatusEnum.WAITING.getCode();
-        if (ProjectStatusEnum.WAITING.getCode().equals(status)) {
-            pdStatus = ProductDemandStatusEnum.INCLUDED.getCode();
-            productDemandMapper.updateByIds(existProductDemandIds, pdStatus, false);
-        } else if (ProjectStatusEnum.SUSPEND.getCode().equals(status)) {
-            pdStatus = ProductDemandStatusEnum.PJ_SUSPEND.getCode();
-            productDemandMapper.updateByIds(existProductDemandIds, pdStatus, false);
-        } else if (ProjectStatusEnum.PLANING.getCode().equals(status)
-                || ProjectStatusEnum.DEVING.getCode().equals(status)
-                || ProjectStatusEnum.TESTING.getCode().equals(status)) {
-            pdStatus = ProductDemandStatusEnum.PROGRESS.getCode();
-            productDemandMapper.updateByIds(existProductDemandIds, pdStatus, false);
-        } else if (ProjectStatusEnum.RELEASED.getCode().equals(status)
-                || ProjectStatusEnum.CONCLUSION.getCode().equals(status)) {
-            pdStatus = ProductDemandStatusEnum.ONLINE.getCode();
-            productDemandMapper.updateByIds(existProductDemandIds, pdStatus, false);
-        } else if (ProjectStatusEnum.INVALID.getCode().equals(status)) {
-            productDemandMapper.updateByIds(existProductDemandIds, pdStatus, false);
+        // 更新需求状态
+        productDemandMapper.updateByIds(needUpdateIds, targetStatus, false);
+        
+        if (ProjectStatusEnum.INVALID.getCode().equals(status)) {
             // unlink log
             String projectName = projectMapper.get(projectId).getName();
             projectLogComponent.addLogWhenLinkOrUnlink(projectName, projectId, nameMap, null);
         }
 
-        productDemandLogComponent.addLogAsProjectStatusChange(statusMap, pdStatus);
-        updateDemandStatusAsProductStatusChange(existProductDemandIds, false);
+        productDemandLogComponent.addLogAsProjectStatusChange(statusMap, targetStatus);
+        updateDemandStatusAsProductStatusChange(needUpdateIds, false);
+    }
+    
+    /**
+     * 判断是否可以更新状态（状态只能前进，不能回退）
+     * @param currentStatus 当前状态
+     * @param targetStatus 目标状态
+     * @return true: 可以更新; false: 不能更新（会导致状态回退）
+     */
+    private boolean canUpdateStatus(Integer currentStatus, Integer targetStatus) {
+        if (currentStatus == null || targetStatus == null) {
+            return true;
+        }
+        // 特殊状态处理：已暂停(-10)和已作废(-20)的需求不应该被自动更新
+        if (currentStatus < 0) {
+            log.info("需求当前状态为特殊状态{}，不自动更新", currentStatus);
+            return false;
+        }
+        // 状态只能前进，不能回退
+        // 目标状态必须大于等于当前状态才能更新
+        return targetStatus >= currentStatus;
+    }
+    
+    /**
+     * 根据项目状态计算产品需求的目标状态
+     */
+    private Integer calculateTargetStatus(Integer projectStatus) {
+        if (ProjectStatusEnum.WAITING.getCode().equals(projectStatus)) {
+            return ProductDemandStatusEnum.INCLUDED.getCode();
+        } else if (ProjectStatusEnum.SUSPEND.getCode().equals(projectStatus)) {
+            return ProductDemandStatusEnum.PJ_SUSPEND.getCode();
+        } else if (ProjectStatusEnum.PLANING.getCode().equals(projectStatus)
+                || ProjectStatusEnum.DEVING.getCode().equals(projectStatus)
+                || ProjectStatusEnum.TESTING.getCode().equals(projectStatus)) {
+            return ProductDemandStatusEnum.PROGRESS.getCode();
+        } else if (ProjectStatusEnum.RELEASED.getCode().equals(projectStatus)
+                || ProjectStatusEnum.CONCLUSION.getCode().equals(projectStatus)) {
+            return ProductDemandStatusEnum.ONLINE.getCode();
+        } else {
+            return ProductDemandStatusEnum.WAITING.getCode();
+        }
     }
 
     @Override

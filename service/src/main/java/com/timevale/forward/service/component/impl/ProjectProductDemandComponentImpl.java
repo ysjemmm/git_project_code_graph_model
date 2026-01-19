@@ -139,28 +139,36 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
             projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(), pdNameMap, ButtonActionEnum.LINK.getText());
 
         } else {
-            // 原先只更新第一个【页面只能一个一个删除】，现在改为更新全部【分组邦定灰批量删除】
+            // 取消关联时，需要检查状态是否可以回退
+            // 状态只能前进，不能回退：如果当前状态已经高于WAITING，则不修改状态
             Integer newStatus = ProductDemandStatusEnum.WAITING.getCode();
             for (Long productDemandId : productDemandIds) {
-                ProductDemandDO productDemandDO = new ProductDemandDO();
-                productDemandDO.setId(productDemandId);
-                productDemandDO.setStatus(newStatus);
-                productDemandComponent.update(productDemandDO);
+                Integer currentStatus = statusMap.get(productDemandId);
+                // 特殊状态（暂停/作废）或已经高于WAITING的状态，不回退
+                if (currentStatus != null && (currentStatus < 0 || currentStatus > newStatus)) {
+                    log.info("需求{}当前状态{}，取消关联时不回退状态", productDemandId, currentStatus);
+                } else {
+                    ProductDemandDO productDemandDO = new ProductDemandDO();
+                    productDemandDO.setId(productDemandId);
+                    productDemandDO.setStatus(newStatus);
+                    productDemandComponent.update(productDemandDO);
+                }
 
                 projectProductDemandComponent.update(null, productDemandId);
             }
-
-//            ProductDemandDO productDemandDO = new ProductDemandDO();
-//            productDemandDO.setId(productDemandIds.get(0));
-//            productDemandDO.setStatus(ProductDemandStatusEnum.WAITING.getCode());
-//            productDemandComponent.update(productDemandDO);
-//            projectProductDemandComponent.update(null, productDemandIds.get(0));
 
             // 一个产品需求下的业务需求
             productDemandComponent.updateDemandStatusAsProductStatusChange(productDemandIds, false);
 
             projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(), pdNameMap, ButtonActionEnum.UN_LINK.getText());
-            productDemandLogComponent.addLogAsProjectStatusChange(statusMap, newStatus);
+            
+            // 只记录实际被修改的需求的日志
+            Map<Long, Integer> actualUpdatedStatusMap = statusMap.entrySet().stream()
+                .filter(e -> e.getValue() == null || (e.getValue() >= 0 && e.getValue() <= newStatus))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v2));
+            if (!actualUpdatedStatusMap.isEmpty()) {
+                productDemandLogComponent.addLogAsProjectStatusChange(actualUpdatedStatusMap, newStatus);
+            }
 
             // 取消产品需求和任务的关联
             productDemandIds.forEach(a -> taskProductDemandComponent.update(null, a));
