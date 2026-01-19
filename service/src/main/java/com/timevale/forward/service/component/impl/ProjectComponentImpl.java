@@ -865,6 +865,9 @@ public class ProjectComponentImpl implements ProjectComponent {
         Set<String> nodeKeys = nodeMap.keySet();
         if (Stream.of(ProjectNodeEnum.START_PLAN.getText(),
                 ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText(),
+                ProjectNodeEnum.DEMAND_AUDIT.getText(),
+                ProjectNodeEnum.PRODUCT_PLAN_REVIEW.getText(),
+                ProjectNodeEnum.PRODUCT_DETAILED_DESIGN_AND_SOLUTION_REVIEW.getText(),
                 ProjectNodeEnum.DEMAND_CONSTRUE.getText(),
                 ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText(),
                 ProjectNodeEnum.UED_AUDIT.getText()).noneMatch(nodeKeys::contains)) {
