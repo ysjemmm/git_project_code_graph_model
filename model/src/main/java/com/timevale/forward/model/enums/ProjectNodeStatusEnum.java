@@ -17,6 +17,9 @@ public enum ProjectNodeStatusEnum {
      */
     READY_START(0,"待启动"),
     READY_INTERNAL_AUDIT(10,"待内审"),
+    READY_AUDIT(11,"待评审"),
+    READY_PLAN_REVIEW(12,"待产品计划评审"),
+    READY_DESIGN_AND_SOLUTION_REVIEW(13,"待产品详细设计和方案评审"),
     READY_CONSTRUE(20,"待串讲"),
     READY_CONSTRUE_REVERSE(25,"待反串讲"),
     READY_UED_AUDIT(27,"待UED评审"),
@@ -51,6 +54,9 @@ public enum ProjectNodeStatusEnum {
         // 配置节点和节点状态的映射关系
         nodeStatusMap.put(ProjectNodeEnum.START_PLAN.getText(),              ProjectNodeStatusEnum.READY_START.code);
         nodeStatusMap.put(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText(),   ProjectNodeStatusEnum.READY_INTERNAL_AUDIT.code);
+        nodeStatusMap.put(ProjectNodeEnum.DEMAND_AUDIT.getText(),            ProjectNodeStatusEnum.READY_AUDIT.code);
+        nodeStatusMap.put(ProjectNodeEnum.PRODUCT_PLAN_REVIEW.getText(),     ProjectNodeStatusEnum.READY_PLAN_REVIEW.code);
+        nodeStatusMap.put(ProjectNodeEnum.PRODUCT_DETAILED_DESIGN_AND_SOLUTION_REVIEW.getText(),   ProjectNodeStatusEnum.READY_DESIGN_AND_SOLUTION_REVIEW.code);
         nodeStatusMap.put(ProjectNodeEnum.DEMAND_CONSTRUE.getText(),         ProjectNodeStatusEnum.READY_CONSTRUE.code);
         nodeStatusMap.put(ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText(), ProjectNodeStatusEnum.READY_CONSTRUE_REVERSE.code);
         nodeStatusMap.put(ProjectNodeEnum.UED_AUDIT.getText(),               ProjectNodeStatusEnum.READY_UED_AUDIT.code);
