@@ -76,4 +76,12 @@ public interface BizDomainGroupService {
      * @return 返回业务域集的产品线列表
      */
     BaseResult<List<ProductLineVO>> productLineList(Long bizDomainGroupId);
+
+    /**
+     * 查询有分组的业务域集列表
+     *
+     * @param bizDomainGroupQueryList 查询条件
+     * @return 返回有分组的业务域集列表
+     */
+    BaseResult<PageQueryResult<BizDomainGroupVO>> bizDomainGroupListWithGroups(BizDomainGroupQueryList bizDomainGroupQueryList);
 }

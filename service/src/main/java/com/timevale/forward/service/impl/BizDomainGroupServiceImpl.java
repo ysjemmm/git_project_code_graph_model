@@ -201,4 +201,16 @@ public class BizDomainGroupServiceImpl implements BizDomainGroupService {
         return BaseResult.success(productLineVOList);
     }
 
+    @Override
+    public BaseResult<PageQueryResult<BizDomainGroupVO>> bizDomainGroupListWithGroups(BizDomainGroupQueryList bizDomainGroupQueryList) {
+        PageHelper.startPage(bizDomainGroupQueryList.pageNum, bizDomainGroupQueryList.pageSize);
+        List<BizDomainGroupDO> bizDomainGroupDOList = bizDomainGroupMapper.selectBizDomainGroupsWithGroups(bizDomainGroupQueryList.getName());
+        List<BizDomainGroupVO> bizDomainGroupVOList = BizDomainGroupCopier.INSTANCE.convert(bizDomainGroupDOList);
+        
+        PageInfo<BizDomainGroupDO> pageInfo = new PageInfo<>(bizDomainGroupDOList);
+        PageQueryResult<BizDomainGroupVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(bizDomainGroupVOList);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+        return BaseResult.success(pageQueryResult);
+    }
 }

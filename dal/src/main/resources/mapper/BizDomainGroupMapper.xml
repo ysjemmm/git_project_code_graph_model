@@ -169,4 +169,16 @@
         </where>
     </select>
 
+    <!-- 查询有分组的业务域集列表 -->
+    <select id="selectBizDomainGroupsWithGroups" resultType="com.timevale.forward.dal.entity.BizDomainGroupDO">
+        SELECT DISTINCT bdg.*
+        FROM biz_domain_group bdg
+        INNER JOIN product_demand_group pdg ON bdg.id = pdg.biz_domain_group_id
+        WHERE bdg.is_deleted = false AND pdg.is_deleted = false
+        <if test="name != null and name != ''">
+            AND bdg.name LIKE CONCAT('%', #{name}, '%')
+        </if>
+        ORDER BY bdg.id DESC
+    </select>
+
 </mapper>
