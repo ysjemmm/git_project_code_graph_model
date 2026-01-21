@@ -146,7 +146,7 @@ public class DingWorkRecordClientImpl implements DingWorkRecordClient {
                 return dingWorkRecordService.getTask(input).getResultObject();
             }
         } catch (Exception e) {
-            log.error("[erpMessage]获取待办失败  error: " + e.getMessage() + " 发送通知信息：" + getTodoTaskMsg);
+            log.warn("[erpMessage]获取待办失败  error: " + e.getMessage() + " 发送通知信息：" + getTodoTaskMsg);
         }
         return null;
     }
