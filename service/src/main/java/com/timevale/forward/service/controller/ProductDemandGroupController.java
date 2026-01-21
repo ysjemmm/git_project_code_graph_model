@@ -13,13 +13,13 @@ import com.timevale.forward.facade.api.request.ProductDemandGroupResourcePlanReq
 import com.timevale.forward.facade.api.result.ProductDemandGroupItemVO;
 import com.timevale.forward.facade.api.result.ProductDemandGroupResourcePlanVO;
 import com.timevale.forward.facade.api.result.ProductDemandGroupVO;
+import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.service.utils.ResultUtils;
 import com.timevale.mandarin.common.result.BusinessResult;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -38,7 +38,6 @@ import javax.validation.Valid;
 @RestController
 @Api(tags = "产品需求分组管理")
 @Slf4j
-@Validated
 @RequestMapping("/forward/productDemand/group")
 public class ProductDemandGroupController {
 
