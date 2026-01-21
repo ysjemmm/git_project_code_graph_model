@@ -119,6 +119,7 @@ import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
 import com.timevale.forward.facade.api.result.ProjectNodeVO;
 import com.timevale.forward.facade.api.result.ProjectProductLineVO;
 import com.timevale.forward.facade.api.result.ProjectSimpleVO;
+import com.timevale.forward.facade.api.result.ProjectStageConfigVO;
 import com.timevale.forward.facade.api.result.ProjectTabCountVO;
 import com.timevale.forward.facade.api.result.ProjectTreeVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
@@ -192,6 +193,7 @@ import com.timevale.forward.service.manager.MessageRetryManager;
 import com.timevale.forward.service.observer.event.ProjectEstablishDateChangeMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.EnvUtils;
+import com.timevale.forward.service.utils.JsonUtils;
 import com.timevale.forward.service.utils.JwtGeneratorUtil;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.StringUtil;
@@ -212,6 +214,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -383,6 +386,9 @@ public class ProjectServiceImpl implements ProjectService {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    @Value("${project.stage.config:}")
+    private String projectStageConfigJson;
 
     @Override
     public BaseResult<Void> sendWorkHourNotice(boolean isExpedite, Long projectId) {
@@ -1943,6 +1949,34 @@ public class ProjectServiceImpl implements ProjectService {
                 projectNodeAddReq.getActualDate(), projectNodeAddReq.getActualEndDate());
 
         return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<List<ProjectStageConfigVO.Stage>> queryStageConfig(String kind, Integer type) {
+        if (projectStageConfigJson == null || projectStageConfigJson.trim().isEmpty()) {
+            log.warn("project.stage.config is empty");
+            return BaseResult.success(Collections.emptyList());
+        }
+        ProjectStageConfigVO stageConfig = JsonUtils.fromJsonWithoutError(projectStageConfigJson, ProjectStageConfigVO.class);
+        if (stageConfig == null || stageConfig.getConfig() == null) {
+            return BaseResult.success(Collections.emptyList());
+        }
+        for (ProjectStageConfigVO.KindConfig kindConfig : stageConfig.getConfig()) {
+            if (!kind.equals(kindConfig.getKind()) || kindConfig.getTypeConfig() == null) {
+                continue;
+            }
+            for (ProjectStageConfigVO.TypeConfig typeConfig : kindConfig.getTypeConfig()) {
+                if (typeConfig == null || !type.equals(typeConfig.getType())) {
+                    continue;
+                }
+                List<ProjectStageConfigVO.Stage> stages = typeConfig.getStage();
+                if (stages == null) {
+                    stages = Collections.emptyList();
+                }
+                return BaseResult.success(stages);
+            }
+        }
+        return BaseResult.success(Collections.emptyList());
     }
 
     @Override
