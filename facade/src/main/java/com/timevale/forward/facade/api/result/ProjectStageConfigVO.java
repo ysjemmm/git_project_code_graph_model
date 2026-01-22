@@ -34,5 +34,6 @@ public class ProjectStageConfigVO {
     public static class StageItem {
         private Integer num;
         private String name;
+        private Boolean isRequired;
     }
 }

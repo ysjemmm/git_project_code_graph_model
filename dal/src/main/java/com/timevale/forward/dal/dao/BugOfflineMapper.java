@@ -138,4 +138,22 @@ public interface BugOfflineMapper {
     List<BugOfflineDO> findBugsApproachingResolveTime(@Param("productLineIds") List<Long> productLineIds, @Param("timeFieldName") String timeFieldName, @Param("remindDays") int remindDays, @Param("remindTime") LocalTime remindTime);
 
     List<BugOfflineDO> findBugsOverdue(@Param("productLineIds") List<Long> productLineIds, @Param("timeFieldName") String timeFieldName);
+
+    /**
+     * 根据ID列表获取线下bug列表
+     *
+     * @param idList ID列表
+     * @return 线下bug列表
+     */
+    List<BugOfflineDO> getByIdList(@Param("idList") List<Long> idList);
+
+    /**
+     * 批量更新线下bug的项目和产品线
+     *
+     * @param idList ID列表
+     * @param projectId 项目ID
+     * @param productLineId 产品线ID
+     * @return 影响行数
+     */
+    int updateProjectAndProductLine(@Param("idList") List<Long> idList, @Param("projectId") Long projectId, @Param("productLineId") Long productLineId);
 }
