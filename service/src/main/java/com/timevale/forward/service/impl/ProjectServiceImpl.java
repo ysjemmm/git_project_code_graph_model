@@ -1388,6 +1388,22 @@ public class ProjectServiceImpl implements ProjectService {
         //节点
         List<ProjectNodeDO> projectNodeDO = projectNodeComponent.get(projectId);
         List<ProjectNodeVO> projectNodeVO = ProjectNodeCopier.INSTANCE.transform(projectNodeDO);
+        BaseResult<List<ProjectStageConfigVO.Stage>> listBaseResult = queryStageConfig(projectDetailVO.getKind(), projectDetailVO.getType());
+        List<ProjectStageConfigVO.Stage> stageList = Optional.ofNullable(listBaseResult).map(BaseResult::getData).orElse(Collections.emptyList());
+        
+        // 根据返回结果构建阶段名称
+        for (ProjectNodeVO nodeVO : projectNodeVO) {
+            // 尝试根据节点的name在阶段配置中找到匹配项
+            Optional<ProjectStageConfigVO.Stage> matchedStage = stageList.stream()
+                .filter(stage -> stage.getStageType() != null && nodeVO.getStageType() != null)
+                .filter(stage -> stage.getStageType().equals(nodeVO.getStageType()))
+                .findFirst();
+            
+            if (matchedStage.isPresent()) {
+                nodeVO.setStageName(matchedStage.get().getStageName());
+                nodeVO.setStageType(matchedStage.get().getStageType());
+            }
+        }
         projectDetailVO.setProjectNodes(projectNodeVO);
         Date currentDate = new Date();
         projectDetailVO.setCurrentDate(currentDate);
@@ -1961,7 +1977,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public BaseResult<List<ProjectStageConfigVO.Stage>> queryStageConfig(String kind, Integer type) {
+    public BaseResult<List<ProjectStageConfigVO.Stage>> queryStageConfig(Integer kind, Integer type) {
         if (projectStageConfigJson == null || projectStageConfigJson.trim().isEmpty()) {
             log.warn("project.stage.config is empty");
             return BaseResult.success(Collections.emptyList());

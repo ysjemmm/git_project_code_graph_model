@@ -284,5 +284,5 @@ public interface ProjectService {
      */
     BaseResult<Boolean> autoCompleteTime(ProjectNodeAddReq projectNodeAddReq);
 
-    BaseResult<List<ProjectStageConfigVO.Stage>> queryStageConfig(String kind, Integer type);
+    BaseResult<List<ProjectStageConfigVO.Stage>> queryStageConfig(Integer kind, Integer type);
 }

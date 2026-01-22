@@ -11,7 +11,7 @@ public class ProjectStageConfigVO {
 
     @Data
     public static class KindConfig {
-        private String kind;
+        private Integer kind;
         private String kindName;
         private List<TypeConfig> typeConfig;
     }

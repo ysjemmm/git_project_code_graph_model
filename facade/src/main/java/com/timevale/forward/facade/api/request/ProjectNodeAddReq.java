@@ -33,4 +33,7 @@ public class ProjectNodeAddReq extends BaseReq{
 
     @ApiModelProperty("实际完成结束时间")
     private Date actualEndDate;
+
+    @ApiModelProperty("阶段类型")
+    private String stageType;
 }
