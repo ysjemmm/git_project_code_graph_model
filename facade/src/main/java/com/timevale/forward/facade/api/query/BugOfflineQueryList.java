@@ -18,6 +18,9 @@ import java.util.List;
 @ApiModel("线下bug列表查询")
 public class BugOfflineQueryList extends QueryBase {
 
+    @ApiModelProperty("bug的id集合")
+    private List<Long> ids;
+
     @ApiModelProperty("bug标题")
     private String name;
 

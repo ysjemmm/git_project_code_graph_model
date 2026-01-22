@@ -14,6 +14,9 @@ import java.util.List;
 @Data
 @Builder
 public class BugOfflineListCondition {
+
+    private List<Long> ids;
+
     /**
      * 名称
      */
