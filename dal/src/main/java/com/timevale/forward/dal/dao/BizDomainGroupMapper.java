@@ -79,4 +79,12 @@ public interface BizDomainGroupMapper {
      * @return 业务域组DO列表
      */
     List<BizDomainGroupDO> selectGroupsWithDemandsByBizDomainIds(@Param("bizDomainIds") List<Long> bizDomainIds);
+
+    /**
+     * 查询有分组的业务域集列表
+     *
+     * @param name 名称（可选）
+     * @return 业务域集DO列表
+     */
+    List<BizDomainGroupDO> selectBizDomainGroupsWithGroups(@Param("name") String name);
 }
