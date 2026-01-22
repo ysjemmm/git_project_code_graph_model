@@ -1647,6 +1647,9 @@ public class ProjectServiceImpl implements ProjectService {
             Map<Long, List<TaskProductDemandDO>> taskProductDemandMap =
                     taskProductDemandDOList.stream().collect(Collectors.groupingBy(TaskProductDemandDO::getProductDemandId));
 
+            // 查询标签信息
+            Map<Long, List<BizLabelSimpleVO>> bizLabelMap = bizLabelComponent.getBizLabelMap(productDemandIdList, BizTypeEnum.PRODUCT_DEMAND.getCode());
+
             // 填充任务数
             for (ProductDemandVO e : productDemandVOList) {
                 int taskCount = taskProductDemandMap.containsKey(e.getId()) ? taskProductDemandMap.get(e.getId()).size() : 0;
@@ -1655,6 +1658,12 @@ public class ProjectServiceImpl implements ProjectService {
                 e.setProjectId(projectId);
                 e.setStatusName(ProductDemandStatusEnum.getTextByCode(e.getStatus()));
                 e.setPriorityName(PriorityEnum.getTextByCode(e.getPriority()));
+
+                // 填充标签信息
+                List<BizLabelSimpleVO> labelSimpleVOList = bizLabelMap.get(e.getId());
+                if (CollectionUtils.isNotEmpty(labelSimpleVOList)) {
+                    e.setLabelNames(labelSimpleVOList);
+                }
             }
         }
 
