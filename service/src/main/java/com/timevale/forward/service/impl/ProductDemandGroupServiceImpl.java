@@ -192,7 +192,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
      * @return 待规划产品需求
      */
     @Override
-    public BaseResult<PageQueryResult<ProductDemandVO>> listProductDemandBacklog(ProductDemandGroupQueryList productDemandGroupQueryList) {
+    public BaseResult<PageQueryResult<ProductDemandGroupItemVO>> listProductDemandBacklog(ProductDemandGroupQueryList productDemandGroupQueryList) {
         log.info("待规划产品需求接收参数:{}", productDemandGroupQueryList);
         ProductDemandGroupListCondition condition = ProductDemandGroupCopier.INSTANCE.convert(productDemandGroupQueryList);
         //是否打标
@@ -204,7 +204,50 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         PageHelper.startPage(productDemandGroupQueryList.getPageNum(), productDemandGroupQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<ProductDemandListDO> productDemandListDO = productDemandGroupItemComponent.listProductDemandBacklog(condition);
 
-        PageQueryResult<ProductDemandVO> pageQueryResult = groupDuplicateUtil.getDemandVOQueryResultVO(productDemandListDO);
+        // 将需求包装成虚拟分组结构
+        List<ProductDemandGroupItemVO> productDemandGroupItemVOList = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(productDemandListDO)) {
+            // 获取所有需求的标签
+            List<Long> productDemandIds = productDemandListDO.stream().map(ProductDemandListDO::getId).collect(Collectors.toList());
+            Map<Long, List<BizLabelSimpleVO>> bizLabelMap = bizLabelComponent.getBizLabelMap(productDemandIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
+            
+            for (ProductDemandListDO demandDO : productDemandListDO) {
+                // 创建虚拟分组项
+                ProductDemandGroupItemVO itemVO = new ProductDemandGroupItemVO();
+                itemVO.setId(demandDO.getId());  // 虚拟ID = 需求ID
+                itemVO.setProductDemandGroupId(-1L);  // 虚拟分组ID固定为-1
+                itemVO.setProductDemandId(demandDO.getId());
+                
+                // 转换需求详情
+                ProductDemandVO productDemandVO = ProductDemandCopier.INSTANCE.convert(demandDO);
+                productDemandVO.setStatusName(ProductDemandStatusEnum.getTextByCode(productDemandVO.getStatus()));
+                productDemandVO.setPriorityName(PriorityEnum.getTextByCode(productDemandVO.getPriority()));
+                
+                // 设置标签
+                List<BizLabelSimpleVO> labelSimpleVOList = bizLabelMap.get(demandDO.getId());
+                if (CollectionUtils.isNotEmpty(labelSimpleVOList)) {
+                    productDemandVO.setLabelNames(labelSimpleVOList);
+                }
+                
+                // 设置需求类型名称
+                if (CollectionUtils.isNotEmpty(productDemandVO.getType())) {
+                    String typeName = productDemandVO.getType().stream()
+                            .map(ProductDemandTypeEnum::getTextByCode)
+                            .collect(Collectors.joining(","));
+                    productDemandVO.setTypeName(typeName);
+                }
+                
+                itemVO.setProductDemand(productDemandVO);
+                productDemandGroupItemVOList.add(itemVO);
+            }
+        }
+        
+        // 构建分页结果
+        PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
+        PageQueryResult<ProductDemandGroupItemVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(productDemandGroupItemVOList);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+        
         return BaseResult.success(pageQueryResult);
     }
 

@@ -4,6 +4,7 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.ProductDemandGroupQueryList;
 import com.timevale.forward.facade.api.request.*;
+import com.timevale.forward.facade.api.result.ProductDemandGroupItemVO;
 import com.timevale.forward.facade.api.result.ProductDemandGroupResourcePlanVO;
 import com.timevale.forward.facade.api.result.ProductDemandGroupVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
@@ -22,9 +23,9 @@ public interface ProductDemandGroupService {
      * 查询待排序的产品需求
      *
      * @param productDemandGroupQueryList 产品分组查询条件信息
-     * @return 列表
+     * @return 列表（productDemandGroupId固定为-1，表示待规划）
      */
-    BaseResult<PageQueryResult<ProductDemandVO>> listProductDemandBacklog(ProductDemandGroupQueryList productDemandGroupQueryList);
+    BaseResult<PageQueryResult<ProductDemandGroupItemVO>> listProductDemandBacklog(ProductDemandGroupQueryList productDemandGroupQueryList);
 
 
     /**

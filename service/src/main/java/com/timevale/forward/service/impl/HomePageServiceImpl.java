@@ -209,6 +209,9 @@ public class HomePageServiceImpl implements HomePageService {
 
             dataIndicatorVO.setProjectReadyStartCount((int) projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_START.getCode().equals(e.getNodeStatus())).count());
             dataIndicatorVO.setProjectReadyInternalAuditCount((int) projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_INTERNAL_AUDIT.getCode().equals(e.getNodeStatus())).count());
+            dataIndicatorVO.setProjectReadyDemandAuditCount((int) projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_AUDIT.getCode().equals(e.getNodeStatus())).count());
+            dataIndicatorVO.setProjectReadyProductPlanReviewCount((int) projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_PLAN_REVIEW.getCode().equals(e.getNodeStatus())).count());
+            dataIndicatorVO.setProjectReadyDetailedDesignAndSolutionCount((int) projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_DESIGN_AND_SOLUTION_REVIEW.getCode().equals(e.getNodeStatus())).count());
             dataIndicatorVO.setProjectReadyConstrueCount((int) projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_CONSTRUE.getCode().equals(e.getNodeStatus())).count());
             dataIndicatorVO.setProjectReadyConstrueReverseCount((int) projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_CONSTRUE_REVERSE.getCode().equals(e.getNodeStatus())).count());
             dataIndicatorVO.setProjectReadyUedAuditCount((int) projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_UED_AUDIT.getCode().equals(e.getNodeStatus())).count());

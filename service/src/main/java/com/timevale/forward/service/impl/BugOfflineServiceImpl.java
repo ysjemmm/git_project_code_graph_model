@@ -38,6 +38,7 @@ import com.timevale.forward.facade.api.client.BugOfflineService;
 import com.timevale.forward.facade.api.query.BugLogQueryList;
 import com.timevale.forward.facade.api.query.BugOfflineQueryList;
 import com.timevale.forward.facade.api.request.BugOfflineAddReq;
+import com.timevale.forward.facade.api.request.BugOfflineChangeProjectReq;
 import com.timevale.forward.facade.api.request.BugOfflineDelayHandleReq;
 import com.timevale.forward.facade.api.request.BugOfflineModifyReq;
 import com.timevale.forward.facade.api.request.BugOfflinePassSelfReq;
@@ -1412,6 +1413,98 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             bugLogDOList.add(bugLogDO);
         }
         return bugLogDOList;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> changeProject(BugOfflineChangeProjectReq bugOfflineChangeProjectReq) {
+        log.info("线下bug变更项目接收参数:{}", bugOfflineChangeProjectReq);
+        
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        
+        // 校验bug是否存在
+        List<BugOfflineDO> bugOfflineDOList = bugOfflineMapper.getByIdList(bugOfflineChangeProjectReq.getIds());
+        if (CollUtil.isEmpty(bugOfflineDOList)) {
+            throw new BaseBizRuntimeException("选择的线下bug不存在");
+        }
+        
+        // 校验bug状态，完成和关闭状态的bug不能变更项目
+        boolean hasCompletedOrClosedBug = bugOfflineDOList.stream().anyMatch(bug -> 
+            BugStatusEnum.COMPLETE.getCode().equals(bug.getStatus()) || 
+            BugStatusEnum.CLOSE.getCode().equals(bug.getStatus())
+        );
+        if (hasCompletedOrClosedBug) {
+            throw new BaseBizRuntimeException("完成和关闭状态的bug不能变更项目，请修改后重试");
+        }
+        
+        // 校验目标项目是否存在且未发布
+        ProjectDO targetProjectDO = projectMapper.get(bugOfflineChangeProjectReq.getProjectId());
+        if (targetProjectDO == null) {
+            throw new BaseBizRuntimeException("目标项目不存在");
+        }
+        if (ProjectStatusEnum.RELEASED.getCode().equals(targetProjectDO.getStatus())) {
+            throw new BaseBizRuntimeException("目标项目已发布，无法变更");
+        }
+        
+        // 校验产品线是否存在
+        ProductLineDO targetProductLineDO = productLineMapper.selectById(bugOfflineChangeProjectReq.getProductLineId());
+        if (targetProductLineDO == null) {
+            throw new BaseBizRuntimeException("目标产品线不存在");
+        }
+        
+        // 校验权限：只有经办人、提出人或QA可以变更项目
+        for (BugOfflineDO bugOfflineDO : bugOfflineDOList) {
+            Boolean operatorResult = isPermission(bugOfflineDO.getOperatorId());
+            Boolean proposerResult = isPermission(bugOfflineDO.getProposerId());
+            Boolean isQA = jobFunctionMatch(userInfo.getId(), JobFunctionEnum.QA);
+            if (!operatorResult && !proposerResult && !isQA) {
+                throw new BaseBizRuntimeException("您没有操作权限变更bug: " + bugOfflineDO.getName());
+            }
+        }
+        
+        // 批量更新bug的项目和产品线
+        bugOfflineMapper.updateProjectAndProductLine(
+            bugOfflineChangeProjectReq.getIds(), 
+            bugOfflineChangeProjectReq.getProjectId(), 
+            bugOfflineChangeProjectReq.getProductLineId()
+        );
+        
+        // 记录变更日志
+        List<BugLogDO> bugLogDOList = new ArrayList<>();
+        for (BugOfflineDO bugOfflineDO : bugOfflineDOList) {
+            // 项目变更日志
+            if (!Objects.equals(bugOfflineDO.getProjectId(), bugOfflineChangeProjectReq.getProjectId())) {
+                ProjectDO oldProjectDO = projectMapper.get(bugOfflineDO.getProjectId());
+                BugLogDO projectLogDO = getBugLogDO(oldProjectDO != null, oldProjectDO.getName(), bugOfflineDO, BugFieldEnum.PROJECTS, targetProjectDO.getName());
+                bugLogDOList.add(projectLogDO);
+            }
+            
+            // 产品线变更日志
+            if (!Objects.equals(bugOfflineDO.getProductLineId(), bugOfflineChangeProjectReq.getProductLineId())) {
+                ProductLineDO oldProductLineDO = productLineMapper.selectById(bugOfflineDO.getProductLineId());
+                BugLogDO productLineLogDO = getBugLogDO(oldProductLineDO != null, oldProductLineDO.getName(), bugOfflineDO, BugFieldEnum.PRODUCT_LINE, targetProductLineDO.getName());
+                bugLogDOList.add(productLineLogDO);
+            }
+        }
+        
+        // 批量插入变更日志
+        if (CollUtil.isNotEmpty(bugLogDOList)) {
+            bugLogMapper.batchInsert(bugLogDOList);
+        }
+        
+        return BaseResult.success(true);
+    }
+
+    private BugLogDO getBugLogDO(boolean oldProductLineDO, String oldProductLineDO1, BugOfflineDO bugOfflineDO, BugFieldEnum productLine, String targetProductLineDO) {
+        String oldProductLineName = oldProductLineDO ? oldProductLineDO1 : "";
+
+        BugLogDO productLineLogDO = new BugLogDO();
+        productLineLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+        productLineLogDO.setMainId(bugOfflineDO.getId());
+        productLineLogDO.setField(productLine.getText());
+        productLineLogDO.setOldValue(oldProductLineName);
+        productLineLogDO.setNewValue(targetProductLineDO);
+        return productLineLogDO;
     }
 }
 

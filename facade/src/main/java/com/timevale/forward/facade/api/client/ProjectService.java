@@ -2,13 +2,44 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
-import com.timevale.forward.facade.api.query.*;
-import com.timevale.forward.facade.api.request.*;
-import com.timevale.forward.facade.api.result.*;
+import com.timevale.forward.facade.api.query.ProjectBizDemandQueryList;
+import com.timevale.forward.facade.api.query.ProjectLinkProductDemandQueryList;
+import com.timevale.forward.facade.api.query.ProjectPageQuery;
+import com.timevale.forward.facade.api.query.ProjectProductDemandQueryList;
+import com.timevale.forward.facade.api.query.ProjectQueryList;
+import com.timevale.forward.facade.api.request.ProjectAddReq;
+import com.timevale.forward.facade.api.request.ProjectAppendChildReq;
+import com.timevale.forward.facade.api.request.ProjectChildListReq;
+import com.timevale.forward.facade.api.request.ProjectConclusionReq;
+import com.timevale.forward.facade.api.request.ProjectDateModifyReq;
+import com.timevale.forward.facade.api.request.ProjectDeleteChildReq;
+import com.timevale.forward.facade.api.request.ProjectInnerAddReq;
+import com.timevale.forward.facade.api.request.ProjectInnerCompleteReq;
+import com.timevale.forward.facade.api.request.ProjectModifyReq;
+import com.timevale.forward.facade.api.request.ProjectNodeAddReq;
+import com.timevale.forward.facade.api.request.ProjectProductDemandLinkReq;
+import com.timevale.forward.facade.api.request.ProjectSimpleModifyReq;
+import com.timevale.forward.facade.api.request.ProjectStageChangeReq;
+import com.timevale.forward.facade.api.request.ProjectUnWriteReasonModifyReq;
+import com.timevale.forward.facade.api.request.ProjectUpdateStatusReq;
+import com.timevale.forward.facade.api.result.BizDemandVO;
+import com.timevale.forward.facade.api.result.ConclusionFormVO;
+import com.timevale.forward.facade.api.result.ModifyProjectCheckVO;
+import com.timevale.forward.facade.api.result.ProductDemandStatusVO;
+import com.timevale.forward.facade.api.result.ProductDemandVO;
+import com.timevale.forward.facade.api.result.ProjectBaseVO;
+import com.timevale.forward.facade.api.result.ProjectDetailVO;
+import com.timevale.forward.facade.api.result.ProjectInnerDetailVO;
+import com.timevale.forward.facade.api.result.ProjectProductLineVO;
+import com.timevale.forward.facade.api.result.ProjectSimpleVO;
+import com.timevale.forward.facade.api.result.ProjectStageConfigVO;
+import com.timevale.forward.facade.api.result.ProjectTabCountVO;
+import com.timevale.forward.facade.api.result.ProjectTreeVO;
+import com.timevale.forward.facade.api.result.ProjectVO;
+import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
-import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -252,4 +283,6 @@ public interface ProjectService {
      * @return 项目检查结果集合
      */
     BaseResult<Boolean> autoCompleteTime(ProjectNodeAddReq projectNodeAddReq);
+
+    BaseResult<List<ProjectStageConfigVO.Stage>> queryStageConfig(String kind, Integer type);
 }

@@ -22,6 +22,9 @@ public enum ProjectNodeEnum {
      */
     START_PLAN(0, "开始规划"),
     DEMAND_INTERNAL_AUDIT(10, "需求内审"),
+    DEMAND_AUDIT(11, "TR1(需求评审)"),
+    PRODUCT_PLAN_REVIEW(12, "TR2(产品计划评审)"),
+    PRODUCT_DETAILED_DESIGN_AND_SOLUTION_REVIEW(13, "TR3(产品详细设计和方案评审)"),
     DEMAND_CONSTRUE(20, "需求串讲"),
     DEMAND_CONSTRUE_REVERSE(25, "需求反串讲"),
     UED_AUDIT(27, "UED评审"),

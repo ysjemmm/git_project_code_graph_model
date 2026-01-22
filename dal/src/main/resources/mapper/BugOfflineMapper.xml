@@ -416,4 +416,25 @@
             #{item}
         </foreach>
     </select>
+
+    <select id="getByIdList" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
+        SELECT *
+        FROM bug_offline
+        WHERE is_deleted = false
+        AND id IN
+        <foreach collection="idList" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <update id="updateProjectAndProductLine">
+        UPDATE bug_offline
+        SET project_id = #{projectId},
+            product_line_id = #{productLineId}
+        WHERE is_deleted = false
+        AND id IN
+        <foreach collection="idList" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </update>
 </mapper>

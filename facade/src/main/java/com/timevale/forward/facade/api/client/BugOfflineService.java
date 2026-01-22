@@ -148,5 +148,13 @@ public interface BugOfflineService {
      */
     BaseResult<PageQueryResult<BugLogVO>> bugLogList(BugLogQueryList logQuery);
 
+    /**
+     * 变更项目
+     *
+     * @param bugOfflineChangeProjectReq 变更项目参数
+     * @return Boolean
+     */
+    BaseResult<Boolean> changeProject(BugOfflineChangeProjectReq bugOfflineChangeProjectReq);
+
 
 }
