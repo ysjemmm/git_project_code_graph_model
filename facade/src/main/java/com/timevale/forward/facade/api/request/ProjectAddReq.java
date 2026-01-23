@@ -132,4 +132,8 @@ public class ProjectAddReq extends ToString {
     @ApiModelProperty("业务需求列表")
     private List<Long> bizDemandIds;
 
+    @ApiModelProperty("节点")
+    @NotNull(message = "项目节点不能为空")
+    private List<ProjectNodeAddReq> projectNodes;
+
 }

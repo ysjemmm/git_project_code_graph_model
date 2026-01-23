@@ -33,7 +33,7 @@ public enum ProjectNodeEnum {
     WRITE_TEST_CASES(50, "编写测试用例"),
     USE_CASE_REVIEW(60, "用例评审"),
     SUBMIT_TEST(70, "提测"),
-    TEST_START(80, "测试开始"),
+    TEST_START(80, "发布测试"),
     PUBLISH_SIMULATE(90, "发布模拟"),
     PUBLISH_OFFICIAL(100, "发布正式");
 

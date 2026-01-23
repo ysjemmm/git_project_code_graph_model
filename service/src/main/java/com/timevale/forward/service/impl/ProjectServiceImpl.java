@@ -843,8 +843,10 @@ public class ProjectServiceImpl implements ProjectService {
             projectNodeComponent.buildNodeForCustomerDevProject(projectDO.getPlanStartDate(),
                     projectDO.getPlanEndDate(), projectDO.getId());
         } else {
-            projectNodeComponent.buildDefaultNode(projectDO.getPlanStartDate(),
-                    projectDO.getPlanEndDate(), projectDO.getId());
+//            projectNodeComponent.buildDefaultNode(projectDO.getPlanStartDate(),
+//                    projectDO.getPlanEndDate(), projectDO.getId());
+            List<ProjectNodeDO> nodes = ProjectNodeCopier.INSTANCE.convert(projectAddReq.getProjectNodes());
+            projectNodeComponent.add(nodes, projectDO.getId());
         }
 
         Integer status = projectDO.getStatus();
