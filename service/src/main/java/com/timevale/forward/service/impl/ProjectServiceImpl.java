@@ -1860,7 +1860,10 @@ public class ProjectServiceImpl implements ProjectService {
             ProjectProductLineVO o = new ProjectProductLineVO();
             o.setId(a.getId());
             o.setName(a.getName());
-            List<ProductLineDO> pdls = ppIdMap.get(a.getId()).stream().filter(pdlMap::containsKey).map(pdlMap::get).collect(Collectors.toList());
+            Set<Long> productLineIdSet = ppIdMap.get(a.getId());
+            List<ProductLineDO> pdls = productLineIdSet != null
+                    ? productLineIdSet.stream().filter(pdlMap::containsKey).map(pdlMap::get).collect(Collectors.toList())
+                    : Collections.emptyList();
             o.setProductLines(ProductLineCopier.INSTANCE.convert(pdls));
             return o;
         }).collect(Collectors.toList());
