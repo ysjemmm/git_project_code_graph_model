@@ -47,4 +47,7 @@ public class ProjectNodeVO extends ToString {
     @ApiModelProperty("阶段名称")
     private String stageName;
 
+    @ApiModelProperty("序号")
+    private Integer num;
+
 }

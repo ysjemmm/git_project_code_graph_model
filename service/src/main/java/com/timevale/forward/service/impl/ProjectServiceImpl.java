@@ -1395,15 +1395,28 @@ public class ProjectServiceImpl implements ProjectService {
         
         // 根据返回结果构建阶段名称
         for (ProjectNodeVO nodeVO : projectNodeVO) {
-            // 尝试根据节点的name在阶段配置中找到匹配项
+            // 尝试根据节点的stageType在阶段配置中找到匹配项
             Optional<ProjectStageConfigVO.Stage> matchedStage = stageList.stream()
                 .filter(stage -> stage.getStageType() != null && nodeVO.getStageType() != null)
                 .filter(stage -> stage.getStageType().equals(nodeVO.getStageType()))
                 .findFirst();
             
             if (matchedStage.isPresent()) {
-                nodeVO.setStageName(matchedStage.get().getStageName());
-                nodeVO.setStageType(matchedStage.get().getStageType());
+                ProjectStageConfigVO.Stage stage = matchedStage.get();
+                nodeVO.setStageName(stage.getStageName());
+                nodeVO.setStageType(stage.getStageType());
+                
+                // 根据节点的name在阶段的nodes中找到对应的序号
+                if (stage.getNodes() != null && nodeVO.getName() != null) {
+                    Optional<ProjectStageConfigVO.StageItem> matchedNode = stage.getNodes().stream()
+                        .filter(node -> node.getName() != null)
+                        .filter(node -> node.getName().equals(nodeVO.getName()))
+                        .findFirst();
+                    
+                    if (matchedNode.isPresent()) {
+                        nodeVO.setNum(matchedNode.get().getNum());
+                    }
+                }
             }
         }
         projectDetailVO.setProjectNodes(projectNodeVO);
