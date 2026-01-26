@@ -50,4 +50,7 @@ public class ProjectNodeVO extends ToString {
     @ApiModelProperty("序号")
     private Integer num;
 
+    @ApiModelProperty("版本")
+    private Integer version;
+
 }

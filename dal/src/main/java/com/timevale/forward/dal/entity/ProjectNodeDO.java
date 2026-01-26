@@ -53,4 +53,9 @@ public class ProjectNodeDO extends BaseDO {
      */
     private String stageType;
 
+    /**
+     * 编码
+     */
+    private Integer version;
+
 }

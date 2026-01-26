@@ -3,10 +3,10 @@
 <mapper namespace="com.timevale.forward.dal.dao.ProjectNodeMapper">
 
     <insert id="batchInsert" parameterType="java.util.List">
-        insert into project_node (project_id,name, plan_date, plan_end_date, actual_date, actual_end_date, code, create_man_id, create_man, stage_type)
+        insert into project_node (project_id,name, plan_date, plan_end_date, actual_date, actual_end_date, code, create_man_id, create_man, stage_type, version)
         values
         <foreach collection="list" item="i" open="" separator="," close="">
-            (#{i.projectId}, #{i.name}, #{i.planDate}, #{i.planEndDate}, #{i.actualDate}, #{i.actualEndDate}, #{i.code}, #{createManId},#{createMan}, #{i.stageType})
+            (#{i.projectId}, #{i.name}, #{i.planDate}, #{i.planEndDate}, #{i.actualDate}, #{i.actualEndDate}, #{i.code}, #{createManId},#{createMan}, #{i.stageType}, #{i.version})
         </foreach>
     </insert>
 

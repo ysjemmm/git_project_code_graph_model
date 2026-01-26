@@ -27,6 +27,7 @@ public class ProjectStageConfigVO {
     public static class Stage {
         private String stageName;
         private String stageType;
+        private Integer version;
         private List<StageItem> nodes;
     }
 

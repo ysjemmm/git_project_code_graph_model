@@ -1398,14 +1398,14 @@ public class ProjectServiceImpl implements ProjectService {
             // 尝试根据节点的stageType在阶段配置中找到匹配项
             Optional<ProjectStageConfigVO.Stage> matchedStage = stageList.stream()
                 .filter(stage -> stage.getStageType() != null && nodeVO.getStageType() != null)
-                .filter(stage -> stage.getStageType().equals(nodeVO.getStageType()))
+                .filter(stage -> stage.getStageType().equals(nodeVO.getStageType()) && stage.getVersion() == nodeVO.getVersion())
                 .findFirst();
             
             if (matchedStage.isPresent()) {
                 ProjectStageConfigVO.Stage stage = matchedStage.get();
                 nodeVO.setStageName(stage.getStageName());
                 nodeVO.setStageType(stage.getStageType());
-                
+
                 // 根据节点的name在阶段的nodes中找到对应的序号
                 if (stage.getNodes() != null && nodeVO.getName() != null) {
                     Optional<ProjectStageConfigVO.StageItem> matchedNode = stage.getNodes().stream()
