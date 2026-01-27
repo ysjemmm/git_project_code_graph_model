@@ -1427,6 +1427,24 @@ public class ProjectServiceImpl implements ProjectService {
                         nodeVO.setNum(matchedNode.get().getNum());
                     }
                 }
+            } else if (nodeVO.getName() != null) {
+                // 历史项目没有stageType，通过节点name在所有阶段中查找匹配
+                for (ProjectStageConfigVO.Stage stage : stageList) {
+                    if (stage.getNodes() == null) {
+                        continue;
+                    }
+                    Optional<ProjectStageConfigVO.StageItem> matchedNode = stage.getNodes().stream()
+                        .filter(node -> node.getName() != null)
+                        .filter(node -> node.getName().equals(nodeVO.getName()))
+                        .findFirst();
+                    
+                    if (matchedNode.isPresent()) {
+                        nodeVO.setStageName(stage.getStageName());
+                        nodeVO.setStageType(stage.getStageType());
+                        nodeVO.setNum(matchedNode.get().getNum());
+                        break;
+                    }
+                }
             }
         }
         projectDetailVO.setProjectNodes(projectNodeVO);
