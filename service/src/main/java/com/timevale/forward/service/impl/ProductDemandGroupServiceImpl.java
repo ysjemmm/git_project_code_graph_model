@@ -332,7 +332,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
 
                 List<BizLabelSimpleVO> labelSimpleVOList = bizLabelMap.get(a.getProductDemand().getId());
                 if (CollectionUtils.isNotEmpty(labelSimpleVOList)) {
-                    a.getProductDemand().setLabelNames(labelSimpleVOList);
+                    a.getProductDemand().setLabelNames(labelSimpleVOList.stream().sorted().collect(Collectors.toList()));
                 }
 
                 String typeName = a.getProductDemand().getType().stream()
