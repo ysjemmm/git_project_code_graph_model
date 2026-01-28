@@ -103,6 +103,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -332,7 +333,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
 
                 List<BizLabelSimpleVO> labelSimpleVOList = bizLabelMap.get(a.getProductDemand().getId());
                 if (CollectionUtils.isNotEmpty(labelSimpleVOList)) {
-                    a.getProductDemand().setLabelNames(labelSimpleVOList.stream().sorted().collect(Collectors.toList()));
+                    a.getProductDemand().setLabelNames(labelSimpleVOList.stream().sorted(Comparator.comparing(BizLabelSimpleVO::getId)).collect(Collectors.toList()));
                 }
 
                 String typeName = a.getProductDemand().getType().stream()
