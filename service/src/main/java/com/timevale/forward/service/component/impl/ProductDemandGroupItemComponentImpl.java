@@ -101,14 +101,14 @@ public class ProductDemandGroupItemComponentImpl implements ProductDemandGroupIt
         if (req.getPrevId() != null) {
             prevGroupItemDO = productDemandGroupItemMapper.getByGroupIdAndId(req.getTargetGroupId(), req.getPrevId());
             if (prevGroupItemDO == null) {
-                throw new BaseBizRuntimeException("产品需求分组的产品需求不存在, 请刷新后重试");
+                throw new BaseBizRuntimeException("目标位置上方的需求不存在，请刷新后重试");
             }
         }
         ProductDemandGroupItemDO nextGroupItemDO = null;
         if (req.getNextId() != null) {
             nextGroupItemDO = productDemandGroupItemMapper.getByGroupIdAndId(req.getTargetGroupId(), req.getNextId());
             if (nextGroupItemDO == null) {
-                throw new BaseBizRuntimeException("产品需求分组的产品需求不存在, 请刷新后重试");
+                throw new BaseBizRuntimeException("目标位置下方的需求不存在，请刷新后重试");
             }
         }
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -134,10 +134,10 @@ public class ProductDemandGroupItemComponentImpl implements ProductDemandGroupIt
             // 查看产品需求是否是当前业务域里的
             ProductDemandDO productDemandDO = productDemandMapper.get(req.getId());
             if (productDemandDO == null) {
-                throw new BaseBizRuntimeException("产品需求不存在");
+                throw new BaseBizRuntimeException("产品需求不存在，请刷新后重试");
             }
             if (notAllowProductDemandStatuses.contains(productDemandDO.getStatus())) {
-                throw new BaseBizRuntimeException(String.format("产品需求状态为%s, 不能操作", ProductDemandStatusEnum.getTextByCode(productDemandDO.getStatus())));
+                throw new BaseBizRuntimeException(String.format("产品需求状态为%s，不能移入分组", ProductDemandStatusEnum.getTextByCode(productDemandDO.getStatus())));
             }
             // 查看产品需求是否已经被拖到分组里
             final Integer countByProductDemandId = productDemandGroupItemMapper.countByProductDemandId(req.getId());
@@ -195,11 +195,11 @@ public class ProductDemandGroupItemComponentImpl implements ProductDemandGroupIt
             return new ProductDemandMoveDTO(req.getTargetGroupId(), null, req.getId(), null, false);
         } else if (Objects.equals(ProductDemandGroupMoveModeEnum.MOVE_OUT.getCode(), req.getMode())) {
             if (req.getPrevId() != null || req.getNextId() != null) {
-                throw new BaseBizRuntimeException("参数错误");
+                throw new BaseBizRuntimeException("移出分组时不应包含前后位置参数");
             }
             final ProductDemandGroupItemDO moveGroupItemDO = productDemandGroupItemMapper.get(req.getId());
             if (moveGroupItemDO == null || !Objects.equals(moveGroupItemDO.getProductDemandGroupId(), req.getTargetGroupId())) {
-                throw new BaseBizRuntimeException("产品需求已经不在当前分组，请刷新后重试");
+                throw new BaseBizRuntimeException("需求已不在当前分组，请刷新后重试");
             }
             // 删除
             productDemandGroupItemMapper.delete(req.getId(), modifyManId, modifyMan);
@@ -207,14 +207,14 @@ public class ProductDemandGroupItemComponentImpl implements ProductDemandGroupIt
         } else {
             final ProductDemandGroupItemDO moveGroupItemDO = productDemandGroupItemMapper.get(req.getId());
             if (moveGroupItemDO == null) {
-                throw new BaseBizRuntimeException("产品需求分组的产品需求不存在, 请刷新后重试");
+                throw new BaseBizRuntimeException("分组内需求不存在，请刷新后重试");
             }
             ProductDemandDO moveProductDemandDO = productDemandMapper.get(moveGroupItemDO.getProductDemandId());
             if (moveProductDemandDO == null) {
-                throw new BaseBizRuntimeException("产品需求不存在");
+                throw new BaseBizRuntimeException("产品需求已被删除，请刷新后重试");
             }
             if (notAllowProductDemandStatuses.contains(moveProductDemandDO.getStatus())) {
-                throw new BaseBizRuntimeException(String.format("产品需求状态为%s, 不能操作", ProductDemandStatusEnum.getTextByCode(moveProductDemandDO.getStatus())));
+                throw new BaseBizRuntimeException(String.format("产品需求状态为%s，不能移动", ProductDemandStatusEnum.getTextByCode(moveProductDemandDO.getStatus())));
             }
             if (Objects.equals(req.getTargetGroupId(), moveGroupItemDO.getProductDemandGroupId())) {
                 ProductDemandGroupItemDO targetNextGroupItemDO = productDemandGroupItemMapper.getNextByPosition(req.getTargetGroupId(), moveGroupItemDO.getPosition());

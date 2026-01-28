@@ -453,7 +453,7 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         ProductDemandGroupDO productDemandGroupDO = ProductDemandGroupCopier.INSTANCE.toDO(productDemandGroupModifyReq);
         ProductDemandGroupDO productDemandGroup = productDemandGroupMapper.get(productDemandGroupDO.getId());
         if (productDemandGroup == null) {
-            throw new BaseBizRuntimeException("该产品需求分组不存在，请刷新后重试");
+            throw new BaseBizRuntimeException("该分组不存在，请刷新后重试");
         }
         if (!Objects.equals(productDemandGroup.getBizDomainGroupId(), productDemandGroupDO.getBizDomainGroupId())) {
             throw new BaseBizRuntimeException("该产品需求分组的业务域集不能修改,请修改后重试");
@@ -502,20 +502,20 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
         bizDomainGroupPermissionComponent.checkOperationPermission(productDemandGroupMoveReq.getBizDomainGroupId());
         ProductDemandGroupDO targetGroupDO = productDemandGroupMapper.getByIdAndBizDomainGroupId(productDemandGroupMoveReq.getBizDomainGroupId(), productDemandGroupMoveReq.getId());
         if (targetGroupDO == null) {
-            throw new BaseBizRuntimeException("产品需求分组不存在, 请刷新后重试");
+            throw new BaseBizRuntimeException("分组不存在, 请刷新后重试");
         }
         ProductDemandGroupDO prevGroupDO = null;
         if (productDemandGroupMoveReq.getPrevId() != null) {
             prevGroupDO = productDemandGroupMapper.getByIdAndBizDomainGroupId(productDemandGroupMoveReq.getBizDomainGroupId(), productDemandGroupMoveReq.getPrevId());
             if (prevGroupDO == null) {
-                throw new BaseBizRuntimeException("产品需求分组不存在, 请刷新后重试");
+                throw new BaseBizRuntimeException("分组不存在, 请刷新后重试");
             }
         }
         ProductDemandGroupDO nextGroupDO = null;
         if (productDemandGroupMoveReq.getNextId() != null) {
             nextGroupDO = productDemandGroupMapper.getByIdAndBizDomainGroupId(productDemandGroupMoveReq.getBizDomainGroupId(), productDemandGroupMoveReq.getNextId());
             if (nextGroupDO == null) {
-                throw new BaseBizRuntimeException("产品需求分组不存在, 请刷新后重试");
+                throw new BaseBizRuntimeException("分组不存在, 请刷新后重试");
             }
         }
         ProductDemandGroupDO targetNextGroupDO = productDemandGroupMapper.getNextByPosition(productDemandGroupMoveReq.getBizDomainGroupId(), targetGroupDO.getPosition());
