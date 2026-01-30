@@ -1129,10 +1129,16 @@
 
     <select id="simpleList" resultType="com.timevale.forward.dal.entity.ProductDemandListDO">
         select a.`id`, a.`name`, a.`desc`, c.`name` as productLineName, a.`owner`, a.`owner_id`
+        <if test="copierId != null and copierId != ''">
+            ,e.user_name copier
+        </if>
         from product_demand as a
         left join product_line c on a.product_line_id=c.id
         <if test="bizDomainIds != null and bizDomainIds.size() > 0">
             left join biz_domain d on c.biz_domain_id=d.id
+        </if>
+        <if test="copierId != null and copierId != ''">
+            left join person e on a.id=e.main_id and e.type =20 and e.is_deleted =false
         </if>
         <where>
             a.is_deleted =false
