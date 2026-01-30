@@ -226,7 +226,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
         ProductDemandGroupCondition parentCondition = ProductDemandGroupCondition.builder().build();
 
-        if (groupDuplicateUtil.setOwnerIdByAscription(productDemandQueryList, userInfo, condition, innerUserPersonClient)) {
+        if (groupDuplicateUtil.setOwnerIdByAscription(productDemandQueryList, userInfo.getId(), condition, innerUserPersonClient)) {
             return BaseResult.success(new ArrayList<>());
         }
 
@@ -1333,7 +1333,7 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
         ProductDemandGroupCondition parentCondition = ProductDemandCopier.INSTANCE.convert(parentProductDemandQueryList);
 
-        if (groupDuplicateUtil.setOwnerIdByAscription(productDemandQueryList, userInfo, condition, innerUserPersonClient)) {
+        if (groupDuplicateUtil.setOwnerIdByAscription(productDemandQueryList, userInfo.getId(), condition, innerUserPersonClient)) {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
 

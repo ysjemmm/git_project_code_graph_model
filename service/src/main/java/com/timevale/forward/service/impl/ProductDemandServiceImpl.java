@@ -264,7 +264,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         log.info("产品需求接收参数:{}", productDemandQueryList);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
-        if (groupDuplicateUtil.setOwnerIdByAscription(productDemandQueryList, userInfo, condition, innerUserPersonClient)) {
+        if (groupDuplicateUtil.setOwnerIdByAscription(productDemandQueryList, userInfo.getId(), condition, innerUserPersonClient)) {
             return BaseResult.success(ResultUtil.queryResultEmpty());
         }
 
@@ -347,7 +347,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         condition.setName(productDemandQueryList.getName());
         condition.setId(productDemandQueryList.getId());
 
-        if (groupDuplicateUtil.setOwnerIdByAscription(productDemandQueryList, LocalSessionUtils.getUserInfo(), condition, innerUserPersonClient)) {
+        if (groupDuplicateUtil.setOwnerIdByAscription(productDemandQueryList, productDemandQueryList.getUserId(), condition, innerUserPersonClient)) {
             return BaseResult.success(ResultUtil.queryResultEmpty());
         }
 
