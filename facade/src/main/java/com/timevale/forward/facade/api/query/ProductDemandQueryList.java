@@ -81,4 +81,7 @@ public class ProductDemandQueryList extends QueryBase {
     private String ownerName;
     @ApiModelProperty(value = "产品线名称-模糊匹配", hidden = true)
     private String productLineName;
+
+    @ApiModelProperty("登录用户")
+    public String userId = "";
 }

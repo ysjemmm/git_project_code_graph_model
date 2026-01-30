@@ -121,11 +121,11 @@ public class GroupDuplicateUtil {
         return pageQueryResult;
     }
 
-    public boolean setOwnerIdByAscription(ProductDemandQueryList productDemandQueryList, UserInfo userInfo, ProductDemandListCondition condition, InnerUserPersonClient innerUserPersonClient) {
+    public boolean setOwnerIdByAscription(ProductDemandQueryList productDemandQueryList, String userId, ProductDemandListCondition condition, InnerUserPersonClient innerUserPersonClient) {
         if (AscriptionEnum.CURRENT_USER.name().equals(productDemandQueryList.getAscription())) {
-            condition.getOwnerIds().add(userInfo.getId());
+            condition.getOwnerIds().add(userId);
         } else if (AscriptionEnum.TEAM.name().equals(productDemandQueryList.getAscription())) {
-            List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
+            List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userId, true);
             log.info("我和我的下属:{}", allMyStaffWithSelf);
             if (!CollectionUtils.isEmpty(productDemandQueryList.getOwnerIds())) {
                 allMyStaffWithSelf.retainAll(productDemandQueryList.getOwnerIds());
@@ -137,7 +137,7 @@ public class GroupDuplicateUtil {
             }
             condition.setOwnerIds(allMyStaffWithSelf);
         } else if (AscriptionEnum.DEPARTMENT.name().equals(productDemandQueryList.getAscription())) {
-            List<BaseInfoResponse> baseInfos = innerUserPersonClient.getPersonByAccountNew(Lists.newArrayList(userInfo.getId()));
+            List<BaseInfoResponse> baseInfos = innerUserPersonClient.getPersonByAccountNew(Lists.newArrayList(userId));
 
             String groupId = baseInfos.get(0).getDefaultGroup().getGroupId();
             List<String> accountIds = innerUserPersonClient.getAllByGroupId(groupId);
@@ -152,7 +152,7 @@ public class GroupDuplicateUtil {
             }
             condition.setOwnerIds(accountIds);
         } else if (AscriptionEnum.COPIER.name().equals(productDemandQueryList.getAscription())) {
-            condition.setCopierId(userInfo.getId());
+            condition.setCopierId(userId);
         }
         return false;
     }
