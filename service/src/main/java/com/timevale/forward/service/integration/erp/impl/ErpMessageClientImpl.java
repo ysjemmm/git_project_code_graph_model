@@ -64,7 +64,7 @@ public class ErpMessageClientImpl implements ErpMessageClient {
 
         ErpResult erpResult = erpMsgService.sendDingMarkdownMsg(input);
         if (!erpResult.isSuccess()) {
-            log.error("[erpMessage]调用钉钉通知接口失败  error: {} 发送通知信息：{}, 标题： {}" + erpResult.getMessage(), markdownMsg, markdownMsg.getTitle());
+            log.error("[erpMessage]调用钉钉通知接口失败  error: {} 发送通知信息：{}, 标题： {}", erpResult.getMessage(), markdownMsg, markdownMsg.getTitle());
         }
         return erpResult;
     }
