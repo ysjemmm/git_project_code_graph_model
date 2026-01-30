@@ -347,6 +347,10 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         condition.setName(productDemandQueryList.getName());
         condition.setId(productDemandQueryList.getId());
 
+        if (groupDuplicateUtil.setOwnerIdByAscription(productDemandQueryList, LocalSessionUtils.getUserInfo(), condition, innerUserPersonClient)) {
+            return BaseResult.success(ResultUtil.queryResultEmpty());
+        }
+
         PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize());
         List<ProductDemandListDO> productDemandListDO = CollUtil.defaultIfEmpty(productDemandMapper.simpleList(condition), Collections.emptyList());
 

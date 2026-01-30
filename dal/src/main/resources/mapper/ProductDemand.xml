@@ -1138,6 +1138,13 @@
             a.is_deleted =false
             <if test="id != null">and a.id = #{id}</if>
             <if test="name != null and name != ''">and a.name like concat('%',#{name},'%')</if>
+            <if test="copierId != null and copierId != ''">and e.user_id = #{copierId}</if>
+            <if test="ownerIds!=null and ownerIds.size()>0">
+                and a.owner_id in
+                <foreach collection="ownerIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="ids!=null and ids.size()>0">
                 and a.id in
                 <foreach collection="ids" item="item" separator="," open="(" close=")">
