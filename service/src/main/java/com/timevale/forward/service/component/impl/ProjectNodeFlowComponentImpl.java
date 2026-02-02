@@ -85,7 +85,11 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
 
         Date notNull = projectNodeFlowDO.getPjEstablishPublishDate() != null ? projectNodeFlowDO.getPjEstablishPublishDate() : projectNodeFlowDO.getPublishDate();
         Date oldPlanEndDate = DateUtil.getEndOfDay(notNull);
-        Date planEndDate = DateUtil.getEndOfDay(projectNodeFlowDO.getChangePublishDate());
+        Date changePublishDate = projectNodeFlowDO.getChangePublishDate();
+        if (changePublishDate == null) {
+            throw new BaseBizRuntimeException("变更发布日期不能为空");
+        }
+        Date planEndDate = DateUtil.getEndOfDay(changePublishDate);
 
         if (oldPlanEndDate.before(planEndDate)) {
             Long seconds = elapsedTimeClient.getElapsedTime(oldPlanEndDate, planEndDate);
