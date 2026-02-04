@@ -38,6 +38,11 @@ public class ProductLineCondition {
     private List<Long> bizDomainIds;
 
     /**
+     * 研发负责人id
+     */
+    private List<String> developmentOwnerIds;
+
+    /**
      * 产品线等级
      */
     private List<Integer> productLineLevels;
