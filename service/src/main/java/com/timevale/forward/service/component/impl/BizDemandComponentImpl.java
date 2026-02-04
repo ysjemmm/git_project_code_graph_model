@@ -413,7 +413,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     private boolean isContainLabel(BizDemandListCondition condition, List<BizLabelDO> bizLabelDOList) {
         List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
         Boolean containLabel = condition.getContainLabel();
-        if (containLabel) {
+        if (Boolean.TRUE.equals(containLabel) || containLabel == null) {
             if (CollectionUtils.isEmpty(bizIds)) {
                 // 空结果
                 return true;
