@@ -54,21 +54,20 @@ public class GroupDuplicateUtil {
                 .reversed());
     }
 
-    public boolean isResultIsEmpty(BizDemandQueryList bizDemandQueryList, BizDemandListCondition condition) {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+    public boolean isResultIsEmpty(BizDemandQueryList bizDemandQueryList, BizDemandListCondition condition, String userId) {
         // 标志是否有对应数据
         boolean resultIsEmpty = false;
 
         // 根据tabs添加不同的效果
         String ascription = bizDemandQueryList.getAscription();
         if (AscriptionEnum.CURRENT_USER.toString().equals(ascription)) {
-            condition.setSubmitManIdList(org.assertj.core.util.Lists.newArrayList(userInfo.getId()));
+            condition.setSubmitManIdList(Lists.newArrayList(userId));
         } else if (AscriptionEnum.RECEIVE.toString().equals(ascription)) {
-            condition.setReceiveManIdList(org.assertj.core.util.Lists.newArrayList(userInfo.getId()));
+            condition.setReceiveManIdList(Lists.newArrayList(userId));
         } else if (AscriptionEnum.COPIER.toString().equals(ascription)) {
-            condition.setCopier(userInfo.getId());
+            condition.setCopier(userId);
         } else {
-            List<String> teamMemberIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
+            List<String> teamMemberIdList = innerUserPersonClient.getAllMyStaffWithSelf(userId, true);
             if (AscriptionEnum.TEAM_SUBMIT.toString().equals(ascription)) {
                 Set<String> createIdSet = new HashSet<>(condition.getSubmitManIdList());
                 if (!createIdSet.isEmpty()) {

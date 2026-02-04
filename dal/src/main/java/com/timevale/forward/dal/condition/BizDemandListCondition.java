@@ -199,6 +199,24 @@ public class BizDemandListCondition{
     @WildcardEscape
     private String stuckOrderInstructions;
 
+    /**
+     *  实现 id 与 name 双向查询
+     */
+
+    private List<Long> ids;
+
+    /**
+     * 需求负责人名称-模糊匹配
+     */
+    private String ownerName;
+
+    /**
+     * 产品线名称-模糊匹配
+     */
+    private String productLineName;
+
+    private List<Long> bizDomainIds;
+
 
     public int pageNum = 1;
     public int pageSize = 20;

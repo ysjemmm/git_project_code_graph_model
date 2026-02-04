@@ -1285,4 +1285,57 @@
             </if>
         </where>
     </select>
+    <select id="simpleList" resultType="com.timevale.forward.dal.entity.BizDemandListDO">
+        select bd.`id`, bd.`name`, bd.`desc`, c.`name` as productLineName, bd.`receive_man` as owner, bd.`receive_man_id` as ownerId
+        from biz_demand bd
+        left join product_line c on c.id = bd.product_line_id
+        <if test="bizDomainIds != null and bizDomainIds.size() > 0">
+            left join biz_domain d on c.biz_domain_id=d.id
+        </if>
+        <where>
+            <if test="id != null">and bd.id = #{id}</if>
+            <if test="name != null and name != ''">and bd.name like concat('%',#{name},'%')</if>
+            <if test="ids!=null and ids.size()>0">
+                and bd.id in
+                <foreach collection="ids" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="bizDomainIds!=null and bizDomainIds.size()>0">
+                and d.id in
+                <foreach collection="bizDomainIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="ownerName != null and ownerName !=''">
+                and bd.receive_man like concat('%',#{ownerName},'%')
+            </if>
+            <if test="productLineName != null and productLineName !=''">
+                and c.name like concat('%',#{productLineName},'%')
+            </if>
+            <if test="submitManIdList!=null and submitManIdList.size()>0">
+                and bd.submit_man_id in
+                <foreach collection="submitManIdList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="receiveManIdList!=null and receiveManIdList.size()>0">
+                and bd.receive_man_id in
+                <foreach collection="receiveManIdList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="copier!=null and copier!='' ">
+                and bd.id IN (
+                SELECT p.main_id
+                FROM person p
+                WHERE p.user_id = #{copier}
+                AND p.type = 30
+                AND p.is_deleted = false
+                )
+            </if>
+            and bd.is_deleted = false
+        </where>
+        order by bd.id desc
+    </select>
 </mapper>

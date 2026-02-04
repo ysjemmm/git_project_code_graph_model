@@ -1443,7 +1443,8 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         BizDemandListCondition condition = BizDemandCopier.INSTANCE.convert(bizDemandQueryList);
         BizDemandGroupCondition parentCondition = BizDemandGroupCondition.builder().build();
 
-        boolean resultIsEmpty = groupDuplicateUtil.isResultIsEmpty(bizDemandQueryList, condition);
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        boolean resultIsEmpty = groupDuplicateUtil.isResultIsEmpty(bizDemandQueryList, condition, userInfo.getId());
         if (resultIsEmpty) {
             return BaseResult.success(new ArrayList<>());
         }
@@ -1739,7 +1740,8 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         BizDemandListCondition condition = BizDemandCopier.INSTANCE.convert(bizDemandQueryList);
         BizDemandGroupCondition parentCondition = BizDemandCopier.INSTANCE.convert(parentBizDemandGroupCondition);
 
-        boolean resultIsEmpty = groupDuplicateUtil.isResultIsEmpty(bizDemandQueryList, condition);
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        boolean resultIsEmpty = groupDuplicateUtil.isResultIsEmpty(bizDemandQueryList, condition, userInfo.getId());
         if (resultIsEmpty) {
             return BaseResult.success(ResultUtil.pageEmpty());
         }

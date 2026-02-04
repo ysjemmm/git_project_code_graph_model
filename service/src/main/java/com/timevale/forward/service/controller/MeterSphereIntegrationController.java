@@ -1,11 +1,14 @@
 package com.timevale.forward.service.controller;
 
+import com.timevale.forward.facade.api.client.BizDemandService;
 import com.timevale.forward.facade.api.client.BizDomainService;
 import com.timevale.forward.facade.api.client.ProductDemandService;
 import com.timevale.forward.facade.api.client.ProjectService;
+import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.query.BizDomainQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandQueryList;
 import com.timevale.forward.facade.api.request.ProjectNodeAddReq;
+import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.BizDomainVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
@@ -38,6 +41,9 @@ public class MeterSphereIntegrationController {
     private ProductDemandService productDemandService;
 
     @Resource
+    private BizDemandService bizDemandService;
+
+    @Resource
     private BizDomainService bizDomainService;
 
     @Resource
@@ -47,6 +53,12 @@ public class MeterSphereIntegrationController {
     @PostMapping("/productDemand/list")
     public BusinessResult<QueryResultVO<ProductDemandVO>> listProductDemands(@RequestBody @Valid ProductDemandQueryList productDemandQueryList) {
         return ResultUtils.result(productDemandService.simpleList(productDemandQueryList));
+    }
+
+    @ApiOperation("业务需求列表")
+    @PostMapping("/bizDemand/list")
+    public BusinessResult<QueryResultVO<BizDemandVO>> listBizDemands(@RequestBody @Valid BizDemandQueryList bizDemandQueryList) {
+        return ResultUtils.result(bizDemandService.simpleList(bizDemandQueryList));
     }
 
     @ApiOperation("业务域列表")

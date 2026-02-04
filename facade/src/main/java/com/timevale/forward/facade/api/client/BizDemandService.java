@@ -25,6 +25,14 @@ public interface BizDemandService {
     BaseResult<QueryResultVO<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList);
 
     /**
+     * 查列表, 只简单查询数据
+     *
+     * @param bizDemandQueryList 业务需求查询列表
+     * @return 列表
+     */
+    BaseResult<QueryResultVO<BizDemandVO>> simpleList(BizDemandQueryList bizDemandQueryList);
+
+    /**
      * 列表分类 by 产品线
      *
      * @param bizDemandQueryList 业务需求查询列表

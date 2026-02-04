@@ -223,4 +223,6 @@ public interface BizDemandMapper {
     List<BizDemandGroupFieldDO> getSimpleGroupList(BizDemandGroupQueryCondition groupQueryCondition);
 
     Long getSimpleGroupCount(BizDemandGroupQueryCondition groupCountCondition);
+
+    List<BizDemandListDO> simpleList(BizDemandListCondition condition);
 }

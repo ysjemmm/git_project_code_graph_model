@@ -4,6 +4,8 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.google.common.base.Objects;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
@@ -134,6 +136,7 @@ import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
+import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -235,7 +238,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         BizDemandListCondition condition = BizDemandCopier.INSTANCE.convert(bizDemandQueryList);
 
         String ascription = bizDemandQueryList.getAscription();
-        boolean resultIsEmpty = groupDuplicateUtil.isResultIsEmpty(bizDemandQueryList, condition);
+        boolean resultIsEmpty = groupDuplicateUtil.isResultIsEmpty(bizDemandQueryList, condition, LocalSessionUtils.getUserInfo().getId());
         if (resultIsEmpty) {
             return BaseResult.success(ResultUtil.queryResultEmpty());
         }
@@ -261,6 +264,33 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         return BaseResult.success(res);
+    }
+
+    @Override
+    public BaseResult<QueryResultVO<BizDemandVO>> simpleList(BizDemandQueryList bizDemandQueryList) {
+        log.info("产品需求对接metersphere平台-接收参数:{}", bizDemandQueryList);
+        BizDemandListCondition condition = BizDemandCopier.INSTANCE.convert(bizDemandQueryList);
+
+        boolean resultIsEmpty = groupDuplicateUtil.isResultIsEmpty(bizDemandQueryList, condition, bizDemandQueryList.getUserId());
+        if (resultIsEmpty) {
+            return BaseResult.success(ResultUtil.queryResultEmpty());
+        }
+
+        PageHelper.startPage(bizDemandQueryList.getPageNum(), bizDemandQueryList.getPageSize());
+        List<BizDemandListDO> bizDemandListDO = CollUtil.defaultIfEmpty(bizDemandMapper.simpleList(condition), Collections.emptyList());
+
+        List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandListDO);
+
+        PageInfo<BizDemandListDO> pageInfo = new PageInfo<>(bizDemandListDO);
+        PageQueryResult<BizDemandVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(bizDemandVOList);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+
+        QueryResultVO<BizDemandVO> queryResultVO = new QueryResultVO<>();
+        queryResultVO.setPageQueryResult(pageQueryResult);
+        queryResultVO.setAnalyseVOList(Collections.emptyList());
+
+        return BaseResult.success(queryResultVO);
     }
 
     @Override
