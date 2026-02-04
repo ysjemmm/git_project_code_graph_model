@@ -32,6 +32,9 @@ public class ProductLineQueryList extends QueryBase {
     @ApiModelProperty("sr专家id")
     private List<String> srIds;
 
+    @ApiModelProperty("研发负责人id")
+    private List<String> developmentOwnerIds;
+
     @ApiModelProperty("产品线等级列表 1-核心产品线; 2-即将退市产品线; 3-一般产品线")
     private List<Integer> productLineLevels;
 

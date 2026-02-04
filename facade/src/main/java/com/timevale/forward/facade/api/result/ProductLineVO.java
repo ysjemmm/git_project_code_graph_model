@@ -38,6 +38,12 @@ public class ProductLineVO extends ToString {
     @ApiModelProperty("产品线负责人id")
     private String productLineOwnerId;
 
+    @ApiModelProperty("研发负责人")
+    private String developmentOwner;
+
+    @ApiModelProperty("研发负责人id")
+    private String developmentOwnerId;
+
     @ApiModelProperty("其他负责人信息")
     private List<PersonVO> otherOwners;
 
