@@ -1142,6 +1142,7 @@
         </if>
         <where>
             a.is_deleted =false
+            and a.status != -20
             <if test="id != null">and a.id = #{id}</if>
             <if test="name != null and name != ''">and a.name like concat('%',#{name},'%')</if>
             <if test="copierId != null and copierId != ''">and e.user_id = #{copierId}</if>

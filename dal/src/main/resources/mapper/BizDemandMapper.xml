@@ -1335,6 +1335,7 @@
                 )
             </if>
             and bd.is_deleted = false
+            and bd.status != -20
         </where>
         order by bd.id desc
     </select>
