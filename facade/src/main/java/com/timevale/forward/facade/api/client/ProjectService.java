@@ -17,6 +17,7 @@ import com.timevale.forward.facade.api.request.ProjectInnerAddReq;
 import com.timevale.forward.facade.api.request.ProjectInnerCompleteReq;
 import com.timevale.forward.facade.api.request.ProjectModifyReq;
 import com.timevale.forward.facade.api.request.ProjectNodeAddReq;
+import com.timevale.forward.facade.api.request.ProjectNodeUpdateReq;
 import com.timevale.forward.facade.api.request.ProjectProductDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProjectSimpleModifyReq;
 import com.timevale.forward.facade.api.request.ProjectStageChangeReq;
@@ -287,4 +288,12 @@ public interface ProjectService {
     BaseResult<List<ProjectStageConfigVO.Stage>> queryStageConfig(Integer kind, Integer type, Integer version);
 
     BaseResult<Integer> getNodeVersion(String createDate);
+
+    /**
+     * 单独更新项目节点（不涉及项目其他字段）
+     *
+     * @param req 节点更新请求
+     * @return 是否成功
+     */
+    BaseResult<Boolean> updateNodes(ProjectNodeUpdateReq req);
 }

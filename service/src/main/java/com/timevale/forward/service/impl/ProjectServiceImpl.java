@@ -97,6 +97,7 @@ import com.timevale.forward.facade.api.request.ProjectInnerAddReq;
 import com.timevale.forward.facade.api.request.ProjectInnerCompleteReq;
 import com.timevale.forward.facade.api.request.ProjectModifyReq;
 import com.timevale.forward.facade.api.request.ProjectNodeAddReq;
+import com.timevale.forward.facade.api.request.ProjectNodeUpdateReq;
 import com.timevale.forward.facade.api.request.ProjectProductDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProjectSimpleModifyReq;
 import com.timevale.forward.facade.api.request.ProjectStageChangeReq;
@@ -2060,6 +2061,47 @@ public class ProjectServiceImpl implements ProjectService {
             return BaseResult.success(2);
         }
         return BaseResult.success(1);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> updateNodes(ProjectNodeUpdateReq req) {
+        final Long projectId = req.getProjectId();
+        log.info("单独更新项目节点, projectId={}, nodes={}", projectId, req.getProjectNodes());
+
+        // 校验项目存在
+        ProjectDO project = projectMapper.get(projectId);
+        AssertUtil.notNull(project, "项目不存在");
+
+        // 校验项目状态（已终止的项目不允许更新）
+        AssertUtil.checkState(!ProjectStatusEnum.terminated(project.getStatus()),
+                "项目已终止，无法更新节点");
+
+        // 权限校验：当前用户必须是 PM / 负责人 / 1-N负责人 / PD
+        String currentAccount = req.getAccount();
+        boolean hasPermission = StrUtil.equals(currentAccount, project.getPmId())
+                || StrUtil.equals(currentAccount, project.getPrincipalId())
+                || StrUtil.equals(currentAccount, project.getOtnPrincipalId());
+
+        if (!hasPermission) {
+            // 检查是否为 PD
+            List<PersonDO> pds = personMapper.get(Collections.singletonList(projectId), PersonTypeEnum.PROJECT_PD.getCode());
+            hasPermission = pds.stream().anyMatch(pd -> StrUtil.equals(currentAccount, pd.getUserId()));
+        }
+        AssertUtil.checkState(hasPermission, "无权限更新项目节点");
+
+        // 转换并保存节点
+        List<ProjectNodeDO> nodes = ProjectNodeCopier.INSTANCE.convert(req.getProjectNodes());
+        projectNodeComponent.add(nodes, projectId);
+
+        // 更新项目节点状态
+        projectComponent.updateNodeStatus(projectId);
+
+        // 记录日志
+        projectLogComponent.addLogWhenStatusChange(project.getStatus(), project.getStatus(),
+                projectId, ButtonActionEnum.MODIFY.getText());
+
+        return BaseResult.success(true);
     }
 
     @Override
