@@ -2078,7 +2078,7 @@ public class ProjectServiceImpl implements ProjectService {
                 "项目已终止，无法更新节点");
 
         // 权限校验：当前用户必须是 PM / 负责人 / 1-N负责人 / PD
-        String currentAccount = req.getAccount();
+        String currentAccount = LocalSessionUtils.getUserInfo().getId();
         boolean hasPermission = StrUtil.equals(currentAccount, project.getPmId())
                 || StrUtil.equals(currentAccount, project.getPrincipalId())
                 || StrUtil.equals(currentAccount, project.getOtnPrincipalId());
