@@ -67,4 +67,46 @@ public class ColumnHideServiceImpl implements ColumnHideService {
 
         return BaseResult.success(true);
     }
+
+    private static final String GLOBAL_BELONG_MAN_ID = "SYSTEM";
+    private static final String GLOBAL_BELONG_MAN = "SYSTEM";
+
+    @Override
+    public BaseResult<ColumnHideVO> getGlobal(ColumnHideGetReq columnHideGetReq) {
+        Integer model = columnHideGetReq.getModel();
+        Integer tabType = columnHideGetReq.getTabType();
+
+        ColumnHideDO columnHideDO = columnHideMapper.select(model, tabType, GLOBAL_BELONG_MAN_ID);
+        if (columnHideDO == null) {
+            columnHideDO = new ColumnHideDO();
+            columnHideDO.setContent("");
+            columnHideDO.setModel(model);
+            columnHideDO.setTabType(tabType);
+        }
+
+        return BaseResult.success(ColumnHideCopier.INSTANCE.convert(columnHideDO));
+    }
+
+    @Override
+    public BaseResult<Boolean> updateGlobal(ColumnHideModifyReq columnHideModifyReq) {
+        Integer model = columnHideModifyReq.getModel();
+        Integer tabType = columnHideModifyReq.getTabType();
+        String content = columnHideModifyReq.getContent();
+
+        ColumnHideDO columnHideDO = columnHideMapper.select(model, tabType, GLOBAL_BELONG_MAN_ID);
+        if (columnHideDO == null) {
+            columnHideDO = new ColumnHideDO();
+            columnHideDO.setModel(model);
+            columnHideDO.setTabType(tabType);
+            columnHideDO.setContent(content);
+            columnHideDO.setBelongMan(GLOBAL_BELONG_MAN);
+            columnHideDO.setBelongManId(GLOBAL_BELONG_MAN_ID);
+            columnHideMapper.insert(columnHideDO);
+        } else {
+            columnHideDO.setContent(content);
+            columnHideMapper.updateById(columnHideDO);
+        }
+
+        return BaseResult.success(true);
+    }
 }

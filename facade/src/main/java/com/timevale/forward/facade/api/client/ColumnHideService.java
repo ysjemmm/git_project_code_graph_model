@@ -28,4 +28,20 @@ public interface ColumnHideService {
      * @return {@link BaseResult}<{@link Boolean}>
      */
     BaseResult<Boolean> update(ColumnHideModifyReq columnHideModifyReq);
+
+    /**
+     * 获取全局配置（不区分用户，所有人共享同一份数据）
+     *
+     * @param columnHideGetReq 查询请求（model + tabType）
+     * @return {@link BaseResult}<{@link ColumnHideVO}>
+     */
+    BaseResult<ColumnHideVO> getGlobal(ColumnHideGetReq columnHideGetReq);
+
+    /**
+     * 更新全局配置（不区分用户，所有人共享同一份数据）
+     *
+     * @param columnHideModifyReq 修改请求（model + tabType + content）
+     * @return {@link BaseResult}<{@link Boolean}>
+     */
+    BaseResult<Boolean> updateGlobal(ColumnHideModifyReq columnHideModifyReq);
 }
