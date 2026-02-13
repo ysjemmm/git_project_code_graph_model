@@ -9,7 +9,7 @@ import lombok.Getter;
 @Getter
 public enum PriorityEnum {
     /**
-     * 优先级:0(P0),1(P1),2(P2)
+     * 优先级:0(P0),10(P1),20(P2),30(P3)
      */
     P0(0,"P0", "紧急"),
 

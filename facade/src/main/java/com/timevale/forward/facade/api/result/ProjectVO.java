@@ -30,7 +30,7 @@ public class ProjectVO extends ToString {
     @ApiModelProperty("是否为客户开发项目：0否，1是")
     private Integer customerDev;
 
-    @ApiModelProperty("优先级:0(P0),1(P1),2(P2)")
+    @ApiModelProperty("优先级:0(P0),10(P1),20(P2),30(P3)")
     private Integer priority;
 
     @ApiModelProperty("项目性质:0产品研发项目,1技术优化项目,2日常迭代，3自研项目，4ISV项目")

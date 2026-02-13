@@ -26,7 +26,7 @@ public class ProductDemandLinkProjectQueryList extends QueryBase {
     @ApiModelProperty("项目类型 0-产研项目 1-内部项目")
     private Integer category = 0;
 
-    @ApiModelProperty("优先级:0(P0),1(P1),2(P2)")
+    @ApiModelProperty("优先级:0(P0),10(P1),20(P2),30(P3)")
     private List<Integer> priorities;
 
     @ApiModelProperty("业务域")

@@ -22,7 +22,7 @@ public class ProductDemandMD extends BaseMD{
 
 
     /**
-     * 优先级:0(P0),1(P1),2(P2),3(P3)
+     * 优先级:0(P0),10(P1),20(P2),30(P3)
      */
     @FieldCompare(fieldName = "优先级",enumClass = PriorityEnum.class)
     private Integer priority;

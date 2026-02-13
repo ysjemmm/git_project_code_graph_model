@@ -38,7 +38,7 @@ public class ProjectDetailVO extends ToString {
     @ApiModelProperty("项目状态")
     private String statusName;
 
-    @ApiModelProperty("优先级:0(P0),1(P1),2(P2)")
+    @ApiModelProperty("优先级:0(P0),10(P1),20(P2),30(P3)")
     private Integer priority;
 
     @ApiModelProperty("优先级")

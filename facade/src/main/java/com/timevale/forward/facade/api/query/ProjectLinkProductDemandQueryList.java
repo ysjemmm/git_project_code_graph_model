@@ -32,7 +32,7 @@ public class ProjectLinkProductDemandQueryList extends QueryBase {
     @ApiModelProperty("产品线")
     private List<Long> productLineIds;
 
-    @ApiModelProperty("优先级:0(P0),1(P1),2(P2),3(P3)")
+    @ApiModelProperty("优先级:0(P0),10(P1),20(P2),30(P3)")
     private List<Integer> priorities;
 
     @ApiModelProperty("负责人")

@@ -14,7 +14,7 @@ import java.util.List;
 @Getter
 public enum ViewsGroupFieldEnum {
     /**
-     * 优先级:0(P0),1(P1),2(P2)
+     * 优先级:0(P0),10(P1),20(P2),30(P3)
      */
     BIZ_DOMAIN("bizDomain", "业务域", 0, Lists.newArrayList(ViewsTypeEnum.BIZ_DEMAND, ViewsTypeEnum.PRODUCT_DEMAND)),
 

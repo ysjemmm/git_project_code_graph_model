@@ -18,7 +18,7 @@ import java.util.List;
 @ApiModel("分组产品需求数量查询")
 public class ProductDemandGroupList extends QueryBase {
 
-    @ApiModelProperty("优先级:0(P0),1(P1),2(P2),3(P3)")
+    @ApiModelProperty("优先级:0(P0),10(P1),20(P2),30(P3)")
     private Integer priority;
 
     @ApiModelProperty("业务域")
