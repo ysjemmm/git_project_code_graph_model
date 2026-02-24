@@ -28,4 +28,20 @@ public interface ColumnHideService {
      * @return {@link BaseResult}<{@link Boolean}>
      */
     BaseResult<Boolean> update(ColumnHideModifyReq columnHideModifyReq);
+
+    /**
+     * 查询全局配置（负责人颜色等）
+     *
+     * @param columnHideGetReq 查询请求
+     * @return {@link BaseResult}<{@link ColumnHideVO}>
+     */
+    BaseResult<ColumnHideVO> getGlobal(ColumnHideGetReq columnHideGetReq);
+
+    /**
+     * 更新全局配置（负责人颜色等）
+     *
+     * @param columnHideModifyReq 修改请求
+     * @return {@link BaseResult}<{@link Boolean}>
+     */
+    BaseResult<Boolean> updateGlobal(ColumnHideModifyReq columnHideModifyReq);
 }
