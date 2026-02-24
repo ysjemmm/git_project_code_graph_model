@@ -6,6 +6,8 @@ import com.timevale.forward.facade.api.request.ResourcePlanV2SaveReq;
 import com.timevale.forward.facade.api.result.ResourcePlanV2VO;
 import com.timevale.mandarin.common.annotation.RestClient;
 
+import java.util.List;
+
 /**
  * 资源规划V2服务接口
  *
@@ -24,4 +26,14 @@ public interface ResourcePlanV2Service {
      * 批量保存资源规划（V2，按人拆分人天）
      */
     BaseResult<Boolean> saveResourcePlanV2(ResourcePlanV2SaveReq req);
+
+    /**
+     * 查询单条需求的资源分配（V2，按人拆分人天）
+     */
+    BaseResult<List<ResourcePlanV2VO.OwnerTimeItem>> getOwnerTimesByDemandId(Long productDemandId);
+
+    /**
+     * 保存单条需求的资源分配（V2，按人拆分人天）
+     */
+    BaseResult<Boolean> saveOwnerTimesByDemandId(ResourcePlanV2SaveReq req);
 }

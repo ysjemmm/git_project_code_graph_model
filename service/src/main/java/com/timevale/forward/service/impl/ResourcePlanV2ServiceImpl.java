@@ -208,4 +208,70 @@ public class ResourcePlanV2ServiceImpl implements ResourcePlanV2Service {
         }).collect(Collectors.toList());
         productDemandMapper.updateResourceTime(toUpdate);
     }
+
+    @Override
+    public BaseResult<List<ResourcePlanV2VO.OwnerTimeItem>> getOwnerTimesByDemandId(Long productDemandId) {
+        if (productDemandId == null) {
+            return BaseResult.success(Collections.emptyList());
+        }
+        List<ProductDemandOwnerTimeDO> times = ownerTimeMapper.listByProductDemandIds(Collections.singleton(productDemandId));
+        List<ResourcePlanV2VO.OwnerTimeItem> items = times.stream().map(t -> {
+            ResourcePlanV2VO.OwnerTimeItem item = new ResourcePlanV2VO.OwnerTimeItem();
+            item.setId(t.getId());
+            item.setProductDemandId(t.getProductDemandId());
+            item.setOwnerId(t.getOwnerId());
+            item.setOwner(t.getOwner());
+            item.setResourceType(t.getResourceType());
+            item.setResourceTime(t.getResourceTime());
+            return item;
+        }).collect(Collectors.toList());
+        return BaseResult.success(items);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> saveOwnerTimesByDemandId(ResourcePlanV2SaveReq req) {
+        List<ResourcePlanV2SaveReq.DemandOwnerTimeItem> items = req.getItems();
+        String operatorId = req.getOperatorId();
+        String operator = req.getOperator();
+
+        // 从 items 中提取需求ID（单条需求场景下所有 item 的 productDemandId 相同）
+        Set<Long> demandIds = new HashSet<>();
+        if (CollUtil.isNotEmpty(items)) {
+            items.forEach(item -> demandIds.add(item.getProductDemandId()));
+        }
+        if (demandIds.isEmpty()) {
+            return BaseResult.success(true);
+        }
+
+        // 删除旧数据
+        ownerTimeMapper.deleteByDemandIds(demandIds, operatorId, operator);
+
+        // 插入新数据
+        if (CollUtil.isNotEmpty(items)) {
+            List<ProductDemandOwnerTimeDO> toInsert = items.stream()
+                    .filter(item -> item.getResourceTime() != null && item.getResourceTime().compareTo(BigDecimal.ZERO) > 0)
+                    .map(item -> {
+                        ProductDemandOwnerTimeDO doItem = new ProductDemandOwnerTimeDO();
+                        doItem.setProductDemandId(item.getProductDemandId());
+                        doItem.setOwnerId(item.getOwnerId());
+                        doItem.setOwner(item.getOwner());
+                        doItem.setResourceType(item.getResourceType());
+                        doItem.setResourceTime(item.getResourceTime());
+                        // 单条需求场景不需要 groupId
+                        return doItem;
+                    }).collect(Collectors.toList());
+
+            if (CollUtil.isNotEmpty(toInsert)) {
+                ownerTimeMapper.batchInsert(toInsert, operatorId, operator);
+            }
+
+            // 回写主表汇总
+            syncDemandTimeFromOwnerTime(demandIds, items);
+        } else {
+            clearDemandTime(demandIds);
+        }
+
+        return BaseResult.success(true);
+    }
 }
