@@ -79,4 +79,17 @@
         </foreach>
     </update>
 
+    <select id="sumByGroupIds" resultType="java.util.HashMap">
+        SELECT product_demand_group_id AS groupId,
+               resource_type AS resourceType,
+               SUM(resource_time) AS totalTime
+        FROM product_demand_owner_time
+        WHERE is_deleted = 0
+        AND product_demand_group_id IN
+        <foreach collection="groupIds" item="gid" open="(" separator="," close=")">
+            #{gid}
+        </foreach>
+        GROUP BY product_demand_group_id, resource_type
+    </select>
+
 </mapper>

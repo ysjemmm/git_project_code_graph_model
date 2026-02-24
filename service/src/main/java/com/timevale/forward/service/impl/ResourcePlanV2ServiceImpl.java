@@ -2,20 +2,29 @@ package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.condition.PersonRemoveCondition;
 import com.timevale.forward.dal.dao.ProductDemandMapper;
 import com.timevale.forward.dal.dao.ProductDemandOwnerTimeMapper;
+import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.dal.entity.ProductDemandGroupItemDO;
 import com.timevale.forward.dal.entity.ProductDemandOwnerTimeDO;
 import com.timevale.forward.facade.api.client.ResourcePlanV2Service;
+import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.request.ResourcePlanV2SaveReq;
 import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
 import com.timevale.forward.facade.api.result.ResourcePlanV2VO;
-import com.timevale.forward.service.component.BizLabelComponent;
 import com.timevale.forward.model.enums.BizTypeEnum;
+import com.timevale.forward.model.enums.PersonLevelEnum;
+import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.service.component.BizLabelComponent;
+import com.timevale.forward.service.component.PersonComponent;
+import com.timevale.forward.service.observer.event.ProductDemandToCopiedMsgEvent;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.dal.dao.ProductDemandGroupItemMapper;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.util.Pair;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -45,6 +54,12 @@ public class ResourcePlanV2ServiceImpl implements ResourcePlanV2Service {
 
     @Resource
     private BizLabelComponent bizLabelComponent;
+
+    @Resource
+    private PersonComponent personComponent;
+
+    @Resource
+    private MessageEventPublisher messageEventPublisher;
 
     @Override
     public BaseResult<ResourcePlanV2VO> getResourcePlanV2(Long bizDomainGroupId, Long productDemandGroupId) {
@@ -127,10 +142,13 @@ public class ResourcePlanV2ServiceImpl implements ResourcePlanV2Service {
                 .map(ProductDemandGroupItemDO::getProductDemandId)
                 .collect(Collectors.toSet());
 
-        // 2. 删除这些需求的旧资源分配
+        // 2. 查询旧的资源分配（用于后续 diff 抄送人）
+        List<ProductDemandOwnerTimeDO> oldOwnerTimes = ownerTimeMapper.listByProductDemandIds(demandIds);
+
+        // 3. 删除这些需求的旧资源分配
         ownerTimeMapper.deleteByDemandIds(demandIds, operatorId, operator);
 
-        // 3. 插入新的资源分配
+        // 4. 插入新的资源分配
         List<ResourcePlanV2SaveReq.DemandOwnerTimeItem> items = req.getItems();
         if (CollUtil.isNotEmpty(items)) {
             List<ProductDemandOwnerTimeDO> toInsert = items.stream()
@@ -152,12 +170,15 @@ public class ResourcePlanV2ServiceImpl implements ResourcePlanV2Service {
                 ownerTimeMapper.batchInsert(toInsert, operatorId, operator);
             }
 
-            // 4. 回写 product_demand 主表的汇总人天（保持兼容）
+            // 5. 回写 product_demand 主表的汇总人天（保持兼容）
             syncDemandTimeFromOwnerTime(demandIds, items);
         } else {
             // 清空时也要回写主表
             clearDemandTime(demandIds);
         }
+
+        // 6. 同步抄送人（新增加入抄送、删除移出抄送）
+        syncCopiers(oldOwnerTimes, items, demandIds, operatorId, operator);
 
         return BaseResult.success(true);
     }
@@ -216,6 +237,101 @@ public class ResourcePlanV2ServiceImpl implements ResourcePlanV2Service {
         productDemandMapper.updateResourceTime(toUpdate);
     }
 
+    /**
+     * 同步抄送人：对比新旧资源分配，新增的负责人加入抄送名单，删除的负责人移出抄送名单。
+     * 与老代码 ProductDemandGroupServiceImpl.batchUpsertProductDemandOwners 逻辑一致。
+     */
+    private void syncCopiers(List<ProductDemandOwnerTimeDO> oldOwnerTimes,
+                             List<ResourcePlanV2SaveReq.DemandOwnerTimeItem> newItems,
+                             Set<Long> demandIds,
+                             String operatorId, String operator) {
+        // 旧数据：按需求ID -> 负责人ID集合
+        Map<Long, Set<String>> oldDemandOwnerIds = new HashMap<>();
+        if (CollUtil.isNotEmpty(oldOwnerTimes)) {
+            for (ProductDemandOwnerTimeDO ot : oldOwnerTimes) {
+                oldDemandOwnerIds.computeIfAbsent(ot.getProductDemandId(), k -> new HashSet<>())
+                        .add(ot.getOwnerId());
+            }
+        }
+
+        // 新数据：按需求ID -> 负责人信息（去重）
+        Map<Long, Map<String, String>> newDemandOwners = new HashMap<>(); // demandId -> (ownerId -> ownerName)
+        if (CollUtil.isNotEmpty(newItems)) {
+            for (ResourcePlanV2SaveReq.DemandOwnerTimeItem item : newItems) {
+                if (!demandIds.contains(item.getProductDemandId())) continue;
+                if (item.getResourceTime() == null || item.getResourceTime().compareTo(BigDecimal.ZERO) <= 0) continue;
+                newDemandOwners.computeIfAbsent(item.getProductDemandId(), k -> new HashMap<>())
+                        .putIfAbsent(item.getOwnerId(), item.getOwner());
+            }
+        }
+
+        // 收集所有涉及的需求ID，查询需求信息（用于发消息）
+        Set<Long> allDemandIds = new HashSet<>(oldDemandOwnerIds.keySet());
+        allDemandIds.addAll(newDemandOwners.keySet());
+        if (allDemandIds.isEmpty()) return;
+
+        Map<Long, ProductDemandDO> demandMap = productDemandMapper.selectByIdList(allDemandIds).stream()
+                .collect(Collectors.toMap(ProductDemandDO::getId, Function.identity(), (e, r) -> e));
+
+        // 处理新增的负责人 → 加入抄送名单
+        for (Map.Entry<Long, Map<String, String>> entry : newDemandOwners.entrySet()) {
+            Long demandId = entry.getKey();
+            Map<String, String> newOwners = entry.getValue();
+            Set<String> oldOwners = oldDemandOwnerIds.getOrDefault(demandId, Collections.emptySet());
+
+            // 找出新增的负责人（在新数据中但不在旧数据中）
+            Set<PersonAddReq> addedPersons = new LinkedHashSet<>();
+            for (Map.Entry<String, String> ownerEntry : newOwners.entrySet()) {
+                if (!oldOwners.contains(ownerEntry.getKey())) {
+                    addedPersons.add(new PersonAddReq().setUserId(ownerEntry.getKey()).setUserName(ownerEntry.getValue()));
+                }
+            }
+
+            if (CollUtil.isNotEmpty(addedPersons)) {
+                // 查询已有的抄送人，避免重复
+                List<PersonDO> existPersons = personComponent.select(demandId, PersonTypeEnum.PRODUCT_DEMAND_CC.getCode(), PersonLevelEnum.CORE.getCode());
+                personComponent.add(addedPersons, demandId, PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
+
+                // 发送消息通知（仅通知真正新增的）
+                Set<String> existUserIds = existPersons.stream().map(PersonDO::getUserId).collect(Collectors.toSet());
+                List<String> realNewUserIds = addedPersons.stream()
+                        .map(PersonAddReq::getUserId)
+                        .filter(uid -> !existUserIds.contains(uid))
+                        .collect(Collectors.toList());
+
+                ProductDemandDO demand = demandMap.get(demandId);
+                if (CollUtil.isNotEmpty(realNewUserIds) && demand != null) {
+                    messageEventPublisher.publish(new ProductDemandToCopiedMsgEvent(
+                            this, demandId, demand.getCreateMan(), realNewUserIds, demand.getName()));
+                }
+            }
+        }
+
+        // 处理删除的负责人 → 移出抄送名单（仅当该人在新数据中完全不存在时才移除）
+        List<Pair<Long, String>> toRemove = new ArrayList<>();
+        for (Map.Entry<Long, Set<String>> entry : oldDemandOwnerIds.entrySet()) {
+            Long demandId = entry.getKey();
+            Set<String> oldOwners = entry.getValue();
+            Set<String> newOwnerIds = newDemandOwners.containsKey(demandId)
+                    ? newDemandOwners.get(demandId).keySet()
+                    : Collections.emptySet();
+
+            for (String oldOwnerId : oldOwners) {
+                if (!newOwnerIds.contains(oldOwnerId)) {
+                    toRemove.add(Pair.of(demandId, oldOwnerId));
+                }
+            }
+        }
+
+        if (CollUtil.isNotEmpty(toRemove)) {
+            PersonRemoveCondition removeCondition = PersonRemoveCondition.builder()
+                    .type(PersonTypeEnum.PRODUCT_DEMAND_CC.getCode())
+                    .mainId2PersonId(toRemove)
+                    .build();
+            personComponent.remove(removeCondition, operatorId, operator);
+        }
+    }
+
     @Override
     public BaseResult<List<ResourcePlanV2VO.OwnerTimeItem>> getOwnerTimesByDemandId(Long productDemandId) {
         if (productDemandId == null) {
@@ -251,6 +367,9 @@ public class ResourcePlanV2ServiceImpl implements ResourcePlanV2Service {
             return BaseResult.success(true);
         }
 
+        // 查询旧的资源分配（用于后续 diff 抄送人）
+        List<ProductDemandOwnerTimeDO> oldOwnerTimes = ownerTimeMapper.listByProductDemandIds(demandIds);
+
         // 删除旧数据
         ownerTimeMapper.deleteByDemandIds(demandIds, operatorId, operator);
 
@@ -279,6 +398,26 @@ public class ResourcePlanV2ServiceImpl implements ResourcePlanV2Service {
             clearDemandTime(demandIds);
         }
 
+        // 同步抄送人（新增加入抄送、删除移出抄送）
+        syncCopiers(oldOwnerTimes, items, demandIds, operatorId, operator);
+
         return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Map<Long, Map<String, BigDecimal>>> getGroupTimeSummary(List<Long> groupIds) {
+        if (CollUtil.isEmpty(groupIds)) {
+            return BaseResult.success(Collections.emptyMap());
+        }
+        List<Map<String, Object>> rows = ownerTimeMapper.sumByGroupIds(groupIds);
+        Map<Long, Map<String, BigDecimal>> result = new HashMap<>();
+        for (Map<String, Object> row : rows) {
+            Long groupId = ((Number) row.get("groupId")).longValue();
+            String resourceType = (String) row.get("resourceType");
+            BigDecimal totalTime = new BigDecimal(row.get("totalTime").toString());
+            result.computeIfAbsent(groupId, k -> new HashMap<>())
+                    .put(resourceType, totalTime);
+        }
+        return BaseResult.success(result);
     }
 }

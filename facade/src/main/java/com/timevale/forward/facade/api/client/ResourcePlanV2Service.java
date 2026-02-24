@@ -7,6 +7,7 @@ import com.timevale.forward.facade.api.result.ResourcePlanV2VO;
 import com.timevale.mandarin.common.annotation.RestClient;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 资源规划V2服务接口
@@ -36,4 +37,9 @@ public interface ResourcePlanV2Service {
      * 保存单条需求的资源分配（V2，按人拆分人天）
      */
     BaseResult<Boolean> saveOwnerTimesByDemandId(ResourcePlanV2SaveReq req);
+
+    /**
+     * 批量查询分组资源人天汇总
+     */
+    BaseResult<Map<Long, Map<String, java.math.BigDecimal>>> getGroupTimeSummary(List<Long> groupIds);
 }

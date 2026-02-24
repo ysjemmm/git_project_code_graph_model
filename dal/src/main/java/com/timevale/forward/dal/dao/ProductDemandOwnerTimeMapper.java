@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Param;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 产品需求资源人天分配 Mapper
@@ -75,4 +76,9 @@ public interface ProductDemandOwnerTimeMapper {
             @Param("operatorId") String operatorId,
             @Param("operator") String operator
     );
+
+    /**
+     * 按分组ID列表汇总各资源类型人天
+     */
+    List<Map<String, Object>> sumByGroupIds(@Param("groupIds") Collection<Long> groupIds);
 }
