@@ -1,8 +1,10 @@
 package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.request.ResourcePlanV2SaveReq;
 import com.timevale.forward.facade.api.result.ResourcePlanV2VO;
+import com.timevale.mandarin.common.annotation.RestClient;
 
 /**
  * 资源规划V2服务接口
@@ -10,6 +12,7 @@ import com.timevale.forward.facade.api.result.ResourcePlanV2VO;
  * @author kiro
  * @date 2026-02-24
  */
+@RestClient(serviceId = MagicValue.FORWARD_RPC_PREFIX)
 public interface ResourcePlanV2Service {
 
     /**

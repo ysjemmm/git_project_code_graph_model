@@ -14,8 +14,8 @@ import com.timevale.forward.facade.api.result.ResourcePlanV2VO;
 import com.timevale.forward.service.component.BizLabelComponent;
 import com.timevale.forward.model.enums.BizTypeEnum;
 import com.timevale.forward.dal.dao.ProductDemandGroupItemMapper;
+import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
  * @date 2026-02-24
  */
 @Slf4j
-@Service("resourcePlanV2Service")
+@RestService
 public class ResourcePlanV2ServiceImpl implements ResourcePlanV2Service {
 
     @Resource
