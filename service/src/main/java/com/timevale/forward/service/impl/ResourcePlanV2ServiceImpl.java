@@ -12,7 +12,7 @@ import com.timevale.forward.facade.api.request.ResourcePlanV2SaveReq;
 import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
 import com.timevale.forward.facade.api.result.ResourcePlanV2VO;
 import com.timevale.forward.service.component.BizLabelComponent;
-import com.timevale.forward.service.enums.BizTypeEnum;
+import com.timevale.forward.model.enums.BizTypeEnum;
 import com.timevale.forward.dal.dao.ProductDemandGroupItemMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
