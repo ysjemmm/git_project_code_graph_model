@@ -111,6 +111,13 @@ public class ResourcePlanV2ServiceImpl implements ResourcePlanV2Service {
         String operatorId = req.getOperatorId();
         String operator = req.getOperator();
 
+        if (groupId == null) {
+            return BaseResult.fail("产品需求分组ID不能为空");
+        }
+        if (bizDomainGroupId == null) {
+            return BaseResult.fail("业务域集ID不能为空");
+        }
+
         // 1. 获取分组下所有需求ID
         List<ProductDemandGroupItemDO> groupItems = productDemandGroupItemMapper.getByGroupId(groupId);
         if (CollUtil.isEmpty(groupItems)) {

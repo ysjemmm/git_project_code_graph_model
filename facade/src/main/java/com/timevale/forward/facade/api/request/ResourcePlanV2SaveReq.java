@@ -19,12 +19,10 @@ import java.util.List;
 @ApiModel("资源规划V2-批量保存请求")
 public class ResourcePlanV2SaveReq extends BaseReq {
 
-    @NotNull(message = "业务域集ID不能为空")
-    @ApiModelProperty(value = "业务域集ID", required = true)
+    @ApiModelProperty(value = "业务域集ID（批量保存时必传）")
     private Long bizDomainGroupId;
 
-    @NotNull(message = "产品需求分组ID不能为空")
-    @ApiModelProperty(value = "产品需求分组ID", required = true)
+    @ApiModelProperty(value = "产品需求分组ID（批量保存时必传）")
     private Long productDemandGroupId;
 
     @NotNull(message = "操作人ID不能为空")
