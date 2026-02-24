@@ -30,7 +30,7 @@ public interface ColumnHideService {
     BaseResult<Boolean> update(ColumnHideModifyReq columnHideModifyReq);
 
     /**
-     * 获取全局配置（不区分用户，所有人共享同一份数据）
+     * 获取全局配置（不区分用户，所有人共享同一份数据，如负责人颜色等）
      *
      * @param columnHideGetReq 查询请求（model + tabType）
      * @return {@link BaseResult}<{@link ColumnHideVO}>
@@ -38,7 +38,7 @@ public interface ColumnHideService {
     BaseResult<ColumnHideVO> getGlobal(ColumnHideGetReq columnHideGetReq);
 
     /**
-     * 更新全局配置（不区分用户，所有人共享同一份数据）
+     * 更新全局配置（不区分用户，所有人共享同一份数据，如负责人颜色等）
      *
      * @param columnHideModifyReq 修改请求（model + tabType + content）
      * @return {@link BaseResult}<{@link Boolean}>

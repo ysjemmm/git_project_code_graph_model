@@ -1,0 +1,82 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.timevale.forward.dal.dao.ProductDemandOwnerTimeMapper">
+
+    <select id="listByProductDemandIds" resultType="com.timevale.forward.dal.entity.ProductDemandOwnerTimeDO">
+        SELECT id, product_demand_id, owner_id, owner, resource_type, resource_time,
+               product_demand_group_id, biz_domain_group_id
+        FROM product_demand_owner_time
+        WHERE is_deleted = 0
+        AND product_demand_id IN
+        <foreach collection="productDemandIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="listByGroupId" resultType="com.timevale.forward.dal.entity.ProductDemandOwnerTimeDO">
+        SELECT id, product_demand_id, owner_id, owner, resource_type, resource_time,
+               product_demand_group_id, biz_domain_group_id
+        FROM product_demand_owner_time
+        WHERE is_deleted = 0
+        AND product_demand_group_id = #{groupId}
+    </select>
+
+    <select id="listByOwnerId" resultType="com.timevale.forward.dal.entity.ProductDemandOwnerTimeDO">
+        SELECT id, product_demand_id, owner_id, owner, resource_type, resource_time,
+               product_demand_group_id, biz_domain_group_id
+        FROM product_demand_owner_time
+        WHERE is_deleted = 0
+        AND owner_id = #{ownerId}
+    </select>
+
+    <select id="listByGroupIdAndOwnerIds" resultType="com.timevale.forward.dal.entity.ProductDemandOwnerTimeDO">
+        SELECT id, product_demand_id, owner_id, owner, resource_type, resource_time,
+               product_demand_group_id, biz_domain_group_id
+        FROM product_demand_owner_time
+        WHERE is_deleted = 0
+        AND product_demand_group_id = #{groupId}
+        AND owner_id IN
+        <foreach collection="ownerIds" item="oid" open="(" separator="," close=")">
+            #{oid}
+        </foreach>
+    </select>
+
+    <insert id="batchInsert">
+        INSERT INTO product_demand_owner_time
+        (product_demand_id, owner_id, owner, resource_type, resource_time,
+         product_demand_group_id, biz_domain_group_id,
+         create_man_id, create_man)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.productDemandId}, #{item.ownerId}, #{item.owner},
+             #{item.resourceType}, #{item.resourceTime},
+             #{item.productDemandGroupId}, #{item.bizDomainGroupId},
+             #{operatorId}, #{operator})
+        </foreach>
+    </insert>
+
+    <update id="deleteByDemandIdAndType">
+        UPDATE product_demand_owner_time
+        SET is_deleted = 1, modify_man_id = #{operatorId}, modify_man = #{operator}, modify_date = NOW()
+        WHERE is_deleted = 0
+        AND product_demand_id = #{productDemandId}
+        AND resource_type = #{resourceType}
+    </update>
+
+    <update id="deleteByDemandId">
+        UPDATE product_demand_owner_time
+        SET is_deleted = 1, modify_man_id = #{operatorId}, modify_man = #{operator}, modify_date = NOW()
+        WHERE is_deleted = 0
+        AND product_demand_id = #{productDemandId}
+    </update>
+
+    <update id="deleteByDemandIds">
+        UPDATE product_demand_owner_time
+        SET is_deleted = 1, modify_man_id = #{operatorId}, modify_man = #{operator}, modify_date = NOW()
+        WHERE is_deleted = 0
+        AND product_demand_id IN
+        <foreach collection="productDemandIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+</mapper>

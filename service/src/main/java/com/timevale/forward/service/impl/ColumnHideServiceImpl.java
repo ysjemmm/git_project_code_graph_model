@@ -95,10 +95,7 @@ public class ColumnHideServiceImpl implements ColumnHideService {
 
         ColumnHideDO columnHideDO = columnHideMapper.select(model, tabType, GLOBAL_BELONG_MAN_ID);
         if (columnHideDO == null) {
-            columnHideDO = new ColumnHideDO();
-            columnHideDO.setModel(model);
-            columnHideDO.setTabType(tabType);
-            columnHideDO.setContent(content);
+            columnHideDO = ColumnHideCopier.INSTANCE.convert(columnHideModifyReq);
             columnHideDO.setBelongMan(GLOBAL_BELONG_MAN);
             columnHideDO.setBelongManId(GLOBAL_BELONG_MAN_ID);
             columnHideMapper.insert(columnHideDO);
