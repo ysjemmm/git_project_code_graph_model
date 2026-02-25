@@ -42,6 +42,9 @@ public class ResourcePlanV2VO extends ToString {
         @ApiModelProperty("需求名称")
         private String name;
 
+        @ApiModelProperty("优先级:0(P0),10(P1),20(P2),30(P3)")
+        private Integer priority;
+
         @ApiModelProperty("标签")
         private List<BizLabelSimpleVO> labelNames;
 

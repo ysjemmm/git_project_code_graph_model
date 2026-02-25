@@ -98,6 +98,7 @@ public class ResourcePlanV2ServiceImpl implements ResourcePlanV2Service {
             ResourcePlanV2VO.DemandWithOwnerTimes demandVO = new ResourcePlanV2VO.DemandWithOwnerTimes();
             demandVO.setId(demandId);
             demandVO.setName(demand.getName());
+            demandVO.setPriority(demand.getPriority());
             demandVO.setLabelNames(labelMap.getOrDefault(demandId, Collections.emptyList()));
 
             List<ProductDemandOwnerTimeDO> times = ownerTimeMap.getOrDefault(demandId, Collections.emptyList());
