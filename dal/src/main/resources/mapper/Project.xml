@@ -743,8 +743,8 @@
     <!-- 首页-近期上线项目：我参与的项目，按计划上线时间倒序 -->
     <select id="selectProjectOnlineLately" resultType="com.timevale.forward.dal.dto.HomePageProjectOnlineLatelyDTO">
         SELECT
-            pj.id AS project_id,
-            pj.name AS pj_name,
+            pj.id AS projectId,
+            pj.name AS projectName,
             pj.pm AS pm,
             CASE pj.status
                 WHEN 0 THEN '待启动'
@@ -758,7 +758,7 @@
                 WHEN -20 THEN '已中止'
                 ELSE '未知'
             END AS status,
-            pj.plan_end_date AS plan_start_date
+            pj.plan_end_date AS planStartDate
         FROM person p
         JOIN project pj ON pj.id = p.main_id
         WHERE p.user_id IN
