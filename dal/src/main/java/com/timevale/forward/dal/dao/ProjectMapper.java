@@ -213,4 +213,19 @@ public interface ProjectMapper {
      * @return 项目信息
      */
     List<ProjectDO> getByWorkHoursNotify(@Param("status") List<Integer> status, @Param("category")Integer category, @Param("workHoursNotify") Boolean workHoursNotify);
+
+
+    /**
+     * 首页-近期上线项目（按计划上线时间倒序）
+     */
+    List<com.timevale.forward.dal.dto.HomePageProjectOnlineLatelyDTO> selectProjectOnlineLately(
+            @Param("userIds") List<String> userIds,
+            @Param("offset") int offset,
+            @Param("pageSize") int pageSize);
+
+    /**
+     * 首页-近期上线项目总数
+     */
+    int countProjectOnlineLately(@Param("userIds") List<String> userIds);
+
 }

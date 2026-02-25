@@ -739,4 +739,56 @@
         </where>
     </select>
 
+
+    <!-- 首页-近期上线项目：我参与的项目，按计划上线时间倒序 -->
+    <select id="selectProjectOnlineLately" resultType="com.timevale.forward.dal.dto.HomePageProjectOnlineLatelyDTO">
+        SELECT
+            pj.id AS project_id,
+            pj.name AS pj_name,
+            pj.pm AS pm,
+            CASE pj.status
+                WHEN 0 THEN '待启动'
+                WHEN 5 THEN '启动中'
+                WHEN 10 THEN '规划中'
+                WHEN 20 THEN '研发中'
+                WHEN 30 THEN '测试中'
+                WHEN 40 THEN '已发布'
+                WHEN 50 THEN '已结项'
+                WHEN -10 THEN '已暂停'
+                WHEN -20 THEN '已中止'
+                ELSE '未知'
+            END AS status,
+            pj.plan_end_date AS plan_start_date
+        FROM person p
+        JOIN project pj ON pj.id = p.main_id
+        WHERE p.user_id IN
+        <foreach collection="userIds" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        AND p.type IN (0, 1)
+        AND p.is_deleted = false
+        AND pj.is_deleted = false
+        AND pj.status NOT IN (-20, -30, 50)
+        AND pj.plan_end_date IS NOT NULL
+        GROUP BY pj.id
+        ORDER BY pj.plan_end_date DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!-- 首页-近期上线项目总数 -->
+    <select id="countProjectOnlineLately" resultType="int">
+        SELECT COUNT(DISTINCT pj.id)
+        FROM person p
+        JOIN project pj ON pj.id = p.main_id
+        WHERE p.user_id IN
+        <foreach collection="userIds" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        AND p.type IN (0, 1)
+        AND p.is_deleted = false
+        AND pj.is_deleted = false
+        AND pj.status NOT IN (-20, -30, 50)
+        AND pj.plan_end_date IS NOT NULL
+    </select>
+
 </mapper>

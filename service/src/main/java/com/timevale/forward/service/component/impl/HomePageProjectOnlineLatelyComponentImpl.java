@@ -1,15 +1,12 @@
 package com.timevale.forward.service.component.impl;
 
+import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dto.HomePageProjectOnlineLatelyDTO;
 import com.timevale.forward.facade.api.query.HomePageProjectOnlineLatelyQueryList;
 import com.timevale.forward.model.enums.HomePageTabEnum;
 import com.timevale.forward.service.component.HomePageProjectOnlineLatelyComponent;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
-import com.timevale.forward.service.integration.superset.client.impl.BaseDistributeClientImpl;
-import com.timevale.forward.service.integration.superset.config.DistributeConfig;
-import com.timevale.forward.service.integration.superset.model.base.DistributePageQueryVO;
 import com.timevale.forward.service.integration.superset.model.base.PageResult;
-import com.timevale.forward.service.integration.superset.util.ParamHelper;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
@@ -25,40 +22,32 @@ import java.util.List;
  */
 @Slf4j
 @Component
-public class HomePageProjectOnlineLatelyComponentImpl extends BaseDistributeClientImpl<HomePageProjectOnlineLatelyDTO> implements HomePageProjectOnlineLatelyComponent {
+public class HomePageProjectOnlineLatelyComponentImpl implements HomePageProjectOnlineLatelyComponent {
 
     @Resource
-    private DistributeConfig distributeConfig;
+    private ProjectMapper projectMapper;
 
     @Resource
     private InnerUserPersonClient innerUserPersonClient;
 
     @Override
-    public PageResult<HomePageProjectOnlineLatelyDTO> getProjectOnlineLately(HomePageProjectOnlineLatelyQueryList homePageProjectOnlineLatelyQueryList) {
+    public PageResult<HomePageProjectOnlineLatelyDTO> getProjectOnlineLately(HomePageProjectOnlineLatelyQueryList query) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
-        List<String> allMyStaffWithSelf;
-        if(HomePageTabEnum.INDIVIDUAL.getCode().equals(homePageProjectOnlineLatelyQueryList.getTabType())) {
-            allMyStaffWithSelf = Lists.newArrayList(userInfo.getId());
-        }else{
-            allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
+        List<String> userIds;
+        if (HomePageTabEnum.INDIVIDUAL.getCode().equals(query.getTabType())) {
+            userIds = Lists.newArrayList(userInfo.getId());
+        } else {
+            userIds = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
         }
 
-        ParamHelper queryParamHelper = ParamHelper.newInstance()
-                .offset((homePageProjectOnlineLatelyQueryList.getPageNum() - 1) * homePageProjectOnlineLatelyQueryList.getPageSize())
-                .page(homePageProjectOnlineLatelyQueryList.getPageSize())
-                .in("user_id", allMyStaffWithSelf);
-        DistributePageQueryVO queryParams = DistributePageQueryVO.builder()
-                .params(queryParamHelper.params())
-                .distributeConfigVO(distributeConfig.getProjectOnlineLately())
-                .build();
+        int offset = (query.getPageNum() - 1) * query.getPageSize();
+        List<HomePageProjectOnlineLatelyDTO> list = projectMapper.selectProjectOnlineLately(userIds, offset, query.getPageSize());
+        int total = projectMapper.countProjectOnlineLately(userIds);
 
-        ParamHelper countParamHelper = ParamHelper.newInstance()
-                .in("user_id", allMyStaffWithSelf);
-        DistributePageQueryVO countParams = DistributePageQueryVO.builder()
-                .params(countParamHelper.params())
-                .distributeConfigVO(distributeConfig.getProjectOnlineLatelyCount())
-                .build();
-        return doPage(queryParams, countParams);
+        PageResult<HomePageProjectOnlineLatelyDTO> pageResult = new PageResult<>();
+        pageResult.setResult(list);
+        pageResult.setTotal(total);
+        return pageResult;
     }
 }
