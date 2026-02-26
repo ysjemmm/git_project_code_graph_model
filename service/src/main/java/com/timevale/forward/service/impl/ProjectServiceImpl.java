@@ -2097,8 +2097,24 @@ public class ProjectServiceImpl implements ProjectService {
         // 更新项目节点状态
         projectComponent.updateNodeStatus(projectId);
 
+        // 根据节点实际时间重新计算项目状态（与 projectModify 逻辑一致）
+        Integer oldStatus = project.getStatus();
+        if (!ProjectStatusEnum.SUSPEND.getCode().equals(oldStatus)) {
+            // 暂停状态不自动变更项目状态
+            List<ProjectNodeDO> latestNodes = projectNodeComponent.get(projectId);
+            ProjectDO updateProject = projectMapper.get(projectId);
+            projectComponent.fillInfo(latestNodes, updateProject);
+            projectMapper.fullUpdateById(updateProject);
+
+            if (!Objects.equals(updateProject.getStatus(), oldStatus)) {
+                // 状态变化时，同步更新关联的产品需求状态
+                productDemandComponent.updateProductDemandStatus(projectId, updateProject.getStatus());
+            }
+        }
+
         // 记录日志
-        projectLogComponent.addLogWhenStatusChange(project.getStatus(), project.getStatus(),
+        Integer newStatus = projectMapper.get(projectId).getStatus();
+        projectLogComponent.addLogWhenStatusChange(oldStatus, newStatus,
                 projectId, ButtonActionEnum.MODIFY.getText());
 
         return BaseResult.success(true);
