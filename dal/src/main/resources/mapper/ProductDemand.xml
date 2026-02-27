@@ -5,9 +5,9 @@
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProductDemandDO" useGeneratedKeys="true"
             keyProperty="id" keyColumn="id">
         insert into product_demand (name, product_line_id, type, `desc`, status, priority, owner, owner_id,
-                                    expect_schedule_time, target_customer, customer_grade, create_man_id, create_man, ued_time, transfer_time, product_time, back_time, front_time, qa_time, ops_time, security_time, total_time)
+                                    expect_schedule_time, target_customer, customer_grade, create_man_id, create_man, ued_time, transfer_time, product_time, back_time, front_time, qa_time, ops_time, security_time, total_time, story_point)
         values (#{name}, #{productLineId}, #{type}, #{desc}, #{status}, #{priority}, #{owner}, #{ownerId},
-                #{expectScheduleTime}, #{targetCustomer}, #{customerGrade},#{createManId}, #{createMan}, #{uedTime}, #{transferTime}, #{productTime}, #{backTime}, #{frontTime}, #{qaTime}, #{opsTime}, #{securityTime}, #{totalTime})
+                #{expectScheduleTime}, #{targetCustomer}, #{customerGrade},#{createManId}, #{createMan}, #{uedTime}, #{transferTime}, #{productTime}, #{backTime}, #{frontTime}, #{qaTime}, #{opsTime}, #{securityTime}, #{totalTime}, #{storyPoint})
     </insert>
 
     <insert id="batchUpsertProductDemandOwners">
@@ -119,7 +119,7 @@
 
     <select id="selectByIdList" resultType="com.timevale.forward.dal.entity.ProductDemandDO">
         select id, name, product_line_id, type, `desc`, status, priority, owner, is_deleted, create_man_id, create_man,
-        create_date, modify_man_id, modify_man, modify_date, owner_id, ued_time, product_time, back_time, front_time, qa_time, ops_time, security_time, total_time
+        create_date, modify_man_id, modify_man, modify_date, owner_id, ued_time, product_time, back_time, front_time, qa_time, ops_time, security_time, total_time, story_point
         from product_demand
         where
         is_deleted = false
@@ -184,7 +184,8 @@
                security_time,
                total_time,
                target_customer,
-               customer_grade
+               customer_grade,
+               story_point
         from product_demand
         where id = #{id}
     </select>
@@ -313,6 +314,7 @@
             <if test="transferTime != null">transfer_time = #{transferTime},</if>
             <if test="productTime != null">product_time = #{productTime},</if>
             <if test="totalTime != null">total_time = #{totalTime},</if>
+            <if test="storyPoint != null">story_point = #{storyPoint},</if>
         </set>
         <where>
             id = #{id} and is_deleted=false

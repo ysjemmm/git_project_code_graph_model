@@ -104,4 +104,9 @@ public class ProductDemandAddReq extends BaseReq {
 
     @ApiModelProperty("产品需求负责人集合")
     private List<ProductDemandOwnerAddReq> productDemandOwners;
+
+
+    @ApiModelProperty("故事点（SP）")
+    private Integer storyPoint;
+
 }

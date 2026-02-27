@@ -24,4 +24,7 @@ public class ProductDemandPriorityUpdateReq extends BaseReq {
     @ApiModelProperty("产品需求优先级")
     @NotNull(message = "优先级不能为空")
     private Integer priority;
+
+    @ApiModelProperty("业务域集ID（需求规划场景传入，用于权限校验）")
+    private Long bizDomainGroupId;
 }

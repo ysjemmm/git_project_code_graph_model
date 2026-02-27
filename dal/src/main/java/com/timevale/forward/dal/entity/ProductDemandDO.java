@@ -110,4 +110,11 @@ public class ProductDemandDO extends BaseDO {
      */
     private String customerGrade;
 
+
+    /**
+     * 故事点（SP）
+     */
+    private Integer storyPoint;
+
+
 }

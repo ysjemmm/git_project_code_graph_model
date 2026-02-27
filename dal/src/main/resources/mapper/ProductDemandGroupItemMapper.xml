@@ -7,7 +7,7 @@
         select  pdgi.id,pdgi.product_demand_id,pdgi.product_demand_group_id,pdgi.position,pdgi.version, pdgi.create_man,pdgi.create_man_id,pdgi.create_date,pdgi.modify_date,
         a.name,a.priority,a.owner,a.owner_id,a.status, a.product_line_id,a.type, a.expect_schedule_time,a.create_man as demandCreateMan,a.create_man_id as demandCreateManId,
         a.create_date as demandCreateDate,a.modify_date as demandModifyDate,c.name productLineName,d.name bizDomainName, a.ued_time, a.transfer_time, a.product_time, a.back_time,
-        a.front_time, a.qa_time, a.total_time, a.ops_time, a.security_time
+        a.front_time, a.qa_time, a.total_time, a.ops_time, a.security_time, a.story_point
         <if test="copierId != null and copierId != ''">
             ,e.user_name copier
         </if>

@@ -111,4 +111,9 @@ public class ProductDemandDetailVO extends ToString {
 
     @ApiModelProperty("资源评估信息")
     private List<SimpleResourcePlanItemVO> resourcePlans;
+
+
+    @ApiModelProperty("故事点（SP）")
+    private Integer storyPoint;
+
 }

@@ -142,4 +142,11 @@ public class ProductDemandGroupItemListDO extends ProductDemandGroupItemDO {
 
     private String customerGrade;
 
+
+    /**
+     * 故事点（SP）
+     */
+    private Integer storyPoint;
+
+
 } 

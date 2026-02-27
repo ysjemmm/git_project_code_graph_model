@@ -22,6 +22,7 @@ import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.facade.api.result.TrackEventVO;
 import com.timevale.forward.service.utils.ResultUtils;
+import com.timevale.mandarin.base.enums.BaseResultCodeEnum;
 import com.timevale.mandarin.common.result.BusinessResult;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import io.swagger.annotations.Api;
@@ -104,12 +105,24 @@ public class ProductDemandController {
     @ApiOperation("产品需求新增")
     @PostMapping("/add")
     public BusinessResult<Boolean> add(@RequestBody @Valid ProductDemandAddReq productDemandAddReq) {
+        // 校验故事点：必须为 null 或正整数（> 0）
+        Integer storyPoint = productDemandAddReq.getStoryPoint();
+        if (storyPoint != null && storyPoint <= 0) {
+            return ResultUtils.fail(BaseResultCodeEnum.ILLEGAL_ARGUMENT.getNCode(),
+                    "故事点必须为大于0的正整数");
+        }
         return ResultUtils.result(productDemandService.add(productDemandAddReq));
     }
 
     @ApiOperation("产品需求修改")
     @PostMapping("/modify")
     public BusinessResult<Boolean> modify(@RequestBody @Valid ProductDemandModifyReq productDemandModifyReq) {
+        // 校验故事点：必须为 null 或正整数（> 0）
+        Integer storyPoint = productDemandModifyReq.getStoryPoint();
+        if (storyPoint != null && storyPoint <= 0) {
+            return ResultUtils.fail(BaseResultCodeEnum.ILLEGAL_ARGUMENT.getNCode(),
+                    "故事点必须为大于0的正整数");
+        }
         return ResultUtils.result(productDemandService.modify(productDemandModifyReq));
     }
 

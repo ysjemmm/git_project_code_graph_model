@@ -443,6 +443,10 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         if (StrUtil.isBlank(PriorityEnum.getTextByCode(priority))) {
             throw new BaseBizRuntimeException("未知优先级");
         }
+        // 校验操作权限（需求规划场景传入bizDomainGroupId）
+        if (productDemandPriorityUpdateReq.getBizDomainGroupId() != null) {
+            bizDomainGroupPermissionComponent.checkOperationPermission(productDemandPriorityUpdateReq.getBizDomainGroupId());
+        }
         ProductDemandDO pdo = new ProductDemandDO().setPriority(productDemandPriorityUpdateReq.getPriority());
         pdo.setId(productDemandPriorityUpdateReq.getId());
         productDemandComponent.update(pdo);

@@ -47,4 +47,9 @@ public class BizDomainGroupVO extends ToString {
 
     @ApiModelProperty("业务域")
     private List<BizDomainVO> bizDomainVOS;
+
+
+    @ApiModelProperty("估算模式：resource=传统资源规划, storyPoint=故事点")
+    private String estimationMode;
+
 }

@@ -36,4 +36,11 @@ public class BizDomainGroupDO extends BaseDO {
      */
     private String desc;
 
+
+    /**
+     * 估算模式：resource=传统资源规划, storyPoint=故事点
+     */
+    private String estimationMode;
+
+
 }

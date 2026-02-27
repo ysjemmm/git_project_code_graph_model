@@ -121,4 +121,9 @@ public class ProductDemandVO extends ToString {
 
     @ApiModelProperty("客户等级")
     private String customerGrade;
+
+
+    @ApiModelProperty("故事点（SP）")
+    private Integer storyPoint;
+
 }
