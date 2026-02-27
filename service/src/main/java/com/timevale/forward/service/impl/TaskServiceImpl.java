@@ -530,6 +530,9 @@ public class TaskServiceImpl implements TaskService {
         TaskDO taskDO = taskMapper.getById(taskId);
         AssertUtil.notNull(taskDO, "找不到该任务");
         AssertUtil.checkState(TaskStatusEnum.PROGRESS.getCode().equals(taskDO.getStatus()), "任务状态不是进行中,不能修改状态");
+        // 添加参数校验，避免空指针异常
+        AssertUtil.notNull(taskDO.getActualStartDate(), "任务实际开始时间不能为空");
+        AssertUtil.notNull(doneReq.getActualEndDate(), "任务实际完成时间不能为空");
         AssertUtil.checkState(taskDO.getActualStartDate().compareTo(doneReq.getActualEndDate()) <= 0, "任务实际完成时间必须大于等于实际开始时间");
 
         taskDO.setStatus(TaskStatusEnum.DONE.getCode());
