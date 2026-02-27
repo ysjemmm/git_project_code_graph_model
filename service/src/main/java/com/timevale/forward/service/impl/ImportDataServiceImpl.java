@@ -1,11 +1,24 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.context.AnalysisContext;
+import com.alibaba.excel.event.AnalysisEventListener;
 import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.dao.LabelCategoryBizDomainMapper;
+import com.timevale.forward.dal.dao.LabelCategoryMapper;
+import com.timevale.forward.dal.dao.LabelMapper;
+import com.timevale.forward.dal.dao.ProductDemandGroupItemMapper;
+import com.timevale.forward.dal.dao.ProductDemandGroupMapper;
 import com.timevale.forward.dal.dao.ProductDemandMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.entity.LabelCategoryBizDomainDO;
+import com.timevale.forward.dal.entity.LabelCategoryDO;
+import com.timevale.forward.dal.entity.LabelDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
+import com.timevale.forward.dal.entity.ProductDemandGroupDO;
+import com.timevale.forward.dal.entity.ProductDemandGroupItemDO;
 import com.timevale.forward.dal.entity.ProductLineDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.facade.api.client.ImportDataService;
@@ -29,10 +42,13 @@ import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.ProjectDetailVO;
 import com.timevale.forward.facade.api.result.ProjectNodeVO;
 import com.timevale.forward.model.enums.LinkOrUnLinkEnum;
+import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.service.component.BizLabelComponent;
 import com.timevale.forward.service.utils.file.FileUtil;
 import com.timevale.forward.service.utils.file.ImportDataUtil;
 import com.timevale.forward.service.utils.file.PinyinConverter;
+import com.timevale.forward.service.utils.position.PositionUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -96,6 +112,24 @@ public class ImportDataServiceImpl implements ImportDataService {
 
     @Resource
     private ProjectEvaluateService evaluateService;
+
+    @Resource
+    private LabelCategoryMapper labelCategoryMapper;
+
+    @Resource
+    private LabelCategoryBizDomainMapper labelCategoryBizDomainMapper;
+
+    @Resource
+    private LabelMapper labelMapper;
+
+    @Resource
+    private ProductDemandGroupMapper productDemandGroupMapper;
+
+    @Resource
+    private ProductDemandGroupItemMapper productDemandGroupItemMapper;
+
+    @Resource
+    private BizLabelComponent bizLabelComponent;
 
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
@@ -716,5 +750,492 @@ public class ImportDataServiceImpl implements ImportDataService {
         evaluateReqList.add(evaluateReq2);
         projectEvaluateReq.setEvaluateReqList(evaluateReqList);
         return projectEvaluateReq;
+    }
+
+    // ==================== 需求规划Excel导入 ====================
+
+    /**
+     * 业务域集id，固定为26
+     */
+    private static Long BIZ_DOMAIN_GROUP_ID = 26L;
+    private static String PRODUCT_LINE_NAME = "eSignGlobal";
+
+    /**
+     * 需求状态映射：Excel中的状态文本 -> 系统ProductDemandStatusEnum
+     */
+    private static final Map<String, Integer> STATUS_MAPPING = new HashMap<String, Integer>() {{
+        put("未开始", ProductDemandStatusEnum.WAITING.getCode());
+        put("等待排期", ProductDemandStatusEnum.WAITING.getCode());
+        put("发模拟", ProductDemandStatusEnum.DEV_COMPLETED.getCode());
+        put("研发完成", ProductDemandStatusEnum.DEV_COMPLETED.getCode());
+        put("已完成", ProductDemandStatusEnum.ONLINE.getCode());
+        put("完成上线", ProductDemandStatusEnum.ONLINE.getCode());
+        put("已上线", ProductDemandStatusEnum.ONLINE.getCode());
+        put("研发中", ProductDemandStatusEnum.DEVELOPING.getCode());
+        put("研发进行", ProductDemandStatusEnum.DEVELOPING.getCode());
+        put("开发中", ProductDemandStatusEnum.DEVELOPING.getCode());
+        put("已列项目", ProductDemandStatusEnum.INCLUDED.getCode());
+        put("项目进行", ProductDemandStatusEnum.PROGRESS.getCode());
+        put("已暂停", ProductDemandStatusEnum.SUSPEND.getCode());
+        put("需求暂停", ProductDemandStatusEnum.SUSPEND.getCode());
+        put("已作废", ProductDemandStatusEnum.INVALID.getCode());
+        put("需求作废", ProductDemandStatusEnum.INVALID.getCode());
+        put("项目暂停", ProductDemandStatusEnum.PJ_SUSPEND.getCode());
+    }};
+
+    @Override
+    public void importDemandPlanData(Long bizDomainGroupId, String productLineName, MultipartFile file, HttpServletResponse response) {
+        try {
+            if (bizDomainGroupId != null) {
+                BIZ_DOMAIN_GROUP_ID = bizDomainGroupId;
+            }
+            if (StringUtils.isNotBlank(productLineName)) {
+                PRODUCT_LINE_NAME = productLineName;
+            }
+            doImportDemandPlanData(file, response);
+        } catch (Exception e) {
+            log.error("导入需求规划数据异常", e);
+            throw new BaseBizRuntimeException("导入需求规划数据异常：" + e.getMessage());
+        }
+    }
+
+    private void doImportDemandPlanData(MultipartFile file, HttpServletResponse response) {
+        // 1. 读取Excel数据
+        List<Map<Integer, String>> allData = new ArrayList<>();
+        List<String> headerList = new ArrayList<>();
+
+        EasyExcel.read(getInputStream(file), new AnalysisEventListener<Map<Integer, String>>() {
+            @Override
+            public void invokeHeadMap(Map<Integer, String> headMap, AnalysisContext context) {
+                headMap.forEach((k, v) -> headerList.add(v != null ? v.trim() : ""));
+            }
+
+            @Override
+            public void invoke(Map<Integer, String> data, AnalysisContext context) {
+                allData.add(data);
+            }
+
+            @Override
+            public void doAfterAllAnalysed(AnalysisContext context) {
+                log.info("Excel解析完成，共{}条数据", allData.size());
+            }
+        }).sheet().doRead();
+
+        if (allData.isEmpty()) {
+            throw new BaseBizRuntimeException("Excel文件数据为空");
+        }
+
+        // 2. 解析列索引
+        Map<String, Integer> colIndex = new HashMap<>();
+        for (int i = 0; i < headerList.size(); i++) {
+            colIndex.put(headerList.get(i), i);
+        }
+
+        // 需要的标签类别列
+        String[] labelCategoryColumns = {"模块", "ePaaS", "UED", "来源"};
+        // 3. 创建标签类别和标签
+        Map<String, Long> labelNameToIdMap = createLabelsFromExcel(allData, colIndex, labelCategoryColumns);
+
+        // 4. 创建需求规划组并导入需求
+        List<String> failedRecords = new ArrayList<>();
+        failedRecords.add("行号,需求名称,失败原因");
+        int successCount = 0;
+        int failCount = 0;
+
+        // 按分组列+排期列组合分组
+        Integer groupColIdx = colIndex.get("分组");
+        Integer scheduleColIdx = colIndex.get("排期");
+
+        // 收集所有分组名称（排期+分组组合）
+        Map<String, Long> groupNameToIdMap = new HashMap<>();
+
+        for (int i = 0; i < allData.size(); i++) {
+            Map<Integer, String> row = allData.get(i);
+            try {
+                String demandName = getCellValue(row, colIndex.get("需求名称"));
+                if (demandName == null) {
+                    demandName = getCellValue(row, colIndex.get("需求"));
+                }
+                if (demandName == null) {
+                    // 尝试第一列
+                    demandName = getCellValue(row, 0);
+                }
+                if (demandName == null || demandName.isEmpty()) {
+                    continue;
+                }
+
+                String schedule = scheduleColIdx != null ? getCellValue(row, scheduleColIdx) : null;
+                String group = groupColIdx != null ? getCellValue(row, groupColIdx) : null;
+
+                // 构建分组名称
+                String groupName = buildGroupName(schedule, group);
+
+                // 获取或创建分组
+                Long groupId = null;
+                if (groupName != null) {
+                    groupId = groupNameToIdMap.computeIfAbsent(groupName, name -> getOrCreateDemandGroup(name));
+                }
+
+                // 创建需求
+                importSingleDemand(row, colIndex, demandName, groupId, labelNameToIdMap, labelCategoryColumns);
+                successCount++;
+            } catch (Exception e) {
+                String demandName = getCellValue(row, colIndex.containsKey("需求名称") ? colIndex.get("需求名称") : 0);
+                String errorMsg = e.getMessage() != null ? e.getMessage().replaceAll("[\\r\\n]+", " ") : "未知错误";
+                failedRecords.add((i + 2) + "," + demandName + "," + errorMsg);
+                failCount++;
+                log.warn("导入需求规划数据失败，行号: {}, 错误: {}", i + 2, e.getMessage());
+            }
+        }
+
+        log.info("需求规划数据导入完成，成功: {}条，失败: {}条", successCount, failCount);
+
+        if (failedRecords.size() > 1) {
+            generateFailedDataFile(failedRecords, response, "failed_demand_plan_data.csv");
+        }
+    }
+
+    /**
+     * 从Excel数据中创建标签类别和标签
+     */
+    private Map<String, Long> createLabelsFromExcel(List<Map<Integer, String>> allData, Map<String, Integer> colIndex, String[] labelCategoryColumns) {
+        Map<String, Long> labelNameToIdMap = new HashMap<>();
+
+        for (String categoryName : labelCategoryColumns) {
+            Integer colIdx = colIndex.get(categoryName);
+            if (colIdx == null) {
+                log.info("Excel中不存在列: {}, 跳过", categoryName);
+                continue;
+            }
+
+            // 收集该列所有去重的值
+            Set<String> uniqueValues = new HashSet<>();
+            for (Map<Integer, String> row : allData) {
+                String value = getCellValue(row, colIdx);
+                if (value != null && !value.isEmpty()) {
+                    uniqueValues.add(value);
+                }
+            }
+
+            if (uniqueValues.isEmpty()) {
+                continue;
+            }
+
+            // 获取或创建标签类别
+            Long categoryId = getOrCreateLabelCategory(categoryName);
+
+            // 获取该类别下已有的标签
+            List<LabelDO> existingLabels = labelMapper.getByCategoryIds(Arrays.asList(categoryId), false);
+            Map<String, Long> existingLabelMap = existingLabels.stream()
+                    .collect(Collectors.toMap(LabelDO::getName, LabelDO::getId, (v1, v2) -> v1));
+
+            // 创建不存在的标签
+            List<String> newLabelNames = uniqueValues.stream()
+                    .filter(name -> !existingLabelMap.containsKey(name))
+                    .collect(Collectors.toList());
+
+            if (!newLabelNames.isEmpty()) {
+                List<LabelDO> newLabels = newLabelNames.stream().map(name -> {
+                    LabelDO labelDO = new LabelDO();
+                    labelDO.setLabelCategoryId(categoryId);
+                    labelDO.setName(name);
+                    return labelDO;
+                }).collect(Collectors.toList());
+                labelMapper.batchInsert(newLabels);
+
+                // 重新查询获取id
+                List<LabelDO> allLabels = labelMapper.getByCategoryIds(Arrays.asList(categoryId), false);
+                allLabels.forEach(label -> existingLabelMap.put(label.getName(), label.getId()));
+            }
+
+            // 将所有标签名->id放入map，key加上类别前缀避免冲突
+            existingLabelMap.forEach((name, id) -> labelNameToIdMap.put(categoryName + ":" + name, id));
+            log.info("标签类别[{}]处理完成，共{}个标签", categoryName, existingLabelMap.size());
+        }
+
+        return labelNameToIdMap;
+    }
+
+    /**
+     * 获取或创建标签类别
+     */
+    private Long getOrCreateLabelCategory(String categoryName) {
+        List<LabelCategoryDO> existing = labelCategoryMapper.getByName(categoryName);
+        // 查找type包含11（产品需求）的类别
+        Optional<LabelCategoryDO> matched = existing.stream()
+                .filter(c -> c.getType() != null && c.getType().contains("11"))
+                .findFirst();
+
+        if (matched.isPresent()) {
+            return matched.get().getId();
+        }
+
+        // 创建新的标签类别
+        LabelCategoryDO labelCategoryDO = new LabelCategoryDO();
+        labelCategoryDO.setName(categoryName);
+        labelCategoryDO.setType("[11]"); // 产品需求类型
+        labelCategoryDO.setMarkMan("[\"雨桦-杨军辉\"]");
+        labelCategoryDO.setMarkManId("[\"yuhua\"]");
+        labelCategoryDO.setProtection(0);
+        labelCategoryMapper.insert(labelCategoryDO);
+
+        // 关联业务域：插入label_category_biz_domain关联表数据
+        LabelCategoryBizDomainDO lcbdDO = new LabelCategoryBizDomainDO();
+        lcbdDO.setLabelCategoryId(labelCategoryDO.getId());
+        lcbdDO.setBizDomainId(BIZ_DOMAIN_GROUP_ID); // 业务域id为52
+        labelCategoryBizDomainMapper.batchInsert(Arrays.asList(lcbdDO));
+
+        log.info("创建标签类别: {}, id: {}, 关联业务域id: {}", categoryName, labelCategoryDO.getId(), BIZ_DOMAIN_GROUP_ID);
+        return labelCategoryDO.getId();
+    }
+
+    /**
+     * 构建分组名称
+     */
+    private String buildGroupName(String schedule, String group) {
+        if ((schedule == null || schedule.isEmpty()) && (group == null || group.isEmpty())) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        if (schedule != null && !schedule.isEmpty()) {
+            sb.append(schedule);
+        }
+        if (group != null && !group.isEmpty()) {
+            if (sb.length() > 0) {
+                sb.append("-");
+            }
+            sb.append(group);
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 获取或创建需求规划组
+     */
+    private Long getOrCreateDemandGroup(String groupName) {
+        // 查询是否已存在
+        ProductDemandGroupDO existing = productDemandGroupMapper.getByBizDomainGroupIdAndName(BIZ_DOMAIN_GROUP_ID, groupName);
+        if (existing != null) {
+            return existing.getId();
+        }
+
+        // 创建新的需求规划组
+        ProductDemandGroupDO groupDO = new ProductDemandGroupDO();
+        groupDO.setName(groupName);
+        groupDO.setBizDomainGroupId(BIZ_DOMAIN_GROUP_ID);
+        groupDO.setPosition(PositionUtil.generate(BIZ_DOMAIN_GROUP_ID.toString(), System.currentTimeMillis()));
+        groupDO.setVersion(0L);
+        groupDO.setOwner("system");
+        groupDO.setOwnerId("system");
+        groupDO.setIsActive(true);
+        productDemandGroupMapper.insert(groupDO);
+        log.info("创建需求规划组: {}, id: {}", groupName, groupDO.getId());
+        return groupDO.getId();
+    }
+
+    /**
+     * 导入单条需求
+     */
+    private void importSingleDemand(Map<Integer, String> row, Map<String, Integer> colIndex,
+                                     String demandName, Long groupId,
+                                     Map<String, Long> labelNameToIdMap, String[] labelCategoryColumns) {
+        // 需求名称截断处理
+        String desc = null;
+        if (demandName.length() > 64) {
+            desc = demandName;
+            demandName = demandName.substring(0, 64);
+        }
+
+        // 查询需求是否已存在
+        ProductDemandDO existingDemand = productDemandMapper.getByName(demandName);
+        if (existingDemand != null) {
+            // 需求已存在，直接关联到分组
+            if (groupId != null) {
+                addDemandToGroup(existingDemand.getId(), groupId);
+            }
+            // 打标签
+            addLabelsForDemand(existingDemand.getId(), row, colIndex, labelNameToIdMap, labelCategoryColumns);
+            return;
+        }
+
+        // 获取状态
+        String statusText = getCellValue(row, colIndex.get("状态"));
+        Integer status = ProductDemandStatusEnum.WAITING.getCode();
+        if (statusText != null && !statusText.isEmpty()) {
+            status = STATUS_MAPPING.getOrDefault(statusText.trim(), ProductDemandStatusEnum.WAITING.getCode());
+        }
+
+        // 获取优先级
+        String priorityText = getCellValue(row, colIndex.get("优先级"));
+        Integer priority = parsePriority(priorityText);
+
+        // 获取产品线
+        Long productLineId = null;
+        if (PRODUCT_LINE_NAME != null && !PRODUCT_LINE_NAME.isEmpty()) {
+            ProductLineDO productLineDO = productLineMapper.selectByName(PRODUCT_LINE_NAME);
+            if (productLineDO != null) {
+                productLineId = productLineDO.getId();
+            }
+        }
+
+        // 获取负责人
+        String ownerName = getCellValue(row, colIndex.get("创建人"));
+        if (ownerName == null || ownerName.isEmpty()) {
+            ownerName = getCellValue(row, colIndex.get("产品负责人"));
+        }
+
+        // 解析预期排期时间（从"排期"列）
+        Date expectScheduleTime = parseScheduleDate(getCellValue(row, colIndex.get("排期")));
+
+        // 创建需求DO
+        ProductDemandDO productDemandDO = new ProductDemandDO();
+        productDemandDO.setName(demandName);
+        productDemandDO.setDesc(desc);
+        productDemandDO.setStatus(status);
+        productDemandDO.setPriority(priority != null ? priority : 20); // 默认P2
+        productDemandDO.setProductLineId(productLineId);
+        productDemandDO.setType("[1]"); // 默认功能迭代
+        productDemandDO.setExpectScheduleTime(expectScheduleTime);
+
+        if (ownerName != null && !ownerName.isEmpty()) {
+            String[] parts = ownerName.split("-");
+            String name = parts.length >= 2 ? parts[0] + "-" + parts[1] : parts[0];
+            productDemandDO.setOwner(name);
+            productDemandDO.setOwnerId(PinyinConverter.toPinyin(parts[0]));
+        }
+
+        productDemandMapper.insert(productDemandDO);
+        log.info("创建需求: {}, id: {}, 预期排期: {}", demandName, productDemandDO.getId(), expectScheduleTime);
+
+        // 关联到分组
+        if (groupId != null) {
+            addDemandToGroup(productDemandDO.getId(), groupId);
+        }
+
+        // 打标签
+        addLabelsForDemand(productDemandDO.getId(), row, colIndex, labelNameToIdMap, labelCategoryColumns);
+    }
+
+    /**
+     * 将需求添加到分组
+     */
+    private void addDemandToGroup(Long demandId, Long groupId) {
+        // 检查是否已在分组中
+        ProductDemandGroupItemDO existing = productDemandGroupItemMapper.getByGroupIdAndDemandId(groupId, demandId);
+        if (existing != null) {
+            return;
+        }
+
+        // 检查是否已在其他分组中
+        ProductDemandGroupItemDO existInOther = productDemandGroupItemMapper.getByDemandId(demandId);
+        if (existInOther != null) {
+            log.info("需求{}已在分组{}中，跳过添加到分组{}", demandId, existInOther.getProductDemandGroupId(), groupId);
+            return;
+        }
+
+        ProductDemandGroupItemDO itemDO = new ProductDemandGroupItemDO();
+        itemDO.setProductDemandGroupId(groupId);
+        itemDO.setProductDemandId(demandId);
+        itemDO.setPosition(PositionUtil.generate(groupId.toString(), System.currentTimeMillis()));
+        itemDO.setVersion(0L);
+        itemDO.setIsActive(true);
+        productDemandGroupItemMapper.insert(itemDO);
+    }
+
+    /**
+     * 为需求打标签
+     */
+    private void addLabelsForDemand(Long demandId, Map<Integer, String> row, Map<String, Integer> colIndex,
+                                     Map<String, Long> labelNameToIdMap, String[] labelCategoryColumns) {
+        List<Long> labelIds = new ArrayList<>();
+        for (String categoryName : labelCategoryColumns) {
+            Integer colIdx = colIndex.get(categoryName);
+            if (colIdx == null) continue;
+            String value = getCellValue(row, colIdx);
+            if (value != null && !value.isEmpty()) {
+                Long labelId = labelNameToIdMap.get(categoryName + ":" + value);
+                if (labelId != null) {
+                    labelIds.add(labelId);
+                }
+            }
+        }
+        if (!labelIds.isEmpty()) {
+            bizLabelComponent.addLabel(demandId, labelIds, 11); // 11=产品需求
+        }
+    }
+
+    /**
+     * 解析排期日期
+     * 格式：260604 -> 2026-06-04
+     * 待定或空值 -> 当前时间
+     */
+    private Date parseScheduleDate(String scheduleText) {
+        if (scheduleText == null || scheduleText.isEmpty() || "待定".equals(scheduleText.trim())) {
+            return new Date();
+        }
+
+        scheduleText = scheduleText.trim();
+        
+        // 如果已经是标准日期格式，尝试解析
+        if (scheduleText.contains("-") || scheduleText.contains("/")) {
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                return sdf.parse(scheduleText.replace("/", "-"));
+            } catch (Exception e) {
+                log.warn("解析日期失败: {}, 使用当前时间", scheduleText);
+                return new Date();
+            }
+        }
+
+        // 解析 260604 格式
+        if (scheduleText.length() == 6 && scheduleText.matches("\\d{6}")) {
+            try {
+                String year = "20" + scheduleText.substring(0, 2);
+                String month = scheduleText.substring(2, 4);
+                String day = scheduleText.substring(4, 6);
+                String dateStr = year + "-" + month + "-" + day;
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                return sdf.parse(dateStr);
+            } catch (Exception e) {
+                log.warn("解析日期失败: {}, 使用当前时间", scheduleText);
+                return new Date();
+            }
+        }
+
+        // 其他格式，返回当前时间
+        log.warn("无法识别的日期格式: {}, 使用当前时间", scheduleText);
+        return new Date();
+    }
+
+    /**
+     * 解析优先级
+     */
+    private Integer parsePriority(String priorityText) {
+        if (priorityText == null || priorityText.isEmpty()) {
+            return null;
+        }
+        priorityText = priorityText.trim().toUpperCase();
+        if (priorityText.contains("P0") || priorityText.equals("0")) return 0;
+        if (priorityText.contains("P1") || priorityText.equals("10")) return 10;
+        if (priorityText.contains("P2") || priorityText.equals("20")) return 20;
+        if (priorityText.contains("P3") || priorityText.equals("30")) return 30;
+        return null;
+    }
+
+    /**
+     * 获取单元格值
+     */
+    private String getCellValue(Map<Integer, String> row, Integer colIdx) {
+        if (colIdx == null || row == null) return null;
+        String value = row.get(colIdx);
+        return value != null ? value.trim() : null;
+    }
+
+    private InputStream getInputStream(MultipartFile file) {
+        try {
+            return file.getInputStream();
+        } catch (IOException e) {
+            throw new BaseBizRuntimeException("读取文件失败：" + e.getMessage());
+        }
     }
 }

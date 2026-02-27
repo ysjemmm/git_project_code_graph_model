@@ -44,4 +44,11 @@ public interface ImportDataService {
      * @param file
      */
     void updateProjectNode(MultipartFile file, HttpServletResponse response);
+
+    /**
+     * 导入需求规划数据（Excel）
+     * @param file Excel文件
+     * @param response 响应
+     */
+    void importDemandPlanData(Long bizDomainGroupId, String productLineName, MultipartFile file, HttpServletResponse response);
 }

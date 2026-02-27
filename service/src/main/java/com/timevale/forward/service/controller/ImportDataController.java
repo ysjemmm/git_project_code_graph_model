@@ -58,4 +58,11 @@ public class ImportDataController {
     public void updateProjectNode(@ApiParam(value = "任务文件") @RequestParam("file") MultipartFile file, HttpServletResponse response) {
         importDataService.updateProjectNode(file, response);
     }
+
+    @ApiOperation("导入需求规划数据（Excel）")
+    @PostMapping("/importDemandPlanData")
+    public void importDemandPlanData(@RequestParam("bizDomainGroupId") Long bizDomainGroupId, @RequestParam("productLineName") String productLineName,
+            @ApiParam(value = "需求规划Excel文件") @RequestParam("file") MultipartFile file, HttpServletResponse response) {
+        importDataService.importDemandPlanData(bizDomainGroupId, productLineName, file, response);
+    }
 }
