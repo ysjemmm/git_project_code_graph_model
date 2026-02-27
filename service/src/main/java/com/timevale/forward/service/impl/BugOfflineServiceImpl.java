@@ -1661,8 +1661,8 @@ public class BugOfflineServiceImpl implements BugOfflineService {
                 BugOfflineDO detail = detailMap.get(vo.getId());
                 row.add(detail != null ? detail.getCause() : "");
                 row.add(detail != null ? detail.getSolvePlan() : "");
-                row.add(vo.getCreateDate() != null ? DateUtil.DateToString(vo.getCreateDate(), DateStyle.YYYY_MM_DD_HH_MM_SS) : "");
-                row.add(vo.getModifyDate() != null ? DateUtil.DateToString(vo.getModifyDate(), DateStyle.YYYY_MM_DD_HH_MM_SS) : "");
+                row.add(vo.getCreateDate() != null ? DateUtil.parseToString(vo.getCreateDate(), DateStyle.YYYY_MM_DD_HH_MM_SS) : "");
+                row.add(vo.getModifyDate() != null ? DateUtil.parseToString(vo.getModifyDate(), DateStyle.YYYY_MM_DD_HH_MM_SS) : "");
                 rows.add(row);
             }
 
