@@ -112,9 +112,14 @@ import com.timevale.forward.service.utils.date.DateStyle;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.forward.service.integration.OssClient;
+import com.timevale.filesystem.common.service.result.GetDownloadUrlResult;
+import com.timevale.filesystem.common.service.result.GetSignUrlResult;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import com.timevale.forward.facade.api.result.TrackExportLogFileVO;
+import com.alibaba.excel.EasyExcel;
 import com.timevale.security.facade.request.AccountRequest;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -125,6 +130,10 @@ import org.assertj.core.util.Sets;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -183,6 +192,8 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     private BizDemandMapper bizDemandMapper;
     @Resource
     private BugLogComponent bugLogComponent;
+    @Resource
+    private OssClient ossClient;
 
     @Override
     public BaseResult<PageQueryResult<BugOfflineVO>> list(BugOfflineQueryList bugOfflineQueryList) {
@@ -1505,6 +1516,179 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         productLineLogDO.setOldValue(oldProductLineName);
         productLineLogDO.setNewValue(targetProductLineDO);
         return productLineLogDO;
+    }
+
+    @Override
+    public BaseResult<TrackExportLogFileVO> export(BugOfflineQueryList bugOfflineQueryList) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+        // 复用 list 方法的查询条件构建逻辑
+        BugOfflineListCondition condition = BugOfflineCopier.INSTANCE.convert(bugOfflineQueryList);
+        condition.setCreateDateLeft(DateUtil.getStartOfDay(condition.getCreateDateLeft()));
+        condition.setCreateDateRight(DateUtil.getEndOfDay(condition.getCreateDateRight()));
+        condition.setModifyDateLeft(DateUtil.getStartOfDay(condition.getModifyDateLeft()));
+        condition.setModifyDateRight(DateUtil.getEndOfDay(condition.getModifyDateRight()));
+
+        boolean resultIsEmpty = false;
+        String ascription = bugOfflineQueryList.getAscription();
+        if (AscriptionEnum.CURRENT_USER.toString().equals(ascription)) {
+            condition.setProposerIds(Lists.newArrayList(userInfo.getId()));
+        } else if (AscriptionEnum.RECEIVE.toString().equals(ascription)) {
+            if (Objects.equals(bugOfflineQueryList.getCurrentOperatorOnly(), false)) {
+                condition.setHistoryOperators(Lists.newArrayList(
+                        userInfo.getAlias() + "-" + userInfo.getName()));
+            } else {
+                condition.setOperatorIds(Lists.newArrayList(userInfo.getId()));
+            }
+        } else if (AscriptionEnum.COPIER.toString().equals(ascription)) {
+            condition.setCopier(userInfo.getId());
+        } else {
+            List<String> teamMemberIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
+            if (AscriptionEnum.TEAM_SUBMIT.toString().equals(ascription)) {
+                Set<String> createIdSet = Sets.newHashSet(condition.getProposerIds());
+                if (!createIdSet.isEmpty()) {
+                    teamMemberIdList = teamMemberIdList.stream().filter(createIdSet::contains).collect(Collectors.toList());
+                    resultIsEmpty = teamMemberIdList.isEmpty();
+                }
+                condition.setProposerIds(teamMemberIdList);
+            } else if (AscriptionEnum.TEAM_RECEIVE.toString().equals(ascription)) {
+                Set<String> operatorSet = Sets.newHashSet(condition.getOperatorIds());
+                if (!operatorSet.isEmpty()) {
+                    teamMemberIdList = teamMemberIdList.stream().filter(operatorSet::contains).collect(Collectors.toList());
+                    resultIsEmpty = teamMemberIdList.isEmpty();
+                }
+                condition.setOperatorIds(teamMemberIdList);
+            }
+        }
+        if (resultIsEmpty) {
+            throw new BaseBizRuntimeException("需要导出数据为空，请检查后重试");
+        }
+
+        // 标签筛选
+        if (CollectionUtils.isNotEmpty(bugOfflineQueryList.getLabelIds()) || CollectionUtils.isNotEmpty(bugOfflineQueryList.getLabelCategoryIds())) {
+            Boolean containLabel = bugOfflineQueryList.getContainLabel();
+            List<Long> newLabelIds = labelComponent.getLabelIds(bugOfflineQueryList.getLabelIds(), bugOfflineQueryList.getLabelCategoryIds());
+            if (CollectionUtils.isEmpty(newLabelIds) && containLabel) {
+                throw new BaseBizRuntimeException("需要导出数据为空，请检查后重试");
+            }
+            List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.BUG_OFFLINE.getCode());
+            List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+            if (containLabel) {
+                if (CollectionUtils.isEmpty(bizIds)) {
+                    throw new BaseBizRuntimeException("需要导出数据为空，请检查后重试");
+                }
+                condition.setContainIds(bizIds);
+            } else {
+                condition.setExclusiveIds(bizIds);
+            }
+        }
+
+        // 不分页，查询全部
+        String collation = sqlOrderComponent.build(bugOfflineQueryList.getOrderFiled(), bugOfflineQueryList.getOrderCollation());
+        List<BugOfflineListDO> bugOfflineDOList = bugOfflineMapper.selectByCondition(condition);
+        if (CollUtil.isEmpty(bugOfflineDOList)) {
+            throw new BaseBizRuntimeException("需要导出数据为空，请检查后重试");
+        }
+
+        List<BugOfflineVO> bugOfflineVOList = bugOfflineDOList.stream().map(BugOfflineCopier.INSTANCE::convert).collect(Collectors.toList());
+        for (BugOfflineVO e : bugOfflineVOList) {
+            e.setEnvName(BugEnvEnum.getTextByCode(e.getEnv()));
+            e.setStatusName(BugStatusEnum.getTextByCode(e.getStatus()));
+            e.setSourceName(BugSourceEnum.getTextByCode(e.getSource()));
+            e.setBelongName(BugBelongEnum.getTextByCode(e.getBelong()));
+            e.setReasonName(BugReasonEnum.getTextByCode(e.getReason()));
+            e.setPriorityName(PriorityEnum.getTextChineseByCode(e.getPriority()));
+            e.setSeverityName(SeverityEnum.getTextByCode(e.getSeverity()));
+            e.setUnHandleReasonName(BugUnHandleReasonEnum.getTextByCode(e.getUnHandleReason()));
+        }
+
+        // 批量查详情，获取 cause 和 solvePlan（这两个大文本字段不在列表查询中）
+        List<Long> bugIds = bugOfflineDOList.stream().map(BugOfflineListDO::getId).collect(Collectors.toList());
+        List<BugOfflineDO> detailList = bugOfflineMapper.getByIdList(bugIds);
+        Map<Long, BugOfflineDO> detailMap = detailList.stream()
+                .collect(Collectors.toMap(BugOfflineDO::getId, d -> d, (a, b) -> a));
+
+        // 生成 Excel 并上传
+        return BaseResult.success(generateExcelAndUpload(bugOfflineVOList, detailMap));
+    }
+
+    private TrackExportLogFileVO generateExcelAndUpload(List<BugOfflineVO> dataList, Map<Long, BugOfflineDO> detailMap) {
+        File tempFile = null;
+        InputStream tempFileIns = null;
+        TrackExportLogFileVO result = new TrackExportLogFileVO();
+        try {
+            tempFile = File.createTempFile("线下Bug导出", ".xlsx");
+            tempFile.deleteOnExit();
+
+            // 构建表头和数据
+            List<List<String>> head = new ArrayList<>();
+            head.add(java.util.Collections.singletonList("ID"));
+            head.add(java.util.Collections.singletonList("标题"));
+            head.add(java.util.Collections.singletonList("状态"));
+            head.add(java.util.Collections.singletonList("严重程度"));
+            head.add(java.util.Collections.singletonList("优先级"));
+            head.add(java.util.Collections.singletonList("关联项目"));
+            head.add(java.util.Collections.singletonList("业务域"));
+            head.add(java.util.Collections.singletonList("产品线"));
+            head.add(java.util.Collections.singletonList("提出人"));
+            head.add(java.util.Collections.singletonList("经办人"));
+            head.add(java.util.Collections.singletonList("原因"));
+            head.add(java.util.Collections.singletonList("来源"));
+            head.add(java.util.Collections.singletonList("环境"));
+            head.add(java.util.Collections.singletonList("所属端"));
+            head.add(java.util.Collections.singletonList("Bug产生原因"));
+            head.add(java.util.Collections.singletonList("解决方案"));
+            head.add(java.util.Collections.singletonList("创建时间"));
+            head.add(java.util.Collections.singletonList("更新时间"));
+
+            List<List<Object>> rows = new ArrayList<>();
+            for (BugOfflineVO vo : dataList) {
+                List<Object> row = new ArrayList<>();
+                row.add(vo.getId());
+                row.add(vo.getBugName());
+                row.add(vo.getStatusName());
+                row.add(vo.getSeverityName());
+                row.add(vo.getPriorityName());
+                row.add(vo.getProjectName());
+                row.add(vo.getBizDomainName());
+                row.add(vo.getProductLineName());
+                row.add(vo.getProposer());
+                row.add(vo.getOperator());
+                row.add(vo.getReasonName());
+                row.add(vo.getSourceName());
+                row.add(vo.getEnvName());
+                row.add(vo.getBelongName());
+                BugOfflineDO detail = detailMap.get(vo.getId());
+                row.add(detail != null ? detail.getCause() : "");
+                row.add(detail != null ? detail.getSolvePlan() : "");
+                row.add(vo.getCreateDate() != null ? DateUtil.DateToString(vo.getCreateDate(), DateStyle.YYYY_MM_DD_HH_MM_SS) : "");
+                row.add(vo.getModifyDate() != null ? DateUtil.DateToString(vo.getModifyDate(), DateStyle.YYYY_MM_DD_HH_MM_SS) : "");
+                rows.add(row);
+            }
+
+            EasyExcel.write(tempFile).head(head).sheet("线下Bug").doWrite(rows);
+
+            // 上传到 OSS
+            tempFileIns = Files.newInputStream(tempFile.toPath());
+            byte[] bytes = new byte[(int) tempFile.length()];
+            tempFileIns.read(bytes);
+
+            GetSignUrlResult signUrlResult = ossClient.getSignUrl("线下Bug导出.xlsx");
+            ossClient.uploadFile(signUrlResult.getUrl(), bytes);
+            GetDownloadUrlResult downloadUrlResult = ossClient.getDownloadUrl(signUrlResult.getFileKey());
+
+            result.setFileName("线下Bug导出.xlsx");
+            result.setFileId(signUrlResult.getFileKey());
+            result.setDownloadUrl(downloadUrlResult.getUrl());
+        } catch (IOException e) {
+            throw new BaseBizRuntimeException("线下Bug导出失败");
+        } finally {
+            cn.hutool.core.io.IoUtil.close(tempFileIns);
+            if (tempFile != null && !tempFile.delete()) {
+                log.error("[BugOfflineServiceImpl][export]:临时文件删除失败");
+            }
+        }
+        return result;
     }
 }
 

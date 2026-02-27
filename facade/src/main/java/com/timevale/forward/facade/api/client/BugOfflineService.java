@@ -8,6 +8,7 @@ import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BugLogVO;
 import com.timevale.forward.facade.api.result.BugOfflineDetailVO;
 import com.timevale.forward.facade.api.result.BugOfflineVO;
+import com.timevale.forward.facade.api.result.TrackExportLogFileVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
@@ -155,6 +156,14 @@ public interface BugOfflineService {
      * @return Boolean
      */
     BaseResult<Boolean> changeProject(BugOfflineChangeProjectReq bugOfflineChangeProjectReq);
+
+    /**
+     * 导出线下bug列表
+     *
+     * @param bugOfflineQueryList 查询条件
+     * @return 导出文件信息
+     */
+    BaseResult<TrackExportLogFileVO> export(BugOfflineQueryList bugOfflineQueryList);
 
 
 }

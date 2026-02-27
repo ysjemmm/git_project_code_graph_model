@@ -111,4 +111,5 @@ public class BugOfflineListDO extends BaseDO {
      * 预计解决完成日期
      */
     private Date expectSolveDate;
+
 }

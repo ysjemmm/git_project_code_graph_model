@@ -117,4 +117,5 @@ public class BugOfflineVO extends ToString {
 
     @ApiModelProperty("标签名称")
     private List<BizLabelSimpleVO> labelNames;
+
 }
