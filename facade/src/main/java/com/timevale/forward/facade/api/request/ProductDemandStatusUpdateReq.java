@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotNull;
+import java.util.Date;
 import java.util.Set;
 
 /**
@@ -29,4 +30,7 @@ public class ProductDemandStatusUpdateReq extends BaseReq {
 
     @ApiModelProperty("业务域集ID")
     private Long bizDomainGroupId;
+
+    @ApiModelProperty("上线时间（状态更新为完成上线时必填，只能设置一次）")
+    private Date onlineTime;
 }

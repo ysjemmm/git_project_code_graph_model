@@ -953,6 +953,20 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
 
         Integer status = productDemandStatusUpdateReq.getStatus();
+        
+        // 校验：更新为"完成上线"状态时，必须提供上线时间
+        if (ProductDemandStatusEnum.ONLINE.getCode().equals(status)) {
+            if (productDemandStatusUpdateReq.getOnlineTime() == null) {
+                throw new BaseBizRuntimeException("完成上线时必须选择上线时间");
+            }
+            // 校验：已有上线时间的需求不能再次设置上线时间
+            for (ProductDemandDO demand : demands) {
+                if (demand.getOnlineTime() != null) {
+                    throw new BaseBizRuntimeException("产品需求【" + demand.getName() + "】已设置过上线时间，不能重复设置");
+                }
+            }
+        }
+        
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         Set<Long> suspendOrInvalidDemandIds = new HashSet<>();
         Set<Long> ids = new HashSet<>();
@@ -978,6 +992,10 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             waitUpdate.setModifyManId(userInfo.getId());
             waitUpdate.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
             waitUpdate.setModifyDate(new Date());
+            // 如果是完成上线状态，设置上线时间
+            if (ProductDemandStatusEnum.ONLINE.getCode().equals(status)) {
+                waitUpdate.setOnlineTime(productDemandStatusUpdateReq.getOnlineTime());
+            }
             productDemandMapper.batchUpdateStatus(ids, waitUpdate);
             // 批量更新关联的业务需求状态
             productDemandComponent.updateDemandStatusAsProductStatusChange(new ArrayList<>(ids), false);

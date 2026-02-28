@@ -116,5 +116,9 @@ public class ProductDemandDO extends BaseDO {
      */
     private Integer storyPoint;
 
+    /**
+     * 上线时间（产品需求完成上线时记录）
+     */
+    private Date onlineTime;
 
 }
