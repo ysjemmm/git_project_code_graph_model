@@ -81,6 +81,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -758,7 +759,7 @@ public class ImportDataServiceImpl implements ImportDataService {
      * 业务域集id，固定为26
      */
     private static Long BIZ_DOMAIN_GROUP_ID = 26L;
-    private static String PRODUCT_LINE_NAME = "eSignGlobal";
+    private static String PRODUCT_LINE_NAME = "国际站";
 
     /**
      * 需求状态映射：Excel中的状态文本 -> 系统ProductDemandStatusEnum
@@ -786,16 +787,29 @@ public class ImportDataServiceImpl implements ImportDataService {
     @Override
     public void importDemandPlanData(Long bizDomainGroupId, String productLineName, MultipartFile file, HttpServletResponse response) {
         try {
-            if (bizDomainGroupId != null) {
-                BIZ_DOMAIN_GROUP_ID = bizDomainGroupId;
-            }
-            if (StringUtils.isNotBlank(productLineName)) {
-                PRODUCT_LINE_NAME = productLineName;
-            }
-            doImportDemandPlanData(file, response);
+            // 立即返回成功响应
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"success\":true,\"message\":\"导入任务已提交，正在后台处理\"}");
+            response.getWriter().flush();
+            
+            // 使用CompletableFuture异步执行导入任务
+            CompletableFuture.runAsync(() -> {
+                try {
+                    if (bizDomainGroupId != null) {
+                        BIZ_DOMAIN_GROUP_ID = bizDomainGroupId;
+                    }
+                    if (StringUtils.isNotBlank(productLineName)) {
+                        PRODUCT_LINE_NAME = productLineName;
+                    }
+                    doImportDemandPlanData(file, null);
+                    log.info("需求规划数据导入任务执行完成");
+                } catch (Exception e) {
+                    log.warn("异步导入需求规划数据异常", e);
+                }
+            });
         } catch (Exception e) {
-            log.error("导入需求规划数据异常", e);
-            throw new BaseBizRuntimeException("导入需求规划数据异常：" + e.getMessage());
+            log.warn("提交导入需求规划数据任务异常", e);
+            throw new BaseBizRuntimeException("提交导入任务异常：" + e.getMessage());
         }
     }
 
@@ -890,8 +904,10 @@ public class ImportDataServiceImpl implements ImportDataService {
 
         log.info("需求规划数据导入完成，成功: {}条，失败: {}条", successCount, failCount);
 
-        if (failedRecords.size() > 1) {
+        if (failedRecords.size() > 1 && response != null) {
             generateFailedDataFile(failedRecords, response, "failed_demand_plan_data.csv");
+        } else if (failedRecords.size() > 1) {
+            log.warn("导入失败记录：\n{}", String.join("\n", failedRecords));
         }
     }
 
