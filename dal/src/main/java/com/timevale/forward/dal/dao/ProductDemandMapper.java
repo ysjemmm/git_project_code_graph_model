@@ -11,6 +11,7 @@ import org.apache.ibatis.annotations.Select;
 import javax.validation.constraints.NotNull;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
