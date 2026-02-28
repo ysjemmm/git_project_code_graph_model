@@ -42,6 +42,18 @@ public class ResourcePlanV2VO extends ToString {
         @ApiModelProperty("需求名称")
         private String name;
 
+        @ApiModelProperty("需求状态")
+        private Integer status;
+
+        @ApiModelProperty("需求状态名称")
+        private String statusName;
+
+        @ApiModelProperty("负责人")
+        private String owner;
+
+        @ApiModelProperty("负责人ID")
+        private String ownerId;
+
         @ApiModelProperty("优先级:0(P0),10(P1),20(P2),30(P3)")
         private Integer priority;
 

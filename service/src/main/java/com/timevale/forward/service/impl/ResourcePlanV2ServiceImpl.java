@@ -14,6 +14,7 @@ import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.request.ResourcePlanV2SaveReq;
 import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
 import com.timevale.forward.facade.api.result.ResourcePlanV2VO;
+import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.model.enums.BizTypeEnum;
 import com.timevale.forward.model.enums.PersonLevelEnum;
 import com.timevale.forward.model.enums.PersonTypeEnum;
@@ -98,6 +99,10 @@ public class ResourcePlanV2ServiceImpl implements ResourcePlanV2Service {
             ResourcePlanV2VO.DemandWithOwnerTimes demandVO = new ResourcePlanV2VO.DemandWithOwnerTimes();
             demandVO.setId(demandId);
             demandVO.setName(demand.getName());
+            demandVO.setStatus(demand.getStatus());
+            demandVO.setStatusName(ProductDemandStatusEnum.getTextByCode(demand.getStatus()));
+            demandVO.setOwner(demand.getOwner());
+            demandVO.setOwnerId(demand.getOwnerId());
             demandVO.setPriority(demand.getPriority());
             demandVO.setLabelNames(labelMap.getOrDefault(demandId, Collections.emptyList()));
 
