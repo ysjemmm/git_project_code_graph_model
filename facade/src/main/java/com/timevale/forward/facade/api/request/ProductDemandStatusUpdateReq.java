@@ -31,6 +31,6 @@ public class ProductDemandStatusUpdateReq extends BaseReq {
     @ApiModelProperty("业务域集ID")
     private Long bizDomainGroupId;
 
-    @ApiModelProperty("上线时间（状态更新为完成上线时必填，只能设置一次）")
+    @ApiModelProperty("上线时间（状态更新为完成上线时必填，只能设置一次，传时间戳）")
     private Date onlineTime;
 }

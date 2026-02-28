@@ -138,6 +138,22 @@ public interface ProductDemandMapper {
     int updateByIds(@Param("ids") List<Long> ids,@Param("status") Integer status,@Param("retainModifyDate") boolean retainModifyDate);
 
     /**
+     * 更新产品需求状态和上线时间
+     *
+     * @param ids 产品需求ID列表
+     * @param status 状态
+     * @param onlineTime 上线时间
+     * @param onlyUpdateNullOnlineTime 是否只更新上线时间为空的记录
+     * @param retainModifyDate 是否保留修改时间
+     * @return int
+     */
+    int updateStatusAndOnlineTime(@Param("ids") List<Long> ids, 
+                                   @Param("status") Integer status, 
+                                   @Param("onlineTime") Date onlineTime,
+                                   @Param("onlyUpdateNullOnlineTime") boolean onlyUpdateNullOnlineTime,
+                                   @Param("retainModifyDate") boolean retainModifyDate);
+
+    /**
      * 更新产品需求的人天
      *
      * @param demands 产品需求DO

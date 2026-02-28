@@ -119,7 +119,7 @@
 
     <select id="selectByIdList" resultType="com.timevale.forward.dal.entity.ProductDemandDO">
         select id, name, product_line_id, type, `desc`, status, priority, owner, is_deleted, create_man_id, create_man,
-        create_date, modify_man_id, modify_man, modify_date, owner_id, ued_time, product_time, back_time, front_time, qa_time, ops_time, security_time, total_time, story_point
+        create_date, modify_man_id, modify_man, modify_date, owner_id, ued_time, product_time, back_time, front_time, qa_time, ops_time, security_time, total_time, story_point, online_time
         from product_demand
         where
         is_deleted = false
@@ -374,6 +374,26 @@
         </where>
     </update>
 
+    <update id="updateStatusAndOnlineTime">
+        update product_demand
+        <set>
+            <if test="retainModifyDate">modify_date = modify_date,</if>
+            status = #{status},
+            <if test="onlineTime != null">
+                online_time = #{onlineTime}
+            </if>
+        </set>
+        <where>
+            and id IN
+            <foreach item="item" index="index" collection="ids" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            <if test="onlyUpdateNullOnlineTime">
+                and online_time IS NULL
+            </if>
+        </where>
+    </update>
+
     <update id="updateOwner">
         UPDATE product_demand
         SET owner = #{owner},
@@ -453,6 +473,7 @@
             <if test="demand.modifyMan != null">modify_man = #{demand.modifyMan},</if>
             <if test="demand.modifyManId != null">modify_man_id = #{demand.modifyManId},</if>
             <if test="demand.modifyDate != null">modify_date = #{demand.modifyDate},</if>
+            <if test="demand.onlineTime != null">online_time = #{demand.onlineTime},</if>
         </set>
         <where>
             id IN

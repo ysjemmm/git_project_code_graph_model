@@ -232,7 +232,26 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         Map<Long, String> nameMap = productDemands.stream().collect(Collectors.toMap(ProductDemandDO::getId, ProductDemandDO::getName, (v1, v2) -> v2));
 
         // 更新需求状态
-        productDemandMapper.updateByIds(needUpdateIds, targetStatus, false);
+        // 如果目标状态是"完成上线"(30)，需要同时更新上线时间
+        if (ProductDemandStatusEnum.ONLINE.getCode().equals(targetStatus)) {
+            // 获取项目的实际结束时间
+            ProjectDO project = projectMapper.get(projectId);
+            Date actualEndDate = project.getActualEndDate();
+            
+            if (actualEndDate != null) {
+                // 只更新上线时间为空的产品需求
+                int updatedCount = productDemandMapper.updateStatusAndOnlineTime(needUpdateIds, targetStatus, actualEndDate, true, false);
+                log.info("项目{}状态变更为{}，自动更新{}个产品需求状态为完成上线，并设置上线时间为项目实际结束时间：{}", 
+                    projectId, status, updatedCount, actualEndDate);
+            } else {
+                // 如果项目没有实际结束时间，只更新状态
+                productDemandMapper.updateByIds(needUpdateIds, targetStatus, false);
+                log.warn("项目{}状态变更为{}，但项目实际结束时间为空，只更新产品需求状态", projectId, status);
+            }
+        } else {
+            // 其他状态只更新状态
+            productDemandMapper.updateByIds(needUpdateIds, targetStatus, false);
+        }
         
         if (ProjectStatusEnum.INVALID.getCode().equals(status)) {
             // unlink log
@@ -259,9 +278,8 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
             log.info("需求当前状态为特殊状态{}，不自动更新", currentStatus);
             return false;
         }
-        // 状态只能前进，不能回退
-        // 目标状态必须大于等于当前状态才能更新
-        return targetStatus >= currentStatus;
+        // 状态只能前进，不能回退（严格大于，相同状态不重复更新）
+        return targetStatus > currentStatus;
     }
     
     /**
