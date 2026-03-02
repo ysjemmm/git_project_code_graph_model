@@ -58,31 +58,12 @@ pip install -r requirements.txt
 
 ### 基本使用
 
-```python
-from core.importer import Importer
-from storage.neo4j.connector import Neo4jConnector
-
-# 创建 Neo4j 连接
-connector = Neo4jConnector(
-    uri="bolt://localhost:7687",
-    user="neo4j",
-    password="your_password"
-)
-
-# 创建导入器
-importer = Importer(connector)
-
-# 导入 Git 仓库
-result = importer.import_from_git(
-    repo_url="https://github.com/user/repo.git",
-    project_name="MyProject"
-)
-
-print(f"导入结果: {result}")
+### 仅获取 AST 数据
+```bash
+python tests/fixtures/test_java_file.py
 ```
 
-### 简单导入示例
-
+### AST -> Neo4j
 ```bash
 python scripts/simple_import.py
 ```
@@ -97,7 +78,7 @@ python scripts/simple_import.py
 - `parser`: 解析器对象
 - `before_uri_path`: REST 映射前缀
 
-### 注释存储策略（方案A）
+### 注释存储策略
 
 - **<200字符**: 存为节点属性 `simple_comment`
 - **包含Javadoc**: 创建独立 Comment 节点，解析 Javadoc 标签
@@ -177,12 +158,6 @@ class CommentStorageConfig:
 
 ## 开发
 
-### 运行测试
-
-```bash
-python tests/fixtures/test_java_file.py
-```
-
 ### 代码风格
 
 - 使用 Enum 代替魔法值
@@ -213,7 +188,7 @@ MIT License
 
 ## 作者
 
-[Your Name]
+mayYoung
 
 ## 更新日志
 
