@@ -50,3 +50,6 @@ neo4j_data/
 
 # Git repos cache
 .cache/git_repos/
+
+# Kiro IDE
+.kiro/
