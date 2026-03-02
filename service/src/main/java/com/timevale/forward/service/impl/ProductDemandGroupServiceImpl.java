@@ -1080,10 +1080,10 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> archive(ProductDemandGroupArchiveReq req) {
-        log.info("批量归档产品需求分组接收参数:{}", req);
-        List<Long> ids = req.getIds();
-        Long bizDomainGroupId = req.getBizDomainGroupId();
+    public BaseResult<Boolean> archive(ProductDemandGroupArchiveReq productDemandGroupArchiveReq) {
+        log.info("批量归档产品需求分组接收参数:{}", productDemandGroupArchiveReq);
+        List<Long> ids = productDemandGroupArchiveReq.getIds();
+        Long bizDomainGroupId = productDemandGroupArchiveReq.getBizDomainGroupId();
 
         // 校验分组ID存在性和归属
         for (Long id : ids) {
@@ -1102,9 +1102,9 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> unarchive(ProductDemandGroupArchiveReq req) {
-        log.info("批量取消归档产品需求分组接收参数:{}", req);
-        List<Long> ids = req.getIds();
+    public BaseResult<Boolean> unarchive(ProductDemandGroupArchiveReq productDemandGroupArchiveReq) {
+        log.info("批量取消归档产品需求分组接收参数:{}", productDemandGroupArchiveReq);
+        List<Long> ids = productDemandGroupArchiveReq.getIds();
 
         // 校验分组ID存在性
         for (Long id : ids) {
