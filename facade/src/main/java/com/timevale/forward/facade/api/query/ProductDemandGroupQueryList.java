@@ -77,4 +77,7 @@ public class ProductDemandGroupQueryList extends QueryBase {
 
     @ApiModelProperty("客户等级")
     private String customerGrade;
+
+    @ApiModelProperty(value = "是否已归档，默认false")
+    private Boolean archived = false;
 }

@@ -3,6 +3,8 @@ package com.timevale.forward.service.controller;
 import com.timevale.forward.facade.api.client.ProductDemandGroupService;
 import com.timevale.forward.facade.api.query.ProductDemandGroupQueryList;
 import com.timevale.forward.facade.api.request.ProductDemandGroupAddReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupArchiveReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupBatchMoveReq;
 import com.timevale.forward.facade.api.request.ProductDemandGroupInnerAddReq;
 import com.timevale.forward.facade.api.request.ProductDemandGroupItemMoveReq;
 import com.timevale.forward.facade.api.request.ProductDemandGroupModifyReq;
@@ -114,6 +116,24 @@ public class ProductDemandGroupController {
     @PostMapping("/getResourcePlan")
     public BusinessResult<ProductDemandGroupResourcePlanVO> getResourcePlan(@RequestParam Long bizDomainGroupId, @RequestParam Long productDemandGroupId) {
         return ResultUtils.result(productDemandGroupService.getResourcePlan(bizDomainGroupId, productDemandGroupId));
+    }
+
+    @ApiOperation("批量归档产品需求分组")
+    @PostMapping("/archive")
+    public BusinessResult<Boolean> archive(@RequestBody @Valid ProductDemandGroupArchiveReq productDemandGroupArchiveReq) {
+        return ResultUtils.result(productDemandGroupService.archive(productDemandGroupArchiveReq));
+    }
+
+    @ApiOperation("批量取消归档产品需求分组")
+    @PostMapping("/unarchive")
+    public BusinessResult<Boolean> unarchive(@RequestBody @Valid ProductDemandGroupArchiveReq productDemandGroupArchiveReq) {
+        return ResultUtils.result(productDemandGroupService.unarchive(productDemandGroupArchiveReq));
+    }
+
+    @ApiOperation("批量移动产品需求到目标分组")
+    @PostMapping("/batchMoveProductDemand")
+    public BusinessResult<Boolean> batchMoveProductDemand(@RequestBody @Valid ProductDemandGroupBatchMoveReq req) {
+        return ResultUtils.result(productDemandGroupService.batchMoveProductDemand(req));
     }
 
 }

@@ -179,6 +179,15 @@
                 select 1 from product_demand_group_item pdgi
                 where pdgi.product_demand_id  = a.id and pdgi.is_deleted = false
             )
+            <!-- 排除已归档分组中的需求 -->
+            and not exists (
+                select 1 from product_demand_group_item pdgi2
+                inner join product_demand_group pdg2 on pdgi2.product_demand_group_id = pdg2.id
+                where pdgi2.product_demand_id = a.id
+                and pdgi2.is_deleted = false
+                and pdg2.is_deleted = false
+                and pdg2.archived = 1
+            )
         </where>
     </select>
 

@@ -35,6 +35,8 @@ import com.timevale.forward.facade.api.query.ProductDemandGroupQueryList;
 import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.request.ProductDemandAddReq;
 import com.timevale.forward.facade.api.request.ProductDemandGroupAddReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupArchiveReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupBatchMoveReq;
 import com.timevale.forward.facade.api.request.ProductDemandGroupInnerAddReq;
 import com.timevale.forward.facade.api.request.ProductDemandGroupItemMoveReq;
 import com.timevale.forward.facade.api.request.ProductDemandGroupModifyReq;
@@ -446,6 +448,8 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modify(ProductDemandGroupModifyReq productDemandGroupModifyReq) {
         log.info("产品需求分组修改接收参数:{}", productDemandGroupModifyReq);
+        // 校验分组是否已归档
+        checkNotArchived(productDemandGroupModifyReq.getId());
         if (productDemandGroupModifyReq.getName().contains(CommonConstant.BLANK)) {
             throw new BaseBizRuntimeException("产品需求分组名称中请勿包含空格");
         }
@@ -471,6 +475,8 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> delete(ProductDemandGroupReq productDemandGroupReq) {
         log.info("产品需求分组删除接收参数:{}", productDemandGroupReq);
+        // 校验分组是否已归档
+        checkNotArchived(productDemandGroupReq.getId());
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         String modifyManId = userInfo.getId();
         String modifyMan = userInfo.getFullAlias();
@@ -500,6 +506,8 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> moveProductDemandGroup(ProductDemandGroupMoveReq productDemandGroupMoveReq) {
         log.info("产品需求拖动分组接收参数:{}", productDemandGroupMoveReq);
+        // 校验分组是否已归档
+        checkNotArchived(productDemandGroupMoveReq.getId());
         bizDomainGroupPermissionComponent.checkOperationPermission(productDemandGroupMoveReq.getBizDomainGroupId());
         ProductDemandGroupDO targetGroupDO = productDemandGroupMapper.getByIdAndBizDomainGroupId(productDemandGroupMoveReq.getBizDomainGroupId(), productDemandGroupMoveReq.getId());
         if (targetGroupDO == null) {
@@ -588,6 +596,8 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> moveProductDemand(ProductDemandGroupItemMoveReq productDemandGroupItemMoveReq) {
         log.info("产品需求拖动接收参数:{}", productDemandGroupItemMoveReq);
+        // 校验目标分组是否已归档
+        checkNotArchived(productDemandGroupItemMoveReq.getTargetGroupId());
         // 校验操作权限
         bizDomainGroupPermissionComponent.checkOperationPermission(productDemandGroupItemMoveReq.getBizDomainGroupId());
         // 拖动产品需求到分组
@@ -636,6 +646,8 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> linkOrUnlinkProject(ProductDemandGroupProjectLinkReq productDemandGroupItemMoveReq) {
         log.info("关联or取消关联项目需求,参数:{}", productDemandGroupItemMoveReq);
+        // 校验分组是否已归档
+        checkNotArchived(productDemandGroupItemMoveReq.getProductDemandGroupId());
         Long projectId = productDemandGroupItemMoveReq.getProjectId();
         Long groupId = productDemandGroupItemMoveReq.getProductDemandGroupId();
         ProductDemandGroupDO productDemandGroupDO = productDemandGroupComponent.getById(groupId);
@@ -846,6 +858,8 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> upsertResourcePlan(ProductDemandGroupResourcePlanReq productDemandGroupResourcePlanReq, boolean isAloneUpdate, boolean isUpdateTime) {
+        // 校验分组是否已归档
+        checkNotArchived(productDemandGroupResourcePlanReq.getProductDemandGroupId());
         List<ResourcePlanProductDemandAddReq> productDemands = distinctResourceTypeAndOwner(productDemandGroupResourcePlanReq);
 
         Map<Long, List<ProductDemandOwnerDO>> existedOwnersMap = new HashMap<>();
@@ -917,6 +931,8 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
 
     @Override
     public BaseResult<Boolean> addDemand(ProductDemandGroupInnerAddReq productDemandGroupInnerAddReq) {
+        // 校验目标分组是否已归档
+        checkNotArchived(productDemandGroupInnerAddReq.getTargetGroupId());
         ProductDemandAddReq productDemandAddReq = new ProductDemandAddReq();
         BeanUtils.copyProperties(productDemandGroupInnerAddReq, productDemandAddReq);
         productDemandService.add(productDemandAddReq);
@@ -1001,5 +1017,104 @@ public class ProductDemandGroupServiceImpl implements ProductDemandGroupService 
                     }).collect(Collectors.groupingBy(ResourcePlanProductDemandOwnerVO::getResourceType))));
         });
         return BaseResult.success(demandGroupResourcePlanVO);
+    }
+
+    /**
+     * 校验分组是否已归档，已归档则抛出异常
+     */
+    private void checkNotArchived(Long groupId) {
+        ProductDemandGroupDO group = productDemandGroupMapper.get(groupId);
+        if (group != null && Boolean.TRUE.equals(group.getArchived())) {
+            throw new BaseBizRuntimeException("分组已归档，请先取消归档");
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> batchMoveProductDemand(ProductDemandGroupBatchMoveReq req) {
+        log.info("批量移动产品需求到目标分组接收参数:{}", req);
+        Long targetGroupId = req.getTargetGroupId();
+        Long bizDomainGroupId = req.getBizDomainGroupId();
+        List<Long> productDemandIds = req.getProductDemandIds();
+
+        // 校验目标分组是否已归档
+        checkNotArchived(targetGroupId);
+        // 校验目标分组存在
+        ProductDemandGroupDO targetGroup = productDemandGroupMapper.get(targetGroupId);
+        if (targetGroup == null) {
+            throw new BaseBizRuntimeException("目标分组不存在");
+        }
+        // 校验操作权限
+        bizDomainGroupPermissionComponent.checkOperationPermission(bizDomainGroupId);
+
+        // 逐个调用现有的 moveProductDemand 逻辑
+        for (Long productDemandId : productDemandIds) {
+            // 查找需求当前所在的分组关联记录
+            ProductDemandGroupItemDO groupItem = productDemandGroupItemMapper.getByDemandId(productDemandId);
+            if (groupItem == null) {
+                // 需求不在任何分组中，跳过
+                log.warn("产品需求{}不在任何分组中，跳过批量移动", productDemandId);
+                continue;
+            }
+            if (Objects.equals(groupItem.getProductDemandGroupId(), targetGroupId)) {
+                // 已在目标分组中，跳过
+                log.info("产品需求{}已在目标分组{}中，跳过", productDemandId, targetGroupId);
+                continue;
+            }
+            // 校验源分组是否已归档
+            checkNotArchived(groupItem.getProductDemandGroupId());
+
+            // 使用现有的 moveProductDemand 方法，mode=follow（分组间移动）
+            ProductDemandGroupItemMoveReq moveReq = new ProductDemandGroupItemMoveReq();
+            moveReq.setBizDomainGroupId(bizDomainGroupId);
+            moveReq.setId(groupItem.getId()); // follow 模式下 id 是 groupItemId
+            moveReq.setTargetGroupId(targetGroupId);
+            moveReq.setMode("follow");
+            moveReq.setPrevId(null); // 追加到末尾
+            moveReq.setNextId(null);
+            moveProductDemand(moveReq);
+        }
+
+        return BaseResult.success(true);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> archive(ProductDemandGroupArchiveReq req) {
+        log.info("批量归档产品需求分组接收参数:{}", req);
+        List<Long> ids = req.getIds();
+        Long bizDomainGroupId = req.getBizDomainGroupId();
+
+        // 校验分组ID存在性和归属
+        for (Long id : ids) {
+            ProductDemandGroupDO group = productDemandGroupMapper.get(id);
+            if (group == null) {
+                throw new BaseBizRuntimeException("分组不存在：" + id);
+            }
+            if (!bizDomainGroupId.equals(group.getBizDomainGroupId())) {
+                throw new BaseBizRuntimeException("分组 " + id + " 不属于业务域集 " + bizDomainGroupId);
+            }
+        }
+
+        productDemandGroupMapper.batchArchive(ids);
+        return BaseResult.success(true);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> unarchive(ProductDemandGroupArchiveReq req) {
+        log.info("批量取消归档产品需求分组接收参数:{}", req);
+        List<Long> ids = req.getIds();
+
+        // 校验分组ID存在性
+        for (Long id : ids) {
+            ProductDemandGroupDO group = productDemandGroupMapper.get(id);
+            if (group == null) {
+                throw new BaseBizRuntimeException("分组不存在：" + id);
+            }
+        }
+
+        productDemandGroupMapper.batchUnarchive(ids);
+        return BaseResult.success(true);
     }
 }

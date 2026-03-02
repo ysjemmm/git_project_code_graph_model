@@ -131,4 +131,20 @@ public interface ProductDemandGroupMapper {
      * @param id 主键id
      */
     void removeProject(@Param("id") Long id);
+
+    /**
+     * 批量归档产品需求分组
+     *
+     * @param ids 分组ID列表
+     * @return 影响行数
+     */
+    int batchArchive(@Param("ids") List<Long> ids);
+
+    /**
+     * 批量取消归档产品需求分组
+     *
+     * @param ids 分组ID列表
+     * @return 影响行数
+     */
+    int batchUnarchive(@Param("ids") List<Long> ids);
 } 

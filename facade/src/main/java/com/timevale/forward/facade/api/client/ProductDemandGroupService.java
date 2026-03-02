@@ -107,4 +107,25 @@ public interface ProductDemandGroupService {
      * @return ProductDemandGroupResourcePlanVO
      */
     BaseResult<ProductDemandGroupResourcePlanVO> getResourcePlan(Long bizDomainGroupId, Long productDemandGroupId);
+
+    /**
+     * 批量移动产品需求到目标分组
+     * @param req 批量移动请求
+     * @return 是否成功
+     */
+    BaseResult<Boolean> batchMoveProductDemand(ProductDemandGroupBatchMoveReq req);
+
+    /**
+     * 批量归档产品需求分组
+     * @param productDemandGroupArchiveReq 归档请求
+     * @return 是否成功
+     */
+    BaseResult<Boolean> archive(ProductDemandGroupArchiveReq productDemandGroupArchiveReq);
+
+    /**
+     * 批量取消归档产品需求分组
+     * @param productDemandGroupArchiveReq 取消归档请求
+     * @return 是否成功
+     */
+    BaseResult<Boolean> unarchive(ProductDemandGroupArchiveReq productDemandGroupArchiveReq);
 }

@@ -10,6 +10,9 @@
         <where>
             pdg.biz_domain_group_id = #{bizDomainGroupId}
             AND pdg.is_deleted = false
+            <if test="archived != null">
+                AND pdg.archived = #{archived}
+            </if>
             <if test="groupCreateDateStart != null and groupCreateDateEnd != null">
                 and pdg.create_date &gt;= #{groupCreateDateStart} and pdg.create_date &lt;= #{groupCreateDateEnd}
             </if>
@@ -201,6 +204,28 @@
         UPDATE product_demand_group
         SET project_id = null
         WHERE id = #{id} and is_deleted = false
+    </update>
+
+    <!-- 批量归档产品需求分组 -->
+    <update id="batchArchive">
+        UPDATE product_demand_group
+        SET archived = 1, archived_time = NOW()
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND is_deleted = false
+    </update>
+
+    <!-- 批量取消归档产品需求分组 -->
+    <update id="batchUnarchive">
+        UPDATE product_demand_group
+        SET archived = 0, archived_time = NULL
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND is_deleted = false
     </update>
 
 </mapper>

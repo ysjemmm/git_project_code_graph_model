@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 /**
  * 产品需求分组表DO
@@ -66,4 +67,14 @@ public class ProductDemandGroupDO extends BaseDO {
      * 已删除的这个字段为null
      */
     private Boolean isActive;
+
+    /**
+     * 是否已归档
+     */
+    private Boolean archived;
+
+    /**
+     * 归档时间
+     */
+    private Date archivedTime;
 }

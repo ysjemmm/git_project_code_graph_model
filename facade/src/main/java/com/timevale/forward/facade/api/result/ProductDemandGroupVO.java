@@ -106,4 +106,10 @@ public class ProductDemandGroupVO extends ToString {
     @ApiModelProperty("安全资源评估（人天）")
     private BigDecimal totalSecurityTime;
 
+    @ApiModelProperty("是否已归档")
+    private Boolean archived;
+
+    @ApiModelProperty("归档时间")
+    private Date archivedTime;
+
 } 

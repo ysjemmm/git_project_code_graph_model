@@ -151,6 +151,11 @@ public class ProductDemandGroupListCondition extends QueryBase {
 
     private String customerGrade;
 
+    /**
+     * 是否已归档
+     */
+    private Boolean archived;
+
     public Boolean judgeProductDemandQueryExist() {
         return this.id != null ||
                 !Strings.isNullOrEmpty(this.name) ||
