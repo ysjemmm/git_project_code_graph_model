@@ -24,11 +24,6 @@ public interface ResourcePlanV2Service {
     BaseResult<ResourcePlanV2VO> getResourcePlanV2(Long bizDomainGroupId, Long productDemandGroupId);
 
     /**
-     * 批量保存资源规划（V2，按人拆分人天）
-     */
-    BaseResult<Boolean> saveResourcePlanV2(ResourcePlanV2SaveReq req);
-
-    /**
      * 查询单条需求的资源分配（V2，按人拆分人天）
      */
     BaseResult<List<ResourcePlanV2VO.OwnerTimeItem>> getOwnerTimesByDemandId(Long productDemandId);
