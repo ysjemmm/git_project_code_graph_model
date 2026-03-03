@@ -443,4 +443,106 @@
             #{item}
         </foreach>
     </update>
+
+    <select id="selectByIds" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
+        SELECT *
+        FROM bug_offline
+        WHERE is_deleted = false
+        AND id IN
+        <foreach collection="ids" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <update id="updateById">
+        UPDATE bug_offline
+        <set>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="projectId != null">
+                project_id = #{projectId},
+            </if>
+            <if test="productLineId != null">
+                product_line_id = #{productLineId},
+            </if>
+            <if test="status != null">
+                `status` = #{status},
+            </if>
+            <if test="lastOperator != null and lastOperator != ''">
+                last_operator = #{lastOperator},
+            </if>
+            <if test="lastOperatorId != null and lastOperatorId != ''">
+                last_operator_id = #{lastOperatorId},
+            </if>
+            <if test="operator != null and operator != ''">
+                operator = #{operator},
+            </if>
+            <if test="operatorId != null and operatorId != ''">
+                operator_id = #{operatorId},
+            </if>
+            <if test="proposer != null and proposer != ''">
+                proposer = #{proposer},
+            </if>
+            <if test="proposerId != null and proposerId != ''">
+                proposer_id = #{proposerId},
+            </if>
+            <if test="priority != null">
+                priority = #{priority},
+            </if>
+            <if test="severity != null">
+                severity = #{severity},
+            </if>
+            <if test="env != null">
+                env = #{env},
+            </if>
+            <if test="reason != null">
+                reason = #{reason},
+            </if>
+            <if test="source != null">
+                `source` = #{source},
+            </if>
+            <if test="belong != null">
+                belong = #{belong},
+            </if>
+            <if test="frequency != null">
+                frequency = #{frequency},
+            </if>
+            <if test="desc != null">
+                `desc` = #{desc},
+            </if>
+            <if test="openCount != null">
+                open_count = #{openCount},
+            </if>
+            <if test="returnCount != null">
+                return_count = #{returnCount},
+            </if>
+            <if test="cause != null and cause != ''">
+                cause = #{cause},
+            </if>
+            <if test="solvePlan != null and solvePlan != ''">
+                solve_plan = #{solvePlan},
+            </if>
+            <if test="expectSolveDate != null">
+                expect_solve_date = #{expectSolveDate},
+            </if>
+            <if test="bizDemandId != null">
+                biz_demand_id = #{bizDemandId},
+            </if>
+            <if test="prevStatus != null">
+                prev_status = #{prevStatus},
+            </if>
+            <if test="true">
+                delay_handle_reason = #{delayHandleReason},
+            </if>
+            <if test="true">
+                unhandle_reason = #{unhandleReason},
+            </if>
+            <if test="true">
+                modify_man_id = #{modifyManId},
+                modify_man = #{modifyMan}
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
 </mapper>

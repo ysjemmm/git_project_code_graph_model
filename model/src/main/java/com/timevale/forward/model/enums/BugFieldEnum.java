@@ -18,6 +18,8 @@ public enum BugFieldEnum {
     UN_HANDLE_REASON("不用修复原因"),
 
     DELAY_HANDLE_REASON("延期修复原因"),
+    
+    STATUS_CHANGE("状态变更"),
 
     OPERATOR("经办人"),
 

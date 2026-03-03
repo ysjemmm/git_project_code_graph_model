@@ -156,4 +156,20 @@ public interface BugOfflineMapper {
      * @return 影响行数
      */
     int updateProjectAndProductLine(@Param("idList") List<Long> idList, @Param("projectId") Long projectId, @Param("productLineId") Long productLineId);
+
+    /**
+     * 根据ID列表批量查询线下bug
+     *
+     * @param ids ID列表
+     * @return 线下bug列表
+     */
+    List<BugOfflineDO> selectByIds(@Param("ids") List<Long> ids);
+
+    /**
+     * 根据ID更新线下bug
+     *
+     * @param bugOfflineDO 线下bug对象
+     * @return 影响行数
+     */
+    int updateById(BugOfflineDO bugOfflineDO);
 }
