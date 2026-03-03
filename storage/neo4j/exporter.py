@@ -7,7 +7,8 @@ from pathlib import Path
 from typing import Dict, Set, List, Any, Tuple
 
 from parser.languages.java.core.ast_node_types import JavaFileStructure, ClassInfo, InterfaceInfo, \
-    EnumInfo, AnnotationTypeInfo, RecordInfo, MethodInfo, ConstructorInfo, ParameterInfo, FieldInfo, EnumConstantInfo
+    EnumInfo, AnnotationTypeInfo, RecordInfo, MethodInfo, ConstructorInfo, ParameterInfo, FieldInfo, EnumConstantInfo, \
+    CodeBlockInfo
 from parser.languages.java.utils.analyzer_helper import AnalyzerHelper
 from parser.utils.logger import get_logger
 from storage.neo4j.connector import Neo4jConnector
@@ -19,7 +20,7 @@ from storage.neo4j.field_names import (
 from storage.neo4j.java_modules import JavaGraphEdgeType, ObjectType, ObjectFromType, JavaNeo4jNodeType, \
     JavaFileNodeGraphNode, JavaObjectNodeGraphNode, JavaMethodNodeGraphNode, JavaParameterNodeGraphNode, \
     JavaFieldNodeGraphNode, JavaEnumConstantNodeGraphNode, CommentNodeGraphNode, CommentType, \
-    CommentStorageDecision, JavadocParseResult
+    CommentStorageDecision, JavadocParseResult, JavaCodeBlockNodeGraphNode
 from storage.neo4j.merge_builder import MergeQueryBuilder, get_unique_key_for_node_type
 
 logger = get_logger("neo4j_exporter")
@@ -431,7 +432,10 @@ class Neo4jExporterAST:
         # 收集注释节点
         self._collect_comment_nodes(class_data.comments, java_object_node.symbol_id, 
                                     java_object_node, java_object_node.belong_project)
-        
+
+        for code_blocks in class_data.code_blocks:
+            self._collect_code_block_nodes(code_blocks, java_object_node)
+
         for method_data in class_data.methods:
             self._collect_method_nodes(method_data, java_object_node)
         
@@ -523,6 +527,9 @@ class Neo4jExporterAST:
         self._collect_comment_nodes(enum_data.comments, java_object_node.symbol_id,
                                     java_object_node, java_object_node.belong_project)
 
+        for code_blocks in enum_data.code_blocks:
+            self._collect_code_block_nodes(code_blocks, java_object_node)
+
         for method_data in enum_data.methods:
             self._collect_method_nodes(method_data, java_object_node)
 
@@ -599,6 +606,9 @@ class Neo4jExporterAST:
         self._collect_comment_nodes(record_data.comments, java_object_node.symbol_id,
                                     java_object_node, java_object_node.belong_project)
 
+        for code_blocks in record_data.code_blocks:
+            self._collect_code_block_nodes(code_blocks, java_object_node)
+
         for method_data in record_data.methods:
             self._collect_method_nodes(method_data, java_object_node)
 
@@ -651,7 +661,29 @@ class Neo4jExporterAST:
         
         for param_data in method_data.parameters:
             self._collect_parameter_nodes(param_data, java_method_node)
-    
+
+    def _collect_code_block_nodes(self, code_block_data: CodeBlockInfo | None, java_object_node: JavaObjectNodeGraphNode):
+        if code_block_data is None:
+            return
+
+        java_cb_node = JavaCodeBlockNodeGraphNode()
+        java_cb_node.name = "__CodeBlock__"
+        java_cb_node.is_static = code_block_data.is_static
+        java_cb_node.belong_project = java_object_node.belong_project
+
+        java_cb_node.symbol_id = code_block_data.symbol_id
+        java_cb_node.parent_symbol_id = code_block_data.parent_symbol_id
+        java_cb_node.start_line = code_block_data.location.start_line
+        java_cb_node.end_line = code_block_data.location.end_line
+        java_cb_node.start_column = code_block_data.location.start_column
+        java_cb_node.end_column = code_block_data.location.end_column
+        java_cb_node.raw_metadata = code_block_data.raw_method
+
+        self.nodes_to_create[JavaNeo4jNodeType.JavaCodeBlock].append(java_cb_node)
+        self.created_nodes.add(java_cb_node.symbol_id)
+        self.relationships_to_create.append(
+            (java_object_node.symbol_id, java_cb_node.symbol_id, JavaGraphEdgeType.MEMBER_OF.value))
+
     def _collect_constructor_nodes(self, constructor_data: ConstructorInfo | None, java_object_node: JavaObjectNodeGraphNode):
         if constructor_data is None:
             return
