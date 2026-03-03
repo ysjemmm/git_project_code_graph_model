@@ -44,12 +44,8 @@ logs/
 .env
 .env.local
 
-# Neo4j
-neo4j/
-neo4j_data/
-
 # Git repos cache
-.cache/git_repos/
+.cache
 
 # Kiro IDE
 .kiro/
