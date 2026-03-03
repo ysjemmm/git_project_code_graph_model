@@ -7,6 +7,10 @@ from typing import Dict, List, Optional
 
 from loraxmod import Parser
 
+from parser.languages.java.utils.analyzer_helper import AnalyzerHelper
+from parser.symbol_table_builder import SymbolTableBuilder
+from tools.constants import PROJECT_ROOT_PATH
+
 # 修复 Windows 编码问题
 if sys.platform == 'win32':
     import io
@@ -27,9 +31,8 @@ logger = get_logger("git_importer")
 
 class GitToNeo4jImporter:
     
-    
     # 默认配置
-    DEFAULT_CACHE_BASE_DIR = ".cache/git_repos"
+    DEFAULT_CACHE_BASE_DIR = str(Path(PROJECT_ROOT_PATH / ".cache/git_repos"))
     DEFAULT_NEO4J_URI = "neo4j+s://26fa83e0.databases.neo4j.io"
     DEFAULT_NEO4J_USER = "neo4j"
     DEFAULT_NEO4J_PASSWORD = "kJ0iZG0ys9euMz_6rQle5f6-ibVqHtLDzLCgr42wZe4"
@@ -294,6 +297,7 @@ class GitToNeo4jImporter:
             context = AnalyzerContext(
                 project_name=project_name,
                 project_path=first_source_path,
+                root_project_symbol_id=AnalyzerHelper.generate_symbol_id_for_project(project_name),
                 parser=Parser("java")
             )
             
@@ -314,8 +318,8 @@ class GitToNeo4jImporter:
             # builder = SymbolTableBuilder(symbol_table=global_symbol_table)
             # for java_file_structure in ast_data_list:
             #     builder.current_file = java_file_structure.file_path
-            #     builder._register_all_method_calls(java_file_structure)
-            #     builder._register_all_field_accesses(java_file_structure)
+            #     builder.register_all_method_calls(java_file_structure)
+            #     builder.register_all_field_accesses(java_file_structure)
             
             # 第七步:导出到Neo4j
             logger.info(f"\n导出到Neo4j...")
@@ -323,6 +327,7 @@ class GitToNeo4jImporter:
             result = exporter.export_from_ast_data(
                 ast_data_list,
                 project_name,
+                context.root_project_symbol_id,
                 repo_cache_dir,
                 clear_database,
                 [global_symbol_table]
@@ -433,6 +438,15 @@ class GitToNeo4jImporter:
                 symbol_table = SymbolTable()
             else:
                 symbol_table = global_symbol_table
+            
+            # 设置当前文件路径到 context（用于生成 symbol_id）
+            # 计算相对于项目根目录的路径
+            try:
+                relative_path = os.path.relpath(java_file_path, context.project_path)
+                context.file_path = relative_path.replace(os.sep, '/')  # 统一使用 / 分隔符
+            except ValueError:
+                # 如果无法计算相对路径，使用文件名
+                context.file_path = os.path.basename(java_file_path)
             
             analyzer = JavaFileAnalyzer(
                 context=context,

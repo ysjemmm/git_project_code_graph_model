@@ -23,6 +23,7 @@ class JavaFileAnalyzer(BaseAnalyzer):
         self.symbol_table = symbol_table
         self.auto_resolve_types = auto_resolve_types
         self.current_file = file_path or ""
+        self.relative_file = str(Path(self.current_file).relative_to(self.context.project_path))
         self.type2node: Dict[JavaAstNodeType, List[ExtractedNode]] = {}
 
         self.ast_node = None
@@ -60,19 +61,26 @@ class JavaFileAnalyzer(BaseAnalyzer):
 
         self.java_file_structure = java_file_structure
         self.java_file_structure.file_name = Path(self.current_file).name
+        self.java_file_structure.relative_path = self.relative_file if self.relative_file else ""
         self._ast_node()
 
         self.java_file_structure.set_pos_from_node(self.ast_node)
+
+        # Generate symbol_id for the Java file
+        from parser.languages.java.utils.analyzer_helper import AnalyzerHelper
+        self.java_file_structure.symbol_id = AnalyzerHelper.generate_symbol_id_for_file(
+            self.context.root_project_symbol_id, self.relative_file
+        )
 
         self.java_file_structure.package_info = self._extract_package_info()
         self.java_file_structure.import_details = self._extract_import_infos()
         self.java_file_structure.comments = self._extract_comments()
 
-        self.java_file_structure.class_details = self._extract_class_info()
-        self.java_file_structure.enum_details = self._extract_enum_info()
-        self.java_file_structure.interface_details = self._extract_interface_info()
-        self.java_file_structure.annotation_details = self._extract_annotation_info()
-        self.java_file_structure.record_details = self._extract_record_info()
+        self.java_file_structure.class_details = self._extract_class_info(self.java_file_structure.symbol_id)
+        self.java_file_structure.enum_details = self._extract_enum_info(self.java_file_structure.symbol_id)
+        self.java_file_structure.interface_details = self._extract_interface_info(self.java_file_structure.symbol_id)
+        self.java_file_structure.annotation_details = self._extract_annotation_info(self.java_file_structure.symbol_id)
+        self.java_file_structure.record_details = self._extract_record_info(self.java_file_structure.symbol_id)
 
         return java_file_structure
 
@@ -114,7 +122,7 @@ class JavaFileAnalyzer(BaseAnalyzer):
                     comments.append(result)
         return comments
 
-    def _extract_class_info(self) -> list[ClassInfo]:
+    def _extract_class_info(self, parent_symbol_id: str) -> list[ClassInfo]:
         """Extract class info"""
         analyzer = AnalyzerCache.get_class_analyzer(self.context.project_name)
         nodes = self.type2node.get(JavaAstNodeType.CLASS_DECLARATION, [])
@@ -122,12 +130,12 @@ class JavaFileAnalyzer(BaseAnalyzer):
         objs = []
         for n in nodes:
             if n is not None:
-                result = analyzer.handle_class_declaration(n, self.context)
+                result = analyzer.handle_class_declaration(n, self.context, parent_symbol_id)
                 if result is not None:
                     objs.append(result)
         return objs
 
-    def _extract_enum_info(self) -> list[EnumInfo]:
+    def _extract_enum_info(self, parent_symbol_id: str) -> list[EnumInfo]:
         """Extract enum info"""
         analyzer = AnalyzerCache.get_enum_analyzer(self.context.project_name)
         nodes = self.type2node.get(JavaAstNodeType.ENUM_DECLARATION, [])
@@ -135,12 +143,12 @@ class JavaFileAnalyzer(BaseAnalyzer):
         objs = []
         for n in nodes:
             if n is not None:
-                result = analyzer.handle_enum_declaration(n, self.context)
+                result = analyzer.handle_enum_declaration(n, self.context, parent_symbol_id)
                 if result is not None:
                     objs.append(result)
         return objs
 
-    def _extract_interface_info(self) -> list[InterfaceInfo]:
+    def _extract_interface_info(self, parent_symbol_id: str) -> list[InterfaceInfo]:
         """Extract interface info"""
         analyzer = AnalyzerCache.get_interface_analyzer(self.context.project_name)
         nodes = self.type2node.get(JavaAstNodeType.INTERFACE_DECLARATION, [])
@@ -148,12 +156,12 @@ class JavaFileAnalyzer(BaseAnalyzer):
         objs = []
         for n in nodes:
             if n is not None:
-                result = analyzer.handle_interface_declaration(n, self.context)
+                result = analyzer.handle_interface_declaration(n, self.context, parent_symbol_id)
                 if result is not None:
                     objs.append(result)
         return objs
 
-    def _extract_annotation_info(self) -> list[AnnotationTypeInfo]:
+    def _extract_annotation_info(self, parent_symbol_id: str) -> list[AnnotationTypeInfo]:
         """Extract annotation info"""
         analyzer = AnalyzerCache.get_annotation_analyzer(self.context.project_name)
         nodes = self.type2node.get(JavaAstNodeType.ANNOTATION_TYPE_DECLARATION, [])
@@ -161,12 +169,12 @@ class JavaFileAnalyzer(BaseAnalyzer):
         objs = []
         for n in nodes:
             if n is not None:
-                result = analyzer.handle_annotation_declaration(n, self.context)
+                result = analyzer.handle_annotation_declaration(n, self.context, parent_symbol_id)
                 if result is not None:
                     objs.append(result)
         return objs
 
-    def _extract_record_info(self) -> list[RecordAnalyzer]:
+    def _extract_record_info(self, parent_symbol_id: str) -> list[RecordAnalyzer]:
         """Extract record info"""
         analyzer = AnalyzerCache.get_record_analyzer(self.context.project_name)
         nodes = self.type2node.get(JavaAstNodeType.RECORD_DECLARATION, [])
@@ -174,7 +182,7 @@ class JavaFileAnalyzer(BaseAnalyzer):
         objs = []
         for n in nodes:
             if n is not None:
-                result = analyzer.handle_record_declaration(n, self.context)
+                result = analyzer.handle_record_declaration(n, self.context, parent_symbol_id)
                 if result is not None:
                     objs.append(result)
         return objs

@@ -66,7 +66,7 @@ class InterfaceBodyAnalyzer(BaseAnalyzer):
         fs = []
         for n in fields:
             if n is not None:
-                result = analyzer.handle_field_declaration(n)
+                result = analyzer.handle_field_declaration(n, self._interface_info.symbol_id)
                 if result is not None:
                     fs.append(result)
         return fs
@@ -78,7 +78,7 @@ class InterfaceBodyAnalyzer(BaseAnalyzer):
         mtds = []
         for n in methods:
             if n is not None:
-                result = analyzer.handle_method_declaration(n, context)
+                result = analyzer.handle_method_declaration(n, context, self._interface_info.symbol_id)
                 if result is not None:
                     mtds.append(result)
         return mtds

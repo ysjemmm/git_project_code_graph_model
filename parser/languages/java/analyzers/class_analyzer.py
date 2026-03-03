@@ -29,7 +29,7 @@ class ClassAnalyzer(BaseAnalyzer):
             for n in node.children:
                 self.type2node.setdefault(JavaAstNodeType.from_value(n.node_type), []).append(n)
     
-    def handle_class_declaration(self, node: ExtractedNode, context: AnalyzerContext) -> ClassInfo:
+    def handle_class_declaration(self, node: ExtractedNode, context: AnalyzerContext, parent_symbol_id: str) -> ClassInfo:
         self._init()
         self._ast_must_nodes(node)
 
@@ -40,6 +40,12 @@ class ClassAnalyzer(BaseAnalyzer):
 
         self.class_info.set_pos_from_node(node)
         self._extract_class_base(node)
+
+        # Generate symbol_id before processing body (body needs parent_symbol_id)
+        self.class_info.symbol_id = AnalyzerHelper.generate_symbol_id_for_class(
+            parent_symbol_id, self.class_info.class_name
+        )
+        self.class_info.parent_symbol_id = parent_symbol_id
 
         AnalyzerCache.get_class_body_analyzer(context.project_name).handle_class_body(
             self.type2node.get(JavaAstNodeType.CLASS_BODY, [None])[0],

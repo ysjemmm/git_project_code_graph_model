@@ -65,7 +65,7 @@ class AnnotationBodyAnalyzer(BaseAnalyzer):
         fs = []
         for n in fields:
             if n is not None:
-                result = analyzer.handle_field_declaration(n)
+                result = analyzer.handle_field_declaration(n, self._anno_info.symbol_id)
                 if result is not None:
                     fs.append(result)
         return fs

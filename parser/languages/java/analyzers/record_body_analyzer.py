@@ -79,7 +79,7 @@ class RecordBodyAnalyzer(BaseAnalyzer):
         mtds = []
         for n in methods:
             if n is not None:
-                result = analyzer.handle_method_declaration(n, context)
+                result = analyzer.handle_method_declaration(n, context, self._record_info.symbol_id)
                 if result is not None:
                     mtds.append(result)
         return mtds

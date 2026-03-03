@@ -8,7 +8,7 @@ from parser.languages.java.core.ast_node_types import LocationRange
 
 class SymbolType(Enum):
     
-    PROJECT = "project"           # 项目(所有JAVAFILE的根节点
+    PROJECT = "project"           # 项目(所有JAVAFILE的根节点)
     JAVAFILE = "javafile"         # Java 文件
     PACKAGE = "package"           # 
     IMPORT = "import"             # 导入
@@ -290,68 +290,113 @@ class SymbolTable:
         }
 
 class SymbolIdGenerator:
-    
+    """符号ID生成器 - 与 Neo4j Exporter 保持一致的生成规则"""
+
+    @staticmethod
+    def for_project(project_name: str) -> str:
+        """生成项目ID
+        格式: project#{project_name}
+        """
+        return f"project#{project_name}"
+
+    @staticmethod
+    def for_file(parent_symbol_id: str, relative_path: str) -> str:
+        """生成文件符号ID
+        格式: {parent_symbol_id}<file>{relative_path}
+        """
+        return f"{parent_symbol_id}<file>{relative_path}"
     
     @staticmethod
-    def for_class(file_path: str, class_name: str) -> str:
-        
-        return f"{file_path}#{class_name}"
-    
-    @staticmethod
-    def for_method(class_symbol_id: str, method_name: str, param_types: List[str] = None) -> str:
-        
-        base = f"{class_symbol_id}#{method_name}"
-        
-        if param_types is not None:
-            params = ",".join(param_types)
-            return f"{base}({params})"
-        return f"{base}()"
+    def for_class(parent_symbol_id: str, class_name: str) -> str:
+        """生成类/接口/枚举/注解/记录符号ID
+        格式: {parent_symbol_id}${class_name}
+        """
+        return f"{parent_symbol_id}#{class_name}"
     
     @staticmethod
     def for_field(class_symbol_id: str, field_name: str) -> str:
-        
-        return f"{class_symbol_id}#{field_name}"
+        """生成字段符号ID
+        格式: {class_symbol_id}.{field_name}
+        """
+        return f"{class_symbol_id}.{field_name}"
+    
+    @staticmethod
+    def for_static_field(class_symbol_id: str, field_name: str) -> str:
+        """生成静态字段符号ID (与普通字段相同)
+        格式: {class_symbol_id}.{field_name}
+        """
+        return f"{class_symbol_id}.{field_name}"
+    
+    @staticmethod
+    def for_enum_constant(enum_symbol_id: str, constant_name: str) -> str:
+        """生成枚举常量符号ID
+        格式: {enum_symbol_id}$.{constant_name}
+        """
+        return f"{enum_symbol_id}$.{constant_name}"
+    
+    @staticmethod
+    def for_method(class_symbol_id: str, method_name: str, param_types: List[str] = None) -> str:
+        """生成方法符号ID (非静态)
+        格式: {class_symbol_id}#{method_name}({params})
+        """
+        params_str = ",".join(param_types) if param_types else ""
+        return f"{class_symbol_id}#{method_name}({params_str})"
+    
+    @staticmethod
+    def for_static_method(class_symbol_id: str, method_name: str, param_types: List[str] = None) -> str:
+        """生成静态方法符号ID
+        格式: {class_symbol_id}#${method_name}({params})
+        """
+        params_str = ",".join(param_types) if param_types else ""
+        return f"{class_symbol_id}#${method_name}({params_str})"
     
     @staticmethod
     def for_constructor(class_symbol_id: str, param_types: List[str] = None) -> str:
-        
-        base = f"{class_symbol_id}#<init>"
-        
-        if param_types is not None:
-            params = ",".join(param_types)
-            return f"{base}({params})"
-        return f"{base}()"
+        """生成构造器符号ID
+        格式: {class_symbol_id}#<init>({params})
+        """
+        params_str = ",".join(param_types) if param_types else ""
+        return f"{class_symbol_id}#<init>({params_str})"
     
     @staticmethod
-    def for_parameter(method_symbol_id: str, param_name: str, index: int) -> str:
-        
-        return f"{method_symbol_id}#${param_name}#{index}"
+    def for_parameter(method_symbol_id: str, param_name: str, index: int = 0) -> str:
+        """生成方法参数符号ID
+        格式: {method_symbol_id}#{param_name}
+        注意: index 参数保留用于兼容性，但不在 symbol_id 中使用
+        """
+        return f"{method_symbol_id}#{param_name}"
+    
+    @staticmethod
+    def for_record_component(record_symbol_id: str, component_name: str) -> str:
+        """生成 record 组件参数符号ID
+        格式: {record_symbol_id}(.){component_name}
+        """
+        return f"{record_symbol_id}(.){component_name}"
+    
+    @staticmethod
+    def for_javadoc_comment(parent_symbol_id: str, index: int) -> str:
+        """生成 Javadoc 注释符号ID
+        格式: {parent_symbol_id}@javadoc#{index}
+        """
+        return f"{parent_symbol_id}@javadoc#{index}"
+    
+    @staticmethod
+    def for_long_comment(parent_symbol_id: str) -> str:
+        """生成长注释符号ID
+        格式: {parent_symbol_id}@longcomment
+        """
+        return f"{parent_symbol_id}@longcomment"
     
     @staticmethod
     def for_import(file_path: str, import_name: str) -> str:
-        
+        """生成导入符号ID
+        格式: {file_path}#import:{import_name}
+        """
         return f"{file_path}#import:{import_name}"
     
     @staticmethod
     def for_local_var(method_symbol_id: str, var_name: str, line: int) -> str:
-        
+        """生成局部变量符号ID
+        格式: {method_symbol_id}#{var_name}@{line}
+        """
         return f"{method_symbol_id}#{var_name}@{line}"
-    
-    @staticmethod
-    def for_nested_class(parent_class_symbol_id: str, nested_class_name: str) -> str:
-        
-        return f"{parent_class_symbol_id}#{nested_class_name}"
-    
-    @staticmethod
-    def for_static_field(class_symbol_id: str, field_name: str) -> str:
-        
-        return f"{class_symbol_id}#${field_name}"
-    
-    @staticmethod
-    def for_static_method(class_symbol_id: str, method_name: str, param_types: List[str] = None) -> str:
-        base = f"{class_symbol_id}#${method_name}"
-        
-        if param_types is not None:
-            params = ",".join(param_types)
-            return f"{base}({params})"
-        return f"{base}()"

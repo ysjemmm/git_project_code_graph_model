@@ -287,6 +287,7 @@ class ClassInfo(BaseAstNode):
 class JavaFileStructure(BaseAstNode):
     """Java file structure"""
     file_path: str = ""
+    relative_path: str = ""
     package_info: PackageInfo = None
     import_details: List[ImportInfo] = field(default_factory=list)
     classes: List[ClassInfo] = field(default_factory=list)

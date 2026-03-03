@@ -48,46 +48,6 @@ class BaseAnalyzer:
         
         return {}
 
-    @staticmethod
-    def create_location_range(node) -> LocationRange:
-        """Create location range from node
-        
-        Extracts location information from tree-sitter nodes.
-        Tree-sitter uses 0-based line numbers, so we add 1 to convert to 1-based.
-        """
-        start_line = 0
-        start_column = 0
-        end_line = 0
-        end_column = 0
-        
-        if node:
-            # Tree-sitter nodes have start_point and end_point attributes
-            # These are Point objects with row and column attributes
-            if hasattr(node, 'start_point'):
-                start_point = node.start_point
-                if hasattr(start_point, 'row') and hasattr(start_point, 'column'):
-                    start_line = start_point.row + 1  # Convert from 0-based to 1-based
-                    start_column = start_point.column
-                elif isinstance(start_point, (tuple, list)) and len(start_point) >= 2:
-                    start_line = start_point[0] + 1
-                    start_column = start_point[1]
-            
-            if hasattr(node, 'end_point'):
-                end_point = node.end_point
-                if hasattr(end_point, 'row') and hasattr(end_point, 'column'):
-                    end_line = end_point.row + 1  # Convert from 0-based to 1-based
-                    end_column = end_point.column
-                elif isinstance(end_point, (tuple, list)) and len(end_point) >= 2:
-                    end_line = end_point[0] + 1
-                    end_column = end_point[1]
-        
-        return LocationRange(
-            start_line=start_line,
-            start_column=start_column,
-            end_line=end_line,
-            end_column=end_column
-        )
-
     """
     is_final: ?
     is_static: ?

@@ -368,3 +368,81 @@ class AnalyzerHelper:
             pairs.append(current_pair)
 
         return pairs
+
+    @staticmethod
+    def generate_symbol_id_for_project(project_name: str) -> str:
+        """为 Project 项目生成 symbol_id
+        格式: project#{project_name}
+        """
+        from parser.common.symbol_table import SymbolIdGenerator
+        return SymbolIdGenerator.for_project(project_name)
+
+    @staticmethod
+    def generate_symbol_id_for_file(project_id: str, file_path: str) -> str:
+        """为 Java 文件生成 symbol_id
+        格式: {project_id}<file>{file_path}
+        """
+        from parser.common.symbol_table import SymbolIdGenerator
+        return SymbolIdGenerator.for_file(project_id, file_path)
+
+
+    # ========== Symbol ID 生成方法 ==========
+    
+    @staticmethod
+    def generate_symbol_id_for_class(parent_symbol_id: str, class_name: str) -> str:
+        """为类/接口/枚举/注解/记录生成 symbol_id"""
+        from parser.common.symbol_table import SymbolIdGenerator
+        return SymbolIdGenerator.for_class(parent_symbol_id, class_name)
+    
+    @staticmethod
+    def generate_symbol_id_for_method(parent_symbol_id: str, method_name: str, 
+                                     param_types: List[str], is_static: bool = False) -> str:
+        """为方法生成 symbol_id"""
+        from parser.common.symbol_table import SymbolIdGenerator
+        
+        if is_static:
+            return SymbolIdGenerator.for_static_method(parent_symbol_id, method_name, param_types)
+        else:
+            return SymbolIdGenerator.for_method(parent_symbol_id, method_name, param_types)
+    
+    @staticmethod
+    def generate_symbol_id_for_constructor(parent_symbol_id: str, param_types: List[str]) -> str:
+        """为构造器生成 symbol_id"""
+        from parser.common.symbol_table import SymbolIdGenerator
+        return SymbolIdGenerator.for_constructor(parent_symbol_id, param_types)
+    
+    @staticmethod
+    def generate_symbol_id_for_field(parent_symbol_id: str, field_name: str) -> str:
+        """为字段生成 symbol_id"""
+        from parser.common.symbol_table import SymbolIdGenerator
+        return SymbolIdGenerator.for_field(parent_symbol_id, field_name)
+    
+    @staticmethod
+    def generate_symbol_id_for_enum_constant(parent_symbol_id: str, constant_name: str) -> str:
+        """为枚举常量生成 symbol_id"""
+        from parser.common.symbol_table import SymbolIdGenerator
+        return SymbolIdGenerator.for_enum_constant(parent_symbol_id, constant_name)
+    
+    @staticmethod
+    def generate_symbol_id_for_parameter(method_symbol_id: str, param_name: str) -> str:
+        """为方法参数生成 symbol_id"""
+        from parser.common.symbol_table import SymbolIdGenerator
+        return SymbolIdGenerator.for_parameter(method_symbol_id, param_name)
+    
+    @staticmethod
+    def generate_symbol_id_for_record_component(record_symbol_id: str, component_name: str) -> str:
+        """为 record 组件生成 symbol_id"""
+        from parser.common.symbol_table import SymbolIdGenerator
+        return SymbolIdGenerator.for_record_component(record_symbol_id, component_name)
+
+    @staticmethod
+    def generate_symbol_id_for_javadoc_comment(parent_symbol_id: str, index: int) -> str:
+        """为 Javadoc 注释生成 symbol_id"""
+        from parser.common.symbol_table import SymbolIdGenerator
+        return SymbolIdGenerator.for_javadoc_comment(parent_symbol_id, index)
+    
+    @staticmethod
+    def generate_symbol_id_for_long_comment(parent_symbol_id: str) -> str:
+        """为长注释生成 symbol_id"""
+        from parser.common.symbol_table import SymbolIdGenerator
+        return SymbolIdGenerator.for_long_comment(parent_symbol_id)

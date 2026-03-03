@@ -7,6 +7,7 @@ from loraxmod import ExtractedNode
 from parser.languages.java.core.ast_node_types import EnumConstantInfo
 from parser.languages.java.core.base_analyzer import BaseAnalyzer
 from parser.languages.java.java_ast_enums import JavaAstNodeType
+from parser.languages.java.utils.analyzer_helper import AnalyzerHelper
 from tools.ast_tool import AstTool
 
 
@@ -17,7 +18,7 @@ class EnumConstantAnalyzer(BaseAnalyzer):
     def __init__(self):
         super().__init__()
 
-    def handle_enum_constant(self, node: ExtractedNode) -> EnumConstantInfo:
+    def handle_enum_constant(self, node: ExtractedNode, parent_symbol_id: str = "") -> EnumConstantInfo:
         """Handle enum constant node"""
         constant_info = EnumConstantInfo()
         
@@ -32,6 +33,13 @@ class EnumConstantAnalyzer(BaseAnalyzer):
         
         # Extract constant declaration
         constant_info.raw_constant = self._extract_constant_declaration(node)
+        
+        # Generate symbol_id
+        if parent_symbol_id and constant_info.constant_name:
+            constant_info.symbol_id = AnalyzerHelper.generate_symbol_id_for_enum_constant(
+                parent_symbol_id, constant_info.constant_name
+            )
+            constant_info.parent_symbol_id = parent_symbol_id
         
         return constant_info
 

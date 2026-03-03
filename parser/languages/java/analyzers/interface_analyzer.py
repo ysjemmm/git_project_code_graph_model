@@ -29,7 +29,7 @@ class InterfaceAnalyzer(BaseAnalyzer):
             for n in node.children:
                 self.type2node.setdefault(JavaAstNodeType.from_value(n.node_type), []).append(n)
 
-    def handle_interface_declaration(self, node: ExtractedNode, context: AnalyzerContext) -> InterfaceInfo | None:
+    def handle_interface_declaration(self, node: ExtractedNode, context: AnalyzerContext, parent_symbol_id: str) -> InterfaceInfo | None:
         """Handle interface declaration node"""
         from parser.languages.java.utils.analyzer_cache import AnalyzerCache
 
@@ -41,6 +41,12 @@ class InterfaceAnalyzer(BaseAnalyzer):
 
         # Extract interface base
         self._extract_interface_base(node)
+
+        # Generate symbol_id before processing body
+        self.interface_info.symbol_id = AnalyzerHelper.generate_symbol_id_for_class(
+            parent_symbol_id, self.interface_info.interface_name
+        )
+        self.interface_info.parent_symbol_id = parent_symbol_id
 
         AnalyzerCache.get_interface_body_analyzer(context.project_name).handle_interface_body(
             self.type2node.get(JavaAstNodeType.INTERFACE_BODY, [None])[0],

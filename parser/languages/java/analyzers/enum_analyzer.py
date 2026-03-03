@@ -30,7 +30,7 @@ class EnumAnalyzer(BaseAnalyzer):
             for n in node.children:
                 self.type2node.setdefault(JavaAstNodeType.from_value(n.node_type), []).append(n)
 
-    def handle_enum_declaration(self, node: ExtractedNode, context: AnalyzerContext) -> EnumInfo | None:
+    def handle_enum_declaration(self, node: ExtractedNode, context: AnalyzerContext, parent_symbol_id: str) -> EnumInfo | None:
         """Handle enum declaration node"""
         from parser.languages.java.utils.analyzer_cache import AnalyzerCache
 
@@ -43,6 +43,12 @@ class EnumAnalyzer(BaseAnalyzer):
         
         # Extract enum base
         self._extract_enum_base(node)
+
+        # Generate symbol_id before processing body
+        self.enum_info.symbol_id = AnalyzerHelper.generate_symbol_id_for_class(
+            parent_symbol_id, self.enum_info.enum_name
+        )
+        self.enum_info.parent_symbol_id = parent_symbol_id
 
         AnalyzerCache.get_enum_body_analyzer(context.project_name).handle_enum_body(
             self.type2node.get(JavaAstNodeType.ENUM_BODY, [None])[0],

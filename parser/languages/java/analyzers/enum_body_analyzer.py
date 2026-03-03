@@ -78,7 +78,7 @@ class EnumBodyAnalyzer(BaseAnalyzer):
         fs = []
         for n in fields:
             if n is not None:
-                result = analyzer.handle_field_declaration(n)
+                result = analyzer.handle_field_declaration(n, self._enum_info.symbol_id)
                 if result is not None:
                     fs.append(result)
         return fs
@@ -90,7 +90,7 @@ class EnumBodyAnalyzer(BaseAnalyzer):
         mtds = []
         for n in methods:
             if n is not None:
-                result = analyzer.handle_method_declaration(n, context)
+                result = analyzer.handle_method_declaration(n, context, self._enum_info.symbol_id)
                 if result is not None:
                     mtds.append(result)
         return mtds
@@ -102,7 +102,7 @@ class EnumBodyAnalyzer(BaseAnalyzer):
         mtds = []
         for n in methods:
             if n is not None:
-                result = analyzer.handle_constructor_declaration(n, context)
+                result = analyzer.handle_constructor_declaration(n, context, self._enum_info.symbol_id)
                 if result is not None:
                     mtds.append(result)
         return mtds
@@ -145,6 +145,14 @@ class EnumBodyAnalyzer(BaseAnalyzer):
                     else:
                         cns.arguments.append(AstTool.node_text(p))
                 pass
+            
+            # Generate symbol_id for enum constant
+            if cns.constant_name:
+                cns.symbol_id = AnalyzerHelper.generate_symbol_id_for_enum_constant(
+                    self._enum_info.symbol_id, cns.constant_name
+                )
+                cns.parent_symbol_id = self._enum_info.symbol_id
+            
             constants.append(cns)
         return constants
 

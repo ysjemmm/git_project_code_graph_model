@@ -19,7 +19,7 @@ class FieldAnalyzer(BaseAnalyzer):
     def __init__(self):
         super().__init__()
 
-    def handle_field_declaration(self, node: ExtractedNode) -> FieldInfo | None:
+    def handle_field_declaration(self, node: ExtractedNode, parent_symbol_id: str = "") -> FieldInfo | None:
         """
             Handle field declaration node
             if node is interface, then node_type is CONSTANT_DECLARATION
@@ -55,6 +55,14 @@ class FieldAnalyzer(BaseAnalyzer):
 
         # Extract modifiers
         field_info.is_final, field_info.is_static = self.extract_modifiers(node)
+        
+        # Generate symbol_id
+        if parent_symbol_id and field_info.field_name:
+            field_info.symbol_id = AnalyzerHelper.generate_symbol_id_for_field(
+                parent_symbol_id, field_info.field_name
+            )
+            field_info.parent_symbol_id = parent_symbol_id
+        
         return field_info
 
     def _extract_field_type(self, node: ExtractedNode) -> str:
