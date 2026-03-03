@@ -1712,9 +1712,8 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         
         // 筛选出符合条件的bug：
         // 1. 状态为：0-bug打开, 1-待修复, 2-待验收, 3-待确认
-        // 2. 且满足以下任一条件：
-        //    - 优先级为紧急(0)或高(10)
-        //    - 严重程度为阻塞(0)或严重(10)
+        // 2. 优先级为中(20)或低(30)
+        // 3. 严重程度为一般(20)或轻微(30)
         List<BugOfflineDO> bugsToDelay = bugOfflineDOList.stream()
             .filter(bug -> {
                 // 状态为未解决（不包括延期修复）
@@ -1723,16 +1722,16 @@ public class BugOfflineServiceImpl implements BugOfflineService {
                     return false;
                 }
                 
-                // 优先级为紧急或高
-                boolean isHighPriority = Integer.valueOf(0).equals(bug.getPriority()) 
-                    || Integer.valueOf(10).equals(bug.getPriority());
+                // 优先级为中或低
+                boolean isMediumOrLowPriority = Integer.valueOf(20).equals(bug.getPriority()) 
+                    || Integer.valueOf(30).equals(bug.getPriority());
                 
-                // 严重程度为阻塞或严重
-                boolean isSevere = Integer.valueOf(0).equals(bug.getSeverity()) 
-                    || Integer.valueOf(10).equals(bug.getSeverity());
+                // 严重程度为一般或轻微
+                boolean isMinorSeverity = Integer.valueOf(20).equals(bug.getSeverity()) 
+                    || Integer.valueOf(30).equals(bug.getSeverity());
                 
-                // 满足任一条件即可
-                return isHighPriority || isSevere;
+                // 必须同时满足：中/低优先级 且 一般/轻微程度
+                return isMediumOrLowPriority && isMinorSeverity;
             })
             .collect(Collectors.toList());
         
@@ -1791,29 +1790,6 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         return BaseResult.success(true);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
