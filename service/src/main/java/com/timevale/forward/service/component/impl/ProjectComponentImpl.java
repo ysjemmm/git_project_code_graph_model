@@ -981,13 +981,17 @@ public class ProjectComponentImpl implements ProjectComponent {
             }
         });
 
-        // 项目发布时需要校验未关闭bug
+        // 项目发布时需要校验未关闭bug - 已移除此校验，允许项目关闭时有未解决的bug
+        // 前端会在关闭项目前对中/低优先级且一般/轻微程度的bug进行延期处理
+        // 对于紧急/高优先级或阻塞/严重程度的bug，前端会阻止项目关闭
+        /*
         if (released
                 // 注意 checkProductRelease 方法里包含更新线下 bug 的逻辑（延迟执行）
                 && !checkProductRelease(projectModifyReq.getId(), delayTasks)) {
             dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.BUG_OFFLINE, true,
                     "该项目还有bug未关闭，请关闭后再发布。"));
         }
+        */
 
         ProjectNodeDO submitTest = nodeMap.get(ProjectNodeEnum.SUBMIT_TEST.getText());
         if (submitTest != null) {
