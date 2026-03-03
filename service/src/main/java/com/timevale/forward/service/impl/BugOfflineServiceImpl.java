@@ -38,6 +38,7 @@ import com.timevale.forward.facade.api.client.BugOfflineService;
 import com.timevale.forward.facade.api.query.BugLogQueryList;
 import com.timevale.forward.facade.api.query.BugOfflineQueryList;
 import com.timevale.forward.facade.api.request.BugOfflineAddReq;
+import com.timevale.forward.facade.api.request.BugOfflineBatchDelayReq;
 import com.timevale.forward.facade.api.request.BugOfflineChangeProjectReq;
 import com.timevale.forward.facade.api.request.BugOfflineDelayHandleReq;
 import com.timevale.forward.facade.api.request.BugOfflineModifyReq;
@@ -1690,7 +1691,107 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         }
         return result;
     }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> batchDelay(BugOfflineBatchDelayReq bugOfflineBatchDelayReq) {
+        log.info("批量延期修复线下bug接收参数:{}", bugOfflineBatchDelayReq);
+        
+        List<Long> bugIds = bugOfflineBatchDelayReq.getBugIds();
+        if (CollUtil.isEmpty(bugIds)) {
+            log.info("bug ID列表为空");
+            return BaseResult.success(true);
+        }
+        
+        // 查询这些bug
+        List<BugOfflineDO> bugOfflineDOList = bugOfflineMapper.selectByIds(bugIds);
+        if (CollUtil.isEmpty(bugOfflineDOList)) {
+            log.info("未找到对应的bug");
+            return BaseResult.success(true);
+        }
+        
+        // 筛选出符合条件的bug：
+        // 1. 状态为：0-bug打开, 1-待修复, 2-待验收, 3-待确认
+        // 2. 且满足以下任一条件：
+        //    - 优先级为紧急(0)或高(10)
+        //    - 严重程度为阻塞(0)或严重(10)
+        List<BugOfflineDO> bugsToDelay = bugOfflineDOList.stream()
+            .filter(bug -> {
+                // 状态为未解决（不包括延期修复）
+                boolean isUnresolved = Lists.newArrayList(0, 1, 2, 3).contains(bug.getStatus());
+                if (!isUnresolved) {
+                    return false;
+                }
+                
+                // 优先级为紧急或高
+                boolean isHighPriority = Integer.valueOf(0).equals(bug.getPriority()) 
+                    || Integer.valueOf(10).equals(bug.getPriority());
+                
+                // 严重程度为阻塞或严重
+                boolean isSevere = Integer.valueOf(0).equals(bug.getSeverity()) 
+                    || Integer.valueOf(10).equals(bug.getSeverity());
+                
+                // 满足任一条件即可
+                return isHighPriority || isSevere;
+            })
+            .collect(Collectors.toList());
+        
+        if (CollUtil.isEmpty(bugsToDelay)) {
+            log.info("没有符合延期条件的bug");
+            return BaseResult.success(true);
+        }
+        
+        // 批量更新状态为延期修复(4)
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        String delayHandleReason = bugOfflineBatchDelayReq.getDelayHandleReason();
+        if (delayHandleReason == null || delayHandleReason.trim().isEmpty()) {
+            delayHandleReason = "批量延期修复";
+        }
+        
+        List<BugLogDO> bugLogDOList = new ArrayList<>();
+        
+        for (BugOfflineDO bug : bugsToDelay) {
+            // 更新bug状态
+            BugOfflineDO updateDO = new BugOfflineDO();
+            updateDO.setId(bug.getId());
+            updateDO.setStatus(4); // 延期修复
+            updateDO.setPrevStatus(bug.getStatus());
+            updateDO.setDelayHandleReason(delayHandleReason);
+            bugOfflineMapper.updateById(updateDO);
+            
+            // 状态变更日志
+            BugLogDO statusLogDO = new BugLogDO();
+            statusLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+            statusLogDO.setMainId(bug.getId());
+            statusLogDO.setField(BugFieldEnum.STATUS_CHANGE.getText());
+            statusLogDO.setOldValue(BugStatusEnum.getTextByCode(bug.getStatus()));
+            statusLogDO.setNewValue(BugStatusEnum.DELAY_HANDLE.getText());
+            statusLogDO.setCreateMan(userInfo.getAlias() + "-" + userInfo.getName());
+            statusLogDO.setCreateManId(userInfo.getId());
+            bugLogDOList.add(statusLogDO);
+            
+            // 延期原因日志
+            BugLogDO reasonLogDO = new BugLogDO();
+            reasonLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+            reasonLogDO.setMainId(bug.getId());
+            reasonLogDO.setField(BugFieldEnum.DELAY_HANDLE_REASON.getText());
+            reasonLogDO.setOldValue("");
+            reasonLogDO.setNewValue(delayHandleReason);
+            reasonLogDO.setCreateMan(userInfo.getAlias() + "-" + userInfo.getName());
+            reasonLogDO.setCreateManId(userInfo.getId());
+            bugLogDOList.add(reasonLogDO);
+        }
+        
+        // 批量插入变更日志
+        if (CollUtil.isNotEmpty(bugLogDOList)) {
+            bugLogMapper.batchInsert(bugLogDOList);
+        }
+        
+        log.info("成功将{}个bug状态变更为延期修复", bugsToDelay.size());
+        return BaseResult.success(true);
+    }
 }
+
 
 
 

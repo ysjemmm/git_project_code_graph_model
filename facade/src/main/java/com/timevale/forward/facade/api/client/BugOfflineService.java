@@ -165,5 +165,13 @@ public interface BugOfflineService {
      */
     BaseResult<TrackExportLogFileVO> export(BugOfflineQueryList bugOfflineQueryList);
 
+    /**
+     * 批量延期修复线下bug
+     * 将符合条件的bug（状态为0/1/2/3且优先级为紧急/高或严重程度为阻塞/严重）状态变更为延期修复
+     * 
+     * @param bugOfflineBatchDelayReq 批量延期修复参数
+     * @return Boolean
+     */
+    BaseResult<Boolean> batchDelay(BugOfflineBatchDelayReq bugOfflineBatchDelayReq);
 
 }
