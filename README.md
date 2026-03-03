@@ -12,6 +12,9 @@
 - 🚀 **增量分析** - 支持基于 Merkle Tree 的 Git 增量分析，提高大型项目的处理效率
 - 🔄 **多Git仓库支持** - 支持同时分析多个项目，项目级别隔离
 
+<img width="2672" height="1282" alt="image" src="https://github.com/user-attachments/assets/828467ca-a932-4c12-952b-3b02216d892a" />
+
+
 ## 项目结构
 
 ```
