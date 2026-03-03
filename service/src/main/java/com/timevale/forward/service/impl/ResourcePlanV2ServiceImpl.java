@@ -390,7 +390,6 @@ public class ResourcePlanV2ServiceImpl implements ResourcePlanV2Service {
                         doItem.setOwner(item.getOwner());
                         doItem.setResourceType(item.getResourceType());
                         doItem.setResourceTime(item.getResourceTime());
-                        // 单条需求场景不需要 groupId
                         return doItem;
                     }).collect(Collectors.toList());
 

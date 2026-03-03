@@ -80,16 +80,19 @@
     </update>
 
     <select id="sumByGroupIds" resultType="java.util.HashMap">
-        SELECT product_demand_group_id AS groupId,
-               resource_type AS resourceType,
-               SUM(resource_time) AS totalTime
-        FROM product_demand_owner_time
-        WHERE is_deleted = 0
-        AND product_demand_group_id IN
+        SELECT COALESCE(pdgi.product_demand_group_id, pdot.product_demand_group_id) AS groupId,
+               pdot.resource_type AS resourceType,
+               SUM(pdot.resource_time) AS totalTime
+        FROM product_demand_owner_time pdot
+        LEFT JOIN product_demand_group_item pdgi
+               ON pdot.product_demand_id = pdgi.product_demand_id
+              AND pdgi.is_deleted = 0
+        WHERE pdot.is_deleted = 0
+        AND COALESCE(pdgi.product_demand_group_id, pdot.product_demand_group_id) IN
         <foreach collection="groupIds" item="gid" open="(" separator="," close=")">
             #{gid}
         </foreach>
-        GROUP BY product_demand_group_id, resource_type
+        GROUP BY COALESCE(pdgi.product_demand_group_id, pdot.product_demand_group_id), pdot.resource_type
     </select>
 
 </mapper>
