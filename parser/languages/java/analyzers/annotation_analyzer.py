@@ -56,3 +56,7 @@ class AnnotationAnalyzer(BaseAnalyzer):
         self.anno_info.annotation_name = node.extractions.get(JavaAstNodeType.EX_IDENTIFIER.value, "")
         self.anno_info.raw_metadata = node.extractions.get(JavaAstNodeType.EX_ANNOTATION_BODY.value, "")
 
+        _, self.anno_info.is_static = BaseAnalyzer.extract_modifiers(node)
+        self.anno_info.is_final = False
+        if self._is_nested:
+            self.anno_info.is_static = True

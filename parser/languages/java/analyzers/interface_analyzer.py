@@ -60,4 +60,10 @@ class InterfaceAnalyzer(BaseAnalyzer):
         """Extract interface"""
         self.interface_info.interface_name = node.extractions.get(JavaAstNodeType.EX_IDENTIFIER.value, "")
         self.interface_info.raw_metadata = node.extractions.get(JavaAstNodeType.EX_INTERFACE_BODY.value, "")
+
+        _, self.interface_info.is_static = BaseAnalyzer.extract_modifiers(node)
+        self.interface_info.is_final = False
+        if self._is_nested:
+            self.interface_info.is_static = True
+
         self.interface_info.extends_interfaces = AnalyzerHelper.extract_java_super_class(node, JavaAstNodeType.EXTENDS_INTERFACES)

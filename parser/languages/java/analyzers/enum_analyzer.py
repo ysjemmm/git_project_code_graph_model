@@ -62,4 +62,10 @@ class EnumAnalyzer(BaseAnalyzer):
         """Extract enum"""
         self.enum_info.enum_name = node.extractions.get(JavaAstNodeType.EX_IDENTIFIER.value, "")
         self.enum_info.raw_metadata = node.extractions.get(JavaAstNodeType.EX_ENUM_BODY.value, "")
+
+        _, self.enum_info.is_static = BaseAnalyzer.extract_modifiers(node)
+        self.enum_info.is_final = True
+        if self._is_nested:
+            self.enum_info.is_static = True
+
         self.enum_info.super_interfaces = AnalyzerHelper.extract_java_super_class(node, JavaAstNodeType.SUPER_INTERFACES)

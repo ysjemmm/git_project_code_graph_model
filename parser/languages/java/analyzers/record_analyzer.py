@@ -68,6 +68,11 @@ class RecordAnalyzer(BaseAnalyzer):
         self._record_info.record_name = node.extractions.get(JavaAstNodeType.EX_IDENTIFIER.value, "")
         self._record_info.type_parameters = AnalyzerHelper.extract_java_type_parameters(node)
         self._record_info.raw_metadata = node.extractions.get(JavaAstNodeType.EX_RECORD_BODY.value, "")
+
+        _, self._record_info.is_static = BaseAnalyzer.extract_modifiers(node)
+        if self._is_nested:
+            self._record_info.is_static = True
+
         self._record_info.super_interfaces = AnalyzerHelper.extract_java_super_class(node, JavaAstNodeType.SUPER_INTERFACES)
         # parse components
         from parser.languages.java.utils.analyzer_cache import AnalyzerCache

@@ -61,6 +61,7 @@ class ClassAnalyzer(BaseAnalyzer):
         # self.class_info.raw_metadata = node.extractions.get(JavaAstNodeType.EX_INTERFACE_BODY.value, "")
         self.class_info.type_parameters = AnalyzerHelper.extract_java_type_parameters(node)
         self.class_info.super_interfaces = AnalyzerHelper.extract_java_super_class(node, JavaAstNodeType.SUPER_INTERFACES)
+        self.class_info.is_final, self.class_info.is_static = BaseAnalyzer.extract_modifiers(node)
 
         super_classes = AnalyzerHelper.extract_java_super_class(node, JavaAstNodeType.SUPER_CLASS)
         self.class_info.super_class = super_classes[0] if super_classes else ""

@@ -86,6 +86,11 @@ class InterfaceInfo(BaseAstNode):
     extends_interfaces: List[str] = field(default_factory=list)
     symbol_id: str = ""
     raw_metadata: str = ""
+
+    # 嵌套 Interface 默认是 static
+    is_static: bool = False
+    # Interface 隐式为 final
+    is_final: bool = False
     
     @property
     def type_name(self) -> str:
@@ -111,6 +116,11 @@ class EnumInfo(BaseAstNode):
     nested_interfaces: List[InterfaceInfo] = field(default_factory=list)
     symbol_id: str = ""
     raw_metadata: str = ""
+
+    # 嵌套 Enum 默认是 static
+    is_static: bool = False
+    # Enum 隐式为 final
+    is_final: bool = True
     
     @property
     def type_name(self) -> str:
@@ -135,7 +145,12 @@ class RecordInfo(BaseAstNode):
     code_blocks: List[CodeBlockInfo] = field(default_factory=list)
     symbol_id: str = ""
     raw_metadata: str = ""
-    
+
+    # 顶层 Record 不能为 static，但嵌套 Record 默认是 static
+    is_static: bool = False
+    # Record 隐式为 final
+    is_final: bool = True
+
     @property
     def type_name(self) -> str:
         """Alias for record_name for consistency"""
@@ -154,7 +169,12 @@ class AnnotationTypeInfo(BaseAstNode):
     elements: List[FieldInfo] = field(default_factory=list)
     symbol_id: str = ""
     raw_metadata: str = ""
-    
+
+    # 嵌套 Annotation 默认是 static
+    is_static: bool = False
+    # Annotation 一定不能设置为 final
+    is_final: bool = False
+
     @property
     def type_name(self) -> str:
         """Alias for annotation_name for consistency"""
@@ -268,6 +288,9 @@ class ClassInfo(BaseAstNode):
     type_parameters: List[str] = field(default_factory=list)
     symbol_id: str = ""
     raw_metadata: str = ""
+
+    is_static: bool = False
+    is_final: bool = False
 
     # extended properties
     has_uri: bool = False
