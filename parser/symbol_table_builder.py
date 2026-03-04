@@ -55,19 +55,19 @@ class SymbolTableBuilder:
             self._register_import(import_info)
         
         # 处理所有类型声
-        for class_info in java_file.class_details:
+        for class_info in java_file.classes:
             self._register_class(class_info)
         
-        for interface_info in java_file.interface_details:
+        for interface_info in java_file.interfaces:
             self._register_interface(interface_info)
         
-        for enum_info in java_file.enum_details:
+        for enum_info in java_file.enums:
             self._register_enum(enum_info)
         
-        for record_info in java_file.record_details:
+        for record_info in java_file.records:
             self._register_record(record_info)
         
-        for annotation_info in java_file.annotation_details:
+        for annotation_info in java_file.annotations:
             self._register_annotation(annotation_info)
         
         # 第二阶段:解析所有类型(在所有符号注册完成后
@@ -1340,19 +1340,19 @@ class SymbolTableBuilder:
     def register_all_method_calls(self, java_file: JavaFileStructure):
         
         # 遍历所有类的方
-        for cls in java_file.class_details:
+        for cls in java_file.classes:
             self._register_class_method_calls(cls)
         
         # 遍历所有接口的方法
-        for interface in java_file.interface_details:
+        for interface in java_file.interfaces:
             self._register_interface_method_calls(interface)
         
         # 遍历所有枚举的方法
-        for enum in java_file.enum_details:
+        for enum in java_file.enums:
             self._register_enum_method_calls(enum)
         
         # 遍历所record 的方
-        for record in java_file.record_details:
+        for record in java_file.records:
             self._register_record_method_calls(record)
     
     def _register_class_method_calls(self, class_info: ClassInfo):
@@ -1541,19 +1541,19 @@ class SymbolTableBuilder:
     def register_all_field_accesses(self, java_file: JavaFileStructure):
         
         # 遍历所有类的方
-        for cls in java_file.class_details:
+        for cls in java_file.classes:
             self._register_class_field_accesses(cls)
         
         # 遍历所有接口的方法
-        for interface in java_file.interface_details:
+        for interface in java_file.interfaces:
             self._register_interface_field_accesses(interface)
         
         # 遍历所有枚举的方法
-        for enum in java_file.enum_details:
+        for enum in java_file.enums:
             self._register_enum_field_accesses(enum)
         
         # 遍历所record 的方
-        for record in java_file.record_details:
+        for record in java_file.records:
             self._register_record_field_accesses(record)
     
     def _register_class_field_accesses(self, class_info: ClassInfo):

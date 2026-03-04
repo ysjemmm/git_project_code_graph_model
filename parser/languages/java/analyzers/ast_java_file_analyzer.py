@@ -5,9 +5,8 @@ from typing import List, Dict
 from loraxmod import ExtractedNode
 
 from parser.languages.java import JavaAstNodeType
-from parser.languages.java.analyzers.record_analyzer import RecordAnalyzer
 from parser.languages.java.core.ast_node_types import JavaFileStructure, PackageInfo, ImportInfo, ClassInfo, EnumInfo, \
-    InterfaceInfo, AnnotationTypeInfo
+    InterfaceInfo, AnnotationTypeInfo, RecordInfo
 from parser.languages.java.core.base_analyzer import BaseAnalyzer
 from parser.languages.java.utils.analyzer_cache import AnalyzerCache
 from parser.languages.java.utils.analyzer_context import AnalyzerContext
@@ -76,11 +75,11 @@ class JavaFileAnalyzer(BaseAnalyzer):
         self.java_file_structure.import_details = self._extract_import_infos()
         self.java_file_structure.comments = self._extract_comments()
 
-        self.java_file_structure.class_details = self._extract_class_info(self.java_file_structure.symbol_id)
-        self.java_file_structure.enum_details = self._extract_enum_info(self.java_file_structure.symbol_id)
-        self.java_file_structure.interface_details = self._extract_interface_info(self.java_file_structure.symbol_id)
-        self.java_file_structure.annotation_details = self._extract_annotation_info(self.java_file_structure.symbol_id)
-        self.java_file_structure.record_details = self._extract_record_info(self.java_file_structure.symbol_id)
+        self.java_file_structure.classes = self._extract_class_info(self.java_file_structure.symbol_id)
+        self.java_file_structure.enums = self._extract_enum_info(self.java_file_structure.symbol_id)
+        self.java_file_structure.interfaces = self._extract_interface_info(self.java_file_structure.symbol_id)
+        self.java_file_structure.annotations = self._extract_annotation_info(self.java_file_structure.symbol_id)
+        self.java_file_structure.records = self._extract_record_info(self.java_file_structure.symbol_id)
 
         return java_file_structure
 
@@ -174,7 +173,7 @@ class JavaFileAnalyzer(BaseAnalyzer):
                     objs.append(result)
         return objs
 
-    def _extract_record_info(self, parent_symbol_id: str) -> list[RecordAnalyzer]:
+    def _extract_record_info(self, parent_symbol_id: str) -> list[RecordInfo]:
         """Extract record info"""
         analyzer = AnalyzerCache.get_record_analyzer(self.context.project_name)
         nodes = self.type2node.get(JavaAstNodeType.RECORD_DECLARATION, [])
