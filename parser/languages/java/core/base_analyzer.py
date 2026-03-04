@@ -3,6 +3,7 @@ from typing import Dict, List
 
 from jedi.inference.gradual.typing import Tuple
 from loraxmod import ExtractedNode
+from sqlalchemy import false
 
 from parser.languages.java import JavaAstNodeType
 from parser.languages.java.core.ast_node_types import LocationRange
@@ -53,8 +54,14 @@ class BaseAnalyzer:
     is_static: ?
     """
     @staticmethod
-    def extract_modifiers(node) -> Tuple[bool, bool]:
+    def extract_modifiers(node: ExtractedNode) -> Tuple[bool, bool]:
         """Extract modifiers from node"""
-        text = AstTool.node_text(node)
-        modifiers = [m.strip() for m in text.split() if m.strip() == 'final' or m.strip() == 'static']
-        return modifiers.__contains__("final"), modifiers.__contains__("static")
+        modifier = node
+        if node.node_type != JavaAstNodeType.MODIFIERS.value:
+            modifier = AstTool.find_child_by_type(node, JavaAstNodeType.MODIFIERS.value, True)
+        if modifier is not None:
+            return (
+              " final" in AstTool.node_text(modifier),
+              " static" in AstTool.node_text(modifier)
+            )
+        return False, False

@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from parser.languages.java.core.ast_node_types import JavaFileStructure, PackageInfo, ClassInfo
+from parser.languages.java.core.ast_node_types import JavaFileStructure, PackageInfo
 from parser.languages.java.symbol.symbol_commons import ProjectSymbolTable, JavaSymbol
 
 java_class_name_mapping = {

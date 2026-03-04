@@ -22,7 +22,7 @@ class JavaFileAnalyzer(BaseAnalyzer):
         self.symbol_table = symbol_table
         self.auto_resolve_types = auto_resolve_types
         self.current_file = file_path or ""
-        self.relative_file = str(Path(self.current_file).relative_to(self.context.project_path))
+        self.relative_file = str(Path(self.current_file).relative_to(context.project_path))
         self.type2node: Dict[JavaAstNodeType, List[ExtractedNode]] = {}
 
         self.ast_node = None

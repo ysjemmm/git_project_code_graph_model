@@ -287,8 +287,8 @@ class GitToNeo4jImporter:
             ast_data_list = []
             
             # 需要获取第一个源代码目录作为基础路径
-            first_source_dir = java_source_dirs[0]
-            first_source_path = os.path.join(repo_cache_dir, first_source_dir.replace('/', os.sep))
+            # first_source_dir = java_source_dirs[0]
+            # first_source_path = os.path.join(repo_cache_dir, first_source_dir.replace('/', os.sep))
             
             # 创建全局符号表
             global_symbol_table = SymbolTable()
@@ -296,7 +296,7 @@ class GitToNeo4jImporter:
             # 创建分析器上下文
             context = AnalyzerContext(
                 project_name=project_name,
-                project_path=first_source_path,
+                project_path=repo_cache_dir,
                 root_project_symbol_id=AnalyzerHelper.generate_symbol_id_for_project(project_name),
                 parser=Parser("java")
             )
@@ -459,7 +459,7 @@ class GitToNeo4jImporter:
         except Exception as e:
             logger.info(f"[ERROR] 解析 {java_file_path} 失败: {e}")
             import traceback
-            logger.debug(traceback.format_exc())
+            logger.error(traceback.format_exc())
             return None
     
     def disconnect(self):

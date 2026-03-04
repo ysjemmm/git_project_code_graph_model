@@ -9,7 +9,6 @@ from typing import Dict, Set, List, Any, Tuple
 from parser.languages.java.core.ast_node_types import JavaFileStructure, ClassInfo, InterfaceInfo, \
     EnumInfo, AnnotationTypeInfo, RecordInfo, MethodInfo, ConstructorInfo, ParameterInfo, FieldInfo, EnumConstantInfo, \
     CodeBlockInfo
-from parser.languages.java.utils.analyzer_helper import AnalyzerHelper
 from parser.utils.logger import get_logger
 from storage.neo4j.connector import Neo4jConnector
 from storage.neo4j.field_names import (
@@ -409,7 +408,8 @@ class Neo4jExporterAST:
             return
 
         java_object_node = JavaObjectNodeGraphNode()
-        class_data.name = class_data.class_name
+        java_object_node.name = class_data.class_name
+        java_object_node.qualified_name = java_file_node.package_name + "." + class_data.class_name
         java_object_node.belong_project = java_file_node.belong_project
         java_object_node.symbol_id = class_data.symbol_id  # 使用 analyzer 生成 symbol_id
         java_object_node.parent_symbol_id = class_data.parent_symbol_id
@@ -467,6 +467,7 @@ class Neo4jExporterAST:
 
         java_object_node = JavaObjectNodeGraphNode()
         java_object_node.name = interface_data.interface_name
+        java_object_node.qualified_name = java_file_node.package_name + "." + interface_data.interface_name
         java_object_node.belong_project = java_file_node.belong_project
         java_object_node.symbol_id = interface_data.symbol_id 
         java_object_node.parent_symbol_id = interface_data.parent_symbol_id
@@ -505,6 +506,7 @@ class Neo4jExporterAST:
 
         java_object_node = JavaObjectNodeGraphNode()
         java_object_node.name = enum_data.enum_name
+        java_object_node.qualified_name = java_file_node.package_name + "." + enum_data.enum_name
         java_object_node.belong_project = java_file_node.belong_project
         java_object_node.symbol_id = enum_data.symbol_id 
         java_object_node.parent_symbol_id = enum_data.parent_symbol_id
@@ -552,6 +554,7 @@ class Neo4jExporterAST:
 
         java_object_node = JavaObjectNodeGraphNode()
         java_object_node.name = annotation_data.annotation_name
+        java_object_node.qualified_name = java_file_node.package_name + "." + annotation_data.annotation_name
         java_object_node.belong_project = java_file_node.belong_project
         java_object_node.symbol_id = annotation_data.symbol_id
         java_object_node.parent_symbol_id = annotation_data.parent_symbol_id
@@ -583,6 +586,7 @@ class Neo4jExporterAST:
 
         java_object_node = JavaObjectNodeGraphNode()
         java_object_node.name = record_data.record_name
+        java_object_node.qualified_name = java_file_node.package_name + "." + record_data.record_name
         java_object_node.belong_project = java_file_node.belong_project
         java_object_node.symbol_id = record_data.symbol_id  
         java_object_node.parent_symbol_id = record_data.parent_symbol_id
@@ -1024,6 +1028,7 @@ class Neo4jExporterAST:
         
         java_object_node = JavaObjectNodeGraphNode()
         java_object_node.name = nested_class_data.class_name
+        java_object_node.qualified_name = parent_object_node.qualified_name + "." + nested_class_data.class_name
         java_object_node.belong_project = parent_object_node.belong_project
         java_object_node.symbol_id = nested_class_data.symbol_id  
         java_object_node.parent_symbol_id = nested_class_data.parent_symbol_id
@@ -1083,6 +1088,7 @@ class Neo4jExporterAST:
         
         java_object_node = JavaObjectNodeGraphNode()
         java_object_node.name = nested_interface_data.interface_name
+        java_object_node.qualified_name = parent_object_node.qualified_name + "." + nested_interface_data.interface_name
         java_object_node.belong_project = parent_object_node.belong_project
         java_object_node.symbol_id = nested_interface_data.symbol_id  
         java_object_node.parent_symbol_id = nested_interface_data.parent_symbol_id
@@ -1129,6 +1135,7 @@ class Neo4jExporterAST:
 
         java_object_node = JavaObjectNodeGraphNode()
         java_object_node.name = nested_enum_data.enum_name
+        java_object_node.qualified_name = parent_object_node.qualified_name + "." + nested_enum_data.enum_name
         java_object_node.belong_project = parent_object_node.belong_project
         java_object_node.symbol_id = nested_enum_data.symbol_id
         java_object_node.parent_symbol_id = nested_enum_data.parent_symbol_id
@@ -1181,6 +1188,7 @@ class Neo4jExporterAST:
 
         java_object_node = JavaObjectNodeGraphNode()
         java_object_node.name = nested_annotation_data.annotation_name
+        java_object_node.qualified_name = parent_object_node.qualified_name + "." + nested_annotation_data.annotation_name
         java_object_node.belong_project = parent_object_node.belong_project
         java_object_node.symbol_id = nested_annotation_data.symbol_id
         java_object_node.parent_symbol_id = nested_annotation_data.parent_symbol_id
@@ -1217,6 +1225,7 @@ class Neo4jExporterAST:
         
         java_object_node = JavaObjectNodeGraphNode()
         java_object_node.name = nested_record_data.record_name
+        java_object_node.qualified_name = parent_object_node.qualified_name + "." + nested_record_data.record_name
         java_object_node.belong_project = parent_object_node.belong_project
         java_object_node.symbol_id = nested_record_data.symbol_id  
         java_object_node.parent_symbol_id = nested_record_data.parent_symbol_id

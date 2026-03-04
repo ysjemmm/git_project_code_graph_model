@@ -10,11 +10,11 @@ class AstTool:
 
     @staticmethod
     def find_child_by_type(node: ExtractedNode, target_type: str, first: bool = False, **args) -> list[ExtractedNode] | ExtractedNode | None:
-        match nodes := AstTool.find_child_by_types(node, [target_type], **args):
-            case [single_node]:
-                return single_node if first else [single_node]
-            case _:
-                return nodes
+        nodes = AstTool.find_child_by_types(node, [target_type], **args)
+        if first:
+            return nodes[0] if nodes else None
+        else:
+            return nodes
 
     @staticmethod
     def node_text(node: NodeInterface | ExtractedNode, strip_multiline: bool = False) -> str:
