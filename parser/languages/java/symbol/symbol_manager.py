@@ -1,9 +1,17 @@
 import os
 from pathlib import Path
 
-from parser.languages.java.core.ast_node_types import JavaFileStructure, PackageInfo
+from parser.languages.java.core.ast_node_types import JavaFileStructure, PackageInfo, ClassInfo
 from parser.languages.java.symbol.symbol_commons import ProjectSymbolTable, JavaSymbol
 
+java_class_name_mapping = {
+        'ClassInfo': 'class_name',
+        'InterfaceInfo': 'interface_name',
+        'AnnotationTypeInfo': 'annotation_name',
+        'EnumInfo': 'enum_name',
+        'RecordInfo': 'record_name',
+}
+java_class_nested_mapping = ['nested_classes', 'nested_interfaces', 'nested_enums', 'nested_annotations', 'nested_records']
 
 class SymbolManager:
 
@@ -16,28 +24,45 @@ class SymbolManager:
         return self.project_symbol_table_cache[project_name]
 
     def collect_from_java_file(self, project_name: str, java_file_structure: JavaFileStructure):
-        project_symbol_table_cache = self.get_project_symbol_table_cache(project_name)
-
         fqn_path = SymbolManager._extract_package_path(java_file_structure.package_info,
                                                        java_file_structure.relative_path)
+        for c in java_file_structure.classes:
+            self._extract_java_class_symbol(project_name, fqn_path, c)
+        for c in java_file_structure.interfaces:
+            self._extract_java_class_symbol(project_name, fqn_path, c)
+        for c in java_file_structure.enums:
+            self._extract_java_class_symbol(project_name, fqn_path, c)
+        for c in java_file_structure.annotations:
+            self._extract_java_class_symbol(project_name, fqn_path, c)
+        for c in java_file_structure.records:
+            self._extract_java_class_symbol(project_name, fqn_path, c)
 
-        element_mappings = [
-            (java_file_structure.classes, 'class_name'),
-            (java_file_structure.interfaces, 'interface_name'),
-            (java_file_structure.annotations, 'annotation_name'),
-            (java_file_structure.enums, 'enum_name'),
-            (java_file_structure.records, 'record_name'),
-        ]
+    def _extract_java_class_symbol(self, project_name, parent_fqn_path, class_info, parent_java_symbol: JavaSymbol | None = None) -> JavaSymbol:
+        project_symbol_table_cache = self.get_project_symbol_table_cache(project_name)
 
-        for elements, name_attr in element_mappings:
-            for element in elements:
-                element_name = getattr(element, name_attr)
-                java_symbol = JavaSymbol(element.symbol_id, element_name, fqn_path)
-                fqn_path_cls = fqn_path + "." + element_name
+        class_name = getattr(class_info, java_class_name_mapping.get( class_info.__class__.__name__))
+        if class_name is None:
+            raise RuntimeError(f"[SymbolManager]: Class {class_name} not found in class info {class_info}")
 
-                project_symbol_table_cache.fqn_class_index[fqn_path_cls] = java_symbol
-                project_symbol_table_cache.simple_class_name_index[element_name].add(fqn_path_cls)
-                project_symbol_table_cache.package_class_index[fqn_path].add(element_name)
+        java_symbol = JavaSymbol(class_info.symbol_id, class_name, parent_fqn_path)
+        fqn_path_cls = parent_fqn_path + "." + class_name
+
+        project_symbol_table_cache.fqn_class_index[fqn_path_cls] = java_symbol
+        project_symbol_table_cache.simple_class_name_index[class_name].add(fqn_path_cls)
+        project_symbol_table_cache.package_class_index[parent_fqn_path].add(class_name)
+
+        if parent_java_symbol is not None:
+            if class_info.is_static:
+                parent_java_symbol.static_inner_classes.add(class_info.class_name)
+            else:
+                parent_java_symbol.inner_classes.add(class_info.class_name)
+
+        # 处理嵌套类
+        for mapping in java_class_nested_mapping:
+            for nested_class in getattr(class_info, mapping, []):
+                self._extract_java_class_symbol(project_name, fqn_path_cls, nested_class, java_symbol)
+
+        return java_symbol
 
     @staticmethod
     def _extract_package_path(package_info: PackageInfo, file_path: str) -> str:
