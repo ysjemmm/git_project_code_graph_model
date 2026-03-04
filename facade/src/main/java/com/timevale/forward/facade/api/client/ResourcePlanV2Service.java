@@ -2,6 +2,7 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
+import com.timevale.forward.facade.api.request.ResourcePlanSortReq;
 import com.timevale.forward.facade.api.request.ResourcePlanV2SaveReq;
 import com.timevale.forward.facade.api.result.ResourcePlanV2VO;
 import com.timevale.mandarin.common.annotation.RestClient;
@@ -37,4 +38,9 @@ public interface ResourcePlanV2Service {
      * 批量查询分组资源人天汇总
      */
     BaseResult<Map<Long, Map<String, java.math.BigDecimal>>> getGroupTimeSummary(List<Long> groupIds);
+
+    /**
+     * 资源规划内需求排序（用需求id，内部转分组项id，复用follow逻辑）
+     */
+    BaseResult<Boolean> sortDemandInResourcePlan(ResourcePlanSortReq req);
 }

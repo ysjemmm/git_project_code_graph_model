@@ -11,6 +11,8 @@ import com.timevale.forward.dal.entity.ProductDemandGroupItemDO;
 import com.timevale.forward.dal.entity.ProductDemandOwnerTimeDO;
 import com.timevale.forward.facade.api.client.ResourcePlanV2Service;
 import com.timevale.forward.facade.api.request.PersonAddReq;
+import com.timevale.forward.facade.api.request.ProductDemandGroupItemMoveReq;
+import com.timevale.forward.facade.api.request.ResourcePlanSortReq;
 import com.timevale.forward.facade.api.request.ResourcePlanV2SaveReq;
 import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
 import com.timevale.forward.facade.api.result.ResourcePlanV2VO;
@@ -20,9 +22,11 @@ import com.timevale.forward.model.enums.PersonLevelEnum;
 import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.service.component.BizLabelComponent;
 import com.timevale.forward.service.component.PersonComponent;
+import com.timevale.forward.service.component.ProductDemandGroupItemComponent;
 import com.timevale.forward.service.observer.event.ProductDemandToCopiedMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.dal.dao.ProductDemandGroupItemMapper;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.util.Pair;
@@ -61,6 +65,9 @@ public class ResourcePlanV2ServiceImpl implements ResourcePlanV2Service {
 
     @Resource
     private MessageEventPublisher messageEventPublisher;
+
+    @Resource
+    private ProductDemandGroupItemComponent productDemandGroupItemComponent;
 
     @Override
     public BaseResult<ResourcePlanV2VO> getResourcePlanV2(Long bizDomainGroupId, Long productDemandGroupId) {
@@ -359,5 +366,45 @@ public class ResourcePlanV2ServiceImpl implements ResourcePlanV2Service {
                     .put(resourceType, totalTime);
         }
         return BaseResult.success(result);
+    }
+
+    @Override
+    public BaseResult<Boolean> sortDemandInResourcePlan(ResourcePlanSortReq req) {
+        Long groupId = req.getProductDemandGroupId();
+
+        // 把需求id转成分组项id
+        ProductDemandGroupItemDO currentItem = productDemandGroupItemComponent.getByGroupIdAndDemandId(groupId, req.getProductDemandId());
+        if (currentItem == null) {
+            throw new BaseBizRuntimeException("需求不在当前分组中，请刷新后重试");
+        }
+
+        Long prevGroupItemId = null;
+        if (req.getPrevDemandId() != null) {
+            ProductDemandGroupItemDO prevItem = productDemandGroupItemComponent.getByGroupIdAndDemandId(groupId, req.getPrevDemandId());
+            if (prevItem == null) {
+                throw new BaseBizRuntimeException("目标位置上方的需求不存在，请刷新后重试");
+            }
+            prevGroupItemId = prevItem.getId();
+        }
+
+        Long nextGroupItemId = null;
+        if (req.getNextDemandId() != null) {
+            ProductDemandGroupItemDO nextItem = productDemandGroupItemComponent.getByGroupIdAndDemandId(groupId, req.getNextDemandId());
+            if (nextItem == null) {
+                throw new BaseBizRuntimeException("目标位置下方的需求不存在，请刷新后重试");
+            }
+            nextGroupItemId = nextItem.getId();
+        }
+
+        ProductDemandGroupItemMoveReq moveReq = new ProductDemandGroupItemMoveReq();
+        moveReq.setBizDomainGroupId(req.getBizDomainGroupId());
+        moveReq.setTargetGroupId(groupId);
+        moveReq.setMode("follow");
+        moveReq.setId(currentItem.getId());
+        moveReq.setPrevId(prevGroupItemId);
+        moveReq.setNextId(nextGroupItemId);
+
+        productDemandGroupItemComponent.moveProductDemand(moveReq);
+        return BaseResult.success(true);
     }
 }
