@@ -2,13 +2,14 @@
 Neo4j 导出器- 基于 AST 数据直接构建
 按照 java_neo4j_modules 标准，从 AST 节点处理器的输出直接构建图数据库
 """
-
+from collections import defaultdict
 from pathlib import Path
 from typing import Dict, Set, List, Any, Tuple
 
 from parser.languages.java.core.ast_node_types import JavaFileStructure, ClassInfo, InterfaceInfo, \
     EnumInfo, AnnotationTypeInfo, RecordInfo, MethodInfo, ConstructorInfo, ParameterInfo, FieldInfo, EnumConstantInfo, \
     CodeBlockInfo
+from parser.languages.java.symbol.symbol_commons import ClassLocation, ClassLocationType
 from parser.languages.java.symbol.symbol_manager import SymbolManager
 from parser.utils.logger import get_logger
 from storage.neo4j.connector import Neo4jConnector
@@ -108,7 +109,7 @@ class Neo4jExporterAST:
 
         self.symbol_manager = SymbolManager(project_name = project_name)
     
-    def export_from_ast_data(self, ast_data_list: List[Any],
+    def export_from_ast_data(self, ast_data_list: List[JavaFileStructure],
                             clear_database: bool = True,
                             symbol_tables: List[Any] = None) -> Dict:
         """导出 AST 数据到 Neo4j"""
@@ -122,11 +123,12 @@ class Neo4jExporterAST:
                 if ast_data:
                     self._collect_ast_file_nodes(ast_data)
             
-            # 处理符号表中的关系（继承、实现、调用、访问）
-            if symbol_tables:
-                for symbol_table in symbol_tables:
-                    if symbol_table:
-                        self._collect_relationships_from_symbol_table(symbol_table)
+            # 处理符号表中的关系（继承、实现、调用）
+            self._parse_extend_impl_relationships(ast_data_list)
+            # if symbol_tables:
+            #     for symbol_table in symbol_tables:
+            #         if symbol_table:
+            #             self._collect_relationships_from_symbol_table(symbol_table)
             
             self._create_nodes_batch()
             self._create_relationships_batch()
@@ -209,8 +211,7 @@ class Neo4jExporterAST:
 
         self.symbol_manager.collect_from_java_file(
             project_name=self.project_name,
-
-        )
+            java_file_structure=ast_data)
     
     def _collect_class_nodes(self, class_data: ClassInfo | None, java_file_node: JavaFileNodeGraphNode):
         """收集类定义的所有节点"""
@@ -232,6 +233,9 @@ class Neo4jExporterAST:
         java_object_node.from_type = ObjectFromType.INNER_DEFINITION.value
         java_object_node.request_uri = class_data.mapping_uri
         java_object_node.raw_metadata = "empty now"
+
+        java_object_node.super_class = class_data.super_class
+        java_object_node.super_interfaces = class_data.super_interfaces
 
         java_object_node.annotations = [ann.name for ann in class_data.annotations]
         
@@ -289,6 +293,8 @@ class Neo4jExporterAST:
         java_object_node.from_type = ObjectFromType.INNER_DEFINITION.value
         java_object_node.raw_metadata = "empty now"
 
+        java_object_node.super_interfaces = interface_data.extends_interfaces
+
         java_object_node.annotations = [ann.name for ann in interface_data.annotations]
 
         self.nodes_to_create[JavaNeo4jNodeType.JavaObject].append(java_object_node)
@@ -327,6 +333,8 @@ class Neo4jExporterAST:
         java_object_node.object_type = ObjectType.ENUM_TYPE.value
         java_object_node.from_type = ObjectFromType.INNER_DEFINITION.value
         java_object_node.raw_metadata = "empty now"
+
+        java_object_node.super_interfaces = enum_data.super_interfaces
 
         java_object_node.annotations = [ann.name for ann in enum_data.annotations]
 
@@ -409,6 +417,7 @@ class Neo4jExporterAST:
         java_object_node.from_type = ObjectFromType.INNER_DEFINITION.value
         java_object_node.raw_metadata = "empty now"
 
+        java_object_node.super_interfaces = record_data.super_interfaces
         java_object_node.annotations = [ann.name for ann in record_data.annotations]
 
         self.nodes_to_create[JavaNeo4jNodeType.JavaObject].append(java_object_node)
@@ -824,7 +833,59 @@ class Neo4jExporterAST:
             import traceback
             traceback.print_exc()
 
-    
+    def _parse_extend_impl_relationships(self, ast_data_list: List[JavaFileStructure]):
+        for ast_data in ast_data_list:
+            for c in ast_data.classes:
+                if c.super_class is not None and c.super_class.strip() != '':
+                    location = self.symbol_manager.parse_java_object_where(c.super_class.split("<")[0], ast_data, project_name=self.project_name)
+                    self._parse_class_location_to_node(location, c.symbol_id, JavaGraphEdgeType.EXTENDS.value, ObjectType.CLASS_TYPE)
+                for interface in c.super_interfaces:
+                    location = self.symbol_manager.parse_java_object_where(interface.split("<")[0], ast_data, project_name=self.project_name)
+                    self._parse_class_location_to_node(location, c.symbol_id, JavaGraphEdgeType.IMPLEMENTS.value, ObjectType.INTERFACE_TYPE)
+            for c in ast_data.interfaces:
+                for interface in c.extends_interfaces:
+                    location = self.symbol_manager.parse_java_object_where(interface.split("<")[0], ast_data, project_name=self.project_name)
+                    self._parse_class_location_to_node(location, c.symbol_id, JavaGraphEdgeType.EXTENDS.value, ObjectType.INTERFACE_TYPE)
+            for c in ast_data.enums:
+                for interface in c.super_interfaces:
+                    location = self.symbol_manager.parse_java_object_where(interface.split("<")[0], ast_data, project_name=self.project_name)
+                    self._parse_class_location_to_node(location, c.symbol_id, JavaGraphEdgeType.IMPLEMENTS.value, ObjectType.INTERFACE_TYPE)
+            for c in ast_data.records:
+                for interface in c.super_interfaces:
+                    location = self.symbol_manager.parse_java_object_where(interface.split("<")[0], ast_data, project_name=self.project_name)
+                    self._parse_class_location_to_node(location, c.symbol_id,JavaGraphEdgeType.IMPLEMENTS.value, ObjectType.INTERFACE_TYPE)
+
+    def _parse_class_location_to_node(self, location: ClassLocation, class_symbol_id: str, extend_type: str, object_type: ObjectType):
+        if location is None:
+            return
+        if location.type == ClassLocationType.EXTERNAL:
+            java_object = JavaObjectNodeGraphNode()
+            java_object.symbol_id = location.jar_path + '<path>' + location.fqn
+            java_object.qualified_name = location.fqn
+            java_object.name = location.fqn.rsplit(".", 1)[-1]
+            java_object.object_type = object_type.value
+            java_object.belong_project = Path(location.jar_path).stem if location.jar_path else f"UNKNOWN[{ClassLocationType.EXTERNAL.value}]"
+            java_object.from_type = ObjectFromType.EXTERNAL_DEFINITION.value
+            self.created_nodes.add(java_object.symbol_id)
+            self.nodes_to_create[JavaNeo4jNodeType.JavaObject].append(java_object)
+            self.relationships_to_create.append((class_symbol_id, java_object.symbol_id, extend_type))
+        elif location.type == ClassLocationType.INTERNAL:
+            self.relationships_to_create.append((class_symbol_id, location.symbol_id, extend_type))
+        elif location.type == ClassLocationType.UNKNOWN:
+            java_object = JavaObjectNodeGraphNode()
+            # 修复：处理 None 值
+            jar_path = location.jar_path or "UNKNOWN"
+            fqn = location.fqn or "UNKNOWN"
+            java_object.symbol_id = f"{jar_path}<path>{fqn}"
+            java_object.belong_project = "UNKNOWN"
+            java_object.qualified_name = fqn
+            java_object.name = fqn.rsplit(".", 1)[-1] if fqn != "UNKNOWN" else "UNKNOWN"
+            java_object.object_type = object_type.value
+            java_object.from_type = ObjectFromType.UNKNOWN_DEFINITION.value
+            self.created_nodes.add(java_object.symbol_id)
+            self.nodes_to_create[JavaNeo4jNodeType.JavaObject].append(java_object)
+            self.relationships_to_create.append((class_symbol_id, java_object.symbol_id, extend_type))
+
     # ==================== 嵌套类型处理方法 ====================
     
     def _collect_nested_class_nodes(self, nested_class_data: ClassInfo, parent_object_node: JavaObjectNodeGraphNode, depth: int = 0):

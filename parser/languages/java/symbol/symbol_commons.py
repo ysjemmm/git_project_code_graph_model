@@ -19,3 +19,4 @@ class ClassLocation:
     jar_path: Optional[str]     # JAR 路径（仅外部类）
     file_path: Optional[str]    # 文件路径（仅内部类）
     resolution_method: str      # 解析方法
+    symbol_id: Optional[str] = None  # 符号 ID

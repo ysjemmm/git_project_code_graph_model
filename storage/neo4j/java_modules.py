@@ -34,6 +34,7 @@ class ObjectFromType(Enum):
     INNER_DEFINITION = "InnerDefinition"          # 文件内顶层定义
     NESTED_DEFINITION = "NestedDefinition"        # 嵌套定义（类内部的类/接口/枚举等）
     EXTERNAL_DEFINITION = "ExternalDefinition"    # 外部引用
+    UNKNOWN_DEFINITION = "UnknownDefinition"      # 未知引用
 
 class JavaGraphEdgeType(Enum):
     
@@ -185,6 +186,9 @@ class JavaObjectNodeGraphNode(ObjectNodeGraphNode):
     type_parameters: List[str] = None
     simple_comment: str = ""  # 简短注释（直接存储）
     has_detailed_comment: bool = False  # 是否有详细注释节点
+
+    super_class: str
+    super_interfaces: list[str] = field(default_factory=list)
     
     def get_unique_key(self) -> Dict[str, Any]:
         

@@ -239,7 +239,8 @@ class SymbolManager:
                     fqn=internal_cls.fqn,
                     jar_path=None,
                     file_path=internal_cls.file_path,
-                    resolution_method="same_package_internal"
+                    resolution_method="same_package_internal",
+                    symbol_id=internal_cls.symbol_id
                 )
         
         # 2. 检查是否是项目内部的 import 类
@@ -258,7 +259,8 @@ class SymbolManager:
                             fqn=internal_cls.fqn,
                             jar_path=None,
                             file_path=internal_cls.file_path,
-                            resolution_method="explicit_import_internal"
+                            resolution_method="explicit_import_internal",
+                            symbol_id=internal_cls.symbol_id
                         )
         
         # 3. 检查是否是外部 JAR 的同包类
@@ -270,7 +272,8 @@ class SymbolManager:
                     fqn=external_cls.fqn,
                     jar_path=external_cls.jar_path,
                     file_path=None,
-                    resolution_method="same_package_external"
+                    resolution_method="same_package_external",
+                    symbol_id=None  # JAR 类没有 symbol_id
                 )
         
         # 4. 检查是否是外部 JAR 的 import 类
@@ -288,7 +291,8 @@ class SymbolManager:
                             fqn=external_cls.fqn,
                             jar_path=external_cls.jar_path,
                             file_path=None,
-                            resolution_method="explicit_import_external"
+                            resolution_method="explicit_import_external",
+                            symbol_id=None  # JAR 类没有 symbol_id
                         )
             
             # 4.2 通配符 import
@@ -308,7 +312,8 @@ class SymbolManager:
                             fqn=internal_cls.fqn,
                             jar_path=None,
                             file_path=internal_cls.file_path,
-                            resolution_method="wildcard_import_internal"
+                            resolution_method="wildcard_import_internal",
+                            symbol_id=internal_cls.symbol_id
                         )
                 
                 # 再检查外部 JAR
@@ -319,7 +324,8 @@ class SymbolManager:
                         fqn=external_cls.fqn,
                         jar_path=external_cls.jar_path,
                         file_path=None,
-                        resolution_method="wildcard_import_external"
+                        resolution_method="wildcard_import_external",
+                        symbol_id=None  # JAR 类没有 symbol_id
                     )
         
         # 5. 检查是否是 java.lang 包
@@ -332,16 +338,18 @@ class SymbolManager:
                     fqn=external_cls.fqn,
                     jar_path=external_cls.jar_path,
                     file_path=None,
-                    resolution_method="java_lang"
+                    resolution_method="java_lang",
+                    symbol_id=None  # JAR 类没有 symbol_id
                 )
         
         # 6. 未知
         return ClassLocation(
             type=ClassLocationType.UNKNOWN,
-            fqn=None,
+            fqn=identifier,  # 保留原始标识符作为 fqn
             jar_path=None,
             file_path=None,
-            resolution_method="unresolved"
+            resolution_method="unresolved",
+            symbol_id=None
         )
     
     def _resolve_fqn_location_db(
@@ -359,7 +367,8 @@ class SymbolManager:
                     fqn=internal_cls.fqn,
                     jar_path=None,
                     file_path=internal_cls.file_path,
-                    resolution_method="fqn_internal"
+                    resolution_method="fqn_internal",
+                    symbol_id=internal_cls.symbol_id
                 )
         
         # 再检查外部 JAR
@@ -371,7 +380,8 @@ class SymbolManager:
                     fqn=external_cls.fqn,
                     jar_path=external_cls.jar_path,
                     file_path=None,
-                    resolution_method="fqn_external"
+                    resolution_method="fqn_external",
+                    symbol_id=None  # JAR 类没有 symbol_id
                 )
         
         # 未知
@@ -380,7 +390,8 @@ class SymbolManager:
             fqn=fqn,
             jar_path=None,
             file_path=None,
-            resolution_method="fqn_unresolved"
+            resolution_method="fqn_unresolved",
+            symbol_id=None
         )
     
     def _extract_package_from_file_path(self, file_path: str) -> str:
