@@ -128,7 +128,8 @@ class EnumBodyAnalyzer(BaseAnalyzer):
             cns = EnumConstantInfo()
             cns.set_pos_from_node(n)
             cns.constant_name = n.extractions.get(JavaAstNodeType.EX_IDENTIFIER.value, "")
-            cns.constant_body = n.extractions.get(JavaAstNodeType.EX_ENUM_CONSTANT_BODY.value, "")
+            cns.constant_body = n.extractions.get(JavaAstNodeType.EX_ENUM_CONSTANT_BODY.value,
+                                                  n.extractions.get(JavaAstNodeType.EX_ENUM_CONSTANT_PARAM.value, ""))
             cns.raw_constant = AstTool.node_text(n)
             cns.annotations = AnalyzerHelper.extract_java_marked_annotation(
                 AstTool.find_child_by_type(n, JavaAstNodeType.MODIFIERS.value, True)
