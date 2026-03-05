@@ -43,7 +43,7 @@ class EnumBodyAnalyzer(BaseAnalyzer):
         self._init()
         self._ast_must_nodes(node)
 
-        AnalyzerHelper.extract_java_nested_object(self._enum_info, self.type2node, context)
+        AnalyzerHelper.extract_java_nested_object(self._enum_info, self.type2node, context, enum_info.symbol_id)
 
         self._enum_info.comments = self._extract_comments(context)
         self._enum_info.enum_constants = self._extract_constants(context)
@@ -129,6 +129,7 @@ class EnumBodyAnalyzer(BaseAnalyzer):
             cns.set_pos_from_node(n)
             cns.constant_name = n.extractions.get(JavaAstNodeType.EX_IDENTIFIER.value, "")
             cns.constant_body = n.extractions.get(JavaAstNodeType.EX_ENUM_CONSTANT_BODY.value, "")
+            cns.raw_constant = AstTool.node_text(n)
             cns.annotations = AnalyzerHelper.extract_java_marked_annotation(
                 AstTool.find_child_by_type(n, JavaAstNodeType.MODIFIERS.value, True)
             )
