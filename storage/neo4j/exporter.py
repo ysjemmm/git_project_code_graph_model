@@ -786,7 +786,6 @@ class Neo4jExporterAST:
         java_enum_constant_node.start_column = constant_data.location.start_column
         java_enum_constant_node.end_column = constant_data.location.end_column
         java_enum_constant_node.raw_metadata = constant_data.raw_constant
-        java_enum_constant_node.body = constant_data.constant_body
         java_enum_constant_node.arguments = constant_data.arguments
         java_enum_constant_node.annotations = [ann.name for ann in constant_data.annotations]
 

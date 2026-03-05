@@ -258,7 +258,6 @@ class ParameterInfo(BaseAstNode):
 class EnumConstantInfo(BaseAstNode):
     """Enum constant information"""
     constant_name: str = ""
-    constant_body: str = ""
     annotations: List[MarkedAnnotationInfo] = field(default_factory=list)
     arguments: List[str] = field(default_factory=list)
     raw_constant: str = ""

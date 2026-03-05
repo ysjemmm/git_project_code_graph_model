@@ -244,7 +244,6 @@ class JavaFieldNodeGraphNode(FieldNodeGraphNode):
 class JavaEnumConstantNodeGraphNode(FieldNodeGraphNode):
     annotations: List[str] = None  # 注解列表
     arguments: List[str] = None
-    body: str = ""
 
     def get_unique_key(self) -> Dict[str, Any]:
         return {
