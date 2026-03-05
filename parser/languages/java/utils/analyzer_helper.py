@@ -103,7 +103,7 @@ class AnalyzerHelper:
         return parameters, comments
 
     @staticmethod
-    def extract_java_nested_object(filler, type2node: Dict, context):
+    def extract_java_nested_object(filler, type2node: Dict, context, parent_symbol_id: str):
         from parser.languages.java.analyzers.class_analyzer import ClassAnalyzer
         from parser.languages.java.analyzers.enum_analyzer import EnumAnalyzer
         from parser.languages.java.analyzers.interface_analyzer import InterfaceAnalyzer
@@ -122,7 +122,7 @@ class AnalyzerHelper:
             if filler.nested_classes is None:
                 filler.nested_classes = []
             filler.nested_classes.append(
-                class_analyzer.handle_class_declaration(nested_obj, context))
+                class_analyzer.handle_class_declaration(nested_obj, context, parent_symbol_id))
 
         for nested_obj in type2node.get(JavaAstNodeType.ENUM_DECLARATION, []):
             if enum_analyzer is None:
@@ -130,7 +130,7 @@ class AnalyzerHelper:
             if filler.nested_enums is None:
                 filler.nested_enums = []
             filler.nested_enums.append(
-                enum_analyzer.handle_enum_declaration(nested_obj, context))
+                enum_analyzer.handle_enum_declaration(nested_obj, context, parent_symbol_id))
 
         for nested_obj in type2node.get(JavaAstNodeType.INTERFACE_DECLARATION, []):
             if interface_analyzer is None:
@@ -138,7 +138,7 @@ class AnalyzerHelper:
             if filler.nested_interfaces is None:
                 filler.nested_interfaces = []
             filler.nested_interfaces.append(
-                interface_analyzer.handle_interface_declaration(nested_obj, context))
+                interface_analyzer.handle_interface_declaration(nested_obj, context, parent_symbol_id))
 
         for nested_obj in type2node.get(JavaAstNodeType.ANNOTATION_TYPE_DECLARATION, []):
             if annotation_analyzer is None:
@@ -146,7 +146,7 @@ class AnalyzerHelper:
             if filler.nested_annotations is None:
                 filler.nested_annotations = []
             filler.nested_annotations.append(
-                annotation_analyzer.handle_annotation_declaration(nested_obj, context))
+                annotation_analyzer.handle_annotation_declaration(nested_obj, context, parent_symbol_id))
 
         for nested_obj in type2node.get(JavaAstNodeType.RECORD_DECLARATION, []):
             if record_analyzer is None:
@@ -154,7 +154,7 @@ class AnalyzerHelper:
             if filler.nested_records is None:
                 filler.nested_records = []
             filler.nested_records.append(
-                record_analyzer.handle_record_declaration(nested_obj, context))
+                record_analyzer.handle_record_declaration(nested_obj, context, parent_symbol_id))
 
     @staticmethod
     def _parse_annotation_param_comments(parameters: str | None) -> Tuple[Dict[str, str], List[str]]:

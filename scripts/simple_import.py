@@ -27,8 +27,11 @@ def main():
     neo4j_database = "neo4j"
 
     # Git 配置
-    repo_url = "http://git.timevale.cn:8081/devops/lops-flight.git"
-    branch = "master"
+    # repo_url = "http://git.timevale.cn:8081/devops/lops-flight.git"
+    # branch = "master"
+
+    repo_url = "http://git.timevale.cn:8081/epaas/esign-egress-gateway.git"
+    branch = "release/http_async_20250916"
 
     # 创建导入器
     git_importer = GitToNeo4jImporter(neo4j_uri, neo4j_user, neo4j_password, neo4j_database)

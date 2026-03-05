@@ -323,12 +323,9 @@ class GitToNeo4jImporter:
             
             # 第七步:导出到Neo4j
             logger.info(f"\n导出到Neo4j...")
-            exporter = Neo4jExporterAST(self.connector)
+            exporter = Neo4jExporterAST(self.connector, project_name, context.root_project_symbol_id, repo_cache_dir)
             result = exporter.export_from_ast_data(
                 ast_data_list,
-                project_name,
-                context.root_project_symbol_id,
-                repo_cache_dir,
                 clear_database,
                 [global_symbol_table]
             )

@@ -9,6 +9,7 @@ from typing import Dict, Set, List, Any, Tuple
 from parser.languages.java.core.ast_node_types import JavaFileStructure, ClassInfo, InterfaceInfo, \
     EnumInfo, AnnotationTypeInfo, RecordInfo, MethodInfo, ConstructorInfo, ParameterInfo, FieldInfo, EnumConstantInfo, \
     CodeBlockInfo
+from parser.languages.java.symbol.symbol_manager import SymbolManager
 from parser.utils.logger import get_logger
 from storage.neo4j.connector import Neo4jConnector
 from storage.neo4j.field_names import (
@@ -31,7 +32,6 @@ class CommentStorageConfig:
     SHORT_COMMENT_THRESHOLD = 200  # 短注释阈值（字符数）
     MULTIPLE_COMMENT_THRESHOLD = 3  # 多条注释阈值
     MULTIPLE_COMMENT_MIN_LENGTH = 100  # 多条注释最小总长度
-
 
 class JavadocParser:
     """Javadoc解析器"""
@@ -92,31 +92,27 @@ class JavadocParser:
         result.summary = ' '.join(summary_lines)
         return result
 
-
 class Neo4jExporterAST:
     """基于 AST 数据的 Neo4j 导出器"""
     
-    def __init__(self, connector: Neo4jConnector):
+    def __init__(self, connector: Neo4jConnector, project_name: str = "",
+                            project_id: str = "",
+                            project_path: str = "",):
         self.connector = connector
         self.created_nodes: Set[str] = set()
-        self.project_id = "project#?"
-        self.project_name = "?"
-        self.project_path = None
+        self.project_id = project_id
+        self.project_name = project_name
+        self.project_path = project_path
         self.relationships_to_create: List[Tuple[str, str, str]] = []
         self.nodes_to_create: Dict[JavaNeo4jNodeType, List] = {node_type: [] for node_type in JavaNeo4jNodeType}
+
+        self.symbol_manager = SymbolManager(project_name = project_name)
     
-    def export_from_ast_data(self, ast_data_list: List[Any], 
-                            project_name: str = "",
-                            project_id: str = "",
-                            project_path: str = "",
+    def export_from_ast_data(self, ast_data_list: List[Any],
                             clear_database: bool = True,
                             symbol_tables: List[Any] = None) -> Dict:
         """导出 AST 数据到 Neo4j"""
         try:
-            self.project_name = project_name
-            self.project_id = project_id
-            self.project_path = project_path
-            
             if clear_database:
                 self.connector.clear_database()
             
@@ -210,196 +206,10 @@ class Neo4jExporterAST:
         
         for record_data in ast_data.records:
             self._collect_record_nodes(record_data, java_file_node)
-    
-    def _get_attr(self, obj: Any, attr: str, default: Any = None) -> Any:
-        """获取对象属性，支持对象和字段"""
-        if obj is None:
-            return default
-        if isinstance(obj, dict):
-            return obj.get(attr, default)
-        return getattr(obj, attr, default)
-    
-    def _decide_comment_storage_strategy(self, comments: List[Any]) -> CommentStorageDecision:
-        """决定注释存储策略
-        
-        Args:
-            comments: 注释列表
-            
-        Returns:
-            CommentStorageDecision: 存储决策
-        """
-        if not comments:
-            return CommentStorageDecision.STORE_AS_ATTRIBUTE
-        
-        # 检查是否包含Javadoc
-        has_javadoc = any(
-            c.raw_comment.strip().startswith('/**') 
-            for c in comments 
-            if hasattr(c, 'raw_comment')
-        )
-        
-        if has_javadoc:
-            return CommentStorageDecision.CREATE_JAVADOC_NODE
-        
-        # 计算总长度
-        total_text = "\n".join([c.raw_comment for c in comments if hasattr(c, 'raw_comment')])
-        total_length = len(total_text)
-        
-        # 规则1: 总长度超过阈-> 创建长注释节点
-        if total_length > CommentStorageConfig.SHORT_COMMENT_THRESHOLD:
-            return CommentStorageDecision.CREATE_LONG_COMMENT_NODE
-        
-        # 规则2: 多条注释且总长点 > 100 -> 创建长注释节点
-        if (len(comments) > CommentStorageConfig.MULTIPLE_COMMENT_THRESHOLD and 
-            total_length > CommentStorageConfig.MULTIPLE_COMMENT_MIN_LENGTH):
-            return CommentStorageDecision.CREATE_LONG_COMMENT_NODE
-        
-        # 默认: 存为属性
-        return CommentStorageDecision.STORE_AS_ATTRIBUTE
-    
-    def _collect_comment_nodes(self, comments: List[Any], parent_symbol_id: str, 
-                              parent_node: Any, parent_belong_project: str) -> None:
-        """收集注释节点（混合策略）
-        
-        Args:
-            comments: 注释列表
-            parent_symbol_id: 父节点symbol_id
-            parent_node: 父节点对象（用于设置simple_comment属性）
-            parent_belong_project: 所属项目
-        """
-        if not comments:
-            parent_node.simple_comment = ""
-            parent_node.has_detailed_comment = False
-            return
-        
-        # 决定存储策略
-        decision = self._decide_comment_storage_strategy(comments)
-        
-        if decision == CommentStorageDecision.STORE_AS_ATTRIBUTE:
-            # 策略A: 存为属性
-            all_text = "\n".join([c.raw_comment for c in comments if hasattr(c, 'raw_comment')])
-            parent_node.simple_comment = all_text
-            parent_node.has_detailed_comment = False
-            
-        elif decision == CommentStorageDecision.CREATE_JAVADOC_NODE:
-            # 策略B: 创建Javadoc节点
-            parent_node.has_detailed_comment = True
-            self._create_javadoc_nodes(comments, parent_symbol_id, parent_node, parent_belong_project)
-            
-        elif decision == CommentStorageDecision.CREATE_LONG_COMMENT_NODE:
-            # 策略C: 创建长注释节点
-            parent_node.has_detailed_comment = True
-            self._create_long_comment_node(comments, parent_symbol_id, parent_belong_project)
-    
-    def _create_javadoc_nodes(self, comments: List[Any], parent_symbol_id: str,
-                             parent_node: Any, parent_belong_project: str) -> None:
-        """创建Javadoc节点
-        
-        Args:
-            comments: 注释列表
-            parent_symbol_id: 父节点symbol_id
-            parent_node: 父节点对象
-            parent_belong_project: 所属项目
-        """
-        javadoc_comments = []
-        other_comments = []
-        
-        for comment in comments:
-            if not hasattr(comment, 'raw_comment'):
-                continue
-            
-            if comment.raw_comment.strip().startswith('/**'):
-                javadoc_comments.append(comment)
-            else:
-                other_comments.append(comment)
-        
-        # 为每个Javadoc创建节点
-        for idx, comment in enumerate(javadoc_comments):
-            comment_node = CommentNodeGraphNode()
-            comment_node.content = comment.raw_comment
-            comment_node.comment_type = CommentType.JAVADOC.value
-            comment_node.belong_project = parent_belong_project
-            comment_node.char_count = len(comment.raw_comment)
-            comment_node.line_count = comment.raw_comment.count('\n') + 1
-            
-            # 解析Javadoc
-            javadoc_result = JavadocParser.parse(comment.raw_comment)
-            comment_node.javadoc_summary = javadoc_result.summary
-            comment_node.javadoc_params = javadoc_result.params
-            comment_node.javadoc_return = javadoc_result.return_desc
-            comment_node.javadoc_throws = javadoc_result.throws
-            comment_node.javadoc_author = javadoc_result.author
-            comment_node.javadoc_version = javadoc_result.version
-            comment_node.javadoc_since = javadoc_result.since
-            comment_node.javadoc_deprecated = javadoc_result.deprecated
-            comment_node.javadoc_see = javadoc_result.see
-            
-            # 位置信息
-            comment_node.start_line = comment.location.start_line
-            comment_node.end_line = comment.location.end_line
-            comment_node.start_column = comment.location.start_column
-            comment_node.end_column = comment.location.end_column
-            
-            # 生成symbol_id
-            comment_node.symbol_id = f"{parent_symbol_id}@javadoc#{idx}"
-            comment_node.parent_symbol_id = parent_symbol_id
-            comment_node.name = f"javadoc_{idx}"
-            
-            # 添加到待创建列表
-            self.nodes_to_create[JavaNeo4jNodeType.Comment].append(comment_node)
-            self.created_nodes.add(comment_node.symbol_id)
-            
-            # 创建关系
-            self.relationships_to_create.append(
-                (parent_symbol_id, comment_node.symbol_id, JavaGraphEdgeType.HAS_COMMENT.value)
-            )
-        
-        # 其他简短注释存为属性
-        if other_comments:
-            other_text = "\n".join([c.raw_comment for c in other_comments])
-            parent_node.simple_comment = other_text
-        else:
-            parent_node.simple_comment = ""
-    
-    def _create_long_comment_node(self, comments: List[Any], parent_symbol_id: str,
-                                  parent_belong_project: str) -> None:
-        """创建长注释节点（聚合所有注释）
-        
-        Args:
-            comments: 注释列表
-            parent_symbol_id: 父节点symbol_id
-            parent_belong_project: 所属项目
-        """
-        comment_node = CommentNodeGraphNode()
-        
-        # 合并所有注释
-        all_text = "\n---\n".join([c.raw_comment for c in comments if hasattr(c, 'raw_comment')])
-        comment_node.content = all_text
-        comment_node.comment_type = CommentType.LONG_COMMENT.value
-        comment_node.belong_project = parent_belong_project
-        comment_node.char_count = len(all_text)
-        comment_node.line_count = all_text.count('\n') + 1
-        
-        # 使用第一个和最后一个注释的位置
-        first_comment = comments[0]
-        last_comment = comments[-1]
-        comment_node.start_line = first_comment.location.start_line
-        comment_node.end_line = last_comment.location.end_line
-        comment_node.start_column = first_comment.location.start_column
-        comment_node.end_column = last_comment.location.end_column
-        
-        # 生成symbol_id
-        comment_node.symbol_id = f"{parent_symbol_id}@longcomment"
-        comment_node.parent_symbol_id = parent_symbol_id
-        comment_node.name = "long_comment"
-        
-        # 添加到待创建列表
-        self.nodes_to_create[JavaNeo4jNodeType.Comment].append(comment_node)
-        self.created_nodes.add(comment_node.symbol_id)
-        
-        # 创建关系
-        self.relationships_to_create.append(
-            (parent_symbol_id, comment_node.symbol_id, JavaGraphEdgeType.HAS_COMMENT.value)
+
+        self.symbol_manager.collect_from_java_file(
+            project_name=self.project_name,
+
         )
     
     def _collect_class_nodes(self, class_data: ClassInfo | None, java_file_node: JavaFileNodeGraphNode):
@@ -1257,3 +1067,194 @@ class Neo4jExporterAST:
         
         for component_data in nested_record_data.components:
             self._collect_record_component_nodes(component_data, java_object_node)
+
+    def _get_attr(self, obj: Any, attr: str, default: Any = None) -> Any:
+        """获取对象属性，支持对象和字段"""
+        if obj is None:
+            return default
+        if isinstance(obj, dict):
+            return obj.get(attr, default)
+        return getattr(obj, attr, default)
+
+    def _decide_comment_storage_strategy(self, comments: List[Any]) -> CommentStorageDecision:
+        """决定注释存储策略
+
+        Args:
+            comments: 注释列表
+
+        Returns:
+            CommentStorageDecision: 存储决策
+        """
+        if not comments:
+            return CommentStorageDecision.STORE_AS_ATTRIBUTE
+
+        # 检查是否包含Javadoc
+        has_javadoc = any(
+            c.raw_comment.strip().startswith('/**')
+            for c in comments
+            if hasattr(c, 'raw_comment')
+        )
+
+        if has_javadoc:
+            return CommentStorageDecision.CREATE_JAVADOC_NODE
+
+        # 计算总长度
+        total_text = "\n".join([c.raw_comment for c in comments if hasattr(c, 'raw_comment')])
+        total_length = len(total_text)
+
+        # 规则1: 总长度超过阈-> 创建长注释节点
+        if total_length > CommentStorageConfig.SHORT_COMMENT_THRESHOLD:
+            return CommentStorageDecision.CREATE_LONG_COMMENT_NODE
+
+        # 规则2: 多条注释且总长点 > 100 -> 创建长注释节点
+        if (len(comments) > CommentStorageConfig.MULTIPLE_COMMENT_THRESHOLD and
+                total_length > CommentStorageConfig.MULTIPLE_COMMENT_MIN_LENGTH):
+            return CommentStorageDecision.CREATE_LONG_COMMENT_NODE
+
+        # 默认: 存为属性
+        return CommentStorageDecision.STORE_AS_ATTRIBUTE
+
+    def _collect_comment_nodes(self, comments: List[Any], parent_symbol_id: str,
+                               parent_node: Any, parent_belong_project: str) -> None:
+        """收集注释节点（混合策略）
+
+        Args:
+            comments: 注释列表
+            parent_symbol_id: 父节点symbol_id
+            parent_node: 父节点对象（用于设置simple_comment属性）
+            parent_belong_project: 所属项目
+        """
+        if not comments:
+            parent_node.simple_comment = ""
+            parent_node.has_detailed_comment = False
+            return
+
+        # 决定存储策略
+        decision = self._decide_comment_storage_strategy(comments)
+
+        if decision == CommentStorageDecision.STORE_AS_ATTRIBUTE:
+            # 策略A: 存为属性
+            all_text = "\n".join([c.raw_comment for c in comments if hasattr(c, 'raw_comment')])
+            parent_node.simple_comment = all_text
+            parent_node.has_detailed_comment = False
+
+        elif decision == CommentStorageDecision.CREATE_JAVADOC_NODE:
+            # 策略B: 创建Javadoc节点
+            parent_node.has_detailed_comment = True
+            self._create_javadoc_nodes(comments, parent_symbol_id, parent_node, parent_belong_project)
+
+        elif decision == CommentStorageDecision.CREATE_LONG_COMMENT_NODE:
+            # 策略C: 创建长注释节点
+            parent_node.has_detailed_comment = True
+            self._create_long_comment_node(comments, parent_symbol_id, parent_belong_project)
+
+    def _create_javadoc_nodes(self, comments: List[Any], parent_symbol_id: str,
+                              parent_node: Any, parent_belong_project: str) -> None:
+        """创建Javadoc节点
+
+        Args:
+            comments: 注释列表
+            parent_symbol_id: 父节点symbol_id
+            parent_node: 父节点对象
+            parent_belong_project: 所属项目
+        """
+        javadoc_comments = []
+        other_comments = []
+
+        for comment in comments:
+            if not hasattr(comment, 'raw_comment'):
+                continue
+
+            if comment.raw_comment.strip().startswith('/**'):
+                javadoc_comments.append(comment)
+            else:
+                other_comments.append(comment)
+
+        # 为每个Javadoc创建节点
+        for idx, comment in enumerate(javadoc_comments):
+            comment_node = CommentNodeGraphNode()
+            comment_node.content = comment.raw_comment
+            comment_node.comment_type = CommentType.JAVADOC.value
+            comment_node.belong_project = parent_belong_project
+            comment_node.char_count = len(comment.raw_comment)
+            comment_node.line_count = comment.raw_comment.count('\n') + 1
+
+            # 解析Javadoc
+            javadoc_result = JavadocParser.parse(comment.raw_comment)
+            comment_node.javadoc_summary = javadoc_result.summary
+            comment_node.javadoc_params = javadoc_result.params
+            comment_node.javadoc_return = javadoc_result.return_desc
+            comment_node.javadoc_throws = javadoc_result.throws
+            comment_node.javadoc_author = javadoc_result.author
+            comment_node.javadoc_version = javadoc_result.version
+            comment_node.javadoc_since = javadoc_result.since
+            comment_node.javadoc_deprecated = javadoc_result.deprecated
+            comment_node.javadoc_see = javadoc_result.see
+
+            # 位置信息
+            comment_node.start_line = comment.location.start_line
+            comment_node.end_line = comment.location.end_line
+            comment_node.start_column = comment.location.start_column
+            comment_node.end_column = comment.location.end_column
+
+            # 生成symbol_id
+            comment_node.symbol_id = f"{parent_symbol_id}@javadoc#{idx}"
+            comment_node.parent_symbol_id = parent_symbol_id
+            comment_node.name = f"javadoc_{idx}"
+
+            # 添加到待创建列表
+            self.nodes_to_create[JavaNeo4jNodeType.Comment].append(comment_node)
+            self.created_nodes.add(comment_node.symbol_id)
+
+            # 创建关系
+            self.relationships_to_create.append(
+                (parent_symbol_id, comment_node.symbol_id, JavaGraphEdgeType.HAS_COMMENT.value)
+            )
+
+        # 其他简短注释存为属性
+        if other_comments:
+            other_text = "\n".join([c.raw_comment for c in other_comments])
+            parent_node.simple_comment = other_text
+        else:
+            parent_node.simple_comment = ""
+
+    def _create_long_comment_node(self, comments: List[Any], parent_symbol_id: str,
+                                  parent_belong_project: str) -> None:
+        """创建长注释节点（聚合所有注释）
+
+        Args:
+            comments: 注释列表
+            parent_symbol_id: 父节点symbol_id
+            parent_belong_project: 所属项目
+        """
+        comment_node = CommentNodeGraphNode()
+
+        # 合并所有注释
+        all_text = "\n---\n".join([c.raw_comment for c in comments if hasattr(c, 'raw_comment')])
+        comment_node.content = all_text
+        comment_node.comment_type = CommentType.LONG_COMMENT.value
+        comment_node.belong_project = parent_belong_project
+        comment_node.char_count = len(all_text)
+        comment_node.line_count = all_text.count('\n') + 1
+
+        # 使用第一个和最后一个注释的位置
+        first_comment = comments[0]
+        last_comment = comments[-1]
+        comment_node.start_line = first_comment.location.start_line
+        comment_node.end_line = last_comment.location.end_line
+        comment_node.start_column = first_comment.location.start_column
+        comment_node.end_column = last_comment.location.end_column
+
+        # 生成symbol_id
+        comment_node.symbol_id = f"{parent_symbol_id}@longcomment"
+        comment_node.parent_symbol_id = parent_symbol_id
+        comment_node.name = "long_comment"
+
+        # 添加到待创建列表
+        self.nodes_to_create[JavaNeo4jNodeType.Comment].append(comment_node)
+        self.created_nodes.add(comment_node.symbol_id)
+
+        # 创建关系
+        self.relationships_to_create.append(
+            (parent_symbol_id, comment_node.symbol_id, JavaGraphEdgeType.HAS_COMMENT.value)
+        )

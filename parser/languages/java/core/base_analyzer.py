@@ -3,7 +3,6 @@ from typing import Dict, List
 
 from jedi.inference.gradual.typing import Tuple
 from loraxmod import ExtractedNode
-from sqlalchemy import false
 
 from parser.languages.java import JavaAstNodeType
 from parser.languages.java.core.ast_node_types import LocationRange
