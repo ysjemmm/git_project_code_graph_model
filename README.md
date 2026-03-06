@@ -1,8 +1,34 @@
 # Java AST Parser & Neo4j Exporter
 
-一个强大的 Java 代码分析工具，能够解析 Java 源代码的 AST（抽象语法树），并将其导出到 Neo4j 图数据库进行深度分析。支持完整的符号解析、类型推断和依赖分析。
+<div align="center">
 
-## 功能特性
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Neo4j](https://img.shields.io/badge/Neo4j-5.x-green.svg)](https://neo4j.com/)
+
+一个强大的 Java 代码分析工具，能够解析 Java 源代码的 AST（抽象语法树），并将其导出到 Neo4j 图数据库进行深度分析。
+
+支持完整的符号解析、类型推断和依赖分析。
+
+[功能特性](#功能特性) • [快速开始](#快速开始) • [使用示例](#使用示例) • [文档](#相关文档)
+
+</div>
+
+---
+
+## ✨ 亮点
+
+- 🎯 **智能符号解析** - 自动识别类来源（项目内部/外部JAR/JDK标准库）
+- 📦 **依赖分析** - 扫描并索引 Maven 依赖和 JDK 标准库
+- 🔍 **完整 AST 解析** - 支持所有 Java 类型和嵌套结构
+- 📊 **图数据库导出** - 将代码结构导出到 Neo4j，支持复杂查询
+- 🚀 **增量分析** - 基于 Git 和文件修改时间的增量更新
+- 🎭 **单例模式** - 每个项目独立的符号管理器实例
+
+<img width="2672" height="1282" alt="Neo4j Graph Visualization" src="https://github.com/user-attachments/assets/828467ca-a932-4c12-952b-3b02216d892a" />
+
+
+## 📋 功能特性
 
 ### 核心功能
 - 🔍 **完整的 Java AST 解析** - 支持类、接口、枚举、注解、记录等所有 Java 类型
@@ -10,22 +36,16 @@
 - 💬 **智能注释存储** - 混合策略存储注释（属性 + 独立节点），支持 Javadoc 解析
 - 🔗 **关系分析** - 支持继承、实现、方法调用、字段访问等关系
 - 📈 **Neo4j 导出** - 将代码结构导出为图数据库，支持复杂查询
-- 🚀 **增量分析** - 支持基于 Merkle Tree 的 Git 增量分析，提高大型项目的处理效率
-- 🔄 **多Git仓库支持** - 支持同时分析多个项目，项目级别隔离
+- 🚀 **增量分析** - 支持基于 Merkle Tree 的 Git 增量分析
+- 🔄 **多仓库支持** - 支持同时分析多个项目，项目级别隔离
 
-### 符号解析系统（新增）
-- 🎯 **智能符号解析** - 自动解析类的来源（项目内部 / 外部 JAR / 未知）
-- 📦 **JAR 类索引** - 扫描并索引 Maven 依赖的所有 JAR 包类
-- 🗄️ **项目类索引** - 扫描并索引项目源代码的所有类
+### 符号解析系统
+- 🎯 **智能符号解析** - 自动解析类的来源（项目内部 / 外部 JAR / JDK 标准库）
+- 📦 **依赖索引** - 扫描并索引 Maven 依赖和 JDK 标准库
+- 🗄️ **项目索引** - 扫描并索引项目源代码的所有类
 - 🔍 **完全限定名解析** - 支持包名、import、嵌套类等多种解析策略
 - 🏷️ **Symbol ID 追踪** - 为每个类、方法、字段生成唯一的符号 ID
 - 🔄 **增量更新** - 基于文件修改时间的增量扫描和 UPSERT 操作
-- 🎭 **单例模式** - 每个项目的 SymbolManager 保持唯一实例，避免重复初始化
-
-<img width="2672" height="1282" alt="image" src="https://github.com/user-attachments/assets/828467ca-a932-4c12-952b-3b02216d892a" />
-
-
-## 项目结构
 
 ```
 .
@@ -78,29 +98,57 @@
 └── README.md
 ```
 
-## 快速开始
+## 🚀 快速开始
 
-### 安装依赖
+### 前置要求
+
+- Python 3.8+
+- Neo4j 5.x（可选，用于图数据库导出）
+- Java 8+（用于分析 Java 项目）
+
+### 安装
 
 ```bash
+# 克隆仓库
+git clone https://github.com/yourusername/java-ast-parser.git
+cd java-ast-parser
+
+# 安装依赖
 pip install -r requirements.txt
 ```
 
 ### 基本使用
 
-### 仅获取 AST 数据
+#### 1. 构建依赖索引
+
 ```bash
-python tests/fixtures/test_java_file.py
+# 扫描 Maven 依赖
+python scripts/scan_maven_jars.py
+
+# 构建 JDK 索引（可选，但推荐）
+python scripts/build_jdk_index.py --auto-detect
 ```
 
-### AST -> Neo4j
+#### 2. 分析项目
+
 ```bash
+# 扫描项目源代码
+python scripts/scan_esign_project.py
+
+# 查询类信息
+python scripts/query_project_db.py
+```
+
+#### 3. 导出到 Neo4j
+
+```bash
+# 导出 AST 到 Neo4j
 python scripts/simple_import.py
 ```
 
-## 核心概念
+## 📚 项目结构
 
-### AnalyzerContext
+## 💡 核心概念
 
 统一的参数传递载体，包含：
 - `project_name`: 项目名称
@@ -241,7 +289,7 @@ CREATE TABLE project_classes (
 
 深度限制为 50 层，防止栈溢出。
 
-## Neo4j 图结构
+## 🗂️ Neo4j 图结构
 
 ### 节点类型
 
@@ -265,7 +313,7 @@ CREATE TABLE project_classes (
 - `ACCESSES`: 字段访问关系
 - `HAS_COMMENT`: 代码元素关联注释
 
-## 使用示例
+## 📖 使用示例
 
 ### 1. 扫描 Maven JAR 依赖
 
@@ -356,7 +404,7 @@ for n in nested:
     print(f"嵌套类: {n.fqn}")
 ```
 
-## Neo4j 查询示例
+## 🔍 Neo4j 查询示例
 
 ### 查询所有 Javadoc
 
@@ -396,7 +444,7 @@ RETURN obj.qualified_name, obj.belong_project
 ORDER BY obj.belong_project
 ```
 
-## 配置
+## ⚙️ 配置
 
 ### 注释存储配置
 
@@ -409,7 +457,7 @@ class CommentStorageConfig:
     MULTIPLE_COMMENT_MIN_LENGTH = 100  # 多条注释最小总长度
 ```
 
-## 开发
+## 🛠️ 开发
 
 ### 代码风格
 
@@ -418,7 +466,7 @@ class CommentStorageConfig:
 - 类型注解完整
 - 清晰的方法命名
 
-## 性能优化
+## ⚡ 性能优化
 
 - **项目级别隔离**: AnalyzerCache 支持多项目并发分析
 - **增量分析**: 支持 Git 增量分析，只处理变更文件
@@ -430,7 +478,7 @@ class CommentStorageConfig:
 - **WAL 模式**: SQLite 启用 WAL 模式，支持并发读写
 - **批量插入**: 使用 executemany 批量插入数据，提高性能
 
-## 已知限制
+## ⚠️ 已知限制
 
 - 暂不支持 Java 泛型的完整分析
 - 方法调用分析仅支持直接调用，不支持反射
@@ -438,19 +486,33 @@ class CommentStorageConfig:
 - JDK 标准库类需要手动扫描 rt.jar 或 modules 文件才能识别
 - 匿名类默认不包含在索引中（可通过 `include_anonymous=True` 启用）
 
-## 贡献
+## 🤝 贡献
 
 欢迎提交 Issue 和 Pull Request！
 
-## 许可证
+### 贡献指南
 
-MIT License
+1. Fork 本仓库
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启 Pull Request
 
-## 作者
+## 📄 许可证
 
-mayYoung
+本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
 
-## 更新日志
+## 👤 作者
+
+**mayYoung**
+
+- GitHub: [@mayYoung](https://github.com/mayYoung)
+
+## 🙏 致谢
+
+感谢所有为本项目做出贡献的开发者！
+
+## 📝 更新日志
 
 ### v2.0.0 (2026-03-05)
 - ✅ **符号解析系统** - 完整的类来源解析（内部/外部/未知）
@@ -469,8 +531,18 @@ mayYoung
 - ✅ Neo4j 导出
 - ✅ 增量分析支持
 
-## 相关文档
+## 📚 相关文档
 
 - [符号管理器数据流](docs/symbol_manager_data_flow.md) - SymbolManager 的工作原理和使用方式
 - [数据库 UPSERT 行为](docs/database_upsert_behavior.md) - SQLite 数据库的 UPSERT 实现
 - [JDK 索引构建指南](docs/jdk_index_guide.md) - 如何构建和使用 JDK 标准库索引
+
+---
+
+<div align="center">
+
+**如果这个项目对你有帮助，请给它一个 ⭐️**
+
+Made with ❤️ by mayYoung
+
+</div>
