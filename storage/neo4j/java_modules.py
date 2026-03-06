@@ -33,7 +33,8 @@ class ObjectFromType(Enum):
     
     INNER_DEFINITION = "InnerDefinition"          # 文件内顶层定义
     NESTED_DEFINITION = "NestedDefinition"        # 嵌套定义（类内部的类/接口/枚举等）
-    EXTERNAL_DEFINITION = "ExternalDefinition"    # 外部引用
+    EXTERNAL_DEFINITION = "ExternalDefinition"    # 外部引用（第三方 JAR）
+    JDK_DEFINITION = "JdkDefinition"              # JDK 标准库引用
     UNKNOWN_DEFINITION = "UnknownDefinition"      # 未知引用
 
 class JavaGraphEdgeType(Enum):

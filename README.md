@@ -473,4 +473,4 @@ mayYoung
 
 - [符号管理器数据流](docs/symbol_manager_data_flow.md) - SymbolManager 的工作原理和使用方式
 - [数据库 UPSERT 行为](docs/database_upsert_behavior.md) - SQLite 数据库的 UPSERT 实现
-- [符号解析 API 更新](docs/parse_java_object_where_api_update.md) - parse_java_object_where 方法的更新说明
+- [JDK 索引构建指南](docs/jdk_index_guide.md) - 如何构建和使用 JDK 标准库索引

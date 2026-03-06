@@ -8,6 +8,7 @@ class ClassLocationType(Enum):
     """类位置类型"""
     INTERNAL = "INTERNAL"      # 项目内部定义的类
     EXTERNAL = "EXTERNAL"      # 外部 JAR 包的类
+    JDK = "JDK"               # JDK 标准库的类
     UNKNOWN = "UNKNOWN"       # 无法解析的类
 
 

@@ -1,4 +1,4 @@
-# SymbolManager 数据流说明
+# 符号管理器数据流说明
 
 ## 单例模式（重要更新）
 
@@ -44,6 +44,14 @@ manager = SymbolManager(
     auto_sync_db=True        # 是否启用自动同步（初始化 ProjectScanner）
 )
 ```
+
+### 数据库支持
+
+SymbolManager 自动加载三个数据库：
+
+1. **项目类数据库** (`project_classes.db`) - 项目源代码的类
+2. **JAR 类数据库** (`jar_classes.db`) - Maven 依赖的类
+3. **JDK 类数据库** (`jdk{version}_classes.db`) - JDK 标准库的类（可选）
 
 ### 数据插入时机
 
@@ -106,12 +114,36 @@ manager.parse_java_object_where("ClassName", java_file_structure)
         ↓
 解析类名（处理嵌套类、包名等）
         ↓
-查询数据库
+查询数据库（按优先级）
   ├─ project_db.query_by_fqn()  (项目内部类)
-  └─ jar_db.query_by_fqn()      (外部 JAR 类)
+  ├─ jar_db.query_by_fqn()      (外部 JAR 类)
+  └─ jdk_db.query_by_fqn()      (JDK 标准库类)
         ↓
 返回 ClassLocation (类型、FQN、来源)
 ```
+
+## ClassLocation 类型
+
+```python
+class ClassLocationType(Enum):
+    INTERNAL = "INTERNAL"  # 项目内部类
+    EXTERNAL = "EXTERNAL"  # 外部 JAR 类
+    JDK = "JDK"           # JDK 标准库类
+    UNKNOWN = "UNKNOWN"    # 未知类
+```
+
+## 解析优先级
+
+1. 项目内部类（同包）
+2. 项目内部类（显式 import）
+3. 外部 JAR 类（同包）
+4. 外部 JAR 类（显式 import）
+5. 外部 JAR 类（通配符 import）
+6. **JDK 类（同包）**
+7. **JDK 类（显式 import）**
+8. **JDK 类（通配符 import）**
+9. **JDK 类（java.lang 包）**
+10. 未知
 
 ## 使用场景
 
@@ -142,6 +174,14 @@ manager.collect_from_java_file(project_name, java_file_structure)
 
 # 查询符号
 location = manager.parse_java_object_where("ClassName", java_file_structure)
+
+# 检查类型
+if location.type == ClassLocationType.JDK:
+    print(f"JDK 类: {location.fqn}")
+elif location.type == ClassLocationType.EXTERNAL:
+    print(f"外部 JAR 类: {location.fqn}")
+elif location.type == ClassLocationType.INTERNAL:
+    print(f"项目内部类: {location.fqn}")
 ```
 
 ### 场景 3: 只查询（不插入）
@@ -168,43 +208,37 @@ location = manager.parse_java_object_where("ClassName", java_file_structure)
 - `True`: 使用全局单例数据库（推荐）
 - `False`: 不使用数据库，只能做内存操作
 
-## 改进建议
+## JDK 索引支持
 
-如果希望真正的"自动同步"，可以考虑：
+### 自动加载
 
-### 方案 1: 在 JavaFileAnalyzer 中集成
+如果存在 JDK 索引数据库，SymbolManager 会自动加载：
+
 ```python
-class JavaFileAnalyzer:
-    def analyze_file(self, auto_sync=False):
-        java_file_structure = self._parse()
-        
-        if auto_sync and self.symbol_manager:
-            self.symbol_manager.collect_from_java_file(
-                self.project_name, 
-                java_file_structure
-            )
-        
-        return java_file_structure
+manager = SymbolManager.get_instance("my-project")
+
+# 查询 JDK 类
+location = manager.parse_java_object_where("String", java_file_structure)
+# location.type == ClassLocationType.JDK
+# location.fqn == "java.lang.String"
 ```
 
-### 方案 2: 使用装饰器
-```python
-@auto_sync_to_db
-def analyze_file():
-    return analyzer.analyze_file()
+### 构建 JDK 索引
+
+```bash
+# 自动检测 JDK 路径并构建索引
+python scripts/build_jdk_index.py --auto-detect
+
+# 或指定 JDK 路径
+python scripts/build_jdk_index.py --jdk-home /path/to/jdk
 ```
 
-### 方案 3: 使用上下文管理器
-```python
-with SymbolManager.auto_sync(project_name) as manager:
-    java_file_structure = analyzer.analyze_file()
-    # 自动调用 collect_from_java_file
-```
+详见：[JDK 索引构建指南](jdk_index_guide.md)
 
 ## 总结
 
 - ✅ `auto_sync_db=True` 只是准备基础设施
 - ✅ 实际插入需要手动调用 `collect_from_java_file()`
+- ✅ 支持三种类型：INTERNAL、EXTERNAL、JDK
+- ✅ JDK 索引可选，自动加载
 - ✅ 这样设计给用户更多控制权
-- ⚠️ 容易忘记调用，导致数据库为空
-- 💡 可以考虑添加真正的自动同步机制

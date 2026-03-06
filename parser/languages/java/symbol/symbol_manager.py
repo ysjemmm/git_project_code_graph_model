@@ -57,12 +57,13 @@ class SymbolManager:
         self.auto_sync_db = auto_sync_db
         self.project_scanner = None
         
-        # 如果启用全局数据库，则自动使用两个单例
+        # 如果启用全局数据库，则自动使用单例
         if use_global_db:
             try:
-                from storage.sqlite import get_jar_class_db, get_project_class_db, ProjectScanner
+                from storage.sqlite import get_jar_class_db, get_project_class_db, get_jdk_class_db, ProjectScanner
                 self.jar_db = get_jar_class_db()           # JAR 类数据库（全局单例）
                 self.project_db = get_project_class_db()   # 项目类数据库（单例）
+                self.jdk_db = get_jdk_class_db()           # JDK 类数据库（单例，可能为 None）
                 
                 # 如果启用自动同步，初始化 ProjectScanner
                 if auto_sync_db:
@@ -72,10 +73,12 @@ class SymbolManager:
                 # 如果导入失败或数据库不存在，保持为 None
                 self.jar_db = None
                 self.project_db = None
+                self.jdk_db = None
                 self.project_scanner = None
         else:
             self.jar_db = None
             self.project_db = None
+            self.jdk_db = None
             self.project_scanner = None
         
         self._initialized = True
@@ -328,18 +331,67 @@ class SymbolManager:
                         symbol_id=None  # JAR 类没有 symbol_id
                     )
         
-        # 5. 检查是否是 java.lang 包
-        if self.jar_db:
-            java_lang_fqn = f"java.lang.{identifier}"
-            external_cls = self.jar_db.query_by_fqn(java_lang_fqn)
-            if external_cls:
+        # 5. 检查是否是 JDK 类（新增）
+        if self.jdk_db:
+            # 5.1 检查同包 JDK 类
+            jdk_cls = self.jdk_db.query_by_fqn(same_package_fqn)
+            if jdk_cls:
                 return ClassLocation(
-                    type=ClassLocationType.EXTERNAL,
-                    fqn=external_cls.fqn,
-                    jar_path=external_cls.jar_path,
+                    type=ClassLocationType.JDK,
+                    fqn=jdk_cls.fqn,
+                    jar_path=jdk_cls.jar_path,
+                    file_path=None,
+                    resolution_method="same_package_jdk",
+                    symbol_id=None
+                )
+            
+            # 5.2 检查显式 import 的 JDK 类
+            for imp in imports:
+                if imp.endswith('.*'):
+                    continue
+                
+                if imp.endswith('.' + identifier):
+                    jdk_cls = self.jdk_db.query_by_fqn(imp)
+                    if jdk_cls:
+                        return ClassLocation(
+                            type=ClassLocationType.JDK,
+                            fqn=jdk_cls.fqn,
+                            jar_path=jdk_cls.jar_path,
+                            file_path=None,
+                            resolution_method="explicit_import_jdk",
+                            symbol_id=None
+                        )
+            
+            # 5.3 检查通配符 import 的 JDK 类
+            for imp in imports:
+                if not imp.endswith('.*'):
+                    continue
+                
+                package = imp.rstrip('.*')
+                potential_fqn = f"{package}.{identifier}"
+                
+                jdk_cls = self.jdk_db.query_by_fqn(potential_fqn)
+                if jdk_cls:
+                    return ClassLocation(
+                        type=ClassLocationType.JDK,
+                        fqn=jdk_cls.fqn,
+                        jar_path=jdk_cls.jar_path,
+                        file_path=None,
+                        resolution_method="wildcard_import_jdk",
+                        symbol_id=None
+                    )
+            
+            # 5.4 检查 java.lang 包（JDK 类的特殊情况）
+            java_lang_fqn = f"java.lang.{identifier}"
+            jdk_cls = self.jdk_db.query_by_fqn(java_lang_fqn)
+            if jdk_cls:
+                return ClassLocation(
+                    type=ClassLocationType.JDK,
+                    fqn=jdk_cls.fqn,
+                    jar_path=jdk_cls.jar_path,
                     file_path=None,
                     resolution_method="java_lang",
-                    symbol_id=None  # JAR 类没有 symbol_id
+                    symbol_id=None
                 )
         
         # 6. 未知
@@ -382,6 +434,19 @@ class SymbolManager:
                     file_path=None,
                     resolution_method="fqn_external",
                     symbol_id=None  # JAR 类没有 symbol_id
+                )
+        
+        # 检查 JDK 类（新增）
+        if self.jdk_db:
+            jdk_cls = self.jdk_db.query_by_fqn(fqn)
+            if jdk_cls:
+                return ClassLocation(
+                    type=ClassLocationType.JDK,
+                    fqn=jdk_cls.fqn,
+                    jar_path=jdk_cls.jar_path,
+                    file_path=None,
+                    resolution_method="fqn_jdk",
+                    symbol_id=None
                 )
         
         # 未知

@@ -28,7 +28,12 @@ class ClassNameParser:
             "com/example/User$1.class" -> ("com.example.User$1", "User$1", "com.example", True)
             "com/example/Outer$Inner.class" -> ("com.example.Outer.Inner", "Outer.Inner", "com.example", False)
             "com/example/Outer$Inner$1.class" -> ("com.example.Outer.Inner$1", "Outer.Inner$1", "com.example", True)
+            "classes/java/lang/String.class" -> ("java.lang.String", "String", "java.lang", False)  # JMOD 文件
         """
+        # 移除 JMOD 文件的 classes/ 前缀（JDK 9+）
+        if class_file_path.startswith('classes/') or class_file_path.startswith('classes\\'):
+            class_file_path = class_file_path[8:]  # 移除 "classes/"
+        
         # 移除 .class 后缀
         if class_file_path.endswith('.class'):
             class_file_path = class_file_path[:-6]

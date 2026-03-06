@@ -869,6 +869,23 @@ class Neo4jExporterAST:
             self.created_nodes.add(java_object.symbol_id)
             self.nodes_to_create[JavaNeo4jNodeType.JavaObject].append(java_object)
             self.relationships_to_create.append((class_symbol_id, java_object.symbol_id, extend_type))
+        elif location.type == ClassLocationType.JDK:
+            # JDK 标准库类
+            java_object = JavaObjectNodeGraphNode()
+            java_object.symbol_id = location.jar_path + '<path>' + location.fqn if location.jar_path else f"JDK<path>{location.fqn}"
+            java_object.qualified_name = location.fqn
+            java_object.name = location.fqn.rsplit(".", 1)[-1]
+            java_object.object_type = object_type.value
+            # 从 jar_path 提取 JDK 模块名（例如 java.base.jmod -> java.base）
+            if location.jar_path:
+                jar_name = Path(location.jar_path).stem  # 例如 "java.base"
+                java_object.belong_project = f"JDK:{jar_name}"
+            else:
+                java_object.belong_project = "JDK"
+            java_object.from_type = ObjectFromType.JDK_DEFINITION.value
+            self.created_nodes.add(java_object.symbol_id)
+            self.nodes_to_create[JavaNeo4jNodeType.JavaObject].append(java_object)
+            self.relationships_to_create.append((class_symbol_id, java_object.symbol_id, extend_type))
         elif location.type == ClassLocationType.INTERNAL:
             self.relationships_to_create.append((class_symbol_id, location.symbol_id, extend_type))
         elif location.type == ClassLocationType.UNKNOWN:

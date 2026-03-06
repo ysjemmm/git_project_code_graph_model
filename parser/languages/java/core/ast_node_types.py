@@ -28,7 +28,7 @@ class LocationRange:
 class BaseLocationAstNode:
     """Base class for all AST nodes with common location property"""
     location: LocationRange = field(default_factory=lambda: LocationRange())
-    version: str = ""
+    version: str = "Default Version"
 
     def set_pos_from_node(self, node: ExtractedNode):
         """Set location from tree-sitter node or ExtractedNode
