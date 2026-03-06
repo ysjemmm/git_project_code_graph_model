@@ -104,8 +104,8 @@
                     </where>
                 )
             </if>
-            order by pdg.`position` desc
         </where>
+        order by pdg.`position` desc
     </select>
 
     <!-- 新增一条产品需求分组信息 -->
