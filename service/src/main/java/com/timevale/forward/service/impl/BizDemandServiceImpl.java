@@ -147,6 +147,7 @@ import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -706,6 +707,14 @@ public class BizDemandServiceImpl implements BizDemandService {
         newBizDemandDO.setStatus(oldBizDemandDO.getStatus());
         newBizDemandDO.setReason(oldBizDemandDO.getReason());
         newBizDemandDO.setProjectEndDate(oldBizDemandDO.getProjectEndDate());
+        // 自动计算总资源评估（人天）
+        BigDecimal total = BigDecimal.ZERO;
+        if (newBizDemandDO.getUedTime() != null) total = total.add(newBizDemandDO.getUedTime());
+        if (newBizDemandDO.getQaTime() != null) total = total.add(newBizDemandDO.getQaTime());
+        if (newBizDemandDO.getFrontTime() != null) total = total.add(newBizDemandDO.getFrontTime());
+        if (newBizDemandDO.getBackTime() != null) total = total.add(newBizDemandDO.getBackTime());
+        if (newBizDemandDO.getTransferTime() != null) total = total.add(newBizDemandDO.getTransferTime());
+        newBizDemandDO.setTotalTime(total);
         bizDemandMapper.fullUpdate(newBizDemandDO);
 
         // 抄送人
