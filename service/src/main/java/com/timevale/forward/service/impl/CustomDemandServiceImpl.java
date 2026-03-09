@@ -37,6 +37,7 @@ import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.forward.service.utils.richtext.RichTextImageUrlRefresher;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -90,6 +91,8 @@ public class CustomDemandServiceImpl implements CustomDemandService {
 
     @Resource
     private ProductCustomDemandComponent productCustomDemandComponent;
+    @Resource
+    private RichTextImageUrlRefresher richTextImageUrlRefresher;
 
     @Value("${custom.demand.receiver}")
     private String receiver;
@@ -168,6 +171,7 @@ public class CustomDemandServiceImpl implements CustomDemandService {
         }
         // 信息填充
         CustomDemandVO customDemandVO = CustomDemandCopier.INSTANCE.convert(customDemandDO);
+        customDemandVO.setDesc(richTextImageUrlRefresher.refresh(customDemandVO.getDesc()));
         List<ProductEndBO> receivers = JSONObject.parseArray(receiver, ProductEndBO.class);
         Map<Integer, ProductEndBO> receiverMap = receivers.stream().collect(Collectors.toMap(ProductEndBO::getCode, k -> k, (v1, v2) -> v2));
         customDemandVO.setProductEndText(receiverMap.get(customDemandVO.getProductEnd()).getName());

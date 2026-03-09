@@ -39,6 +39,7 @@ import com.timevale.forward.service.copy.ProductLineCopier;
 import com.timevale.forward.service.observer.event.BizDemandStatusAloneChangeMsgEvent;
 import com.timevale.forward.service.observer.event.BizDemandStatusChangeMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
+import com.timevale.forward.service.utils.richtext.RichTextImageUrlRefresher;
 import com.timevale.forward.service.utils.StringUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -105,6 +106,8 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
     private ProductDemandDescFlowMapper productDemandDescFlowMapper;
     @Resource
     private BizPermissionOwnerComponent bizPermissionOwnerComponent;
+    @Resource
+    private RichTextImageUrlRefresher richTextImageUrlRefresher;
 
     @Override
     public List<ProductDemandListDO> list(ProductDemandListCondition condition) {
@@ -120,6 +123,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
             throw new BaseBizRuntimeException("该产品需求不存在");
         }
         ProductDemandDetailVO demandDetailVO = ProductDemandCopier.INSTANCE.convert(demandDO);
+        demandDetailVO.setDesc(richTextImageUrlRefresher.refresh(demandDetailVO.getDesc()));
         demandDetailVO.setStatusName(ProductDemandStatusEnum.getTextByCode(demandDetailVO.getStatus()));
         demandDetailVO.setPriorityName(PriorityEnum.getTextByCode(demandDetailVO.getPriority()));
         List<Integer> list = JSON.parseArray(demandDO.getType(), Integer.class);
@@ -159,7 +163,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         ProductDemandDescFlowDO latestDescFlow =
                 productDemandDescFlowMapper.getLastByProductDemandId(demandDO.getId());
         if (latestDescFlow != null && ForwardFlowStatusEnum.AUDITING.getCode().equals(latestDescFlow.getStatus())) {
-            demandDetailVO.setChangeDesc(latestDescFlow.getChangeDesc());
+            demandDetailVO.setChangeDesc(richTextImageUrlRefresher.refresh(latestDescFlow.getChangeDesc()));
         }
 
         // 资源评估信息

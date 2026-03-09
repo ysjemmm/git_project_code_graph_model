@@ -19,8 +19,6 @@ import com.timevale.forward.service.component.BizLabelComponent;
 import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
-import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
-import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.RequiredArgsConstructor;

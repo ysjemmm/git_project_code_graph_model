@@ -113,6 +113,7 @@ import com.timevale.forward.service.utils.date.DateStyle;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.forward.service.utils.richtext.RichTextImageUrlRefresher;
 import com.timevale.forward.service.integration.OssClient;
 import com.timevale.filesystem.common.service.result.GetDownloadUrlResult;
 import com.timevale.filesystem.common.service.result.GetSignUrlResult;
@@ -195,6 +196,8 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     private BugLogComponent bugLogComponent;
     @Resource
     private OssClient ossClient;
+    @Resource
+    private RichTextImageUrlRefresher richTextImageUrlRefresher;
 
     @Override
     public BaseResult<PageQueryResult<BugOfflineVO>> list(BugOfflineQueryList bugOfflineQueryList) {
@@ -1126,6 +1129,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
         //转化线下bug
         BugOfflineDetailVO bugOfflineDetailVO = BugOfflineCopier.INSTANCE.transform(bugOfflineDO);
+        bugOfflineDetailVO.setDesc(richTextImageUrlRefresher.refresh(bugOfflineDetailVO.getDesc()));
 
         //给bug原因名字赋值
         bugOfflineDetailVO.setReasonName(BugReasonEnum.getTextByCode(bugOfflineDO.getReason()));
@@ -1281,6 +1285,10 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
         // 转换为 VO
         List<BugLogVO> bugLogVOList = bugLogDOList.stream().map(BugLogCopier.INSTANCE::convert).collect(Collectors.toList());
+        bugLogVOList.forEach(item -> {
+            item.setOldValue(richTextImageUrlRefresher.refresh(item.getOldValue()));
+            item.setNewValue(richTextImageUrlRefresher.refresh(item.getNewValue()));
+        });
 
         // 如果是线上bug，需要填充关联的对应bug信息
         if (BugLogTypeEnum.ONLINE.getCode().equals(logQuery.getType())) {
@@ -1790,6 +1798,4 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         return BaseResult.success(true);
     }
 }
-
-
 

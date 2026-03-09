@@ -133,6 +133,7 @@ import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.duplicate.GroupDuplicateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.forward.service.utils.richtext.RichTextImageUrlRefresher;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -232,6 +233,8 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Resource
     private CrmClient crmClient;
+    @Resource
+    private RichTextImageUrlRefresher richTextImageUrlRefresher;
 
     @Override
     public BaseResult<QueryResultVO<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList) {
@@ -557,6 +560,8 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 信息填充
         BizDemandDetailVO bizDemandDetailVO = BizDemandCopier.INSTANCE.convert(bizDemandDO);
+        bizDemandDetailVO.setDesc(richTextImageUrlRefresher.refresh(bizDemandDetailVO.getDesc()));
+        bizDemandDetailVO.setProductSolution(richTextImageUrlRefresher.refresh(bizDemandDetailVO.getProductSolution()));
         bizDemandDetailVO.setFileList(fileVOList);
         bizDemandDetailVO.setRecipientInfoList(personVOList);
         bizDemandDetailVO.setEndDate(bizDemandDO.getProjectEndDate());
@@ -626,7 +631,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         productDemandDetailVO.setOwner(bizDemandDO.getReceiveMan());
         productDemandDetailVO.setOwnerId(bizDemandDO.getReceiveManId());
         // 描述
-        productDemandDetailVO.setDesc(bizDemandDO.getDesc());
+        productDemandDetailVO.setDesc(richTextImageUrlRefresher.refresh(bizDemandDO.getDesc()));
         // 抄送人
         productDemandDetailVO.setRecipients(personVOList);
         // 附件

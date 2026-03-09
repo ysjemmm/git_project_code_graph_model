@@ -25,6 +25,7 @@ import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
+import com.timevale.forward.service.utils.richtext.RichTextImageUrlRefresher;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.base.util.DateUtils;
@@ -81,6 +82,8 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
     @Resource
     private MessageEventPublisher messageEventPublisher;
+    @Resource
+    private RichTextImageUrlRefresher richTextImageUrlRefresher;
 
 
     @Override
@@ -150,6 +153,10 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         }
         // 转换格式
         TroubleTicketDetailVO ticketDetailVO = TroubleTicketCopier.INSTANCE.convert(troubleTicketDO);
+        ticketDetailVO.setInfluenceClient(richTextImageUrlRefresher.refresh(ticketDetailVO.getInfluenceClient()));
+        ticketDetailVO.setTimeLine(richTextImageUrlRefresher.refresh(ticketDetailVO.getTimeLine()));
+        ticketDetailVO.setReasonAnalysis(richTextImageUrlRefresher.refresh(ticketDetailVO.getReasonAnalysis()));
+        ticketDetailVO.setDataStatistics(richTextImageUrlRefresher.refresh(ticketDetailVO.getDataStatistics()));
 
         // 填充描述数据
         List<Long> productLineIdList = bugOnlineProductLineMapper.selectProductLineIds(troubleTicketId, BizProductLineTypeEnum.TROUBLE_TICKET.getCode());

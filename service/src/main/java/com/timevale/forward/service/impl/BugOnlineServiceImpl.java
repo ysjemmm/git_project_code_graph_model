@@ -1696,15 +1696,21 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             throw new BaseBizRuntimeException("线上bug不存在");
         }
 
-        //判断当前状态是否为“待确认”状态
-        if (!bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.BE_CONFIRM.getCode())) {
+        boolean isBeConfirm = bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.BE_CONFIRM.getCode());
+        boolean isClosedAfterNoRepair = bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.CLOSE.getCode())
+                && bugOnlineDO.getDismissCause() != null
+                && StringUtils.isNotBlank(bugOnlineDO.getLastOperatorId());
+
+        // 判断当前状态是否为“待确认”状态，或“不用修复同意后关闭”状态
+        if (!isBeConfirm && !isClosedAfterNoRepair) {
             throw new BaseBizRuntimeException("当前状态不允许点击拒绝");
         }
 
         //判断操作人是否有点击权限
         Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
         Boolean proposerResult = isPermission(bugOnlineDO.getProposerId());
-        if (!operatorResult && !proposerResult) {
+        Boolean lastOperatorResult = isPermission(bugOnlineDO.getLastOperatorId());
+        if (!operatorResult && !proposerResult && !lastOperatorResult) {
             throw new BaseBizRuntimeException("您没有点击此按钮的权限");
         }
 

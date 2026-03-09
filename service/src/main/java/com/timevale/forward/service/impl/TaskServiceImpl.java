@@ -92,6 +92,7 @@ import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.forward.service.utils.richtext.RichTextImageUrlRefresher;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -167,6 +168,8 @@ public class TaskServiceImpl implements TaskService {
     private ProjectEvaluateComponent evaluateComponent;
     @Resource
     private InnerProjectStatusUpdateComponent innerProjectStatusUpdateComponent;
+    @Resource
+    private RichTextImageUrlRefresher richTextImageUrlRefresher;
 
     @Resource
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
@@ -407,6 +410,7 @@ public class TaskServiceImpl implements TaskService {
             throw new BaseBizRuntimeException("该任务不存在");
         }
         TaskDetailVO taskDetailVO = TaskCopier.INSTANCE.convert(taskDO);
+        taskDetailVO.setDesc(richTextImageUrlRefresher.refresh(taskDetailVO.getDesc()));
         taskDetailVO.setStatusName(TaskStatusEnum.getTextByCode(taskDetailVO.getStatus()));
         taskDetailVO.setStageName(ProjectStageEnum.getTextByCode(taskDetailVO.getStage()));
         taskDetailVO.setTypeName(TaskTypeEnum.getTextByCode(taskDetailVO.getType()));

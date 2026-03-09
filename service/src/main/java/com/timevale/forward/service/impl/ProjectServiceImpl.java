@@ -205,6 +205,7 @@ import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.date.WorkDateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.forward.service.utils.richtext.RichTextImageUrlRefresher;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.exception.BaseIllegalArgumentException;
 import com.timevale.mandarin.base.util.AssertUtil;
@@ -371,6 +372,8 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Resource
     private WorkDateUtil workDateUtil;
+    @Resource
+    private RichTextImageUrlRefresher richTextImageUrlRefresher;
 
     private static final List<Integer> PROJECT_STATUSES = Arrays.asList(
             ProjectStatusEnum.WAITING.getCode(),
@@ -1372,6 +1375,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 转换
         ProjectDetailVO projectDetailVO = ProjectCopier.INSTANCE.convert(projectDO);
+        projectDetailVO.setDesc(richTextImageUrlRefresher.refresh(projectDetailVO.getDesc()));
 
         //产品线
         List<ProductLineDO> productLineDO = productLineMapper.get(projectId);
@@ -1514,6 +1518,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 转换
         ProjectInnerDetailVO projectInnerDetailVO = ProjectCopier.INSTANCE.do2Vo(projectDO);
+        projectInnerDetailVO.setDesc(richTextImageUrlRefresher.refresh(projectInnerDetailVO.getDesc()));
 
         // 团队成员
         List<PersonDO> teamMemberDOList = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());

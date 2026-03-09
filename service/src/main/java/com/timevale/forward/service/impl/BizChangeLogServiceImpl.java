@@ -16,6 +16,7 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizChangeLogCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
+import com.timevale.forward.service.utils.richtext.RichTextImageUrlRefresher;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 public class BizChangeLogServiceImpl implements BizChangeLogService{
     private final BizRecordMapper bizRecordMapper;
     private final BizChangeLogMapper bizChangeLogMapper;
+    private final RichTextImageUrlRefresher richTextImageUrlRefresher;
 
     @Override
     public BaseResult<PageQueryResult<BizChangeLogVO>> list(BizChangeLogQueryList bizChangeLogQueryList) {
@@ -40,6 +42,10 @@ public class BizChangeLogServiceImpl implements BizChangeLogService{
         // 查询转换
         List<BizChangeLogDO> bizChangeLogDOList = bizChangeLogMapper.list(bizChangeLogQueryList.getMainId(), bizChangeLogQueryList.getType());
         List<BizChangeLogVO> bizChangeLogVOList = BizChangeLogCopier.INSTANCE.convert(bizChangeLogDOList);
+        bizChangeLogVOList.forEach(item -> {
+            item.setOldValue(richTextImageUrlRefresher.refresh(item.getOldValue()));
+            item.setNewValue(richTextImageUrlRefresher.refresh(item.getNewValue()));
+        });
 
         // 返回分页数据
         PageInfo<BizChangeLogDO> pageInfo = new PageInfo<>(bizChangeLogDOList);

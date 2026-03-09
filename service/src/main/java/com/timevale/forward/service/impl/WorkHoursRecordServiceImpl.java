@@ -56,6 +56,7 @@ import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.forward.service.utils.richtext.RichTextImageUrlRefresher;
 import com.timevale.framework.tedis.util.TedisUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
@@ -127,6 +128,8 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
 
     @Resource
     private HomePageService homePageService;
+    @Resource
+    private RichTextImageUrlRefresher richTextImageUrlRefresher;
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -402,6 +405,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             throw new BaseBizRuntimeException("该工时记录不存在");
         }
         WorkHoursRecordVO workHoursRecordVO = WorkHoursRecordCopier.INSTANCE.convert(workHoursRecordDO);
+        workHoursRecordVO.setDesc(richTextImageUrlRefresher.refresh(workHoursRecordVO.getDesc()));
         if (Objects.equals(workHoursRecordDO.getWorkItemType(), BizTypeEnum.TASK.getCode())) {
             TaskDO taskDO = taskMapper.getById(workHoursRecordDO.getWorkItemId());
             ProjectDO projectDO = projectMapper.get(taskDO.getProjectId());
