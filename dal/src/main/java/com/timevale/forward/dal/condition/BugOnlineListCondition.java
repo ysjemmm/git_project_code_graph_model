@@ -15,6 +15,11 @@ import java.util.List;
 @Builder
 public class BugOnlineListCondition {
     /**
+     * ID
+     */
+    private Long id;
+
+    /**
      * 名称
      */
     @WildcardEscape

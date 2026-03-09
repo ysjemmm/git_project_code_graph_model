@@ -18,6 +18,9 @@ import java.util.List;
 @Data
 @ApiModel("线上bug列表查询")
 public class BugOnlineQueryList extends QueryBase {
+    @ApiModelProperty("bug ID")
+    private Long id;
+
     @ApiModelProperty("bug标题")
     private String name;
 

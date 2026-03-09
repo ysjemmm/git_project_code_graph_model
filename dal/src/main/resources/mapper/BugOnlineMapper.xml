@@ -19,6 +19,9 @@
         left join bug_online_status_operator boso on bo.id = boso.bug_online_id and boso.is_deleted = false
         </if>
         <where>
+            <if test="id!=null">
+                and bo.id = #{id}
+            </if>
             <if test="containIds!=null and containIds.size()>0">
                 and bo.id in
                 <foreach collection="containIds" item="item" separator="," open="(" close=")">
@@ -626,7 +629,6 @@
     </update>
 
 </mapper>
-
 
 
 
