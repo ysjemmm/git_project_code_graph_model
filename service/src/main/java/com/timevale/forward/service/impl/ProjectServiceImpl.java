@@ -1562,6 +1562,9 @@ public class ProjectServiceImpl implements ProjectService {
         }
         return node.getName();
     }
+
+    @Override
+    public BaseResult<ProjectInnerDetailVO> getInner(Long projectId) {
         ProjectDO projectDO = projectMapper.get(projectId);
         AssertUtil.notNull(projectDO, "该项目不存在");
 
