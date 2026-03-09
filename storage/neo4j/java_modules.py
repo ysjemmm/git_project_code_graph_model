@@ -137,6 +137,7 @@ class BaseNode:
     symbol_id: str = ""
     parent_symbol_id: str = None
     belong_project: Optional[str] = None # 节点所属的项目名称
+    version: str = ""
     
     def get_unique_key(self) -> Dict[str, Any]:
         
@@ -153,7 +154,6 @@ class BaseLocationNode(BaseNode):
 class ProjectGraphNode(BaseNode):
     # 分为 Application 与 Lib
     project_type: str = "Application"
-    pass
 
 @dataclass
 class FileNodeGraphNode(BaseLocationNode):

@@ -2,8 +2,6 @@
 Neo4j 导出器- 基于 AST 数据直接构建
 按照 java_neo4j_modules 标准，从 AST 节点处理器的输出直接构建图数据库
 """
-from collections import defaultdict
-from dataclasses import asdict
 from pathlib import Path
 from typing import Dict, Set, List, Any, Tuple
 
@@ -15,20 +13,19 @@ from parser.languages.java.symbol.symbol_manager import SymbolManager
 from parser.languages.java.utils.analyzer_helper import AnalyzerHelper
 from parser.utils.logger import get_logger
 from storage.neo4j.connector import Neo4jConnector
-from storage.neo4j.field_names import (
-    NODE_SYMBOL_ID, NODE_NAME, NODE_QUALIFIED_NAME, NODE_BELONG_PROJECT,
-    EDGE_SOURCE_SYMBOL, EDGE_TARGET_SYMBOL,
-    INHERITANCE_IS_EXTENSION,
-)
 from storage.neo4j.java_modules import JavaGraphEdgeType, ObjectType, ObjectFromType, JavaNeo4jNodeType, \
     JavaFileNodeGraphNode, JavaObjectNodeGraphNode, JavaMethodNodeGraphNode, JavaParameterNodeGraphNode, \
     JavaFieldNodeGraphNode, JavaEnumConstantNodeGraphNode, CommentNodeGraphNode, CommentType, \
     CommentStorageDecision, JavadocParseResult, JavaCodeBlockNodeGraphNode, ProjectGraphNode
 from storage.neo4j.merge_builder import MergeQueryBuilder, get_unique_key_for_node_type
 from tools.ast_tool import AstTool
+import os
+import re
 
 logger = get_logger("neo4j_exporter")
 
+# 版本号正则表达式模式
+VERSION_PATTERN = r'[-_](\d+(?:\.\d+)*(?:[-._]\w+)?)$'
 
 # 注释存储策略配置
 class CommentStorageConfig:
@@ -114,7 +111,8 @@ class Neo4jExporterAST:
     
     def export_from_ast_data(self, ast_data_list: List[JavaFileStructure],
                             clear_database: bool = True,
-                            symbol_tables: List[Any] = None) -> Dict:
+                            symbol_tables: List[Any] = None,
+                            auto_link_external: bool = True) -> Dict:
         """导出 AST 数据到 Neo4j"""
         try:
             if clear_database:
@@ -133,14 +131,22 @@ class Neo4jExporterAST:
             #         if symbol_table:
             #             self._collect_relationships_from_symbol_table(symbol_table)
             
+            # 在创建节点前，预先计算外部类链接关系
+            if auto_link_external:
+                self._prepare_external_links()
+            
             self._create_nodes_batch()
             self._create_relationships_batch()
+            
+            # 统计链接的外部类数量
+            linked_count = self._count_external_links() if auto_link_external else 0
             
             return {
                 'success': True,
                 'message': f'Successfully exported {len(self.created_nodes)} nodes',
                 'created_nodes': len(self.created_nodes),
-                'created_relationships': len(self.relationships_to_create)
+                'created_relationships': len(self.relationships_to_create),
+                'linked_external_classes': linked_count
             }
         except Exception as e:
             logger.error(f"Export failed: {e}")
@@ -148,8 +154,135 @@ class Neo4jExporterAST:
                 'success': False,
                 'message': str(e),
                 'created_nodes': 0,
-                'created_relationships': 0
+                'created_relationships': 0,
+                'linked_external_classes': 0
             }
+    
+    def _prepare_external_links(self):
+        """
+        在内存中准备外部类链接关系
+        
+        工作原理:
+        1. 遍历当前要创建的所有 JavaObject 节点
+        2. 对于每个外部定义节点，查找数据库中是否有匹配的内部定义
+        3. 对于每个内部定义节点，查找数据库中是否有匹配的外部定义
+        4. 将匹配的链接关系加入 relationships_to_create
+        
+        优势:
+        - 在节点创建前就准备好关系，可以一起批量创建
+        - 支持双向匹配：新外部→已有内部，新内部→已有外部
+        """
+        try:
+            # 收集当前批次中的外部和内部定义
+            current_external = []
+            current_internal = []
+            
+            for node in self.nodes_to_create.get(JavaNeo4jNodeType.JavaObject, []):
+                if isinstance(node, JavaObjectNodeGraphNode):
+                    if node.from_type == ObjectFromType.EXTERNAL_DEFINITION.value:
+                        current_external.append(node)
+                    elif node.from_type == ObjectFromType.INNER_DEFINITION.value:
+                        current_internal.append(node)
+            
+            if not current_external and not current_internal:
+                return
+            
+            logger.info(f"[INFO] 准备外部类链接：{len(current_external)} 个外部定义，{len(current_internal)} 个内部定义")
+            
+            # 场景 1: 新的外部定义 → 查找已有的内部定义
+            for external_node in current_external:
+                internal_node = self._find_internal_in_db(
+                    external_node.qualified_name,
+                    external_node.belong_project
+                )
+                if internal_node:
+                    self.relationships_to_create.append((
+                        external_node.symbol_id,
+                        internal_node['symbol_id'],
+                        'ACTUAL_IMPLEMENTATION'
+                    ))
+                    logger.info(f"[INFO] 链接外部类: {external_node.qualified_name} ({external_node.belong_project})")
+            
+            # 场景 2: 新的内部定义 → 查找已有的外部定义
+            for internal_node in current_internal:
+                external_nodes = self._find_externals_in_db(
+                    internal_node.qualified_name,
+                    internal_node.belong_project
+                )
+                for external_node in external_nodes:
+                    self.relationships_to_create.append((
+                        external_node['symbol_id'],
+                        internal_node.symbol_id,
+                        'ACTUAL_IMPLEMENTATION'
+                    ))
+                    logger.info(f"[INFO] 链接外部类: {internal_node.qualified_name} ({internal_node.belong_project})")
+        
+        except Exception as e:
+            logger.warning(f"[WARN] 准备外部类链接失败: {e}")
+    
+    def _find_internal_in_db(self, fqn: str, project_name: str) -> dict:
+        """
+        在数据库中查找匹配的内部定义
+        
+        参数:
+            fqn: 完全限定名
+            project_name: 项目名称
+        
+        返回:
+            匹配的内部节点信息，如果没找到返回 None
+        """
+        query = """
+        MATCH (internal:JavaObject)
+        WHERE internal.from_type = 'InnerDefinition'
+          AND internal.qualified_name = $fqn
+          AND internal.belong_project = $project_name
+        RETURN internal.symbol_id as symbol_id
+        LIMIT 1
+        """
+        
+        result = self.connector.execute_query(query, {
+            'fqn': fqn,
+            'project_name': project_name
+        })
+        
+        records = list(result)
+        return dict(records[0]) if records else None
+    
+    def _find_externals_in_db(self, fqn: str, project_name: str) -> list:
+        """
+        在数据库中查找匹配的外部定义（可能有多个）
+        
+        参数:
+            fqn: 完全限定名
+            project_name: 项目名称
+        
+        返回:
+            匹配的外部节点列表
+        """
+        query = """
+        MATCH (external:JavaObject)
+        WHERE external.from_type = 'ExternalDefinition'
+          AND external.qualified_name = $fqn
+          AND external.belong_project = $project_name
+        RETURN external.symbol_id as symbol_id
+        """
+        
+        result = self.connector.execute_query(query, {
+            'fqn': fqn,
+            'project_name': project_name
+        })
+        
+        return [dict(record) for record in result]
+    
+    def _count_external_links(self) -> int:
+        """
+        统计本次创建的外部类链接数量
+        
+        返回:
+            ACTUAL_IMPLEMENTATION 关系的数量
+        """
+        count = sum(1 for rel in self.relationships_to_create if rel[2] == 'ACTUAL_IMPLEMENTATION')
+        return count
     
     def _prepare_project_node(self):
         """准备项目节点"""
@@ -809,22 +942,85 @@ class Neo4jExporterAST:
                     location = self.symbol_manager.parse_java_object_where(interface.split("<")[0], ast_data, project_name=self.project_name)
                     self._parse_class_location_to_node(location, c.symbol_id,JavaGraphEdgeType.IMPLEMENTS.value, ObjectType.INTERFACE_TYPE)
 
+    def _create_external_java_object(self, location: ClassLocation, object_type: ObjectType) -> JavaObjectNodeGraphNode:
+        """
+        创建外部 JAR 类的 JavaObject 节点
+        
+        参数:
+            location: 类位置信息
+            object_type: 对象类型（类/接口/枚举等）
+        
+        返回:
+            JavaObjectNodeGraphNode 对象
+        """
+        
+        java_object = JavaObjectNodeGraphNode()
+        java_object.symbol_id = AstTool.get_str(location.jar_path, "UNKNOWN") + '<path>' + AstTool.get_str(location.fqn, "UNKNOWN")
+        java_object.qualified_name = AstTool.get_str(location.fqn, "UNKNOWN")
+        java_object.name = java_object.qualified_name.rsplit(".", 1)[-1]
+        java_object.object_type = object_type.value
+        java_object.belong_file = location.file_path
+        
+        # 确定项目名称的优先级：
+        # 1. parent_artifact_id（如果存在）
+        # 2. artifact_id（如果存在）
+        # 3. 从 jar_path 提取 JAR 文件名（去掉版本号和 .jar 后缀）
+        # 4. 最后才使用 "UNKNOWN"
+        if location.parent_artifact_id:
+            java_object.belong_project = location.parent_artifact_id
+        elif location.artifact_id:
+            java_object.belong_project = location.artifact_id
+        elif location.jar_path:
+            # 从 jar_path 提取文件名，去掉版本号和 .jar 后缀
+            jar_filename = os.path.basename(location.jar_path)
+            if jar_filename.endswith('.jar'):
+                jar_filename = jar_filename[:-4]
+            
+            # 去掉版本号部分
+            # 例如: eapr-mq-rocketmq-plugin-1.2.0 -> eapr-mq-rocketmq-plugin
+            project_name = re.sub(VERSION_PATTERN, '', jar_filename)
+            java_object.belong_project = project_name if project_name else jar_filename
+        else:
+            java_object.belong_project = "UNKNOWN"
+        
+        # 确定版本号的优先级：
+        # 1. parent_version（如果存在）
+        # 2. artifact_version（如果存在）
+        # 3. 从 jar_path 文件名中提取版本号
+        # 4. 空字符串
+        if location.parent_version:
+            java_object.version = location.parent_version
+        elif location.artifact_version:
+            java_object.version = location.artifact_version
+        elif location.jar_path:
+            # 尝试从 JAR 文件名中提取版本号
+            # 例如: spring-core-5.3.0.jar -> 5.3.0
+            #      eapr-mq-rocketmq-plugin-1.2.0.jar -> 1.2.0
+            jar_filename = os.path.basename(location.jar_path)
+            if jar_filename.endswith('.jar'):
+                jar_filename = jar_filename[:-4]
+            
+            # 匹配常见的版本号模式：数字.数字.数字 或 数字.数字.数字-SNAPSHOT 等
+            # 从文件名末尾开始匹配版本号
+            match = re.search(VERSION_PATTERN, jar_filename)
+            if match:
+                java_object.version = match.group(1)
+            else:
+                java_object.version = ""
+        else:
+            java_object.version = ""
+        
+        java_object.from_type = ObjectFromType.EXTERNAL_DEFINITION.value
+        return java_object
+    
     def _parse_class_location_to_node(self, location: ClassLocation, class_symbol_id: str, extend_type: str, object_type: ObjectType):
         if location is None:
             return
+        
         java_object = JavaObjectNodeGraphNode()
+        
         if location.type == ClassLocationType.EXTERNAL:
-            java_object.symbol_id = AstTool.get_str(location.jar_path, "UNKNOWN") + '<path>' + AstTool.get_str(location.fqn, "UNKNOWN")
-            java_object.qualified_name = AstTool.get_str(location.fqn, "UNKNOWN")
-            java_object.name = java_object.qualified_name.rsplit(".", 1)[-1]
-            java_object.object_type = object_type.value
-            java_object.belong_file = location.file_path
-            # 优先使用 parent_artifact_id，其次 artifact_id，最后使用 "UNKNOWN"
-            java_object.belong_project = AstTool.get_str(
-                location.parent_artifact_id, 
-                AstTool.get_str(location.artifact_id, "UNKNOWN")
-            )
-            java_object.from_type = ObjectFromType.EXTERNAL_DEFINITION.value
+            java_object = self._create_external_java_object(location, object_type)
         elif location.type == ClassLocationType.JDK:
             # JDK 标准库类
             jar_path = AstTool.get_str(location.jar_path, "")
@@ -835,6 +1031,7 @@ class Neo4jExporterAST:
             java_object.object_type = object_type.value
             # 从 jar_path 提取 JDK 模块名（例如 java.base.jmod -> java.base）
             java_object.belong_project = "__JDK__"
+            java_object.version = "1.8"
             java_object.from_type = ObjectFromType.JDK_DEFINITION.value
             self.created_nodes.add(java_object.symbol_id)
         elif location.type == ClassLocationType.UNKNOWN:
@@ -860,13 +1057,15 @@ class Neo4jExporterAST:
             exists = any(node.name == java_object.belong_project for node in projects_list if isinstance(node, ProjectGraphNode))
             if not exists:
                 self.created_nodes.add(dep_project_symbol_id)
-                self.nodes_to_create[JavaNeo4jNodeType.Project].append(ProjectGraphNode(
-                    name = java_object.belong_project,
-                    qualified_name = dep_project_symbol_id,
-                    symbol_id = dep_project_symbol_id,
-                    belong_project = java_object.belong_project,
-                    project_type = "Lib"
-                ))
+                pn = ProjectGraphNode(
+                    name=java_object.belong_project,
+                    qualified_name=dep_project_symbol_id,
+                    symbol_id=dep_project_symbol_id,
+                    belong_project=java_object.belong_project,
+                    project_type="Lib"
+                )
+                pn.version = java_object.version
+                self.nodes_to_create[JavaNeo4jNodeType.Project].append(pn)
             self.relationships_to_create.append((dep_project_symbol_id, java_object.symbol_id, JavaGraphEdgeType.CONTAINS_LIB.value))
 
     # ==================== 嵌套类型处理方法 ====================

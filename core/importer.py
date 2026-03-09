@@ -84,7 +84,8 @@ class GitToNeo4jImporter:
                        clear_database: bool = False,
                        async_mode: bool = False,
                        clone_timeout: Optional[int] = None,
-                       git_config: Optional[Dict[str, str]] = None) -> Dict:
+                       git_config: Optional[Dict[str, str]] = None,
+                       commit_id: Optional[str] = None) -> Dict:
         
         if async_mode:
             return self._import_async(
@@ -93,7 +94,8 @@ class GitToNeo4jImporter:
                 repo_name=repo_name,
                 java_source_dir=java_source_dir,
                 project_name=project_name,
-                clear_database=clear_database
+                clear_database=clear_database,
+                commit_id=commit_id
             )
         else:
             return self._import_sync(
@@ -104,7 +106,8 @@ class GitToNeo4jImporter:
                 project_name=project_name,
                 clear_database=clear_database,
                 clone_timeout=clone_timeout,
-                git_config=git_config
+                git_config=git_config,
+                commit_id=commit_id
             )
     
     def _import_async(self,
@@ -113,7 +116,8 @@ class GitToNeo4jImporter:
                       repo_name: Optional[str] = None,
                       java_source_dir: Optional[str] = None,
                       project_name: Optional[str] = None,
-                      clear_database: bool = False) -> Dict:
+                      clear_database: bool = False,
+                      commit_id: Optional[str] = None) -> Dict:
         """异步导入(提交到任务队列)"""
         try:
             from core.task_queue import get_task_queue, TaskPriority
@@ -143,7 +147,8 @@ class GitToNeo4jImporter:
                 java_source_dir=java_source_dir,
                 project_name=project_name,
                 clear_database=clear_database,
-                priority=TaskPriority.NORMAL
+                priority=TaskPriority.NORMAL,
+                commit_id=commit_id
             )
             
             return {
@@ -169,7 +174,8 @@ class GitToNeo4jImporter:
                     project_name: Optional[str] = None,
                     clear_database: bool = False,
                     clone_timeout: Optional[int] = None,
-                    git_config: Optional[Dict[str, str]] = None) -> Dict:
+                    git_config: Optional[Dict[str, str]] = None,
+                    commit_id: Optional[str] = None) -> Dict:
         if not self.connector:
             return {
                 'success': False,
@@ -195,7 +201,10 @@ class GitToNeo4jImporter:
             
             logger.info(f"\n仓库信息:")
             logger.info(f"  URL: {repo_url}")
-            logger.info(f"  分支: {branch}")
+            if commit_id:
+                logger.info(f"  Commit ID: {commit_id}")
+            else:
+                logger.info(f"  分支: {branch}")
             logger.info(f"  仓库 {repo_name}")
             logger.info(f"  项目 {project_name}")
             if java_source_dir:
@@ -211,7 +220,8 @@ class GitToNeo4jImporter:
                 repo_name=repo_name,
                 java_source_dir=java_source_dir,
                 clone_timeout=clone_timeout,
-                git_config=git_config
+                git_config=git_config,
+                commit_id=commit_id
             )
             
             if not git_result['success']:

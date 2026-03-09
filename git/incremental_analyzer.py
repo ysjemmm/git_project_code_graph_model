@@ -26,7 +26,8 @@ class GitIncrementalAnalyzer:
                         repo_name: Optional[str] = None,
                         java_source_dir: str = "src/main/java",
                         clone_timeout: Optional[int] = None,
-                        git_config: Optional[Dict[str, str]] = None) -> Dict:
+                        git_config: Optional[Dict[str, str]] = None,
+                        commit_id: Optional[str] = None) -> Dict:
         try:
             # 提取仓库名称
             if repo_name is None:
@@ -61,7 +62,9 @@ class GitIncrementalAnalyzer:
             # 第一步:克隆或拉取仓库
             if not git_manager.is_repo_exists():
                 logger.info(f"[INFO] 首次克隆仓库: {repo_url}")
-                success, msg = git_manager.clone(repo_url, branch, timeout=clone_timeout, git_config=default_git_config)
+                # 如果指定了 commit_id，使用完整克隆（不使用 shallow）
+                shallow = commit_id is None
+                success, msg = git_manager.clone(repo_url, branch, shallow=shallow, timeout=clone_timeout, git_config=default_git_config)
                 if not success:
                     return {
                         'success': False,
@@ -70,6 +73,19 @@ class GitIncrementalAnalyzer:
                         'branch': branch,
                         'error': msg
                     }
+                
+                # 如果指定了 commit_id，切换到该 commit
+                if commit_id:
+                    logger.info(f"[INFO] 切换到指定 commit: {commit_id}")
+                    success, msg = git_manager.checkout(commit_id)
+                    if not success:
+                        return {
+                            'success': False,
+                            'repo_name': repo_name,
+                            'repo_url': repo_url,
+                            'commit_id': commit_id,
+                            'error': msg
+                        }
             else:
                 logger.info(f"[INFO] 更新本地仓库: {repo_name}")
                 # fetch 获取最新的远程分支信息
@@ -83,13 +99,37 @@ class GitIncrementalAnalyzer:
                         'error': msg
                     }
                 
-                # 获取当前分支
-                current_branch = git_manager.get_current_branch()
-                
-                # 如果目标分支与当前分支不同,需要切换分
-                if current_branch != branch:
-                    logger.info(f"[INFO] 切换分支: {current_branch} -> {branch}")
-                    success, msg = git_manager.checkout(branch)
+                # 如果指定了 commit_id，直接切换到该 commit
+                if commit_id:
+                    logger.info(f"[INFO] 切换到指定 commit: {commit_id}")
+                    success, msg = git_manager.checkout(commit_id)
+                    if not success:
+                        return {
+                            'success': False,
+                            'repo_name': repo_name,
+                            'repo_url': repo_url,
+                            'commit_id': commit_id,
+                            'error': msg
+                        }
+                else:
+                    # 获取当前分支
+                    current_branch = git_manager.get_current_branch()
+                    
+                    # 如果目标分支与当前分支不同,需要切换分
+                    if current_branch != branch:
+                        logger.info(f"[INFO] 切换分支: {current_branch} -> {branch}")
+                        success, msg = git_manager.checkout(branch)
+                        if not success:
+                            return {
+                                'success': False,
+                                'repo_name': repo_name,
+                                'repo_url': repo_url,
+                                'branch': branch,
+                                'error': msg
+                            }
+                    
+                    # 执行 pull 更新代码
+                    success, msg = git_manager.pull(branch)
                     if not success:
                         return {
                             'success': False,
@@ -98,17 +138,6 @@ class GitIncrementalAnalyzer:
                             'branch': branch,
                             'error': msg
                         }
-                
-                # 执行 pull 更新代码
-                success, msg = git_manager.pull(branch)
-                if not success:
-                    return {
-                        'success': False,
-                        'repo_name': repo_name,
-                        'repo_url': repo_url,
-                        'branch': branch,
-                        'error': msg
-                    }
             
             # 第二步:获取当前 commit hash
             current_commit = git_manager.get_current_commit()
@@ -117,14 +146,17 @@ class GitIncrementalAnalyzer:
                     'success': False,
                     'repo_name': repo_name,
                     'repo_url': repo_url,
-                    'branch': branch,
+                    'branch': branch if not commit_id else None,
+                    'commit_id': commit_id,
                     'error': "无法获取 commit hash"
                 }
             
             logger.info(f"[INFO] 当前 commit: {current_commit[:8]}")
             
             # 第三步:检查是否有代码变化
-            has_changes, reason = self.cache_manager.has_changes(repo_name, branch, current_commit)
+            # 如果指定了 commit_id，使用 commit_id 作为缓存键；否则使用 branch
+            cache_key = commit_id if commit_id else branch
+            has_changes, reason = self.cache_manager.has_changes(repo_name, cache_key, current_commit)
             logger.info(f"[INFO] {reason}")
             
             # 规范java_source_dir 路径
@@ -152,12 +184,14 @@ class GitIncrementalAnalyzer:
             # 加载旧的 Merkle 树(从源分支或同分支的旧版本
             # 如果切换了分支,加载源分支的 Merkle 
             # 如果没切换分支,加载同分支的旧版
-            if source_branch and source_branch != branch:
+            # 如果指定了 commit_id，使用 commit_id 作为缓存键
+            cache_key = commit_id if commit_id else branch
+            if source_branch and source_branch != branch and not commit_id:
                 # 切换了分支,加载源分支的 Merkle 
                 old_tree = self.cache_manager.load_merkle_tree(repo_name, source_branch)
             else:
-                # 没切换分支或首次克隆,加载同分支的旧版本
-                old_tree = self.cache_manager.load_merkle_tree(repo_name, branch)
+                # 没切换分支或首次克隆或使用 commit_id,加载对应的旧版本
+                old_tree = self.cache_manager.load_merkle_tree(repo_name, cache_key)
             
             # 对比 Merkle 树,找出变化的文
             changed_files = []
@@ -197,7 +231,10 @@ class GitIncrementalAnalyzer:
                 # 打印详细的分支切换信
                 logger.info("")
                 logger.info("=" * 70)
-                logger.info("分支切换详情:")
+                if commit_id:
+                    logger.info("Commit 切换详情:")
+                else:
+                    logger.info("分支切换详情:")
                 logger.info("=" * 70)
                 
                 # 源信息
@@ -207,7 +244,10 @@ class GitIncrementalAnalyzer:
                     logger.info("commit = 首次克隆")
                 
                 # 目标信息
-                logger.info(f"目标 commit = {current_commit[:8]} ({branch})")
+                if commit_id:
+                    logger.info(f"目标 commit = {current_commit[:8]} (指定 commit)")
+                else:
+                    logger.info(f"目标 commit = {current_commit[:8]} ({branch})")
                 
                 # 文件变化统计
                 logger.info("")
@@ -250,8 +290,11 @@ class GitIncrementalAnalyzer:
                 logger.info("=" * 70)
                 logger.info("首次导入信息:")
                 logger.info("=" * 70)
-                logger.info(f"分支 = {branch}")
-                logger.info(f"Commit = {current_commit[:8]}")
+                if commit_id:
+                    logger.info(f"Commit = {current_commit[:8]} (指定 commit)")
+                else:
+                    logger.info(f"分支 = {branch}")
+                    logger.info(f"Commit = {current_commit[:8]}")
                 logger.info(f"新增文件: {len(added_files)} ")
                 if added_files:
                     for file in added_files:
@@ -280,8 +323,8 @@ class GitIncrementalAnalyzer:
                 }
             
             # 第五步:保存 Merkle 树和元数
-            self.cache_manager.save_merkle_tree(repo_name, branch, new_tree)
-            self.cache_manager.update_metadata(repo_name, repo_url, branch, current_commit)
+            self.cache_manager.save_merkle_tree(repo_name, cache_key, new_tree)
+            self.cache_manager.update_metadata(repo_name, repo_url, cache_key, current_commit)
             
             # 第六步:执行增量分析
             logger.info(f"[INFO] 执行增量分析...")

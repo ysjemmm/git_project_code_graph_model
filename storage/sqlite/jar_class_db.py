@@ -90,7 +90,7 @@ class JARClassDB:
         创建:
             - jar_classes 表（id, fqn, simple_name, package_name, jar_name, jar_path, is_anonymous, insert_time）
             - jar_metadata 表（id, jar_path, scan_timestamp, class_count）
-            - 索引：fqn（唯一）、simple_name、package_name、jar_name
+            - 索引：fqn + jar_name（联合唯一）、simple_name、package_name、jar_name
         """
         cursor = self.conn.cursor()
         
@@ -98,7 +98,7 @@ class JARClassDB:
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS jar_classes (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                fqn TEXT NOT NULL UNIQUE,
+                fqn TEXT NOT NULL,
                 simple_name TEXT NOT NULL,
                 package_name TEXT NOT NULL,
                 jar_name TEXT NOT NULL,
@@ -111,11 +111,17 @@ class JARClassDB:
                 parent_version TEXT,
                 artifact_id TEXT,
                 artifact_group_id TEXT,
-                artifact_version TEXT
+                artifact_version TEXT,
+                UNIQUE(fqn, jar_name)
             )
         """)
         
         # 创建索引
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_fqn 
+            ON jar_classes(fqn)
+        """)
+        
         cursor.execute("""
             CREATE INDEX IF NOT EXISTS idx_simple_name 
             ON jar_classes(simple_name)
@@ -170,7 +176,7 @@ class JARClassDB:
         
         行为:
             - 使用事务确保原子性
-            - 如果FQN已存在，更新为新的JAR信息
+            - 如果 (fqn, jar_name) 组合已存在，更新为新的信息（upsert）
             - 批量操作以提高性能
             - 自动记录插入时间
         """
