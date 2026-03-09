@@ -182,6 +182,31 @@ location = manager.parse_java_object_where(
 # - resolution_method: 解析方法
 ```
 
+#### Symbol ID 生成规则
+
+项目的 Symbol ID 包含项目类型和版本信息，确保不同类型和版本的项目节点唯一：
+
+```python
+# Application 类型项目
+project#my-project@Application
+
+# Lib 类型项目（带版本）
+project#spring-core@Lib@5.3.0
+
+# Lib 类型项目（无版本）
+project#commons-lang@Lib
+```
+
+**格式规则**：
+- 基础格式：`project#{project_name}@{project_type}`
+- 带版本：`project#{project_name}@{project_type}@{version}`
+- `project_type` 可以是 `Application` 或 `Lib`
+
+**节点关系**：
+- **Application 项目** → `HAVE` → 文件节点 → `CONTAINS` → 内部定义的类
+- **Lib 项目** → `CONTAINS_LIB` → 外部定义的类
+- 同名项目的 Application 和 Lib 节点可以共存，通过不同的 Symbol ID 区分
+
 #### 解析优先级
 
 按照 Java/IDE 规范的解析顺序：
@@ -293,25 +318,34 @@ CREATE TABLE project_classes (
 
 ### 节点类型
 
-- `Project`: 项目节点
+- `Project`: 项目节点（区分 Application 和 Lib 类型）
 - `File`: Java 文件节点
-- `JavaObject`: 类/接口/枚举/注解/记录节点
+- `JavaObject`: 类/接口/枚举/注解/记录节点（区分内部定义和外部定义）
 - `JavaMethod`: 方法节点
 - `JavaField`: 字段节点
 - `JavaMethodParameter`: 参数节点
 - `JavaEnumConstant`: 枚举常量节点
 - `Comment`: 注释节点
 
+**JavaObject 的 from_type 属性**：
+- `InnerDefinition`: 项目内部定义的类
+- `ExternalDefinition`: 外部 JAR 中的类
+- `JdkDefinition`: JDK 标准库中的类
+- `NestedDefinition`: 嵌套类
+- `UnknownDefinition`: 未知来源的类
+
 ### 关系类型
 
-- `HAVE`: 项目包含文件
+- `HAVE`: 项目包含文件（仅 Application 类型项目）
 - `CONTAINS`: 文件包含类型定义
+- `CONTAINS_LIB`: Lib 项目包含外部定义的类
 - `MEMBER_OF`: 类型包含成员
 - `EXTENDS`: 继承关系
 - `IMPLEMENTS`: 实现关系
 - `CALLS`: 方法调用关系
 - `ACCESSES`: 字段访问关系
 - `HAS_COMMENT`: 代码元素关联注释
+- `LIB_LINK`: 外部定义链接到内部实现（JAR 中的类链接到源码中的类）
 
 ## 📖 使用示例
 
@@ -439,9 +473,36 @@ RETURN parent.qualified_name, parent.from_type
 ### 查询外部依赖
 
 ```cypher
-MATCH (obj:JavaObject {from_type: 'EXTERNAL_DEFINITION'})
+MATCH (obj:JavaObject {from_type: 'ExternalDefinition'})
 RETURN obj.qualified_name, obj.belong_project
 ORDER BY obj.belong_project
+```
+
+### 查询项目节点
+
+```cypher
+// 查询所有 Application 类型项目
+MATCH (p:Project {project_type: 'Application'})
+RETURN p.name, p.symbol_id, p.version
+
+// 查询所有 Lib 类型项目
+MATCH (p:Project {project_type: 'Lib'})
+RETURN p.name, p.symbol_id, p.version
+ORDER BY p.name
+
+// 查询同名项目的不同类型节点
+MATCH (p:Project)
+WHERE p.name = 'epaas-gateway'
+RETURN p.project_type, p.version, p.symbol_id
+```
+
+### 查询外部类链接
+
+```cypher
+// 查询外部定义链接到内部实现的类
+MATCH (external:JavaObject {from_type: 'ExternalDefinition'})-[:LIB_LINK]->(internal:JavaObject {from_type: 'InnerDefinition'})
+RETURN external.qualified_name, external.belong_project, internal.belong_file
+LIMIT 10
 ```
 
 ## ⚙️ 配置
@@ -513,6 +574,13 @@ class CommentStorageConfig:
 感谢所有为本项目做出贡献的开发者！
 
 ## 📝 更新日志
+
+### v2.1.0 (2026-03-09)
+- ✅ **项目节点 Symbol ID 优化** - Symbol ID 包含项目类型和版本信息
+- ✅ **项目类型区分** - Application 和 Lib 类型项目完全独立
+- ✅ **关系优化** - Application 项目使用 HAVE 关系，Lib 项目使用 CONTAINS_LIB 关系
+- ✅ **外部类链接** - 支持外部定义链接到内部实现（LIB_LINK 关系）
+- ✅ **批量链接优化** - 使用批量查询优化外部类链接性能
 
 ### v2.0.0 (2026-03-05)
 - ✅ **符号解析系统** - 完整的类来源解析（内部/外部/未知）
