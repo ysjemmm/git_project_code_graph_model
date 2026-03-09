@@ -21,17 +21,14 @@ def main():
     print("=" * 70)
 
     # Neo4j 配置
-    neo4j_uri = "neo4j+s://26fa83e0.databases.neo4j.io"
+    neo4j_uri = "neo4j_uri"
     neo4j_user = "neo4j"
-    neo4j_password = "kJ0iZG0ys9euMz_6rQle5f6-ibVqHtLDzLCgr42wZe4"
+    neo4j_password = "neo4j_password"
     neo4j_database = "neo4j"
 
-    # Git 配置
-    # repo_url = "http://git.timevale.cn:8081/devops/lops-flight.git"
-    # branch = "master"
-
-    repo_url = "http://git.timevale.cn:8081/epaas/esign-egress-gateway.git"
-    branch = "release/http_async_20250916"
+    
+    repo_url = "http://example"
+    branch = "master"
 
     # 创建导入器
     git_importer = GitToNeo4jImporter(neo4j_uri, neo4j_user, neo4j_password, neo4j_database)

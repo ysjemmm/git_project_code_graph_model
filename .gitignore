@@ -49,3 +49,4 @@ logs/
 
 # Kiro IDE
 .kiro/
+real_test/
