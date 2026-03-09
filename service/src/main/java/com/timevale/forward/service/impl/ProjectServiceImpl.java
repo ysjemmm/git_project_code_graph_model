@@ -1456,8 +1456,13 @@ public class ProjectServiceImpl implements ProjectService {
         Date currentDate = new Date();
         projectDetailVO.setCurrentDate(currentDate);
 
-        // 节点状态
-        projectDetailVO.setNodeStatusName(ProjectNodeStatusEnum.getNameByCode(projectDetailVO.getNodeStatus()));
+        // 节点状态：优先用"阶段名-节点名"格式显示当前进度
+        String nodeProgressLabel = buildNodeProgressLabel(projectNodeVO);
+        if (nodeProgressLabel != null) {
+            projectDetailVO.setNodeStatusName(nodeProgressLabel);
+        } else {
+            projectDetailVO.setNodeStatusName(ProjectNodeStatusEnum.getNameByCode(projectDetailVO.getNodeStatus()));
+        }
         //详设
         List<ProjectFlowDO> projectFlowDos = projectFlowMapper.getByProjectIdAndType(projectId, ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getCode());
         if (CollectionUtils.isNotEmpty(projectFlowDos)) {
@@ -1511,8 +1516,52 @@ public class ProjectServiceImpl implements ProjectService {
         return BaseResult.success(projectDetailVO);
     }
 
-    @Override
-    public BaseResult<ProjectInnerDetailVO> getInner(Long projectId) {
+    /**
+     * 根据项目节点列表构建"阶段名-节点名"格式的进度标签。
+     * 规则：找第一个没有 actualDate 的节点（当前待完成），如果全部完成则取最后一个节点。
+     */
+    private String buildNodeProgressLabel(List<ProjectNodeVO> projectNodeVO) {
+        if (CollectionUtils.isEmpty(projectNodeVO)) {
+            return null;
+        }
+        // 按 num 排序
+        List<ProjectNodeVO> sorted = projectNodeVO.stream()
+                .sorted(Comparator.comparingInt(n -> n.getNum() != null ? n.getNum() : 0))
+                .collect(Collectors.toList());
+
+        // 找第一个没有 actualDate 的节点
+        ProjectNodeVO targetNode = sorted.stream()
+                .filter(n -> n.getActualDate() == null)
+                .findFirst()
+                .orElse(sorted.get(sorted.size() - 1)); // 全部完成则取最后一个
+
+        return formatNodeLabel(targetNode);
+    }
+
+    private String formatNodeLabel(ProjectNodeVO node) {
+        if (node == null || node.getName() == null) {
+            return null;
+        }
+        String stageName = node.getStageName();
+        if (stageName != null && !stageName.isEmpty()) {
+            return stageName + "-" + node.getName();
+        }
+        // stageName 为空时，根据 stageType 兜底
+        String stageType = node.getStageType();
+        if (stageType != null) {
+            switch (stageType) {
+                case "design":
+                    return "需求规划阶段-" + node.getName();
+                case "development":
+                    return "研发阶段-" + node.getName();
+                case "release":
+                    return "测试发布阶段-" + node.getName();
+                default:
+                    break;
+            }
+        }
+        return node.getName();
+    }
         ProjectDO projectDO = projectMapper.get(projectId);
         AssertUtil.notNull(projectDO, "该项目不存在");
 
