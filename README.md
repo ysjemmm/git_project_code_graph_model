@@ -25,7 +25,8 @@
 - 🚀 **增量分析** - 基于 Git 和文件修改时间的增量更新
 - 🎭 **单例模式** - 每个项目独立的符号管理器实例
 
-<img width="2672" height="1282" alt="Neo4j Graph Visualization" src="https://github.com/user-attachments/assets/828467ca-a932-4c12-952b-3b02216d892a" />
+<img width="2771" height="1294" alt="77d28601ebfa1716e90bf93d78e90e12" src="https://github.com/user-attachments/assets/04086e54-0115-4818-a4e0-4a11b5cdba86" />
+
 
 
 ## 📋 功能特性
