@@ -28,6 +28,7 @@ class LocationRange:
 class BaseLocationAstNode:
     """Base class for all AST nodes with common location property"""
     location: LocationRange = field(default_factory=lambda: LocationRange())
+    version: str = "Default Version"
 
     def set_pos_from_node(self, node: ExtractedNode):
         """Set location from tree-sitter node or ExtractedNode
@@ -86,6 +87,11 @@ class InterfaceInfo(BaseAstNode):
     extends_interfaces: List[str] = field(default_factory=list)
     symbol_id: str = ""
     raw_metadata: str = ""
+
+    # 嵌套 Interface 默认是 static
+    is_static: bool = False
+    # Interface 隐式为 final
+    is_final: bool = False
     
     @property
     def type_name(self) -> str:
@@ -111,6 +117,11 @@ class EnumInfo(BaseAstNode):
     nested_interfaces: List[InterfaceInfo] = field(default_factory=list)
     symbol_id: str = ""
     raw_metadata: str = ""
+
+    # 嵌套 Enum 默认是 static
+    is_static: bool = False
+    # Enum 隐式为 final
+    is_final: bool = True
     
     @property
     def type_name(self) -> str:
@@ -135,7 +146,12 @@ class RecordInfo(BaseAstNode):
     code_blocks: List[CodeBlockInfo] = field(default_factory=list)
     symbol_id: str = ""
     raw_metadata: str = ""
-    
+
+    # 顶层 Record 不能为 static，但嵌套 Record 默认是 static
+    is_static: bool = False
+    # Record 隐式为 final
+    is_final: bool = True
+
     @property
     def type_name(self) -> str:
         """Alias for record_name for consistency"""
@@ -154,7 +170,12 @@ class AnnotationTypeInfo(BaseAstNode):
     elements: List[FieldInfo] = field(default_factory=list)
     symbol_id: str = ""
     raw_metadata: str = ""
-    
+
+    # 嵌套 Annotation 默认是 static
+    is_static: bool = False
+    # Annotation 一定不能设置为 final
+    is_final: bool = False
+
     @property
     def type_name(self) -> str:
         """Alias for annotation_name for consistency"""
@@ -238,7 +259,6 @@ class ParameterInfo(BaseAstNode):
 class EnumConstantInfo(BaseAstNode):
     """Enum constant information"""
     constant_name: str = ""
-    constant_body: str = ""
     annotations: List[MarkedAnnotationInfo] = field(default_factory=list)
     arguments: List[str] = field(default_factory=list)
     raw_constant: str = ""
@@ -269,6 +289,9 @@ class ClassInfo(BaseAstNode):
     symbol_id: str = ""
     raw_metadata: str = ""
 
+    is_static: bool = False
+    is_final: bool = False
+
     # extended properties
     has_uri: bool = False
     mapping_uri: str = ""
@@ -287,6 +310,7 @@ class ClassInfo(BaseAstNode):
 class JavaFileStructure(BaseAstNode):
     """Java file structure"""
     file_path: str = ""
+    relative_path: str = ""
     package_info: PackageInfo = None
     import_details: List[ImportInfo] = field(default_factory=list)
     classes: List[ClassInfo] = field(default_factory=list)
@@ -295,44 +319,3 @@ class JavaFileStructure(BaseAstNode):
     annotations: List[AnnotationTypeInfo] = field(default_factory=list)
     records: List[RecordInfo] = field(default_factory=list)
     file_name: str = ""
-
-    # Aliases for backward compatibility
-    @property
-    def class_details(self):
-        return self.classes
-    
-    @class_details.setter
-    def class_details(self, value):
-        self.classes = value
-    
-    @property
-    def interface_details(self):
-        return self.interfaces
-    
-    @interface_details.setter
-    def interface_details(self, value):
-        self.interfaces = value
-    
-    @property
-    def enum_details(self):
-        return self.enums
-    
-    @enum_details.setter
-    def enum_details(self, value):
-        self.enums = value
-    
-    @property
-    def record_details(self):
-        return self.records
-    
-    @record_details.setter
-    def record_details(self, value):
-        self.records = value
-    
-    @property
-    def annotation_details(self):
-        return self.annotations
-    
-    @annotation_details.setter
-    def annotation_details(self, value):
-        self.annotations = value

@@ -24,7 +24,7 @@ class MethodAnalyzer(BaseAnalyzer):
     def __init__(self, current_class_name: str = ""):
         super().__init__()
 
-    def handle_method_declaration(self, node: ExtractedNode, context: AnalyzerContext) -> MethodInfo | None:
+    def handle_method_declaration(self, node: ExtractedNode, context: AnalyzerContext, parent_symbol_id: str = "") -> MethodInfo | None:
         """Handle method declaration node"""
         method_info = MethodInfo()
         
@@ -51,8 +51,24 @@ class MethodAnalyzer(BaseAnalyzer):
         # Extract type parameters
         method_info.type_parameters = AnalyzerHelper.extract_java_type_parameters(node)
         
-        # Extract parameters
+        # Extract parameters (需要先提取参数以获取参数类型)
         method_info.parameters = self._extract_parameters(node, method_info, context)
+        
+        # Generate symbol_id (在提取参数后生成，因为需要参数类型)
+        if parent_symbol_id and method_info.method_name:
+            param_types = [p.parameter_type for p in method_info.parameters]
+            method_info.symbol_id = AnalyzerHelper.generate_symbol_id_for_method(
+                parent_symbol_id, method_info.method_name, param_types, method_info.is_static
+            )
+            method_info.parent_symbol_id = parent_symbol_id
+            
+            # 为每个参数生成 symbol_id
+            for param in method_info.parameters:
+                if param.parameter_name:
+                    param.symbol_id = AnalyzerHelper.generate_symbol_id_for_parameter(
+                        method_info.symbol_id, param.parameter_name
+                    )
+                    param.parent_symbol_id = method_info.symbol_id
         
         # Extract exceptions
         method_info.exceptions = self._extract_exceptions(node)

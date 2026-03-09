@@ -10,11 +10,11 @@ class AstTool:
 
     @staticmethod
     def find_child_by_type(node: ExtractedNode, target_type: str, first: bool = False, **args) -> list[ExtractedNode] | ExtractedNode | None:
-        match nodes := AstTool.find_child_by_types(node, [target_type], **args):
-            case [single_node]:
-                return single_node if first else [single_node]
-            case _:
-                return nodes
+        nodes = AstTool.find_child_by_types(node, [target_type], **args)
+        if first:
+            return nodes[0] if nodes else None
+        else:
+            return nodes
 
     @staticmethod
     def node_text(node: NodeInterface | ExtractedNode, strip_multiline: bool = False) -> str:
@@ -77,3 +77,29 @@ class AstTool:
             result += '/'
 
         return result
+    
+    @staticmethod
+    def get_str(value: str | None, default: str = "") -> str:
+        """
+        获取字符串值，如果为 None 或空串则返回默认值
+        
+        参数:
+            value: 要检查的字符串值
+            default: 默认值（默认为空字符串）
+        
+        返回:
+            如果 value 为 None 或空串，返回 default；否则返回 value
+        
+        示例:
+            >>> AstTool.get_str(None, "default")
+            'default'
+            >>> AstTool.get_str("", "default")
+            'default'
+            >>> AstTool.get_str("hello", "default")
+            'hello'
+            >>> AstTool.get_str("  ", "default")  # 空白字符串不算空
+            '  '
+        """
+        if value is None or value == "":
+            return default
+        return value

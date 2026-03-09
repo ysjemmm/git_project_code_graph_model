@@ -7,6 +7,10 @@ from typing import Dict, List, Optional
 
 from loraxmod import Parser
 
+from parser.languages.java.utils.analyzer_helper import AnalyzerHelper
+from parser.symbol_table_builder import SymbolTableBuilder
+from tools.constants import PROJECT_ROOT_PATH
+
 # 修复 Windows 编码问题
 if sys.platform == 'win32':
     import io
@@ -27,9 +31,8 @@ logger = get_logger("git_importer")
 
 class GitToNeo4jImporter:
     
-    
     # 默认配置
-    DEFAULT_CACHE_BASE_DIR = ".cache/git_repos"
+    DEFAULT_CACHE_BASE_DIR = str(Path(PROJECT_ROOT_PATH / ".cache/git_repos"))
     DEFAULT_NEO4J_URI = "neo4j+s://26fa83e0.databases.neo4j.io"
     DEFAULT_NEO4J_USER = "neo4j"
     DEFAULT_NEO4J_PASSWORD = "kJ0iZG0ys9euMz_6rQle5f6-ibVqHtLDzLCgr42wZe4"
@@ -81,7 +84,8 @@ class GitToNeo4jImporter:
                        clear_database: bool = False,
                        async_mode: bool = False,
                        clone_timeout: Optional[int] = None,
-                       git_config: Optional[Dict[str, str]] = None) -> Dict:
+                       git_config: Optional[Dict[str, str]] = None,
+                       commit_id: Optional[str] = None) -> Dict:
         
         if async_mode:
             return self._import_async(
@@ -90,7 +94,8 @@ class GitToNeo4jImporter:
                 repo_name=repo_name,
                 java_source_dir=java_source_dir,
                 project_name=project_name,
-                clear_database=clear_database
+                clear_database=clear_database,
+                commit_id=commit_id
             )
         else:
             return self._import_sync(
@@ -101,7 +106,8 @@ class GitToNeo4jImporter:
                 project_name=project_name,
                 clear_database=clear_database,
                 clone_timeout=clone_timeout,
-                git_config=git_config
+                git_config=git_config,
+                commit_id=commit_id
             )
     
     def _import_async(self,
@@ -110,7 +116,8 @@ class GitToNeo4jImporter:
                       repo_name: Optional[str] = None,
                       java_source_dir: Optional[str] = None,
                       project_name: Optional[str] = None,
-                      clear_database: bool = False) -> Dict:
+                      clear_database: bool = False,
+                      commit_id: Optional[str] = None) -> Dict:
         """异步导入(提交到任务队列)"""
         try:
             from core.task_queue import get_task_queue, TaskPriority
@@ -140,7 +147,8 @@ class GitToNeo4jImporter:
                 java_source_dir=java_source_dir,
                 project_name=project_name,
                 clear_database=clear_database,
-                priority=TaskPriority.NORMAL
+                priority=TaskPriority.NORMAL,
+                commit_id=commit_id
             )
             
             return {
@@ -166,7 +174,8 @@ class GitToNeo4jImporter:
                     project_name: Optional[str] = None,
                     clear_database: bool = False,
                     clone_timeout: Optional[int] = None,
-                    git_config: Optional[Dict[str, str]] = None) -> Dict:
+                    git_config: Optional[Dict[str, str]] = None,
+                    commit_id: Optional[str] = None) -> Dict:
         if not self.connector:
             return {
                 'success': False,
@@ -192,7 +201,10 @@ class GitToNeo4jImporter:
             
             logger.info(f"\n仓库信息:")
             logger.info(f"  URL: {repo_url}")
-            logger.info(f"  分支: {branch}")
+            if commit_id:
+                logger.info(f"  Commit ID: {commit_id}")
+            else:
+                logger.info(f"  分支: {branch}")
             logger.info(f"  仓库 {repo_name}")
             logger.info(f"  项目 {project_name}")
             if java_source_dir:
@@ -208,7 +220,8 @@ class GitToNeo4jImporter:
                 repo_name=repo_name,
                 java_source_dir=java_source_dir,
                 clone_timeout=clone_timeout,
-                git_config=git_config
+                git_config=git_config,
+                commit_id=commit_id
             )
             
             if not git_result['success']:
@@ -284,8 +297,8 @@ class GitToNeo4jImporter:
             ast_data_list = []
             
             # 需要获取第一个源代码目录作为基础路径
-            first_source_dir = java_source_dirs[0]
-            first_source_path = os.path.join(repo_cache_dir, first_source_dir.replace('/', os.sep))
+            # first_source_dir = java_source_dirs[0]
+            # first_source_path = os.path.join(repo_cache_dir, first_source_dir.replace('/', os.sep))
             
             # 创建全局符号表
             global_symbol_table = SymbolTable()
@@ -293,7 +306,8 @@ class GitToNeo4jImporter:
             # 创建分析器上下文
             context = AnalyzerContext(
                 project_name=project_name,
-                project_path=first_source_path,
+                project_path=repo_cache_dir,
+                root_project_symbol_id=AnalyzerHelper.generate_symbol_id_for_project(project_name, project_type="Application"),
                 parser=Parser("java")
             )
             
@@ -314,16 +328,14 @@ class GitToNeo4jImporter:
             # builder = SymbolTableBuilder(symbol_table=global_symbol_table)
             # for java_file_structure in ast_data_list:
             #     builder.current_file = java_file_structure.file_path
-            #     builder._register_all_method_calls(java_file_structure)
-            #     builder._register_all_field_accesses(java_file_structure)
+            #     builder.register_all_method_calls(java_file_structure)
+            #     builder.register_all_field_accesses(java_file_structure)
             
             # 第七步:导出到Neo4j
             logger.info(f"\n导出到Neo4j...")
-            exporter = Neo4jExporterAST(self.connector)
+            exporter = Neo4jExporterAST(self.connector, project_name, context.root_project_symbol_id, repo_cache_dir)
             result = exporter.export_from_ast_data(
                 ast_data_list,
-                project_name,
-                repo_cache_dir,
                 clear_database,
                 [global_symbol_table]
             )
@@ -434,6 +446,15 @@ class GitToNeo4jImporter:
             else:
                 symbol_table = global_symbol_table
             
+            # 设置当前文件路径到 context（用于生成 symbol_id）
+            # 计算相对于项目根目录的路径
+            try:
+                relative_path = os.path.relpath(java_file_path, context.project_path)
+                context.file_path = relative_path.replace(os.sep, '/')  # 统一使用 / 分隔符
+            except ValueError:
+                # 如果无法计算相对路径，使用文件名
+                context.file_path = os.path.basename(java_file_path)
+            
             analyzer = JavaFileAnalyzer(
                 context=context,
                 symbol_table=symbol_table,
@@ -445,7 +466,7 @@ class GitToNeo4jImporter:
         except Exception as e:
             logger.info(f"[ERROR] 解析 {java_file_path} 失败: {e}")
             import traceback
-            logger.debug(traceback.format_exc())
+            logger.error(traceback.format_exc())
             return None
     
     def disconnect(self):

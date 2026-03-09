@@ -34,7 +34,7 @@ class ClassBodyAnalyzer(BaseAnalyzer):
         self._init()
         self._ast_must_nodes(node)
 
-        AnalyzerHelper.extract_java_nested_object(self._class_info, self.type2node, context)
+        AnalyzerHelper.extract_java_nested_object(self._class_info, self.type2node, context, class_info.symbol_id)
 
         self._class_info.comments = self._extract_comments(context)
         self._class_info.fields = self._extract_fields(context)
@@ -68,7 +68,7 @@ class ClassBodyAnalyzer(BaseAnalyzer):
         fs = []
         for n in fields:
             if n is not None:
-                result = analyzer.handle_field_declaration(n)
+                result = analyzer.handle_field_declaration(n, self._class_info.symbol_id)
                 if result is not None:
                     fs.append(result)
         return fs
@@ -80,7 +80,7 @@ class ClassBodyAnalyzer(BaseAnalyzer):
         mtds = []
         for n in methods:
             if n is not None:
-                result = analyzer.handle_method_declaration(n, context)
+                result = analyzer.handle_method_declaration(n, context, self._class_info.symbol_id)
                 if result is not None:
                     mtds.append(result)
         return mtds
@@ -92,7 +92,7 @@ class ClassBodyAnalyzer(BaseAnalyzer):
         mtds = []
         for n in methods:
             if n is not None:
-                result = analyzer.handle_constructor_declaration(n, context)
+                result = analyzer.handle_constructor_declaration(n, context, self._class_info.symbol_id)
                 if result is not None:
                     mtds.append(result)
         return mtds

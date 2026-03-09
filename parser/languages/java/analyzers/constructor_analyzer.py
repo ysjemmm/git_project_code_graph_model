@@ -23,7 +23,7 @@ class ConstructorAnalyzer(BaseAnalyzer):
     def __init__(self):
         super().__init__()
 
-    def handle_constructor_declaration(self, node: ExtractedNode, context: AnalyzerContext) -> ConstructorInfo | None:
+    def handle_constructor_declaration(self, node: ExtractedNode, context: AnalyzerContext, parent_symbol_id: str = "") -> ConstructorInfo | None:
         """Handle constructor declaration node"""
         constructor_info = ConstructorInfo()
 
@@ -41,8 +41,24 @@ class ConstructorAnalyzer(BaseAnalyzer):
             AstTool.find_child_by_type(node, JavaAstNodeType.MODIFIERS.value, True)
         )
 
-        # Extract parameters
+        # Extract parameters (需要先提取参数以获取参数类型)
         constructor_info.parameters = self._extract_parameters(node, constructor_info, context)
+
+        # Generate symbol_id (在提取参数后生成，因为需要参数类型)
+        if parent_symbol_id:
+            param_types = [p.parameter_type for p in constructor_info.parameters]
+            constructor_info.symbol_id = AnalyzerHelper.generate_symbol_id_for_constructor(
+                parent_symbol_id, param_types
+            )
+            constructor_info.parent_symbol_id = parent_symbol_id
+            
+            # 为每个参数生成 symbol_id
+            for param in constructor_info.parameters:
+                if param.parameter_name:
+                    param.symbol_id = AnalyzerHelper.generate_symbol_id_for_parameter(
+                        constructor_info.symbol_id, param.parameter_name
+                    )
+                    param.parent_symbol_id = constructor_info.symbol_id
 
         # Extract exceptions
         constructor_info.exceptions = self._extract_exceptions(node)
@@ -88,25 +104,6 @@ class ConstructorAnalyzer(BaseAnalyzer):
 
             parameters.append(now_param_info)
         return parameters
-
-    def _parse_parameter(self, node: ExtractedNode) -> ParameterInfo:
-        """Parse a single parameter"""
-        param_info = ParameterInfo()
-
-        # Extract parameter type
-        type_node = AstTool.find_child_by_type(node, JavaAstNodeType.TYPE.value)
-        if type_node and not isinstance(type_node, list):
-            param_info.parameter_type = AstTool.node_text(type_node)
-
-        # Extract parameter name
-        identifier = AstTool.find_child_by_type(node, JavaAstNodeType.IDENTIFIER.value)
-        if identifier and not isinstance(identifier, list):
-            param_info.parameter_name = AstTool.node_text(identifier)
-
-        # Set location
-        param_info.location = self.create_location_range(node)
-
-        return param_info
 
     def _extract_exceptions(self, node: ExtractedNode) -> List[str]:
         """Extract thrown exceptions"""

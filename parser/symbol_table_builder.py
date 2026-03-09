@@ -19,11 +19,11 @@ from parser.languages.java.core.ast_node_types import LocationRange
 class SymbolTableBuilder:
     
     symbol_table: SymbolTable
-    current_file: str = ""                    # 当前解析的文件路
+    current_file: str = ""                    # 当前解析的文件路径
     current_class_stack: List[str] = None     # 当前类作用域栈(支持嵌套类)
     current_method: Optional[str] = None      # 当前方法符号ID
     current_package_symbol_id: Optional[str] = None  # 当前包符号ID
-    current_package_name: Optional[str] = None  # 当前包名(用于生symbol_id
+    current_package_name: Optional[str] = None  # 当前包名(用于生symbol_id)
     
     def __post_init__(self):
         if self.current_class_stack is None:
@@ -45,29 +45,29 @@ class SymbolTableBuilder:
         self._register_javafile(file_path)
         
         # 处理包声
-        if java_file.package_info and java_file.package_info.package_name:
-            self._register_package(java_file.package_info.package_name)
+        if java_file.package_info and java_file.package_info.name:
+            self._register_package(java_file.package_info.name)
             # 存储包符号ID供后续使
-            self.current_package_symbol_id = f"package:{java_file.package_info.package_name}"
+            self.current_package_symbol_id = f"package:{java_file.package_info.name}"
         
         # 处理导入声明
         for import_info in java_file.import_details:
             self._register_import(import_info)
         
         # 处理所有类型声
-        for class_info in java_file.class_details:
+        for class_info in java_file.classes:
             self._register_class(class_info)
         
-        for interface_info in java_file.interface_details:
+        for interface_info in java_file.interfaces:
             self._register_interface(interface_info)
         
-        for enum_info in java_file.enum_details:
+        for enum_info in java_file.enums:
             self._register_enum(enum_info)
         
-        for record_info in java_file.record_details:
+        for record_info in java_file.records:
             self._register_record(record_info)
         
-        for annotation_info in java_file.annotation_details:
+        for annotation_info in java_file.annotations:
             self._register_annotation(annotation_info)
         
         # 第二阶段:解析所有类型(在所有符号注册完成后
@@ -77,10 +77,10 @@ class SymbolTableBuilder:
         self._resolve_all_inheritance_edges()
         
         # 第四阶段:注册方法调用关系边
-        self._register_all_method_calls(java_file)
+        self.register_all_method_calls(java_file)
         
         # 第五阶段:注册字段访问关系边
-        self._register_all_field_accesses(java_file)
+        self.register_all_field_accesses(java_file)
     
     # ========== 类型声明注册 ==========
     
@@ -721,7 +721,7 @@ class SymbolTableBuilder:
     def _register_nested_class(self, nested_class: ClassInfo, parent_symbol_id: str):
         """注册嵌套类"""
         # 嵌套类的 symbol_id 基于父类symbol_id
-        symbol_id = SymbolIdGenerator.for_nested_class(parent_symbol_id, nested_class.type_name)
+        symbol_id = SymbolIdGenerator.for_class(parent_symbol_id, nested_class.type_name)
         
         # 回填 symbol_id
         nested_class.symbol_id = symbol_id
@@ -750,7 +750,7 @@ class SymbolTableBuilder:
     def _register_nested_interface(self, nested_interface: InterfaceInfo, parent_symbol_id: str):
         
         # 嵌套接口symbol_id 基于父类symbol_id
-        symbol_id = SymbolIdGenerator.for_nested_class(parent_symbol_id, nested_interface.type_name)
+        symbol_id = SymbolIdGenerator.for_class(parent_symbol_id, nested_interface.type_name)
         
         nested_interface.symbol_id = symbol_id
         
@@ -778,7 +778,7 @@ class SymbolTableBuilder:
     def _register_nested_enum(self, nested_enum: EnumInfo, parent_symbol_id: str):
         
         # 嵌套枚举symbol_id 基于父类symbol_id
-        symbol_id = SymbolIdGenerator.for_nested_class(parent_symbol_id, nested_enum.type_name)
+        symbol_id = SymbolIdGenerator.for_class(parent_symbol_id, nested_enum.type_name)
         
         nested_enum.symbol_id = symbol_id
         
@@ -806,7 +806,7 @@ class SymbolTableBuilder:
     def _register_nested_record(self, nested_record: RecordInfo, parent_symbol_id: str):
         
         # 嵌套记录symbol_id 基于父类symbol_id
-        symbol_id = SymbolIdGenerator.for_nested_class(parent_symbol_id, nested_record.type_name)
+        symbol_id = SymbolIdGenerator.for_class(parent_symbol_id, nested_record.type_name)
         
         nested_record.symbol_id = symbol_id
         
@@ -834,7 +834,7 @@ class SymbolTableBuilder:
     def _register_nested_annotation(self, nested_annotation: AnnotationTypeInfo, parent_symbol_id: str):
         
         # 嵌套注解symbol_id 基于父类symbol_id
-        symbol_id = SymbolIdGenerator.for_nested_class(parent_symbol_id, nested_annotation.type_name)
+        symbol_id = SymbolIdGenerator.for_class(parent_symbol_id, nested_annotation.type_name)
         
         nested_annotation.symbol_id = symbol_id
         
@@ -881,7 +881,7 @@ class SymbolTableBuilder:
         # 提取文件名(不含路径
         file_name = file_path.split('/')[-1] if '/' in file_path else file_path.split('\\')[-1]
         
-        javafile_symbol = Symbol(
+        java_file_symbol = Symbol(
             symbol_id=symbol_id,
             symbol_type=SymbolType.JAVAFILE,
             name=file_name,
@@ -890,25 +890,25 @@ class SymbolTableBuilder:
             file_path=file_path
         )
         
-        self.symbol_table.register_symbol(javafile_symbol)
+        self.symbol_table.register_symbol(java_file_symbol)
     
     def _register_import(self, import_info):
-        
+        """注册导入符号"""
         # 生成导入符号ID
-        symbol_id = SymbolIdGenerator.for_import(self.current_file, import_info.qualified_name)
+        symbol_id = SymbolIdGenerator.for_import(self.current_file, import_info.import_path)
         
         # 提取导入的类名(最后一个点后面的部分,或* 如果是通配符)
-        import_name = import_info.type_name if import_info.type_name else import_info.qualified_name.split('.')[-1]
+        import_name = import_info.import_path.split('.')[-1]
         
         import_symbol = Symbol(
             symbol_id=symbol_id,
             symbol_type=SymbolType.IMPORT,
             name=import_name,
-            qualified_name=import_info.qualified_name,
+            qualified_name=import_info.import_path,
             location=import_info.position,
             file_path=self.current_file,
             metadata={
-                'raw_import': import_info.raw_import,
+                'import_path': import_info.import_path,
                 'is_static': import_info.is_static,
                 'is_wildcard': import_info.is_wildcard
             }
@@ -1337,22 +1337,22 @@ class SymbolTableBuilder:
     
     # ========== 方法调用关系==========
     
-    def _register_all_method_calls(self, java_file: JavaFileStructure):
+    def register_all_method_calls(self, java_file: JavaFileStructure):
         
         # 遍历所有类的方
-        for cls in java_file.class_details:
+        for cls in java_file.classes:
             self._register_class_method_calls(cls)
         
         # 遍历所有接口的方法
-        for interface in java_file.interface_details:
+        for interface in java_file.interfaces:
             self._register_interface_method_calls(interface)
         
         # 遍历所有枚举的方法
-        for enum in java_file.enum_details:
+        for enum in java_file.enums:
             self._register_enum_method_calls(enum)
         
         # 遍历所record 的方
-        for record in java_file.record_details:
+        for record in java_file.records:
             self._register_record_method_calls(record)
     
     def _register_class_method_calls(self, class_info: ClassInfo):
@@ -1538,22 +1538,22 @@ class SymbolTableBuilder:
     
     # ========== 字段访问关系==========
     
-    def _register_all_field_accesses(self, java_file: JavaFileStructure):
+    def register_all_field_accesses(self, java_file: JavaFileStructure):
         
         # 遍历所有类的方
-        for cls in java_file.class_details:
+        for cls in java_file.classes:
             self._register_class_field_accesses(cls)
         
         # 遍历所有接口的方法
-        for interface in java_file.interface_details:
+        for interface in java_file.interfaces:
             self._register_interface_field_accesses(interface)
         
         # 遍历所有枚举的方法
-        for enum in java_file.enum_details:
+        for enum in java_file.enums:
             self._register_enum_field_accesses(enum)
         
         # 遍历所record 的方
-        for record in java_file.record_details:
+        for record in java_file.records:
             self._register_record_field_accesses(record)
     
     def _register_class_field_accesses(self, class_info: ClassInfo):

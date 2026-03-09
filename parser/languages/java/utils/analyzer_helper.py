@@ -103,7 +103,7 @@ class AnalyzerHelper:
         return parameters, comments
 
     @staticmethod
-    def extract_java_nested_object(filler, type2node: Dict, context):
+    def extract_java_nested_object(filler, type2node: Dict, context, parent_symbol_id: str):
         from parser.languages.java.analyzers.class_analyzer import ClassAnalyzer
         from parser.languages.java.analyzers.enum_analyzer import EnumAnalyzer
         from parser.languages.java.analyzers.interface_analyzer import InterfaceAnalyzer
@@ -122,7 +122,7 @@ class AnalyzerHelper:
             if filler.nested_classes is None:
                 filler.nested_classes = []
             filler.nested_classes.append(
-                class_analyzer.handle_class_declaration(nested_obj, context))
+                class_analyzer.handle_class_declaration(nested_obj, context, parent_symbol_id))
 
         for nested_obj in type2node.get(JavaAstNodeType.ENUM_DECLARATION, []):
             if enum_analyzer is None:
@@ -130,7 +130,7 @@ class AnalyzerHelper:
             if filler.nested_enums is None:
                 filler.nested_enums = []
             filler.nested_enums.append(
-                enum_analyzer.handle_enum_declaration(nested_obj, context))
+                enum_analyzer.handle_enum_declaration(nested_obj, context, parent_symbol_id))
 
         for nested_obj in type2node.get(JavaAstNodeType.INTERFACE_DECLARATION, []):
             if interface_analyzer is None:
@@ -138,7 +138,7 @@ class AnalyzerHelper:
             if filler.nested_interfaces is None:
                 filler.nested_interfaces = []
             filler.nested_interfaces.append(
-                interface_analyzer.handle_interface_declaration(nested_obj, context))
+                interface_analyzer.handle_interface_declaration(nested_obj, context, parent_symbol_id))
 
         for nested_obj in type2node.get(JavaAstNodeType.ANNOTATION_TYPE_DECLARATION, []):
             if annotation_analyzer is None:
@@ -146,7 +146,7 @@ class AnalyzerHelper:
             if filler.nested_annotations is None:
                 filler.nested_annotations = []
             filler.nested_annotations.append(
-                annotation_analyzer.handle_annotation_declaration(nested_obj, context))
+                annotation_analyzer.handle_annotation_declaration(nested_obj, context, parent_symbol_id))
 
         for nested_obj in type2node.get(JavaAstNodeType.RECORD_DECLARATION, []):
             if record_analyzer is None:
@@ -154,7 +154,7 @@ class AnalyzerHelper:
             if filler.nested_records is None:
                 filler.nested_records = []
             filler.nested_records.append(
-                record_analyzer.handle_record_declaration(nested_obj, context))
+                record_analyzer.handle_record_declaration(nested_obj, context, parent_symbol_id))
 
     @staticmethod
     def _parse_annotation_param_comments(parameters: str | None) -> Tuple[Dict[str, str], List[str]]:
@@ -368,3 +368,86 @@ class AnalyzerHelper:
             pairs.append(current_pair)
 
         return pairs
+
+    @staticmethod
+    def generate_symbol_id_for_project(project_name: str, project_type: str = "Application", version: str = "") -> str:
+        """为 Project 项目生成 symbol_id
+        格式: project#{project_name}@{project_type}@{version}
+        
+        参数:
+            project_name: 项目名称
+            project_type: 项目类型 (Application 或 Lib)
+            version: 版本号（可选）
+        """
+        from parser.common.symbol_table import SymbolIdGenerator
+        return SymbolIdGenerator.for_project(project_name, project_type, version)
+
+    @staticmethod
+    def generate_symbol_id_for_file(project_id: str, file_path: str) -> str:
+        """为 Java 文件生成 symbol_id
+        格式: {project_id}<file>{file_path}
+        """
+        from parser.common.symbol_table import SymbolIdGenerator
+        return SymbolIdGenerator.for_file(project_id, file_path)
+
+
+    # ========== Symbol ID 生成方法 ==========
+    
+    @staticmethod
+    def generate_symbol_id_for_class(parent_symbol_id: str, class_name: str) -> str:
+        """为类/接口/枚举/注解/记录生成 symbol_id"""
+        from parser.common.symbol_table import SymbolIdGenerator
+        return SymbolIdGenerator.for_class(parent_symbol_id, class_name)
+    
+    @staticmethod
+    def generate_symbol_id_for_method(parent_symbol_id: str, method_name: str, 
+                                     param_types: List[str], is_static: bool = False) -> str:
+        """为方法生成 symbol_id"""
+        from parser.common.symbol_table import SymbolIdGenerator
+        
+        if is_static:
+            return SymbolIdGenerator.for_static_method(parent_symbol_id, method_name, param_types)
+        else:
+            return SymbolIdGenerator.for_method(parent_symbol_id, method_name, param_types)
+    
+    @staticmethod
+    def generate_symbol_id_for_constructor(parent_symbol_id: str, param_types: List[str]) -> str:
+        """为构造器生成 symbol_id"""
+        from parser.common.symbol_table import SymbolIdGenerator
+        return SymbolIdGenerator.for_constructor(parent_symbol_id, param_types)
+    
+    @staticmethod
+    def generate_symbol_id_for_field(parent_symbol_id: str, field_name: str) -> str:
+        """为字段生成 symbol_id"""
+        from parser.common.symbol_table import SymbolIdGenerator
+        return SymbolIdGenerator.for_field(parent_symbol_id, field_name)
+    
+    @staticmethod
+    def generate_symbol_id_for_enum_constant(parent_symbol_id: str, constant_name: str) -> str:
+        """为枚举常量生成 symbol_id"""
+        from parser.common.symbol_table import SymbolIdGenerator
+        return SymbolIdGenerator.for_enum_constant(parent_symbol_id, constant_name)
+    
+    @staticmethod
+    def generate_symbol_id_for_parameter(method_symbol_id: str, param_name: str) -> str:
+        """为方法参数生成 symbol_id"""
+        from parser.common.symbol_table import SymbolIdGenerator
+        return SymbolIdGenerator.for_parameter(method_symbol_id, param_name)
+    
+    @staticmethod
+    def generate_symbol_id_for_record_component(record_symbol_id: str, component_name: str) -> str:
+        """为 record 组件生成 symbol_id"""
+        from parser.common.symbol_table import SymbolIdGenerator
+        return SymbolIdGenerator.for_record_component(record_symbol_id, component_name)
+
+    @staticmethod
+    def generate_symbol_id_for_javadoc_comment(parent_symbol_id: str, index: int) -> str:
+        """为 Javadoc 注释生成 symbol_id"""
+        from parser.common.symbol_table import SymbolIdGenerator
+        return SymbolIdGenerator.for_javadoc_comment(parent_symbol_id, index)
+    
+    @staticmethod
+    def generate_symbol_id_for_long_comment(parent_symbol_id: str) -> str:
+        """为长注释生成 symbol_id"""
+        from parser.common.symbol_table import SymbolIdGenerator
+        return SymbolIdGenerator.for_long_comment(parent_symbol_id)

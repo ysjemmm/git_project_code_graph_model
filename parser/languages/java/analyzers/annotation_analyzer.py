@@ -26,7 +26,7 @@ class AnnotationAnalyzer(BaseAnalyzer):
             for n in node.children:
                 self.type2node.setdefault(JavaAstNodeType.from_value(n.node_type), []).append(n)
 
-    def handle_annotation_declaration(self, node: ExtractedNode, context: AnalyzerContext) -> AnnotationTypeInfo | None:
+    def handle_annotation_declaration(self, node: ExtractedNode, context: AnalyzerContext, parent_symbol_id: str) -> AnnotationTypeInfo | None:
         """Handle annotation type declaration node"""
         self._init()
         self._ast_must_nodes(node)
@@ -36,6 +36,12 @@ class AnnotationAnalyzer(BaseAnalyzer):
 
         # Extract annotation base
         self._extract_annotation_base(node)
+
+        # Generate symbol_id before processing body
+        self.anno_info.symbol_id = AnalyzerHelper.generate_symbol_id_for_class(
+            parent_symbol_id, self.anno_info.annotation_name
+        )
+        self.anno_info.parent_symbol_id = parent_symbol_id
 
         AnalyzerCache.get_annotation_body_analyzer(context.project_name).handle_annotation_body(
             self.type2node.get(JavaAstNodeType.ANNOTATION_TYPE_BODY, [None])[0],
@@ -50,3 +56,7 @@ class AnnotationAnalyzer(BaseAnalyzer):
         self.anno_info.annotation_name = node.extractions.get(JavaAstNodeType.EX_IDENTIFIER.value, "")
         self.anno_info.raw_metadata = node.extractions.get(JavaAstNodeType.EX_ANNOTATION_BODY.value, "")
 
+        _, self.anno_info.is_static = BaseAnalyzer.extract_modifiers(node)
+        self.anno_info.is_final = False
+        if self._is_nested:
+            self.anno_info.is_static = True

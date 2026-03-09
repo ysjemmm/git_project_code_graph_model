@@ -43,7 +43,7 @@ class EnumBodyAnalyzer(BaseAnalyzer):
         self._init()
         self._ast_must_nodes(node)
 
-        AnalyzerHelper.extract_java_nested_object(self._enum_info, self.type2node, context)
+        AnalyzerHelper.extract_java_nested_object(self._enum_info, self.type2node, context, enum_info.symbol_id)
 
         self._enum_info.comments = self._extract_comments(context)
         self._enum_info.enum_constants = self._extract_constants(context)
@@ -78,7 +78,7 @@ class EnumBodyAnalyzer(BaseAnalyzer):
         fs = []
         for n in fields:
             if n is not None:
-                result = analyzer.handle_field_declaration(n)
+                result = analyzer.handle_field_declaration(n, self._enum_info.symbol_id)
                 if result is not None:
                     fs.append(result)
         return fs
@@ -90,7 +90,7 @@ class EnumBodyAnalyzer(BaseAnalyzer):
         mtds = []
         for n in methods:
             if n is not None:
-                result = analyzer.handle_method_declaration(n, context)
+                result = analyzer.handle_method_declaration(n, context, self._enum_info.symbol_id)
                 if result is not None:
                     mtds.append(result)
         return mtds
@@ -102,7 +102,7 @@ class EnumBodyAnalyzer(BaseAnalyzer):
         mtds = []
         for n in methods:
             if n is not None:
-                result = analyzer.handle_constructor_declaration(n, context)
+                result = analyzer.handle_constructor_declaration(n, context, self._enum_info.symbol_id)
                 if result is not None:
                     mtds.append(result)
         return mtds
@@ -128,7 +128,7 @@ class EnumBodyAnalyzer(BaseAnalyzer):
             cns = EnumConstantInfo()
             cns.set_pos_from_node(n)
             cns.constant_name = n.extractions.get(JavaAstNodeType.EX_IDENTIFIER.value, "")
-            cns.constant_body = n.extractions.get(JavaAstNodeType.EX_ENUM_CONSTANT_BODY.value, "")
+            cns.raw_constant = AstTool.node_text(n)
             cns.annotations = AnalyzerHelper.extract_java_marked_annotation(
                 AstTool.find_child_by_type(n, JavaAstNodeType.MODIFIERS.value, True)
             )
@@ -145,6 +145,14 @@ class EnumBodyAnalyzer(BaseAnalyzer):
                     else:
                         cns.arguments.append(AstTool.node_text(p))
                 pass
+            
+            # Generate symbol_id for enum constant
+            if cns.constant_name:
+                cns.symbol_id = AnalyzerHelper.generate_symbol_id_for_enum_constant(
+                    self._enum_info.symbol_id, cns.constant_name
+                )
+                cns.parent_symbol_id = self._enum_info.symbol_id
+            
             constants.append(cns)
         return constants
 

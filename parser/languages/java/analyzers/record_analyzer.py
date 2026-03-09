@@ -29,7 +29,7 @@ class RecordAnalyzer(BaseAnalyzer):
             for n in node.children:
                 self.type2node.setdefault(JavaAstNodeType.from_value(n.node_type), []).append(n)
 
-    def handle_record_declaration(self, node: ExtractedNode, context: AnalyzerContext) -> RecordInfo | None:
+    def handle_record_declaration(self, node: ExtractedNode, context: AnalyzerContext, parent_symbol_id: str) -> RecordInfo | None:
         """Handle record declaration node"""
         from parser.languages.java.utils.analyzer_cache import AnalyzerCache
 
@@ -41,6 +41,20 @@ class RecordAnalyzer(BaseAnalyzer):
 
         # Extract record base
         self._extract_record_base(node, context)
+
+        # Generate symbol_id before processing body
+        self._record_info.symbol_id = AnalyzerHelper.generate_symbol_id_for_class(
+            parent_symbol_id, self._record_info.record_name
+        )
+        self._record_info.parent_symbol_id = parent_symbol_id
+        
+        # Generate symbol_id for components
+        for component in self._record_info.components:
+            if component.parameter_name:
+                component.symbol_id = AnalyzerHelper.generate_symbol_id_for_record_component(
+                    self._record_info.symbol_id, component.parameter_name
+                )
+                component.parent_symbol_id = self._record_info.symbol_id
 
         AnalyzerCache.get_record_body_analyzer(context.project_name).handle_record_body(
             self.type2node.get(JavaAstNodeType.CLASS_BODY, [None])[0],
@@ -54,6 +68,11 @@ class RecordAnalyzer(BaseAnalyzer):
         self._record_info.record_name = node.extractions.get(JavaAstNodeType.EX_IDENTIFIER.value, "")
         self._record_info.type_parameters = AnalyzerHelper.extract_java_type_parameters(node)
         self._record_info.raw_metadata = node.extractions.get(JavaAstNodeType.EX_RECORD_BODY.value, "")
+
+        _, self._record_info.is_static = BaseAnalyzer.extract_modifiers(node)
+        if self._is_nested:
+            self._record_info.is_static = True
+
         self._record_info.super_interfaces = AnalyzerHelper.extract_java_super_class(node, JavaAstNodeType.SUPER_INTERFACES)
         # parse components
         from parser.languages.java.utils.analyzer_cache import AnalyzerCache

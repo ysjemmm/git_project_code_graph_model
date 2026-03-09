@@ -30,7 +30,7 @@ class EnumAnalyzer(BaseAnalyzer):
             for n in node.children:
                 self.type2node.setdefault(JavaAstNodeType.from_value(n.node_type), []).append(n)
 
-    def handle_enum_declaration(self, node: ExtractedNode, context: AnalyzerContext) -> EnumInfo | None:
+    def handle_enum_declaration(self, node: ExtractedNode, context: AnalyzerContext, parent_symbol_id: str) -> EnumInfo | None:
         """Handle enum declaration node"""
         from parser.languages.java.utils.analyzer_cache import AnalyzerCache
 
@@ -44,6 +44,12 @@ class EnumAnalyzer(BaseAnalyzer):
         # Extract enum base
         self._extract_enum_base(node)
 
+        # Generate symbol_id before processing body
+        self.enum_info.symbol_id = AnalyzerHelper.generate_symbol_id_for_class(
+            parent_symbol_id, self.enum_info.enum_name
+        )
+        self.enum_info.parent_symbol_id = parent_symbol_id
+
         AnalyzerCache.get_enum_body_analyzer(context.project_name).handle_enum_body(
             self.type2node.get(JavaAstNodeType.ENUM_BODY, [None])[0],
             self.enum_info,
@@ -56,4 +62,10 @@ class EnumAnalyzer(BaseAnalyzer):
         """Extract enum"""
         self.enum_info.enum_name = node.extractions.get(JavaAstNodeType.EX_IDENTIFIER.value, "")
         self.enum_info.raw_metadata = node.extractions.get(JavaAstNodeType.EX_ENUM_BODY.value, "")
+
+        _, self.enum_info.is_static = BaseAnalyzer.extract_modifiers(node)
+        self.enum_info.is_final = True
+        if self._is_nested:
+            self.enum_info.is_static = True
+
         self.enum_info.super_interfaces = AnalyzerHelper.extract_java_super_class(node, JavaAstNodeType.SUPER_INTERFACES)

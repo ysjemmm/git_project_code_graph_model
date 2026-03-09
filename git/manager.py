@@ -16,6 +16,15 @@ class GitManager:
         
         self.repo_path = repo_path
         self.git_dir = os.path.join(repo_path, '.git')
+        
+        # 根据操作系统自动选择编码
+        # Windows 使用 GBK，其他系统使用 UTF-8
+        if platform.system() == 'Windows':
+            self.encoding = 'gbk'
+        else:
+            self.encoding = 'utf-8'
+        
+        logger.info(f"[INFO] Git 输出编码设置为: {self.encoding}")
     
     def is_repo_exists(self) -> bool:
         
@@ -47,7 +56,8 @@ class GitManager:
             result = subprocess.run(
                 cmd,
                 capture_output=True,
-                text=True,
+                encoding=self.encoding,
+                errors='replace',  # 遇到无法解码的字符时替换为 �
                 timeout=timeout
             )
             
@@ -56,7 +66,8 @@ class GitManager:
                 subprocess.run(
                     ['git', '-C', self.repo_path, 'config', 'remote.origin.fetch', '+refs/heads/*:refs/remotes/origin/*'],
                     capture_output=True,
-                    text=True,
+                    encoding=self.encoding,
+                    errors='replace',
                     timeout=30
                 )
                 
@@ -65,7 +76,8 @@ class GitManager:
                     subprocess.run(
                         ['git', '-C', self.repo_path, 'fetch', '--all', '--depth=1'],
                         capture_output=True,
-                        text=True,
+                        encoding=self.encoding,
+                        errors='replace',
                         timeout=300
                     )
                 
@@ -87,7 +99,8 @@ class GitManager:
             result = subprocess.run(
                 ['git', '-C', self.repo_path, 'fetch', 'origin'],
                 capture_output=True,
-                text=True,
+                encoding=self.encoding,
+                errors='replace',
                 timeout=300
             )
             
@@ -111,7 +124,8 @@ class GitManager:
             result = subprocess.run(
                 ['git', '-C', self.repo_path, 'checkout', branch],
                 capture_output=True,
-                text=True,
+                encoding=self.encoding,
+                errors='replace',
                 timeout=60
             )
             
@@ -123,7 +137,8 @@ class GitManager:
             fetch_result = subprocess.run(
                 ['git', '-C', self.repo_path, 'fetch', 'origin', branch],
                 capture_output=True,
-                text=True,
+                encoding=self.encoding,
+                errors='replace',
                 timeout=300
             )
             
@@ -138,7 +153,8 @@ class GitManager:
             checkout_result = subprocess.run(
                 ['git', '-C', self.repo_path, 'checkout', '-b', branch, f'origin/{branch}'],
                 capture_output=True,
-                text=True,
+                encoding=self.encoding,
+                errors='replace',
                 timeout=60
             )
             
@@ -168,7 +184,8 @@ class GitManager:
             result = subprocess.run(
                 ['git', '-C', self.repo_path, 'rev-parse', '--abbrev-ref', 'HEAD'],
                 capture_output=True,
-                text=True,
+                encoding=self.encoding,
+                errors='replace',
                 timeout=10
             )
             
@@ -187,7 +204,8 @@ class GitManager:
             result = subprocess.run(
                 ['git', '-C', self.repo_path, 'rev-parse', 'HEAD'],
                 capture_output=True,
-                text=True,
+                encoding=self.encoding,
+                errors='replace',
                 timeout=10
             )
             
@@ -206,7 +224,8 @@ class GitManager:
             result = subprocess.run(
                 ['git', '-C', self.repo_path, 'config', '--get', 'remote.origin.url'],
                 capture_output=True,
-                text=True,
+                encoding=self.encoding,
+                errors='replace',
                 timeout=10
             )
             
@@ -225,7 +244,8 @@ class GitManager:
             result = subprocess.run(
                 ['git', '-C', self.repo_path, 'branch', '-a'],
                 capture_output=True,
-                text=True,
+                encoding=self.encoding,
+                errors='replace',
                 timeout=10
             )
             
@@ -257,7 +277,8 @@ class GitManager:
             result = subprocess.run(
                 ['git', '-C', self.repo_path, 'pull', 'origin'],
                 capture_output=True,
-                text=True,
+                encoding=self.encoding,
+                errors='replace',
                 timeout=300
             )
             
@@ -351,7 +372,8 @@ class GitManager:
             result = subprocess.run(
                 cmd,
                 capture_output=True,
-                text=True,
+                encoding='utf-8',
+                errors='replace',
                 timeout=10
             )
             
@@ -384,7 +406,8 @@ class GitManager:
             result = subprocess.run(
                 cmd,
                 capture_output=True,
-                text=True,
+                encoding='utf-8',
+                errors='replace',
                 timeout=10,
                 env=env
             )

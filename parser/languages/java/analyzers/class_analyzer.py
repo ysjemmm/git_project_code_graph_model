@@ -29,7 +29,7 @@ class ClassAnalyzer(BaseAnalyzer):
             for n in node.children:
                 self.type2node.setdefault(JavaAstNodeType.from_value(n.node_type), []).append(n)
     
-    def handle_class_declaration(self, node: ExtractedNode, context: AnalyzerContext) -> ClassInfo:
+    def handle_class_declaration(self, node: ExtractedNode, context: AnalyzerContext, parent_symbol_id: str) -> ClassInfo:
         self._init()
         self._ast_must_nodes(node)
 
@@ -40,6 +40,12 @@ class ClassAnalyzer(BaseAnalyzer):
 
         self.class_info.set_pos_from_node(node)
         self._extract_class_base(node)
+
+        # Generate symbol_id before processing body (body needs parent_symbol_id)
+        self.class_info.symbol_id = AnalyzerHelper.generate_symbol_id_for_class(
+            parent_symbol_id, self.class_info.class_name
+        )
+        self.class_info.parent_symbol_id = parent_symbol_id
 
         AnalyzerCache.get_class_body_analyzer(context.project_name).handle_class_body(
             self.type2node.get(JavaAstNodeType.CLASS_BODY, [None])[0],
@@ -55,6 +61,7 @@ class ClassAnalyzer(BaseAnalyzer):
         # self.class_info.raw_metadata = node.extractions.get(JavaAstNodeType.EX_INTERFACE_BODY.value, "")
         self.class_info.type_parameters = AnalyzerHelper.extract_java_type_parameters(node)
         self.class_info.super_interfaces = AnalyzerHelper.extract_java_super_class(node, JavaAstNodeType.SUPER_INTERFACES)
+        self.class_info.is_final, self.class_info.is_static = BaseAnalyzer.extract_modifiers(node)
 
         super_classes = AnalyzerHelper.extract_java_super_class(node, JavaAstNodeType.SUPER_CLASS)
         self.class_info.super_class = super_classes[0] if super_classes else ""

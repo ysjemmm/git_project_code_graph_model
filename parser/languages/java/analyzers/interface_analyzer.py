@@ -29,7 +29,7 @@ class InterfaceAnalyzer(BaseAnalyzer):
             for n in node.children:
                 self.type2node.setdefault(JavaAstNodeType.from_value(n.node_type), []).append(n)
 
-    def handle_interface_declaration(self, node: ExtractedNode, context: AnalyzerContext) -> InterfaceInfo | None:
+    def handle_interface_declaration(self, node: ExtractedNode, context: AnalyzerContext, parent_symbol_id: str) -> InterfaceInfo | None:
         """Handle interface declaration node"""
         from parser.languages.java.utils.analyzer_cache import AnalyzerCache
 
@@ -41,6 +41,12 @@ class InterfaceAnalyzer(BaseAnalyzer):
 
         # Extract interface base
         self._extract_interface_base(node)
+
+        # Generate symbol_id before processing body
+        self.interface_info.symbol_id = AnalyzerHelper.generate_symbol_id_for_class(
+            parent_symbol_id, self.interface_info.interface_name
+        )
+        self.interface_info.parent_symbol_id = parent_symbol_id
 
         AnalyzerCache.get_interface_body_analyzer(context.project_name).handle_interface_body(
             self.type2node.get(JavaAstNodeType.INTERFACE_BODY, [None])[0],
@@ -54,4 +60,10 @@ class InterfaceAnalyzer(BaseAnalyzer):
         """Extract interface"""
         self.interface_info.interface_name = node.extractions.get(JavaAstNodeType.EX_IDENTIFIER.value, "")
         self.interface_info.raw_metadata = node.extractions.get(JavaAstNodeType.EX_INTERFACE_BODY.value, "")
+
+        _, self.interface_info.is_static = BaseAnalyzer.extract_modifiers(node)
+        self.interface_info.is_final = False
+        if self._is_nested:
+            self.interface_info.is_static = True
+
         self.interface_info.extends_interfaces = AnalyzerHelper.extract_java_super_class(node, JavaAstNodeType.EXTENDS_INTERFACES)

@@ -34,7 +34,7 @@ class AnnotationBodyAnalyzer(BaseAnalyzer):
         self._init()
         self._ast_must_nodes(node)
 
-        AnalyzerHelper.extract_java_nested_object(self._anno_info, self.type2node, context)
+        AnalyzerHelper.extract_java_nested_object(self._anno_info, self.type2node, context, anno_info.symbol_id)
 
         self._anno_info.comments = self._extract_comments(context)
         self._anno_info.elements = self._extract_fields(context)
@@ -65,7 +65,7 @@ class AnnotationBodyAnalyzer(BaseAnalyzer):
         fs = []
         for n in fields:
             if n is not None:
-                result = analyzer.handle_field_declaration(n)
+                result = analyzer.handle_field_declaration(n, self._anno_info.symbol_id)
                 if result is not None:
                     fs.append(result)
         return fs
