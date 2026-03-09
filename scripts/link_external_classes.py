@@ -5,7 +5,7 @@
 使用场景：
 - 类 A 作为 JAR 被引用时，创建 EXTERNAL_DEFINITION 节点
 - 类 A 作为项目源码导入时，创建 INNER_DEFINITION 节点
-- 此脚本将这两个节点通过 ACTUAL_IMPLEMENTATION 关系连接起来
+- 此脚本将这两个节点通过 LIB_LINK 关系连接起来
 
 可以在任何时候运行，支持增量链接
 """

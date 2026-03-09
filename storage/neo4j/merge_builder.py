@@ -102,7 +102,7 @@ class MergeQueryBuilder:
 
 # 节点类型的唯一键定义
 NODE_UNIQUE_KEYS = {
-    'Project': ['symbol_id'],
+    'Project': ['symbol_id'],  # symbol_id 已包含 project_type 和 version 信息
     'File': ['symbol_id'],  # 添加 File 节点类型
     'JavaObject': ['symbol_id'],  # 修改为只用 symbol_id
     'JavaMethod': ['symbol_id'],  # 添加 JavaMethod

@@ -307,7 +307,7 @@ class GitToNeo4jImporter:
             context = AnalyzerContext(
                 project_name=project_name,
                 project_path=repo_cache_dir,
-                root_project_symbol_id=AnalyzerHelper.generate_symbol_id_for_project(project_name),
+                root_project_symbol_id=AnalyzerHelper.generate_symbol_id_for_project(project_name, project_type="Application"),
                 parser=Parser("java")
             )
             

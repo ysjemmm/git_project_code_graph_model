@@ -370,12 +370,17 @@ class AnalyzerHelper:
         return pairs
 
     @staticmethod
-    def generate_symbol_id_for_project(project_name: str) -> str:
+    def generate_symbol_id_for_project(project_name: str, project_type: str = "Application", version: str = "") -> str:
         """为 Project 项目生成 symbol_id
-        格式: project#{project_name}
+        格式: project#{project_name}@{project_type}@{version}
+        
+        参数:
+            project_name: 项目名称
+            project_type: 项目类型 (Application 或 Lib)
+            version: 版本号（可选）
         """
         from parser.common.symbol_table import SymbolIdGenerator
-        return SymbolIdGenerator.for_project(project_name)
+        return SymbolIdGenerator.for_project(project_name, project_type, version)
 
     @staticmethod
     def generate_symbol_id_for_file(project_id: str, file_path: str) -> str:

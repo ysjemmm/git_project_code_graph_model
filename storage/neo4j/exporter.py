@@ -18,6 +18,7 @@ from storage.neo4j.java_modules import JavaGraphEdgeType, ObjectType, ObjectFrom
     JavaFieldNodeGraphNode, JavaEnumConstantNodeGraphNode, CommentNodeGraphNode, CommentType, \
     CommentStorageDecision, JavadocParseResult, JavaCodeBlockNodeGraphNode, ProjectGraphNode
 from storage.neo4j.merge_builder import MergeQueryBuilder, get_unique_key_for_node_type
+from storage.neo4j.queries import Neo4jQueries, QueryBuilder
 from tools.ast_tool import AstTool
 import os
 import re
@@ -160,15 +161,15 @@ class Neo4jExporterAST:
     
     def _prepare_external_links(self):
         """
-        在内存中准备外部类链接关系
+        在内存中准备外部类链接关系（批量查询优化版）
         
         工作原理:
         1. 遍历当前要创建的所有 JavaObject 节点
-        2. 对于每个外部定义节点，查找数据库中是否有匹配的内部定义
-        3. 对于每个内部定义节点，查找数据库中是否有匹配的外部定义
-        4. 将匹配的链接关系加入 relationships_to_create
+        2. 批量查询数据库中匹配的节点（一次查询代替 N 次）
+        3. 在内存中匹配并创建链接关系
         
         优势:
+        - 批量查询，减少数据库往返次数（从 N 次减少到 2 次）
         - 在节点创建前就准备好关系，可以一起批量创建
         - 支持双向匹配：新外部→已有内部，新内部→已有外部
         """
@@ -189,36 +190,109 @@ class Neo4jExporterAST:
             
             logger.info(f"[INFO] 准备外部类链接：{len(current_external)} 个外部定义，{len(current_internal)} 个内部定义")
             
-            # 场景 1: 新的外部定义 → 查找已有的内部定义
-            for external_node in current_external:
-                internal_node = self._find_internal_in_db(
-                    external_node.qualified_name,
-                    external_node.belong_project
-                )
-                if internal_node:
-                    self.relationships_to_create.append((
-                        external_node.symbol_id,
-                        internal_node['symbol_id'],
-                        'ACTUAL_IMPLEMENTATION'
-                    ))
-                    logger.info(f"[INFO] 链接外部类: {external_node.qualified_name} ({external_node.belong_project})")
+            linked_count = 0
             
-            # 场景 2: 新的内部定义 → 查找已有的外部定义
-            for internal_node in current_internal:
-                external_nodes = self._find_externals_in_db(
-                    internal_node.qualified_name,
-                    internal_node.belong_project
-                )
-                for external_node in external_nodes:
-                    self.relationships_to_create.append((
-                        external_node['symbol_id'],
-                        internal_node.symbol_id,
-                        'ACTUAL_IMPLEMENTATION'
-                    ))
-                    logger.info(f"[INFO] 链接外部类: {internal_node.qualified_name} ({internal_node.belong_project})")
+            # 场景 1: 新的外部定义 → 批量查找已有的内部定义
+            if current_external:
+                # 构建查询条件列表
+                external_conditions = [
+                    {'fqn': node.qualified_name, 'project': node.belong_project}
+                    for node in current_external
+                ]
+                
+                # 批量查询
+                internal_nodes_map = self._batch_find_internals_in_db(external_conditions)
+                
+                # 在内存中匹配
+                for external_node in current_external:
+                    key = (external_node.qualified_name, external_node.belong_project)
+                    if key in internal_nodes_map:
+                        internal_symbol_id = internal_nodes_map[key]
+                        self.relationships_to_create.append((
+                            external_node.symbol_id,
+                            internal_symbol_id,
+                            JavaGraphEdgeType.LIB_LINK.value
+                        ))
+                        linked_count += 1
+            
+            # 场景 2: 新的内部定义 → 批量查找已有的外部定义
+            if current_internal:
+                # 构建查询条件列表
+                internal_conditions = [
+                    {'fqn': node.qualified_name, 'project': node.belong_project}
+                    for node in current_internal
+                ]
+                
+                # 批量查询
+                external_nodes_map = self._batch_find_externals_in_db(internal_conditions)
+                
+                # 在内存中匹配
+                for internal_node in current_internal:
+                    key = (internal_node.qualified_name, internal_node.belong_project)
+                    if key in external_nodes_map:
+                        for external_symbol_id in external_nodes_map[key]:
+                            self.relationships_to_create.append((
+                                external_symbol_id,
+                                internal_node.symbol_id,
+                                JavaGraphEdgeType.LIB_LINK.value
+                            ))
+                            linked_count += 1
+            
+            if linked_count > 0:
+                logger.info(f"[INFO] 准备了 {linked_count} 个外部类链接")
         
         except Exception as e:
             logger.warning(f"[WARN] 准备外部类链接失败: {e}")
+    
+    def _batch_find_internals_in_db(self, conditions: List[Dict]) -> Dict:
+        """
+        批量查找数据库中匹配的内部定义
+        
+        参数:
+            conditions: 查询条件列表，每个条件包含 {'fqn': ..., 'project': ...}
+        
+        返回:
+            字典 {(fqn, project): symbol_id}
+        """
+        if not conditions:
+            return {}
+        
+        query = Neo4jQueries.batch_find_internals()
+        result = self.connector.execute_query(query, {'conditions': conditions})
+        
+        # 构建映射表
+        result_map = {}
+        for record in result:
+            key = (record['fqn'], record['project'])
+            result_map[key] = record['symbol_id']
+        
+        return result_map
+    
+    def _batch_find_externals_in_db(self, conditions: List[Dict]) -> Dict:
+        """
+        批量查找数据库中匹配的外部定义（可能有多个）
+        
+        参数:
+            conditions: 查询条件列表，每个条件包含 {'fqn': ..., 'project': ...}
+        
+        返回:
+            字典 {(fqn, project): [symbol_id1, symbol_id2, ...]}
+        """
+        if not conditions:
+            return {}
+        
+        query = Neo4jQueries.batch_find_externals()
+        result = self.connector.execute_query(query, {'conditions': conditions})
+        
+        # 构建映射表（一个 key 可能对应多个 symbol_id）
+        result_map = {}
+        for record in result:
+            key = (record['fqn'], record['project'])
+            if key not in result_map:
+                result_map[key] = []
+            result_map[key].append(record['symbol_id'])
+        
+        return result_map
     
     def _find_internal_in_db(self, fqn: str, project_name: str) -> dict:
         """
@@ -231,15 +305,7 @@ class Neo4jExporterAST:
         返回:
             匹配的内部节点信息，如果没找到返回 None
         """
-        query = """
-        MATCH (internal:JavaObject)
-        WHERE internal.from_type = 'InnerDefinition'
-          AND internal.qualified_name = $fqn
-          AND internal.belong_project = $project_name
-        RETURN internal.symbol_id as symbol_id
-        LIMIT 1
-        """
-        
+        query = Neo4jQueries.find_internal_by_fqn()
         result = self.connector.execute_query(query, {
             'fqn': fqn,
             'project_name': project_name
@@ -259,14 +325,7 @@ class Neo4jExporterAST:
         返回:
             匹配的外部节点列表
         """
-        query = """
-        MATCH (external:JavaObject)
-        WHERE external.from_type = 'ExternalDefinition'
-          AND external.qualified_name = $fqn
-          AND external.belong_project = $project_name
-        RETURN external.symbol_id as symbol_id
-        """
-        
+        query = Neo4jQueries.find_externals_by_fqn()
         result = self.connector.execute_query(query, {
             'fqn': fqn,
             'project_name': project_name
@@ -279,10 +338,44 @@ class Neo4jExporterAST:
         统计本次创建的外部类链接数量
         
         返回:
-            ACTUAL_IMPLEMENTATION 关系的数量
+            LIB_LINK 关系的数量
         """
-        count = sum(1 for rel in self.relationships_to_create if rel[2] == 'ACTUAL_IMPLEMENTATION')
+        count = sum(1 for rel in self.relationships_to_create if rel[2] == JavaGraphEdgeType.LIB_LINK.value)
         return count
+    
+    def _node_exists_in_list(self, node_type: JavaNeo4jNodeType, node_data: Dict[str, Any]) -> bool:
+        """
+        检查节点是否已存在于待创建列表中（基于唯一键）
+        
+        参数:
+            node_type: 节点类型
+            node_data: 节点数据字典，包含唯一键字段
+        
+        返回:
+            是否存在
+        """
+        from storage.neo4j.merge_builder import get_unique_key_for_node_type
+        
+        # 获取该节点类型的唯一键字段
+        unique_keys = get_unique_key_for_node_type(node_type.value)
+        
+        # 从 node_data 中提取唯一键值
+        unique_values = {key: node_data.get(key) for key in unique_keys}
+        
+        # 检查列表中是否存在匹配的节点
+        nodes_list = self.nodes_to_create.get(node_type, [])
+        for node in nodes_list:
+            # 获取节点的唯一键值
+            if isinstance(node, dict):
+                node_values = {key: node.get(key) for key in unique_keys}
+            else:
+                node_values = {key: getattr(node, key, None) for key in unique_keys}
+            
+            # 比较唯一键值
+            if node_values == unique_values:
+                return True
+        
+        return False
     
     def _prepare_project_node(self):
         """准备项目节点"""
@@ -328,6 +421,8 @@ class Neo4jExporterAST:
         self.nodes_to_create[JavaNeo4jNodeType.File].append(java_file_node)
         self.created_nodes.add(java_file_node.symbol_id)
 
+        # 只有当前项目（Application类型）才创建HAVE关系到文件节点
+        # Lib类型的项目只通过CONTAINS_LIB关系连接到外部定义的JavaObject节点
         self.relationships_to_create.append((self.project_id, java_file_node.symbol_id, JavaGraphEdgeType.HAVE.value))
         
         for class_data in ast_data.classes:
@@ -780,28 +875,21 @@ class Neo4jExporterAST:
         return get_unique_key_for_node_type(node_type)
     
     def _build_unwind_merge_nodes_query(self, node_type: str, unique_key_names: List[str]) -> str:
-        unique_keys = ", ".join([f"{k}: node.{k}" for k in unique_key_names])
-        
-        # 构建 UNWIND 查询
-        query = f"""
-        UNWIND $nodes AS node
-        MERGE (n:{node_type} {{{unique_keys}}})
-        SET n += node
-        RETURN count(n) as created
-        """
-        return query.strip()
+        return QueryBuilder.build_batch_create_nodes_query(node_type, unique_key_names)
     
     def _build_unwind_merge_relationships_query(self, rel_type: str) -> str:
-        query = f"""
-        UNWIND $relationships AS rel
-        MATCH (source {{symbol_id: rel.source_id}})
-        MATCH (target {{symbol_id: rel.target_id}})
-        MERGE (source)-[r:{rel_type}]->(target)
-        RETURN count(r) as created
-        """
-        return query.strip()
+        return QueryBuilder.build_batch_create_relationships_query(rel_type)
     
-    def _create_nodes_batch(self) -> int:
+    def _create_nodes_batch(self, batch_size: int = 1000) -> int:
+        """
+        批量创建节点（分批处理）
+        
+        参数:
+            batch_size: 每批处理的节点数量，默认 1000
+        
+        返回:
+            创建的节点总数
+        """
         from dataclasses import asdict, is_dataclass
         
         total_created = 0
@@ -814,6 +902,7 @@ class Neo4jExporterAST:
                 # 使用 UNWIND 批量创建节点
                 unique_key_names = self._get_unique_keys_for_node_type(node_type.value)
                 
+                # 序列化节点
                 nodes_dicts = []
                 for node in nodes:
                     if isinstance(node, dict):
@@ -829,14 +918,28 @@ class Neo4jExporterAST:
                 if not nodes_dicts:
                     continue
                 
-                # 构建 UNWIND 查询
-                query = self._build_unwind_merge_nodes_query(node_type.value, unique_key_names)
-                parameters = {"nodes": nodes_dicts}
+                # 分批处理
+                total_nodes = len(nodes_dicts)
+                created_count = 0
                 
-                result = self.connector.execute_query(query, parameters)
-                created_count = len(nodes_dicts)
+                for i in range(0, total_nodes, batch_size):
+                    batch = nodes_dicts[i:i + batch_size]
+                    batch_num = i // batch_size + 1
+                    total_batches = (total_nodes + batch_size - 1) // batch_size
+                    
+                    # 构建 UNWIND 查询
+                    query = self._build_unwind_merge_nodes_query(node_type.value, unique_key_names)
+                    parameters = {"nodes": batch}
+                    
+                    result = self.connector.execute_query(query, parameters)
+                    created_count += len(batch)
+                    
+                    if total_batches > 1:
+                        logger.info(f"Created {len(batch)} {node_type} nodes (batch {batch_num}/{total_batches})")
+                
                 total_created += created_count
-                logger.info(f"Created {created_count} {node_type} nodes using UNWIND")
+                logger.info(f"Created {created_count} {node_type} nodes in total")
+                
             except Exception as e:
                 logger.error(f"Failed to create {node_type} nodes with UNWIND: {e}")
                 # 回退到逐个创建
@@ -858,7 +961,16 @@ class Neo4jExporterAST:
         logger.info(f"Created {total_created} nodes in total")
         return total_created
     
-    def _create_relationships_batch(self) -> int:
+    def _create_relationships_batch(self, batch_size: int = 1000) -> int:
+        """
+        批量创建关系（分批处理）
+        
+        参数:
+            batch_size: 每批处理的关系数量，默认 1000
+        
+        返回:
+            创建的关系总数
+        """
         total_created = 0
         failed_relationships = []
         
@@ -866,6 +978,7 @@ class Neo4jExporterAST:
             if not self.relationships_to_create:
                 return 0
             
+            # 按关系类型分组
             relationships_by_type = {}
             for source_id, target_id, rel_type in self.relationships_to_create:
                 if rel_type not in relationships_by_type:
@@ -875,18 +988,33 @@ class Neo4jExporterAST:
                     "target_id": target_id
                 })
             
-            # 使用 UNWIND 批量创建关系
+            # 使用 UNWIND 批量创建关系（分批）
             for rel_type, relationships in relationships_by_type.items():
                 try:
-                    query = self._build_unwind_merge_relationships_query(rel_type)
-                    parameters = {"relationships": relationships}
+                    total_rels = len(relationships)
+                    created_count = 0
                     
-                    result = self.connector.execute_query(query, parameters)
-                    created_count = len(relationships)
+                    # 分批处理
+                    for i in range(0, total_rels, batch_size):
+                        batch = relationships[i:i + batch_size]
+                        batch_num = i // batch_size + 1
+                        total_batches = (total_rels + batch_size - 1) // batch_size
+                        
+                        query = self._build_unwind_merge_relationships_query(rel_type)
+                        parameters = {"relationships": batch}
+                        
+                        result = self.connector.execute_query(query, parameters)
+                        created_count += len(batch)
+                        
+                        if total_batches > 1:
+                            logger.info(f"Created {len(batch)} {rel_type} relationships (batch {batch_num}/{total_batches})")
+                    
                     total_created += created_count
-                    logger.info(f"Created {created_count} {rel_type} relationships using UNWIND")
+                    logger.info(f"Created {created_count} {rel_type} relationships in total")
+                    
                 except Exception as e:
                     logger.error(f"Failed to create {rel_type} relationships with UNWIND: {e}")
+                    # 回退到逐个创建
                     try:
                         for rel in relationships:
                             try:
@@ -1051,11 +1179,21 @@ class Neo4jExporterAST:
             self.nodes_to_create[JavaNeo4jNodeType.JavaObject].append(java_object)
             self.relationships_to_create.append((class_symbol_id, java_object.symbol_id, extend_type))
 
-        if java_object.belong_project is not None:
-            dep_project_symbol_id = AnalyzerHelper.generate_symbol_id_for_project(java_object.belong_project)
-            projects_list = self.nodes_to_create.get(JavaNeo4jNodeType.Project, [])
-            exists = any(node.name == java_object.belong_project for node in projects_list if isinstance(node, ProjectGraphNode))
-            if not exists:
+        if java_object.belong_project is not None and java_object.belong_project != self.project_name:
+            # 只为外部项目创建Lib类型的项目节点
+            # 如果是当前项目，不创建Lib节点，因为已经有Application类型的项目节点
+            dep_project_symbol_id = AnalyzerHelper.generate_symbol_id_for_project(
+                java_object.belong_project, 
+                project_type="Lib", 
+                version=java_object.version
+            )
+            
+            # 使用唯一键检查项目节点是否已存在（现在只需要检查 symbol_id）
+            project_data = {
+                'symbol_id': dep_project_symbol_id
+            }
+            
+            if not self._node_exists_in_list(JavaNeo4jNodeType.Project, project_data):
                 self.created_nodes.add(dep_project_symbol_id)
                 pn = ProjectGraphNode(
                     name=java_object.belong_project,

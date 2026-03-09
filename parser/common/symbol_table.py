@@ -293,11 +293,19 @@ class SymbolIdGenerator:
     """符号ID生成器 - 与 Neo4j Exporter 保持一致的生成规则"""
 
     @staticmethod
-    def for_project(project_name: str) -> str:
+    def for_project(project_name: str, project_type: str = "Application", version: str = "") -> str:
         """生成项目ID
-        格式: project#{project_name}
+        格式: project#{project_name}@{project_type}@{version}
+        
+        参数:
+            project_name: 项目名称
+            project_type: 项目类型 (Application 或 Lib)
+            version: 版本号（可选）
         """
-        return f"project#{project_name}"
+        if version:
+            return f"project#{project_name}@{project_type}@{version}"
+        else:
+            return f"project#{project_name}@{project_type}"
 
     @staticmethod
     def for_file(parent_symbol_id: str, relative_path: str) -> str:

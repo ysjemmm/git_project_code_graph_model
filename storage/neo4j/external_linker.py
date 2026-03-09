@@ -5,10 +5,12 @@
 使用场景：
 - 类 A 作为 JAR 被项目 B 引用时，创建 EXTERNAL_DEFINITION 节点
 - 类 A 作为项目源码导入时，创建 INNER_DEFINITION 节点
-- 链接器将这两个节点通过 ACTUAL_IMPLEMENTATION 关系连接起来
+- 链接器将这两个节点通过 LIB_LINK 关系连接起来
 """
 from typing import List, Dict
 from storage.neo4j.connector import Neo4jConnector
+from storage.neo4j.java_modules import JavaGraphEdgeType
+from storage.neo4j.queries import Neo4jQueries
 from parser.utils.logger import get_logger
 
 logger = get_logger("external_linker")
@@ -45,16 +47,7 @@ class ExternalClassLinker:
         # 使用 Cypher 查询直接匹配并创建关系
         if dry_run:
             # 预览模式：只统计匹配数量
-            query = """
-            MATCH (external:JavaObject)
-            WHERE external.from_type = 'ExternalDefinition'
-            MATCH (internal:JavaObject)
-            WHERE internal.from_type = 'InnerDefinition'
-              AND internal.qualified_name = external.qualified_name
-              AND internal.belong_project = external.belong_project
-            RETURN count(*) as match_count
-            """
-            
+            query = Neo4jQueries.count_all_matches()
             result = self.connector.execute_query(query)
             record = next(iter(result), None)
             match_count = record['match_count'] if record else 0
@@ -69,17 +62,7 @@ class ExternalClassLinker:
             }
         else:
             # 实际创建关系
-            query = """
-            MATCH (external:JavaObject)
-            WHERE external.from_type = 'ExternalDefinition'
-            MATCH (internal:JavaObject)
-            WHERE internal.from_type = 'InnerDefinition'
-              AND internal.qualified_name = external.qualified_name
-              AND internal.belong_project = external.belong_project
-            MERGE (external)-[r:ACTUAL_IMPLEMENTATION]->(internal)
-            RETURN count(r) as created_count
-            """
-            
+            query = Neo4jQueries.link_all_external_to_internal()
             result = self.connector.execute_query(query)
             record = next(iter(result), None)
             created_count = record['created_count'] if record else 0
@@ -109,17 +92,7 @@ class ExternalClassLinker:
         logger.info(f"[INFO] 链接项目 '{project_name}' 的外部类...")
         
         if dry_run:
-            query = """
-            MATCH (external:JavaObject)
-            WHERE external.from_type = 'ExternalDefinition'
-              AND external.belong_project = $project_name
-            MATCH (internal:JavaObject)
-            WHERE internal.from_type = 'InnerDefinition'
-              AND internal.qualified_name = external.qualified_name
-              AND internal.belong_project = external.belong_project
-            RETURN count(*) as match_count
-            """
-            
+            query = Neo4jQueries.count_matches_by_project()
             result = self.connector.execute_query(query, {'project_name': project_name})
             record = next(iter(result), None)
             match_count = record['match_count'] if record else 0
@@ -132,18 +105,7 @@ class ExternalClassLinker:
                 'dry_run': True
             }
         else:
-            query = """
-            MATCH (external:JavaObject)
-            WHERE external.from_type = 'ExternalDefinition'
-              AND external.belong_project = $project_name
-            MATCH (internal:JavaObject)
-            WHERE internal.from_type = 'InnerDefinition'
-              AND internal.qualified_name = external.qualified_name
-              AND internal.belong_project = external.belong_project
-            MERGE (external)-[r:ACTUAL_IMPLEMENTATION]->(internal)
-            RETURN count(r) as created_count
-            """
-            
+            query = Neo4jQueries.link_external_to_internal_by_project()
             result = self.connector.execute_query(query, {'project_name': project_name})
             record = next(iter(result), None)
             created_count = record['created_count'] if record else 0
@@ -163,23 +125,13 @@ class ExternalClassLinker:
         返回:
             统计信息字典
         """
-        query = """
-        MATCH (external:JavaObject)-[r:ACTUAL_IMPLEMENTATION]->(internal:JavaObject)
-        RETURN count(r) as linked_count
-        """
-        
+        query = Neo4jQueries.count_lib_links()
         result = self.connector.execute_query(query)
         record = next(iter(result), None)
         linked_count = record['linked_count'] if record else 0
         
         # 统计未链接的外部类
-        unlinked_query = """
-        MATCH (external:JavaObject)
-        WHERE external.from_type = 'ExternalDefinition'
-          AND NOT (external)-[:ACTUAL_IMPLEMENTATION]->()
-        RETURN count(external) as unlinked_count
-        """
-        
+        unlinked_query = Neo4jQueries.count_unlinked_externals()
         result = self.connector.execute_query(unlinked_query)
         record = next(iter(result), None)
         unlinked_count = record['unlinked_count'] if record else 0
@@ -199,17 +151,7 @@ class ExternalClassLinker:
         返回:
             未链接的外部类列表
         """
-        query = """
-        MATCH (external:JavaObject)
-        WHERE external.from_type = 'ExternalDefinition'
-          AND NOT (external)-[:ACTUAL_IMPLEMENTATION]->()
-        RETURN external.symbol_id as symbol_id,
-               external.qualified_name as fqn,
-               external.belong_project as belong_project
-        ORDER BY external.belong_project, external.qualified_name
-        LIMIT $limit
-        """
-        
+        query = Neo4jQueries.find_unlinked_externals()
         result = self.connector.execute_query(query, {'limit': limit})
         return [dict(record) for record in result]
     
@@ -225,22 +167,6 @@ class ExternalClassLinker:
         返回:
             重复定义的类列表
         """
-        query = """
-        MATCH (external:JavaObject)
-        WHERE external.from_type = 'ExternalDefinition'
-        MATCH (internal:JavaObject)
-        WHERE internal.from_type = 'InnerDefinition'
-          AND internal.qualified_name = external.qualified_name
-          AND internal.belong_project = external.belong_project
-        OPTIONAL MATCH (external)-[r:ACTUAL_IMPLEMENTATION]->(internal)
-        RETURN external.qualified_name as fqn,
-               external.belong_project as project,
-               external.symbol_id as external_symbol_id,
-               internal.symbol_id as internal_symbol_id,
-               r IS NOT NULL as is_linked
-        ORDER BY project, fqn
-        LIMIT $limit
-        """
-        
+        query = Neo4jQueries.find_duplicate_definitions()
         result = self.connector.execute_query(query, {'limit': limit})
         return [dict(record) for record in result]

@@ -57,6 +57,8 @@ class JavaGraphEdgeType(Enum):
     ACCESSES = "ACCESSES"
     # 注释关系
     HAS_COMMENT = "HAS_COMMENT"
+    # 外部类链接到内部实现（JAR 中的类链接到源码中的类）
+    LIB_LINK = "LIB_LINK"
     
     def get_unique_key(self) -> List[str]:
         
