@@ -11,6 +11,7 @@ from typing import List, Optional
 
 from .class_name_parser import ClassNameParser
 from .jar_class_db import JARClassDB, ClassInfo
+from .pom_parser import PomParser, PomInfo
 
 
 @dataclass
@@ -136,6 +137,9 @@ class JARScanner:
         from datetime import datetime
         current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         
+        # 解析 POM 文件获取 artifact 信息
+        pom_info = self._parse_pom_for_jar(jar_path)
+        
         try:
             with zipfile.ZipFile(jar_path, 'r') as jar:
                 # 提取所有 .class 文件
@@ -149,7 +153,7 @@ class JARScanner:
                         if not include_anonymous and is_anonymous:
                             continue
                         
-                        # 创建 ClassInfo 对象
+                        # 创建 ClassInfo 对象，包含 POM 信息
                         class_info = ClassInfo(
                             fqn=fqn,
                             simple_name=simple_name,
@@ -157,7 +161,14 @@ class JARScanner:
                             jar_name=jar_name,
                             jar_path=jar_path,
                             is_anonymous=is_anonymous,
-                            insert_time=current_time
+                            insert_time=current_time,
+                            file_path=file_info,  # 保存类在 JAR 中的文件路径
+                            parent_artifact_id=pom_info.parent_artifact_id if pom_info else None,
+                            parent_group_id=pom_info.parent_group_id if pom_info else None,
+                            parent_version=pom_info.parent_version if pom_info else None,
+                            artifact_id=pom_info.artifact_id if pom_info else None,
+                            artifact_group_id=pom_info.group_id if pom_info else None,
+                            artifact_version=pom_info.version if pom_info else None
                         )
                         classes.append(class_info)
                         
@@ -251,3 +262,18 @@ class JARScanner:
         """
         classes = self.db.query_by_jar(jar_path, include_anonymous=True)
         return len(classes)
+    
+    def _parse_pom_for_jar(self, jar_path: str) -> Optional[PomInfo]:
+        """
+        为 JAR 文件查找并解析对应的 POM 文件
+        
+        参数:
+            jar_path: JAR 文件路径
+        
+        返回:
+            PomInfo 对象，如果找不到或解析失败返回 None
+        """
+        pom_path = PomParser.find_pom_for_jar(jar_path)
+        if pom_path:
+            return PomParser.parse(pom_path)
+        return None

@@ -21,3 +21,13 @@ class ClassLocation:
     file_path: Optional[str]    # 文件路径（仅内部类）
     resolution_method: str      # 解析方法
     symbol_id: Optional[str] = None  # 符号 ID
+    
+    # Maven artifact 信息（仅外部类）
+    artifact_id: Optional[str] = None           # Artifact ID
+    artifact_group_id: Optional[str] = None     # Group ID
+    artifact_version: Optional[str] = None      # Version
+    
+    # Maven parent 信息（仅外部类）
+    parent_artifact_id: Optional[str] = None    # Parent Artifact ID
+    parent_group_id: Optional[str] = None       # Parent Group ID
+    parent_version: Optional[str] = None        # Parent Version

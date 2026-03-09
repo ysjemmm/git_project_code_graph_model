@@ -26,8 +26,9 @@ class ClassNameParser:
         示例:
             "com/example/User.class" -> ("com.example.User", "User", "com.example", False)
             "com/example/User$1.class" -> ("com.example.User$1", "User$1", "com.example", True)
-            "com/example/Outer$Inner.class" -> ("com.example.Outer.Inner", "Outer.Inner", "com.example", False)
-            "com/example/Outer$Inner$1.class" -> ("com.example.Outer.Inner$1", "Outer.Inner$1", "com.example", True)
+            "com/example/Outer$Inner.class" -> ("com.example.Outer.Inner", "Inner", "com.example.Outer", False)
+            "com/example/Outer$1ConnectListener.class" -> ("com.example.Outer.ConnectListener", "ConnectListener", "com.example.Outer", False)
+            "com/example/$Gson$Types.class" -> ("com.example.Gson.Types", "Types", "com.example.Gson", False)
             "classes/java/lang/String.class" -> ("java.lang.String", "String", "java.lang", False)  # JMOD 文件
         """
         # 移除 JMOD 文件的 classes/ 前缀（JDK 9+）
@@ -41,12 +42,24 @@ class ClassNameParser:
         # 将路径分隔符替换为点号
         path_with_dots = class_file_path.replace('/', '.').replace('\\', '.')
         
+        # 处理以 $ 开头的类名（如 com.example.$Gson$Types）
+        # 移除路径中的前导 $
+        parts = path_with_dots.split('.')
+        cleaned_parts = []
+        for part in parts:
+            if part.startswith('$'):
+                # 移除前导 $
+                part = part[1:]
+            cleaned_parts.append(part)
+        path_with_dots = '.'.join(cleaned_parts)
+        
         # 判断是否为匿名类（在转换之前检查）
         is_anonymous = ClassNameParser.is_anonymous_class(path_with_dots)
         
         # 处理 $ 符号：
         # 1. 如果是匿名类（以 $数字 结尾），保留最后的 $数字，其他 $ 替换为 .
-        # 2. 如果不是匿名类，将所有 $ 替换为 .
+        # 2. 如果不是匿名类，处理 $数字+类名 的情况（如 $1ConnectListener -> ConnectListener）
+        # 3. 其他情况，将所有 $ 替换为 .
         if is_anonymous:
             # 找到最后一个 $数字 的位置
             import re
@@ -101,46 +114,35 @@ class ClassNameParser:
         返回:
             (package_name, simple_name)
         
+        规则:
+            - simple_name 只包含最后一个类名（不包含外部类名）
+            - package_name 包含真正的包名 + 外部类名
+        
         示例:
             "com.example.User" -> ("com.example", "User")
-            "com.example.Outer.Inner" -> ("com.example", "Outer.Inner")
+            "com.example.Outer.Inner" -> ("com.example.Outer", "Inner")
+            "com.example.Outer.Inner.Deep" -> ("com.example.Outer.Inner", "Deep")
             "com.example.User$1" -> ("com.example", "User$1")
             "User" -> ("", "User")
+            "com.example.package-info" -> ("com.example", "package-info")
         """
         if '.' not in fqn:
             # 没有包名，只有类名
             return "", fqn
         
-        # 检查是否包含 $ (匿名类或内部类标记)
-        if '$' in fqn:
-            # 对于包含 $ 的类，找到最后一个包名部分
-            # 例如: com.example.User$1 -> package=com.example, simple=User$1
-            # 例如: com.example.Outer$Inner$1 -> package=com.example, simple=Outer$Inner$1
-            parts = fqn.split('.')
-            
-            # 从后往前找第一个不包含 $ 的部分
-            for i in range(len(parts) - 1, -1, -1):
-                if '$' not in parts[i]:
-                    # 找到了包名的结束位置
-                    package_name = '.'.join(parts[:i + 1])
-                    simple_name = '.'.join(parts[i + 1:])
-                    return package_name, simple_name
-            
-            # 所有部分都包含 $，说明没有包名
-            return "", fqn
+        # 特殊处理 package-info 类
+        if fqn.endswith('.package-info'):
+            last_dot = fqn.rfind('.package-info')
+            package_name = fqn[:last_dot]
+            return package_name, "package-info"
         
-        # 对于不包含 $ 的类，需要区分包名和类名
-        # 规则：包名是小写开头的部分，类名是大写开头的部分
-        parts = fqn.split('.')
+        # 找到最后一个点的位置
+        last_dot_index = fqn.rfind('.')
         
-        # 从后往前找第一个小写开头的部分
-        for i in range(len(parts) - 1, -1, -1):
-            part = parts[i]
-            if part and part[0].islower():
-                # 找到了包名的结束位置
-                package_name = '.'.join(parts[:i + 1])
-                simple_name = '.'.join(parts[i + 1:])
-                return package_name, simple_name
+        # simple_name 是最后一个点之后的部分
+        simple_name = fqn[last_dot_index + 1:]
         
-        # 没有找到包名，整个都是类名
-        return "", fqn
+        # package_name 是最后一个点之前的部分
+        package_name = fqn[:last_dot_index]
+        
+        return package_name, simple_name

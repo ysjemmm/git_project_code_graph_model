@@ -1,7 +1,7 @@
 ﻿
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 
 class FileType(Enum):
@@ -45,6 +45,8 @@ class JavaGraphEdgeType(Enum):
     CONTAINS = "CONTAINS"
     # 一个对象节点有多少个属性(静非静态)、方法(静态与非静态)、代码块(实静态)、枚举常量、记录组件
     MEMBER_OF = "MEMBER_OF"
+    # 一个库包含的类
+    CONTAINS_LIB = "CONTAINS_LIB"
     # 类继承关
     EXTENDS = "EXTENDS"
     # 接口实现关系
@@ -128,48 +130,59 @@ class AccessRelationshipProperty(RelationshipProperty):
         })
         return result
 
+@dataclass
 class BaseNode:
     name: str = ""
     qualified_name: str = ""
     symbol_id: str = ""
-    parent_symbol_id: str
-    belong_project: str  # 节点所属的项目名称
+    parent_symbol_id: str = None
+    belong_project: Optional[str] = None # 节点所属的项目名称
     
     def get_unique_key(self) -> Dict[str, Any]:
         
         raise NotImplementedError("子类必须实现 get_unique_key 方法")
 
+@dataclass
 class BaseLocationNode(BaseNode):
-    start_line: int
-    start_column: int
-    end_line: int
-    end_column: int
+    start_line: int = 0
+    start_column: int = 0
+    end_line: int = 0
+    end_column: int = 0
 
+@dataclass
 class ProjectGraphNode(BaseNode):
+    # 分为 Application 与 Lib
+    project_type: str = "Application"
     pass
 
+@dataclass
 class FileNodeGraphNode(BaseLocationNode):
-    full_path: str
-    file_path: str
-    file_type: FileType
+    full_path: str = ""
+    file_path: str = ""
+    file_type: FileType = None
 
+@dataclass
 class ObjectNodeGraphNode(BaseLocationNode):
-    object_type: str
-    raw_metadata: str
+    object_type: str = ""
+    raw_metadata: str = ""
 
+@dataclass
 class MethodNodeGraphNode(BaseLocationNode):
-    raw_signature: str
-    raw_metadata: str
+    raw_signature: str = ""
+    raw_metadata: str = ""
 
+@dataclass
 class CodeBlockNodeGraphNode(BaseLocationNode):
-    raw_metadata: str
+    raw_metadata: str = ""
 
+@dataclass
 class FieldNodeGraphNode(BaseLocationNode):
-    raw_metadata: str
+    raw_metadata: str = ""
 
+@dataclass
 class JavaFileNodeGraphNode(FileNodeGraphNode):
-    imports: List[str]
-    package_name: str
+    imports: List[str] = None
+    package_name: str = ""
     file_type: str = FileType.JAVA_FILE  # 文件类型
     
     def get_unique_key(self) -> Dict[str, Any]:
@@ -179,16 +192,18 @@ class JavaFileNodeGraphNode(FileNodeGraphNode):
             "belong_project": self.belong_project
         }
 
+@dataclass
 class JavaObjectNodeGraphNode(ObjectNodeGraphNode):
-    from_type: str
-    request_uri: str
-    annotation_from_object: List[str]
+    belong_file: str = "" # 所属文件
+    from_type: str = ""
+    request_uri: str = ""
+    annotation_from_object: List[str] = None
     annotations: List[str] = None  # 注解列表
     type_parameters: List[str] = None
     simple_comment: str = ""  # 简短注释（直接存储）
     has_detailed_comment: bool = False  # 是否有详细注释节点
 
-    super_class: str
+    super_class: str = ""
     super_interfaces: list[str] = field(default_factory=list)
     
     def get_unique_key(self) -> Dict[str, Any]:
@@ -198,8 +213,9 @@ class JavaObjectNodeGraphNode(ObjectNodeGraphNode):
             "belong_project": self.belong_project
         }
 
+@dataclass
 class JavaMethodNodeGraphNode(MethodNodeGraphNode):
-    is_static: bool
+    is_static: bool = False
     is_constructor: bool = False
     return_type: str = "void"  # 返回类型
     base_uri: str = ""  # REST 映射路径
@@ -219,8 +235,9 @@ class JavaMethodNodeGraphNode(MethodNodeGraphNode):
         }
 
 
+@dataclass
 class JavaCodeBlockNodeGraphNode(CodeBlockNodeGraphNode):
-    is_static: bool
+    is_static: bool = False
 
     def get_unique_key(self) -> Dict[str, Any]:
         return {
@@ -228,9 +245,10 @@ class JavaCodeBlockNodeGraphNode(CodeBlockNodeGraphNode):
             "belong_project": self.belong_project
         }
 
+@dataclass
 class JavaFieldNodeGraphNode(FieldNodeGraphNode):
-    is_static: bool
-    is_final: bool
+    is_static: bool = False
+    is_final: bool = False
     type_name: str = "Object"  # 字段类型
     annotations: List[str] = None  # 注解列表
     has_default_value: bool = False  # 是否有默认值
@@ -246,6 +264,7 @@ class JavaFieldNodeGraphNode(FieldNodeGraphNode):
         }
 
 
+@dataclass
 class JavaEnumConstantNodeGraphNode(FieldNodeGraphNode):
     annotations: List[str] = None  # 注解列表
     arguments: List[str] = None
@@ -256,9 +275,10 @@ class JavaEnumConstantNodeGraphNode(FieldNodeGraphNode):
             "belong_project": self.belong_project
         }
 
+@dataclass
 class JavaParameterNodeGraphNode(BaseLocationNode):
     """参数节点"""
-    type_name: str
+    type_name: str = ""
     annotations: List[str] = None  # 注解列表
     
     def get_unique_key(self) -> Dict[str, Any]:
@@ -268,39 +288,7 @@ class JavaParameterNodeGraphNode(BaseLocationNode):
             "belong_project": self.belong_project
         }
 
-class ProjectNode(ProjectGraphNode):
-    
-    def get_unique_key(self) -> Dict[str, Any]:
-        
-        return {
-            "symbol_id": self.symbol_id
-        }
-
-class ParameterNode(BaseLocationNode):
-    
-    type_name: str
-    annotations: List[str] = None  # 注解列表
-    
-    def get_unique_key(self) -> Dict[str, Any]:
-        
-        return {
-            "symbol_id": self.symbol_id,
-            "belong_project": self.belong_project
-        }
-
-class ConstructorNode(BaseLocationNode):
-    """构造函数节点"""
-    raw_signature: str
-    annotations: List[str] = None  # 注解列表
-    throws_exceptions: List[str] = None  # 异常列表
-    
-    def get_unique_key(self) -> Dict[str, Any]:
-        
-        return {
-            "symbol_id": self.symbol_id,
-            "belong_project": self.belong_project
-        }
-
+@dataclass
 class CommentNodeGraphNode(BaseLocationNode):
     """注释节点"""
     content: str = ""  # 注释内容

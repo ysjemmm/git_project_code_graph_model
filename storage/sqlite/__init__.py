@@ -8,6 +8,7 @@ from .jdk_class_db import JDKClassDB, get_jdk_class_db, has_jdk_index
 from .class_name_parser import ClassNameParser
 from .jar_scanner import JARScanner, ScanResult
 from .project_scanner import ProjectScanner, ProjectScanResult
+from .pom_parser import PomParser, PomInfo
 
 __all__ = [
     'JARClassDB',
@@ -23,5 +24,7 @@ __all__ = [
     'JARScanner',
     'ScanResult',
     'ProjectScanner',
-    'ProjectScanResult'
+    'ProjectScanResult',
+    'PomParser',
+    'PomInfo'
 ]

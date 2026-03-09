@@ -270,14 +270,7 @@ class SymbolManager:
         if self.jar_db:
             external_cls = self.jar_db.query_by_fqn(same_package_fqn)
             if external_cls:
-                return ClassLocation(
-                    type=ClassLocationType.EXTERNAL,
-                    fqn=external_cls.fqn,
-                    jar_path=external_cls.jar_path,
-                    file_path=None,
-                    resolution_method="same_package_external",
-                    symbol_id=None  # JAR 类没有 symbol_id
-                )
+                return self._create_external_location(external_cls, "same_package_external")
         
         # 4. 检查是否是外部 JAR 的 import 类
         if self.jar_db:
@@ -289,14 +282,7 @@ class SymbolManager:
                 if imp.endswith('.' + identifier):
                     external_cls = self.jar_db.query_by_fqn(imp)
                     if external_cls:
-                        return ClassLocation(
-                            type=ClassLocationType.EXTERNAL,
-                            fqn=external_cls.fqn,
-                            jar_path=external_cls.jar_path,
-                            file_path=None,
-                            resolution_method="explicit_import_external",
-                            symbol_id=None  # JAR 类没有 symbol_id
-                        )
+                        return self._create_external_location(external_cls, "explicit_import_external")
             
             # 4.2 通配符 import
             for imp in imports:
@@ -322,14 +308,7 @@ class SymbolManager:
                 # 再检查外部 JAR
                 external_cls = self.jar_db.query_by_fqn(potential_fqn)
                 if external_cls:
-                    return ClassLocation(
-                        type=ClassLocationType.EXTERNAL,
-                        fqn=external_cls.fqn,
-                        jar_path=external_cls.jar_path,
-                        file_path=None,
-                        resolution_method="wildcard_import_external",
-                        symbol_id=None  # JAR 类没有 symbol_id
-                    )
+                    return self._create_external_location(external_cls, "wildcard_import_external")
         
         # 5. 检查是否是 JDK 类（新增）
         if self.jdk_db:
@@ -404,6 +383,32 @@ class SymbolManager:
             symbol_id=None
         )
     
+    def _create_external_location(self, external_cls, resolution_method: str) -> ClassLocation:
+        """
+        创建外部类的 ClassLocation，包含 POM 信息
+        
+        参数:
+            external_cls: 外部类信息对象（来自 jar_db）
+            resolution_method: 解析方法
+        
+        返回:
+            ClassLocation 对象
+        """
+        return ClassLocation(
+            type=ClassLocationType.EXTERNAL,
+            fqn=external_cls.fqn,
+            jar_path=external_cls.jar_path,
+            file_path=external_cls.file_path,
+            resolution_method=resolution_method,
+            symbol_id=None,
+            artifact_id=external_cls.artifact_id,
+            artifact_group_id=external_cls.artifact_group_id,
+            artifact_version=external_cls.artifact_version,
+            parent_artifact_id=external_cls.parent_artifact_id,
+            parent_group_id=external_cls.parent_group_id,
+            parent_version=external_cls.parent_version
+        )
+    
     def _resolve_fqn_location_db(
         self, 
         fqn: str, 
@@ -427,14 +432,7 @@ class SymbolManager:
         if self.jar_db:
             external_cls = self.jar_db.query_by_fqn(fqn)
             if external_cls:
-                return ClassLocation(
-                    type=ClassLocationType.EXTERNAL,
-                    fqn=external_cls.fqn,
-                    jar_path=external_cls.jar_path,
-                    file_path=None,
-                    resolution_method="fqn_external",
-                    symbol_id=None  # JAR 类没有 symbol_id
-                )
+                return self._create_external_location(external_cls, "fqn_external")
         
         # 检查 JDK 类（新增）
         if self.jdk_db:
@@ -455,7 +453,7 @@ class SymbolManager:
             fqn=fqn,
             jar_path=None,
             file_path=None,
-            resolution_method="fqn_unresolved",
+            resolution_method="unresolved",
             symbol_id=None
         )
     

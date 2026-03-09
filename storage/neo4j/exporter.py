@@ -3,6 +3,7 @@ Neo4j 导出器- 基于 AST 数据直接构建
 按照 java_neo4j_modules 标准，从 AST 节点处理器的输出直接构建图数据库
 """
 from collections import defaultdict
+from dataclasses import asdict
 from pathlib import Path
 from typing import Dict, Set, List, Any, Tuple
 
@@ -11,6 +12,7 @@ from parser.languages.java.core.ast_node_types import JavaFileStructure, ClassIn
     CodeBlockInfo
 from parser.languages.java.symbol.symbol_commons import ClassLocation, ClassLocationType
 from parser.languages.java.symbol.symbol_manager import SymbolManager
+from parser.languages.java.utils.analyzer_helper import AnalyzerHelper
 from parser.utils.logger import get_logger
 from storage.neo4j.connector import Neo4jConnector
 from storage.neo4j.field_names import (
@@ -21,8 +23,9 @@ from storage.neo4j.field_names import (
 from storage.neo4j.java_modules import JavaGraphEdgeType, ObjectType, ObjectFromType, JavaNeo4jNodeType, \
     JavaFileNodeGraphNode, JavaObjectNodeGraphNode, JavaMethodNodeGraphNode, JavaParameterNodeGraphNode, \
     JavaFieldNodeGraphNode, JavaEnumConstantNodeGraphNode, CommentNodeGraphNode, CommentType, \
-    CommentStorageDecision, JavadocParseResult, JavaCodeBlockNodeGraphNode
+    CommentStorageDecision, JavadocParseResult, JavaCodeBlockNodeGraphNode, ProjectGraphNode
 from storage.neo4j.merge_builder import MergeQueryBuilder, get_unique_key_for_node_type
+from tools.ast_tool import AstTool
 
 logger = get_logger("neo4j_exporter")
 
@@ -150,13 +153,13 @@ class Neo4jExporterAST:
     
     def _prepare_project_node(self):
         """准备项目节点"""
-        properties = {
-            NODE_SYMBOL_ID: self.project_id,
-            NODE_NAME: self.project_name,
-            NODE_QUALIFIED_NAME: self.project_id,
-            NODE_BELONG_PROJECT: self.project_name,
-        }
-        self.nodes_to_create[JavaNeo4jNodeType.Project].append(properties)
+        project_node = ProjectGraphNode()
+        project_node.name = self.project_name
+        project_node.symbol_id = self.project_id
+        project_node.qualified_name = self.project_id
+        project_node.belong_project = self.project_name
+
+        self.nodes_to_create[JavaNeo4jNodeType.Project].append(project_node)
         self.created_nodes.add(self.project_id)
     
     def _collect_ast_file_nodes(self, ast_data: JavaFileStructure | None):
@@ -222,6 +225,7 @@ class Neo4jExporterAST:
         java_object_node.name = class_data.class_name
         java_object_node.qualified_name = java_file_node.package_name + "." + class_data.class_name
         java_object_node.belong_project = java_file_node.belong_project
+        java_object_node.belong_file = java_file_node.file_path
         java_object_node.symbol_id = class_data.symbol_id  # 使用 analyzer 生成 symbol_id
         java_object_node.parent_symbol_id = class_data.parent_symbol_id
         java_object_node.type_parameters = class_data.type_parameters
@@ -283,6 +287,7 @@ class Neo4jExporterAST:
         java_object_node.name = interface_data.interface_name
         java_object_node.qualified_name = java_file_node.package_name + "." + interface_data.interface_name
         java_object_node.belong_project = java_file_node.belong_project
+        java_object_node.belong_file = java_file_node.file_path
         java_object_node.symbol_id = interface_data.symbol_id 
         java_object_node.parent_symbol_id = interface_data.parent_symbol_id
         java_object_node.start_line = interface_data.location.start_line
@@ -324,6 +329,7 @@ class Neo4jExporterAST:
         java_object_node.name = enum_data.enum_name
         java_object_node.qualified_name = java_file_node.package_name + "." + enum_data.enum_name
         java_object_node.belong_project = java_file_node.belong_project
+        java_object_node.belong_file = java_file_node.file_path
         java_object_node.symbol_id = enum_data.symbol_id 
         java_object_node.parent_symbol_id = enum_data.parent_symbol_id
         java_object_node.start_line = enum_data.location.start_line
@@ -374,6 +380,7 @@ class Neo4jExporterAST:
         java_object_node.name = annotation_data.annotation_name
         java_object_node.qualified_name = java_file_node.package_name + "." + annotation_data.annotation_name
         java_object_node.belong_project = java_file_node.belong_project
+        java_object_node.belong_file = java_file_node.file_path
         java_object_node.symbol_id = annotation_data.symbol_id
         java_object_node.parent_symbol_id = annotation_data.parent_symbol_id
         java_object_node.start_line = annotation_data.location.start_line
@@ -406,6 +413,7 @@ class Neo4jExporterAST:
         java_object_node.name = record_data.record_name
         java_object_node.qualified_name = java_file_node.package_name + "." + record_data.record_name
         java_object_node.belong_project = java_file_node.belong_project
+        java_object_node.belong_file = java_file_node.file_path
         java_object_node.symbol_id = record_data.symbol_id  
         java_object_node.parent_symbol_id = record_data.parent_symbol_id
         java_object_node.type_parameters = record_data.type_parameters
@@ -778,60 +786,6 @@ class Neo4jExporterAST:
         
         logger.info(f"Created {total_created} relationships in total")
         return total_created
-    
-    def _collect_relationships_from_symbol_table(self, symbol_table: Any) -> None:
-        """从符号表中收集关系（继承、实现、调用、访问）"""
-        try:
-            if hasattr(symbol_table, 'inheritance_edges'):
-                inheritance_count = 0
-                for edge in symbol_table.inheritance_edges:
-                    source_id = self._get_attr(edge, EDGE_SOURCE_SYMBOL, None)
-                    target_id = self._get_attr(edge, EDGE_TARGET_SYMBOL, None)
-                    is_extension = self._get_attr(edge, INHERITANCE_IS_EXTENSION, False)
-                    
-                    if source_id and target_id:
-                        # 只添加已创建的节点之间的关系
-                        if source_id in self.created_nodes and target_id in self.created_nodes:
-                            rel_type = JavaGraphEdgeType.EXTENDS.value if is_extension else JavaGraphEdgeType.IMPLEMENTS.value
-                            self.relationships_to_create.append((source_id, target_id, rel_type))
-                            inheritance_count += 1
-                            logger.debug(f"Added {rel_type} relationship: {source_id} -> {target_id}")
-                logger.info(f"Collected {inheritance_count} inheritance relationships from symbol table")
-            
-            # 处理方法调用关系
-            if hasattr(symbol_table, 'call_edges'):
-                call_count = 0
-                for edge in symbol_table.call_edges:
-                    source_id = self._get_attr(edge, EDGE_SOURCE_SYMBOL, None)
-                    target_id = self._get_attr(edge, EDGE_TARGET_SYMBOL, None)
-                    
-                    if source_id and target_id:
-                        # 只添加已创建的节点之间的关系
-                        if source_id in self.created_nodes and target_id in self.created_nodes:
-                            self.relationships_to_create.append((source_id, target_id, JavaGraphEdgeType.CALLS.value))
-                            call_count += 1
-                            logger.debug(f"Added CALLS relationship: {source_id} -> {target_id}")
-                logger.info(f"Collected {call_count} call relationships from symbol table")
-            
-            # 处理字段访问关系
-            if hasattr(symbol_table, 'access_edges'):
-                access_count = 0
-                for edge in symbol_table.access_edges:
-                    source_id = self._get_attr(edge, EDGE_SOURCE_SYMBOL, None)
-                    target_id = self._get_attr(edge, EDGE_TARGET_SYMBOL, None)
-                    
-                    if source_id and target_id:
-                        # 只添加已创建的节点之间的关系
-                        if source_id in self.created_nodes and target_id in self.created_nodes:
-                            self.relationships_to_create.append((source_id, target_id, JavaGraphEdgeType.ACCESSES.value))
-                            access_count += 1
-                            logger.debug(f"Added ACCESSES relationship: {source_id} -> {target_id}")
-                logger.info(f"Collected {access_count} access relationships from symbol table")
-        
-        except Exception as e:
-            logger.error(f"Failed to collect relationships from symbol table: {e}")
-            import traceback
-            traceback.print_exc()
 
     def _parse_extend_impl_relationships(self, ast_data_list: List[JavaFileStructure]):
         for ast_data in ast_data_list:
@@ -858,50 +812,62 @@ class Neo4jExporterAST:
     def _parse_class_location_to_node(self, location: ClassLocation, class_symbol_id: str, extend_type: str, object_type: ObjectType):
         if location is None:
             return
+        java_object = JavaObjectNodeGraphNode()
         if location.type == ClassLocationType.EXTERNAL:
-            java_object = JavaObjectNodeGraphNode()
-            java_object.symbol_id = location.jar_path + '<path>' + location.fqn
-            java_object.qualified_name = location.fqn
-            java_object.name = location.fqn.rsplit(".", 1)[-1]
+            java_object.symbol_id = AstTool.get_str(location.jar_path, "UNKNOWN") + '<path>' + AstTool.get_str(location.fqn, "UNKNOWN")
+            java_object.qualified_name = AstTool.get_str(location.fqn, "UNKNOWN")
+            java_object.name = java_object.qualified_name.rsplit(".", 1)[-1]
             java_object.object_type = object_type.value
-            java_object.belong_project = Path(location.jar_path).stem if location.jar_path else f"UNKNOWN[{ClassLocationType.EXTERNAL.value}]"
+            java_object.belong_file = location.file_path
+            # 优先使用 parent_artifact_id，其次 artifact_id，最后使用 "UNKNOWN"
+            java_object.belong_project = AstTool.get_str(
+                location.parent_artifact_id, 
+                AstTool.get_str(location.artifact_id, "UNKNOWN")
+            )
             java_object.from_type = ObjectFromType.EXTERNAL_DEFINITION.value
-            self.created_nodes.add(java_object.symbol_id)
-            self.nodes_to_create[JavaNeo4jNodeType.JavaObject].append(java_object)
-            self.relationships_to_create.append((class_symbol_id, java_object.symbol_id, extend_type))
         elif location.type == ClassLocationType.JDK:
             # JDK 标准库类
-            java_object = JavaObjectNodeGraphNode()
-            java_object.symbol_id = location.jar_path + '<path>' + location.fqn if location.jar_path else f"JDK<path>{location.fqn}"
-            java_object.qualified_name = location.fqn
-            java_object.name = location.fqn.rsplit(".", 1)[-1]
+            jar_path = AstTool.get_str(location.jar_path, "")
+            fqn = AstTool.get_str(location.fqn, "UNKNOWN")
+            java_object.symbol_id = f"{jar_path}<path>{fqn}" if jar_path else f"JDK<path>{fqn}"
+            java_object.qualified_name = fqn
+            java_object.name = fqn.rsplit(".", 1)[-1]
             java_object.object_type = object_type.value
             # 从 jar_path 提取 JDK 模块名（例如 java.base.jmod -> java.base）
-            if location.jar_path:
-                jar_name = Path(location.jar_path).stem  # 例如 "java.base"
-                java_object.belong_project = f"JDK:{jar_name}"
-            else:
-                java_object.belong_project = "JDK"
+            java_object.belong_project = "__JDK__"
             java_object.from_type = ObjectFromType.JDK_DEFINITION.value
             self.created_nodes.add(java_object.symbol_id)
-            self.nodes_to_create[JavaNeo4jNodeType.JavaObject].append(java_object)
-            self.relationships_to_create.append((class_symbol_id, java_object.symbol_id, extend_type))
-        elif location.type == ClassLocationType.INTERNAL:
-            self.relationships_to_create.append((class_symbol_id, location.symbol_id, extend_type))
         elif location.type == ClassLocationType.UNKNOWN:
-            java_object = JavaObjectNodeGraphNode()
-            # 修复：处理 None 值
-            jar_path = location.jar_path or "UNKNOWN"
-            fqn = location.fqn or "UNKNOWN"
+            jar_path = AstTool.get_str(location.jar_path, "UNKNOWN")
+            fqn = AstTool.get_str(location.fqn, "UNKNOWN")
             java_object.symbol_id = f"{jar_path}<path>{fqn}"
-            java_object.belong_project = "UNKNOWN"
+            java_object.belong_project = "__UNKNOWN__"
             java_object.qualified_name = fqn
             java_object.name = fqn.rsplit(".", 1)[-1] if fqn != "UNKNOWN" else "UNKNOWN"
             java_object.object_type = object_type.value
             java_object.from_type = ObjectFromType.UNKNOWN_DEFINITION.value
+
+        if location.type == ClassLocationType.INTERNAL:
+            self.relationships_to_create.append((class_symbol_id, location.symbol_id, extend_type))
+        else:
             self.created_nodes.add(java_object.symbol_id)
             self.nodes_to_create[JavaNeo4jNodeType.JavaObject].append(java_object)
             self.relationships_to_create.append((class_symbol_id, java_object.symbol_id, extend_type))
+
+        if java_object.belong_project is not None:
+            dep_project_symbol_id = AnalyzerHelper.generate_symbol_id_for_project(java_object.belong_project)
+            projects_list = self.nodes_to_create.get(JavaNeo4jNodeType.Project, [])
+            exists = any(node.name == java_object.belong_project for node in projects_list if isinstance(node, ProjectGraphNode))
+            if not exists:
+                self.created_nodes.add(dep_project_symbol_id)
+                self.nodes_to_create[JavaNeo4jNodeType.Project].append(ProjectGraphNode(
+                    name = java_object.belong_project,
+                    qualified_name = dep_project_symbol_id,
+                    symbol_id = dep_project_symbol_id,
+                    belong_project = java_object.belong_project,
+                    project_type = "Lib"
+                ))
+            self.relationships_to_create.append((dep_project_symbol_id, java_object.symbol_id, JavaGraphEdgeType.CONTAINS_LIB.value))
 
     # ==================== 嵌套类型处理方法 ====================
     

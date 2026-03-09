@@ -22,6 +22,13 @@ class ClassInfo:
     jar_path: str               # JAR文件完整路径（用于兼容性）
     is_anonymous: bool          # 是否为匿名类
     insert_time: str            # 插入时间，格式: "YYYY-MM-DD HH:MM:SS"
+    file_path: Optional[str] = None             # 类在 JAR 中的文件路径，例如 "com/example/User.class"
+    parent_artifact_id: Optional[str] = None    # 父项目 artifact ID
+    parent_group_id: Optional[str] = None       # 父项目 group ID
+    parent_version: Optional[str] = None        # 父项目版本
+    artifact_id: Optional[str] = None           # 当前项目 artifact ID
+    artifact_group_id: Optional[str] = None     # 当前项目 group ID
+    artifact_version: Optional[str] = None      # 当前项目版本
 
 
 class JARClassDB:
@@ -97,7 +104,14 @@ class JARClassDB:
                 jar_name TEXT NOT NULL,
                 jar_path TEXT NOT NULL,
                 is_anonymous BOOLEAN NOT NULL,
-                insert_time TEXT NOT NULL
+                insert_time TEXT NOT NULL,
+                file_path TEXT,
+                parent_artifact_id TEXT,
+                parent_group_id TEXT,
+                parent_version TEXT,
+                artifact_id TEXT,
+                artifact_group_id TEXT,
+                artifact_version TEXT
             )
         """)
         
@@ -174,10 +188,14 @@ class JARClassDB:
             # 使用 INSERT OR REPLACE 来处理重复的 FQN
             cursor.executemany("""
                 INSERT OR REPLACE INTO jar_classes 
-                (fqn, simple_name, package_name, jar_name, jar_path, is_anonymous, insert_time)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                (fqn, simple_name, package_name, jar_name, jar_path, is_anonymous, insert_time, file_path,
+                 parent_artifact_id, parent_group_id, parent_version,
+                 artifact_id, artifact_group_id, artifact_version)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, [
-                (c.fqn, c.simple_name, c.package_name, c.jar_name, c.jar_path, c.is_anonymous, current_time)
+                (c.fqn, c.simple_name, c.package_name, c.jar_name, c.jar_path, c.is_anonymous, current_time, c.file_path,
+                 c.parent_artifact_id, c.parent_group_id, c.parent_version,
+                 c.artifact_id, c.artifact_group_id, c.artifact_version)
                 for c in classes
             ])
             
@@ -190,6 +208,28 @@ class JARClassDB:
         
         return inserted_count
     
+    def _row_to_classinfo(self, row) -> ClassInfo:
+        """将数据库行转换为 ClassInfo 对象"""
+        # 获取所有可用的列名
+        keys = row.keys() if hasattr(row, 'keys') else []
+        
+        return ClassInfo(
+            fqn=row['fqn'],
+            simple_name=row['simple_name'],
+            package_name=row['package_name'],
+            jar_name=row['jar_name'],
+            jar_path=row['jar_path'],
+            is_anonymous=bool(row['is_anonymous']),
+            insert_time=row['insert_time'],
+            file_path=row['file_path'] if 'file_path' in keys else None,
+            parent_artifact_id=row['parent_artifact_id'] if 'parent_artifact_id' in keys else None,
+            parent_group_id=row['parent_group_id'] if 'parent_group_id' in keys else None,
+            parent_version=row['parent_version'] if 'parent_version' in keys else None,
+            artifact_id=row['artifact_id'] if 'artifact_id' in keys else None,
+            artifact_group_id=row['artifact_group_id'] if 'artifact_group_id' in keys else None,
+            artifact_version=row['artifact_version'] if 'artifact_version' in keys else None
+        )
+    
     def query_by_fqn(self, fqn: str) -> Optional[ClassInfo]:
         """
         按完全限定名精确查询
@@ -201,24 +241,42 @@ class JARClassDB:
             匹配的ClassInfo对象，如果不存在则返回None
         """
         cursor = self.conn.cursor()
-        cursor.execute("""
-            SELECT fqn, simple_name, package_name, jar_name, jar_path, is_anonymous, insert_time
+        
+        # 检查表中是否有 POM 相关字段
+        select_fields = self._get_select_fields()
+        
+        cursor.execute(f"""
+            SELECT {select_fields}
             FROM jar_classes
             WHERE fqn = ?
         """, (fqn,))
         
         row = cursor.fetchone()
         if row:
-            return ClassInfo(
-                fqn=row['fqn'],
-                simple_name=row['simple_name'],
-                package_name=row['package_name'],
-                jar_name=row['jar_name'],
-                jar_path=row['jar_path'],
-                is_anonymous=bool(row['is_anonymous']),
-                insert_time=row['insert_time']
-            )
+            return self._row_to_classinfo(row)
         return None
+    
+    def _get_select_fields(self) -> str:
+        """获取 SELECT 语句的字段列表"""
+        # 检查表结构，确定哪些字段存在
+        cursor = self.conn.cursor()
+        cursor.execute("PRAGMA table_info(jar_classes)")
+        columns = [row[1] for row in cursor.fetchall()]
+        
+        # 基础字段
+        base_fields = ['fqn', 'simple_name', 'package_name', 'jar_name', 'jar_path', 'is_anonymous', 'insert_time']
+        
+        # 可选字段
+        optional_fields = ['file_path', 'parent_artifact_id', 'parent_group_id', 'parent_version', 
+                          'artifact_id', 'artifact_group_id', 'artifact_version']
+        
+        # 只选择存在的字段
+        select_fields = base_fields.copy()
+        for field in optional_fields:
+            if field in columns:
+                select_fields.append(field)
+        
+        return ', '.join(select_fields)
     
     def query_by_simple_name(
         self, 
@@ -236,35 +294,25 @@ class JARClassDB:
             匹配的ClassInfo对象列表，按package_name排序
         """
         cursor = self.conn.cursor()
+        select_fields = self._get_select_fields()
         
         if include_anonymous:
-            cursor.execute("""
-                SELECT fqn, simple_name, package_name, jar_name, jar_path, is_anonymous, insert_time
+            cursor.execute(f"""
+                SELECT {select_fields}
                 FROM jar_classes
                 WHERE simple_name = ?
                 ORDER BY package_name
             """, (simple_name,))
         else:
-            cursor.execute("""
-                SELECT fqn, simple_name, package_name, jar_name, jar_path, is_anonymous, insert_time
+            cursor.execute(f"""
+                SELECT {select_fields}
                 FROM jar_classes
                 WHERE simple_name = ? AND is_anonymous = 0
                 ORDER BY package_name
             """, (simple_name,))
         
         rows = cursor.fetchall()
-        return [
-            ClassInfo(
-                fqn=row['fqn'],
-                simple_name=row['simple_name'],
-                package_name=row['package_name'],
-                jar_name=row['jar_name'],
-                jar_path=row['jar_path'],
-                is_anonymous=bool(row['is_anonymous']),
-                insert_time=row['insert_time']
-            )
-            for row in rows
-        ]
+        return [self._row_to_classinfo(row) for row in rows]
     
     def query_by_package(
         self, 
@@ -282,35 +330,25 @@ class JARClassDB:
             该包中所有类的ClassInfo对象列表，按simple_name排序
         """
         cursor = self.conn.cursor()
+        select_fields = self._get_select_fields()
         
         if include_anonymous:
-            cursor.execute("""
-                SELECT fqn, simple_name, package_name, jar_name, jar_path, is_anonymous, insert_time
+            cursor.execute(f"""
+                SELECT {select_fields}
                 FROM jar_classes
                 WHERE package_name = ?
                 ORDER BY simple_name
             """, (package_name,))
         else:
-            cursor.execute("""
-                SELECT fqn, simple_name, package_name, jar_name, jar_path, is_anonymous, insert_time
+            cursor.execute(f"""
+                SELECT {select_fields}
                 FROM jar_classes
                 WHERE package_name = ? AND is_anonymous = 0
                 ORDER BY simple_name
             """, (package_name,))
         
         rows = cursor.fetchall()
-        return [
-            ClassInfo(
-                fqn=row['fqn'],
-                simple_name=row['simple_name'],
-                package_name=row['package_name'],
-                jar_name=row['jar_name'],
-                jar_path=row['jar_path'],
-                is_anonymous=bool(row['is_anonymous']),
-                insert_time=row['insert_time']
-            )
-            for row in rows
-        ]
+        return [self._row_to_classinfo(row) for row in rows]
     
     def query_by_jar(
         self, 
@@ -328,35 +366,25 @@ class JARClassDB:
             该JAR中所有类的ClassInfo对象列表，按fqn排序
         """
         cursor = self.conn.cursor()
+        select_fields = self._get_select_fields()
         
         if include_anonymous:
-            cursor.execute("""
-                SELECT fqn, simple_name, package_name, jar_name, jar_path, is_anonymous, insert_time
+            cursor.execute(f"""
+                SELECT {select_fields}
                 FROM jar_classes
                 WHERE jar_path = ?
                 ORDER BY fqn
             """, (jar_path,))
         else:
-            cursor.execute("""
-                SELECT fqn, simple_name, package_name, jar_name, jar_path, is_anonymous, insert_time
+            cursor.execute(f"""
+                SELECT {select_fields}
                 FROM jar_classes
                 WHERE jar_path = ? AND is_anonymous = 0
                 ORDER BY fqn
             """, (jar_path,))
         
         rows = cursor.fetchall()
-        return [
-            ClassInfo(
-                fqn=row['fqn'],
-                simple_name=row['simple_name'],
-                package_name=row['package_name'],
-                jar_name=row['jar_name'],
-                jar_path=row['jar_path'],
-                is_anonymous=bool(row['is_anonymous']),
-                insert_time=row['insert_time']
-            )
-            for row in rows
-        ]
+        return [self._row_to_classinfo(row) for row in rows]
     
     def query_by_jar_name(
         self, 
@@ -374,35 +402,25 @@ class JARClassDB:
             该JAR中所有类的ClassInfo对象列表，按fqn排序
         """
         cursor = self.conn.cursor()
+        select_fields = self._get_select_fields()
         
         if include_anonymous:
-            cursor.execute("""
-                SELECT fqn, simple_name, package_name, jar_name, jar_path, is_anonymous, insert_time
+            cursor.execute(f"""
+                SELECT {select_fields}
                 FROM jar_classes
                 WHERE jar_name = ?
                 ORDER BY fqn
             """, (jar_name,))
         else:
-            cursor.execute("""
-                SELECT fqn, simple_name, package_name, jar_name, jar_path, is_anonymous, insert_time
+            cursor.execute(f"""
+                SELECT {select_fields}
                 FROM jar_classes
                 WHERE jar_name = ? AND is_anonymous = 0
                 ORDER BY fqn
             """, (jar_name,))
         
         rows = cursor.fetchall()
-        return [
-            ClassInfo(
-                fqn=row['fqn'],
-                simple_name=row['simple_name'],
-                package_name=row['package_name'],
-                jar_name=row['jar_name'],
-                jar_path=row['jar_path'],
-                is_anonymous=bool(row['is_anonymous']),
-                insert_time=row['insert_time']
-            )
-            for row in rows
-        ]
+        return [self._row_to_classinfo(row) for row in rows]
     
     def update_jar_metadata(
         self, 

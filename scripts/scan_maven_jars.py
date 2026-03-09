@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 # 添加项目根目录到路径
-project_root = Path(__file__).parent.parent.parent
+project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from storage.sqlite import JARClassDB, JARScanner
@@ -19,7 +19,7 @@ def main():
     # 配置参数
     maven_cache_dir = PROJECT_ROOT_PATH / ".cache" / "maven"
     force_rescan = False  # 是否强制重新扫描
-    include_anonymous = True  # 是否包含匿名类
+    include_anonymous = False  # 是否包含匿名类（默认不包含）
     
     print("=" * 70)
     print("Maven JAR 类扫描器")
@@ -35,7 +35,7 @@ def main():
     print("初始化数据库...")
     db = JARClassDB()  # 自动使用 PROJECT_ROOT_PATH
     db.initialize_schema()
-    print("✓ 数据库初始化完成")
+    print("[OK] 数据库初始化完成")
     print()
     
     # 创建扫描器
@@ -55,7 +55,7 @@ def main():
         # 打印结果
         print()
         print("=" * 70)
-        print("扫描完成")
+        print("[OK] 扫描完成")
         print("=" * 70)
         print(f"找到的 JAR 文件: {result.total_jars_found}")
         print(f"已扫描: {result.jars_scanned}")
