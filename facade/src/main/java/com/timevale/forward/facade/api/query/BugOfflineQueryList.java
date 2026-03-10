@@ -21,6 +21,9 @@ public class BugOfflineQueryList extends QueryBase {
     @ApiModelProperty("bug的id集合")
     private List<Long> ids;
 
+    @ApiModelProperty("需要排除的bug id集合")
+    private List<Long> exclusiveIds;
+
     @ApiModelProperty("bug标题")
     private String name;
 

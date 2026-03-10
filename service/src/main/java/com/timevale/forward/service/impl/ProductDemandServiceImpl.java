@@ -968,8 +968,10 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
         
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        Date operateTime = new Date();
         Set<Long> suspendOrInvalidDemandIds = new HashSet<>();
-        Set<Long> ids = new HashSet<>();
+        Set<Long> batchStatusDemandIds = new HashSet<>();
+        Set<Long> enableDemandIds = new HashSet<>();
 
         demands.forEach(productDemandDO -> {
             if (ProductDemandStatusEnum.SUSPEND.getCode().equals(status) || ProductDemandStatusEnum.INVALID.getCode().equals(status)) {
@@ -977,30 +979,54 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             } else if (ProductDemandStatusEnum.DEVELOPING.getCode().equals(status)
                     || ProductDemandStatusEnum.DEV_COMPLETED.getCode().equals(status)
                     || ProductDemandStatusEnum.ONLINE.getCode().equals(status)) {
-                ids.add(productDemandDO.getId());
+                batchStatusDemandIds.add(productDemandDO.getId());
             } else if (ProductDemandStatusEnum.WAITING.getCode().equals(status)) {
                 productDemandService.enable(productDemandDO.getId());
-                ids.add(productDemandDO.getId());
+                enableDemandIds.add(productDemandDO.getId());
             }
         });
         for (Long demandId : suspendOrInvalidDemandIds) {
             updateStatus(demandId, status);
         }
-        if (!ids.isEmpty()) {
-            ProductDemandDO waitUpdate = new ProductDemandDO();
+        if (!batchStatusDemandIds.isEmpty()) {
+            ProductDemandDO waitUpdate = buildBatchStatusUpdate(userInfo, operateTime);
             waitUpdate.setStatus(status);
-            waitUpdate.setModifyManId(userInfo.getId());
-            waitUpdate.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
-            waitUpdate.setModifyDate(new Date());
             // 如果是完成上线状态，设置上线时间
             if (ProductDemandStatusEnum.ONLINE.getCode().equals(status)) {
                 waitUpdate.setOnlineTime(productDemandStatusUpdateReq.getOnlineTime());
             }
-            productDemandMapper.batchUpdateStatus(ids, waitUpdate);
+            productDemandMapper.batchUpdateStatus(batchStatusDemandIds, waitUpdate);
             // 批量更新关联的业务需求状态
-            productDemandComponent.updateDemandStatusAsProductStatusChange(new ArrayList<>(ids), false);
+            productDemandComponent.updateDemandStatusAsProductStatusChange(new ArrayList<>(batchStatusDemandIds), false);
+            addBatchStatusChangeLogs(demands, batchStatusDemandIds, status);
+        }
+        if (!enableDemandIds.isEmpty()) {
+            productDemandMapper.batchUpdateStatus(enableDemandIds, buildBatchStatusUpdate(userInfo, operateTime));
         }
         return BaseResult.success(true);
+    }
+
+    private ProductDemandDO buildBatchStatusUpdate(UserInfo userInfo, Date operateTime) {
+        ProductDemandDO waitUpdate = new ProductDemandDO();
+        waitUpdate.setModifyManId(userInfo.getId());
+        waitUpdate.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+        waitUpdate.setModifyDate(operateTime);
+        return waitUpdate;
+    }
+
+    private void addBatchStatusChangeLogs(List<ProductDemandDO> demands, Set<Long> demandIds, Integer newStatus) {
+        List<BizChangeLogDO> logs = demands.stream()
+                .filter(demand -> demandIds.contains(demand.getId()))
+                .filter(demand -> !Objects.equals(demand.getStatus(), newStatus))
+                .map(demand -> productDemandLogComponent.getLog(
+                        ProductDemandStatusEnum.getTextByCode(demand.getStatus()),
+                        ProductDemandStatusEnum.getTextByCode(newStatus),
+                        demand.getId(),
+                        BizChangeLogFieldEnum.PRODUCT_DEMAND_STATUS.getText(),
+                        true
+                ))
+                .collect(Collectors.toList());
+        productDemandLogComponent.batchAddLog(logs);
     }
 
     @Override
