@@ -1498,7 +1498,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             // 产品线变更日志
             if (!Objects.equals(bugOfflineDO.getProductLineId(), bugOfflineChangeProjectReq.getProductLineId())) {
                 ProductLineDO oldProductLineDO = productLineMapper.selectById(bugOfflineDO.getProductLineId());
-                BugLogDO productLineLogDO = getBugLogDO(oldProductLineDO != null, oldProductLineDO.getName(), bugOfflineDO, BugFieldEnum.PRODUCT_LINE, targetProductLineDO.getName());
+                BugLogDO productLineLogDO = getBugLogDO(oldProductLineDO != null, oldProductLineDO != null ? oldProductLineDO.getName() : "", bugOfflineDO, BugFieldEnum.PRODUCT_LINE, targetProductLineDO.getName());
                 bugLogDOList.add(productLineLogDO);
             }
         }
