@@ -50,3 +50,4 @@ logs/
 # Kiro IDE
 .kiro/
 real_test/
+neo4j_schema_documentation.json
