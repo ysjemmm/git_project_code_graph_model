@@ -1491,7 +1491,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             // 项目变更日志
             if (!Objects.equals(bugOfflineDO.getProjectId(), bugOfflineChangeProjectReq.getProjectId())) {
                 ProjectDO oldProjectDO = projectMapper.get(bugOfflineDO.getProjectId());
-                BugLogDO projectLogDO = getBugLogDO(oldProjectDO != null, oldProjectDO.getName(), bugOfflineDO, BugFieldEnum.PROJECTS, targetProjectDO.getName());
+                BugLogDO projectLogDO = getBugLogDO(oldProjectDO != null, oldProjectDO != null ? oldProjectDO.getName() : "", bugOfflineDO, BugFieldEnum.PROJECTS, targetProjectDO.getName());
                 bugLogDOList.add(projectLogDO);
             }
             
