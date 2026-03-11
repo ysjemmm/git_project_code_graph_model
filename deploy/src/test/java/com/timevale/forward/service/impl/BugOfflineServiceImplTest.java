@@ -8,6 +8,7 @@ import com.timevale.forward.facade.api.query.BugOfflineQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BugOfflineVO;
 import com.timevale.forward.model.enums.BugStatusEnum;
+import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
@@ -15,7 +16,9 @@ import com.timevale.forward.service.observer.event.*;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import com.timevale.security.facade.response.BaseInfoResponse;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedConstruction;
@@ -399,6 +402,80 @@ public class BugOfflineServiceImplTest extends AbstractTestNGSpringContextTests 
     }
 
     @Test
+    public void testChangeProjectAllowsCompletedBug() {
+        BugOfflineChangeProjectReq req = new BugOfflineChangeProjectReq();
+        req.setIds(Lists.newArrayList(1L));
+        req.setProjectId(2L);
+        req.setProductLineId(3L);
+
+        BugOfflineDO bugOfflineDO = new BugOfflineDO();
+        bugOfflineDO.setId(1L);
+        bugOfflineDO.setName("bug-1");
+        bugOfflineDO.setStatus(BugStatusEnum.COMPLETE.getCode());
+        bugOfflineDO.setOperatorId("1");
+        bugOfflineDO.setProposerId("2");
+        bugOfflineDO.setProjectId(1L);
+        bugOfflineDO.setProductLineId(1L);
+        when(bugOfflineMapper.getByIdList(any())).thenReturn(Lists.newArrayList(bugOfflineDO));
+
+        ProjectDO targetProjectDO = new ProjectDO();
+        targetProjectDO.setId(2L);
+        targetProjectDO.setName("target-project");
+        targetProjectDO.setStatus(ProjectStatusEnum.DEVING.getCode());
+        when(projectMapper.get(2L)).thenReturn(targetProjectDO);
+        when(projectMapper.get(1L)).thenReturn(new ProjectDO() {{
+            setId(1L);
+            setName("source-project");
+        }});
+
+        when(productLineMapper.selectById(3L)).thenReturn(new ProductLineDO() {{
+            setId(3L);
+            setName("target-product-line");
+        }});
+        when(productLineMapper.selectById(1L)).thenReturn(new ProductLineDO() {{
+            setId(1L);
+            setName("source-product-line");
+        }});
+        when(innerUserPersonClient.getPersonByAccountNew(any())).thenReturn(Lists.newArrayList(new BaseInfoResponse()));
+
+        UserInfo userInfo = new UserInfo();
+        userInfo.setId("1");
+        MockedStatic<LocalSessionUtils> mockStatic = mockStatic(LocalSessionUtils.class);
+        mockStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
+        try {
+            assert bugOfflineService.changeProject(req).ifSuccess();
+            verify(bugOfflineMapper).updateProjectAndProductLine(req.getIds(), req.getProjectId(), req.getProductLineId());
+            verify(bugLogMapper).batchInsert(any());
+        } finally {
+            mockStatic.close();
+        }
+    }
+
+    @Test(expectedExceptions = BaseBizRuntimeException.class,
+            expectedExceptionsMessageRegExp = "关闭状态的bug不能变更项目，请修改后重试")
+    public void testChangeProjectRejectsClosedBug() {
+        BugOfflineChangeProjectReq req = new BugOfflineChangeProjectReq();
+        req.setIds(Lists.newArrayList(1L));
+        req.setProjectId(2L);
+        req.setProductLineId(3L);
+
+        BugOfflineDO bugOfflineDO = new BugOfflineDO();
+        bugOfflineDO.setId(1L);
+        bugOfflineDO.setStatus(BugStatusEnum.CLOSE.getCode());
+        when(bugOfflineMapper.getByIdList(any())).thenReturn(Lists.newArrayList(bugOfflineDO));
+
+        UserInfo userInfo = new UserInfo();
+        userInfo.setId("1");
+        MockedStatic<LocalSessionUtils> mockStatic = mockStatic(LocalSessionUtils.class);
+        mockStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
+        try {
+            bugOfflineService.changeProject(req);
+        } finally {
+            mockStatic.close();
+        }
+    }
+
+    @Test
     public void testBugLogList() {
         BugLogQueryList bugLogQueryList=new BugLogQueryList();
         bugLogQueryList.setStatusChange(true );
@@ -408,8 +485,6 @@ public class BugOfflineServiceImplTest extends AbstractTestNGSpringContextTests 
     }
 
 }
-
-
 
 
 

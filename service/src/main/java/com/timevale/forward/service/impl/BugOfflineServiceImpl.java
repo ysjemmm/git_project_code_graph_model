@@ -1444,13 +1444,12 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             throw new BaseBizRuntimeException("选择的线下bug不存在");
         }
         
-        // 校验bug状态，完成和关闭状态的bug不能变更项目
-        boolean hasCompletedOrClosedBug = bugOfflineDOList.stream().anyMatch(bug -> 
-            BugStatusEnum.COMPLETE.getCode().equals(bug.getStatus()) || 
-            BugStatusEnum.CLOSE.getCode().equals(bug.getStatus())
+        // 校验bug状态，关闭状态的bug不能变更项目
+        boolean hasClosedBug = bugOfflineDOList.stream().anyMatch(bug ->
+                BugStatusEnum.CLOSE.getCode().equals(bug.getStatus())
         );
-        if (hasCompletedOrClosedBug) {
-            throw new BaseBizRuntimeException("完成和关闭状态的bug不能变更项目，请修改后重试");
+        if (hasClosedBug) {
+            throw new BaseBizRuntimeException("关闭状态的bug不能变更项目，请修改后重试");
         }
         
         // 校验目标项目是否存在且未发布
