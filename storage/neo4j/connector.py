@@ -1,4 +1,4 @@
-﻿"""
+"""
 Neo4j 数据库连接器
 支持连接到 Neo4j 云数据库并执行 Cypher 查询
 内置连接池管理，避免重复创建连接
@@ -9,6 +9,8 @@ from threading import Lock
 from typing import Dict, List, Optional
 
 from neo4j import GraphDatabase, Driver
+
+from storage.neo4j.java_modules import JavaGraphEdgeType
 
 logger = logging.getLogger(__name__)
 
@@ -233,6 +235,59 @@ class Neo4jConnector:
         except Exception as e:
             logger.error(f"清空数据库失败: {e}")
             return False
+    
+    def delete_project_data(self, project_name: str) -> int:
+        """删除指定项目的子图
+
+        以 Project 节点作为根：
+        - 仅匹配标签为 Project、name = project_name、project_type = 'Application' 的项目根节点
+        - 删除与这些项目节点存在路径关系的所有节点（子图）
+        - 为降低误删风险，路径只允许经过本项目定义的“结构关系”类型（HAVE/CONTAINS/MEMBER_OF/...）
+        - 避免通过全局属性直接批量删除，降低误删风险
+        """
+        if not self.connected:
+            logger.error("未连接到数据库")
+            return 0
+        
+        try:
+            with self.driver.session(database=self.database) as session:
+                # 允许所有在 JavaGraphEdgeType 中声明的关系类型参与项目子图删除
+                allowed_rel_types = [edge_type.value for edge_type in JavaGraphEdgeType]
+                query = """
+                // 找到作为根的 Application 类型项目节点
+                MATCH (p:Project {name: $project_name, project_type: 'Application'})
+                WITH collect(p) AS roots
+                WHERE size(roots) > 0
+
+                // 收集与这些项目节点在同一子图中的所有节点
+                // 注意：这里先做全路径展开，再用 ALL(...) 约束路径上的关系类型，避免跨项目意外连边导致误删
+                CALL (roots) {
+                  WITH roots AS rlist
+                  UNWIND rlist AS r
+                  MATCH path = (r)-[*0..]-(n)
+                  WHERE ALL(rel IN relationships(path) WHERE type(rel) IN $allowed_rel_types)
+                  WITH collect(DISTINCT n) AS nodes
+                  RETURN nodes
+                }
+
+                // 删除整个子图
+                WITH nodes
+                FOREACH (n IN nodes | DETACH DELETE n)
+                RETURN size(nodes) AS deleted_count
+                """
+
+                result = session.run(
+                    query,
+                    {"project_name": project_name, "allowed_rel_types": allowed_rel_types},
+                ).single()
+                deleted_count = result["deleted_count"] if result else 0
+            
+            logger.info(f"删除项目 {project_name} 相关 {deleted_count} 个节点")
+            return deleted_count
+        
+        except Exception as e:
+            logger.error(f"删除项目子图失败: {e}")
+            return 0
     
     def get_statistics(self) -> Dict[str, int]:
         """获取数据库统计信息

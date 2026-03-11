@@ -117,7 +117,12 @@ class Neo4jExporterAST:
         """导出 AST 数据到 Neo4j"""
         try:
             if clear_database:
-                self.connector.clear_database()
+                # 仅清理当前项目的子图，避免误删其他项目或共享库数据
+                if self.project_name:
+                    deleted_count = self.connector.delete_project_data(self.project_name)
+                    logger.info(f"已清理项目 {self.project_name} 旧数据，共删除 {deleted_count} 个节点")
+                else:
+                    logger.warning("未提供 project_name，跳过项目子图清理（不再执行全库清空）")
             
             self._prepare_project_node()
             

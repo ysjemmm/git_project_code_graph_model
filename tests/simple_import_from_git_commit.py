@@ -64,7 +64,7 @@ def main():
         print("导入完成")
         print("=" * 70)
 
-        print(f"\n✅ 导入成功")
+        print("\n导入成功")
         print(f"  - 新增节点: {result.get('added_nodes', 0)}")
         print(f"  - 新增关系: {result.get('added_relationships', 0)}")
 
@@ -89,7 +89,7 @@ def main():
                 print(f"  - {rel_type}: {count}")
 
         print("\n" + "=" * 70)
-        print("✅ 测试完成")
+        print("测试完成")
         print("=" * 70)
 
         return 0

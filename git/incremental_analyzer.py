@@ -1,4 +1,4 @@
-﻿
+
 from parser.utils.logger import get_logger
 
 import os
@@ -204,10 +204,11 @@ class GitIncrementalAnalyzer:
                 logger.info(f"[DEBUG] 新树哈希: {new_tree.hash[:16]}...")
                 
                 # 收集两个树中的所有文件及其哈希
-                old_files_dict = {}  # {filename: (path, hash)}
-                new_files_dict = {}  # {filename: (path, hash)}
-                self._collect_all_files_with_hash(old_tree, old_files_dict)
-                self._collect_all_files_with_hash(new_tree, new_files_dict)
+                # 使用「相对于 Java 源码根目录的相对路径」作为 key，避免同名不同路径文件冲突
+                old_files_dict = {}  # {rel_path: (abs_path, hash)}
+                new_files_dict = {}  # {rel_path: (abs_path, hash)}
+                self._collect_all_files_with_hash(old_tree, old_files_dict, old_tree.path)
+                self._collect_all_files_with_hash(new_tree, new_files_dict, new_tree.path)
                 
                 # 新增文件
                 for name, (path, hash_val) in new_files_dict.items():
@@ -392,12 +393,15 @@ class GitIncrementalAnalyzer:
                     java_files.append(os.path.join(root, file))
         return java_files
     
-    def _collect_all_files_with_hash(self, node: 'MerkleNode', file_dict: dict):
-        ""
+    def _collect_all_files_with_hash(self, node: 'MerkleNode', file_dict: dict, base_dir: str):
+        """
+        收集默克尔树中的所有文件:
+        - 使用相对于 base_dir 的相对路径作为 key，避免同名不同目录文件冲突
+        - value 为 (文件绝对路径, 哈希)
+        """
         if node.is_file:
-            # 使用文件名作为键,存(路径, 哈希
-            filename = os.path.basename(node.path)
-            file_dict[filename] = (node.path, node.hash)
+            rel_path = os.path.relpath(node.path, base_dir)
+            file_dict[rel_path] = (node.path, node.hash)
         else:
             for child in (node.children or {}).values():
-                self._collect_all_files_with_hash(child, file_dict)
+                self._collect_all_files_with_hash(child, file_dict, base_dir)

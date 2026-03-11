@@ -1,10 +1,38 @@
 #!/usr/bin/env python3
 """简化版导入测试：克隆仓库 -> 创建 Merkle Tree -> AST 解析 -> 导入 Neo4j"""
 
+import os
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+
+def _load_repo_env_from_local():
+    """
+    在调用 os.getenv 之前，先从项目根目录的 .env.local/.env 中加载 REPO_URL/REPO_BRANCH。
+    规则：
+    - 不覆盖已有环境变量（例如你在终端里手动 export 的）
+    - .env.local 优先于 .env
+    """
+    root = Path(__file__).resolve().parent.parent
+    for filename in [".env.local", ".env"]:
+        env_path = root / filename
+        if not env_path.exists():
+            continue
+        try:
+            content = env_path.read_text(encoding="utf-8")
+        except Exception:
+            continue
+        for raw in content.splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key = key.strip()
+            value = value.strip().strip("'").strip('"')
+            if key in ("REPO_URL", "REPO_BRANCH") and key not in os.environ and value:
+                os.environ[key] = value
 
 
 def main():
@@ -20,18 +48,17 @@ def main():
     print("简化版导入测试")
     print("=" * 70)
 
-    # Neo4j 配置
-    neo4j_uri = "neo4j_uri"
-    neo4j_user = "neo4j"
-    neo4j_password = "neo4j_password"
-    neo4j_database = "neo4j"
+    # 先从 .env.local/.env 补充 REPO_URL/REPO_BRANCH
+    _load_repo_env_from_local()
 
-    
-    repo_url = "http://example"
-    branch = "master"
+    # Git 仓库配置：优先从环境变量/本地配置读取
+    repo_url = os.getenv("REPO_URL", "http://example")
+    branch = os.getenv("REPO_BRANCH", "master")
 
     # 创建导入器
-    git_importer = GitToNeo4jImporter(neo4j_uri, neo4j_user, neo4j_password, neo4j_database)
+    # Neo4j 配置读取优先级：环境变量 > .env.local > .env > 默认值
+    # 为了避免测试脚本中的占位符覆盖真实配置，这里不再传入连接参数。
+    git_importer = GitToNeo4jImporter()
 
     if not git_importer.connect():
         print("[ERROR] 无法连接到 Neo4j")
@@ -61,7 +88,7 @@ def main():
         print("导入完成")
         print("=" * 70)
 
-        print(f"\n✅ 导入成功")
+        print("\n导入成功")
         print(f"  - 新增节点: {result.get('added_nodes', 0)}")
         print(f"  - 新增关系: {result.get('added_relationships', 0)}")
 
@@ -86,7 +113,7 @@ def main():
                 print(f"  - {rel_type}: {count}")
 
         print("\n" + "=" * 70)
-        print("✅ 测试完成")
+        print("测试完成")
         print("=" * 70)
 
         return 0
@@ -97,3 +124,4 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+

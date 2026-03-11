@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 
 import os
 import sys
@@ -10,12 +10,6 @@ from loraxmod import Parser
 from parser.languages.java.utils.analyzer_helper import AnalyzerHelper
 from parser.symbol_table_builder import SymbolTableBuilder
 from tools.constants import PROJECT_ROOT_PATH
-
-# 修复 Windows 编码问题
-if sys.platform == 'win32':
-    import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -44,16 +38,78 @@ class GitToNeo4jImporter:
                  neo4j_password: str = None,
                  neo4j_database: str = None,
                  cache_base_dir: str = None):
-        
-        # 从环境变量或参数获取配置
+        # 便捷配置：若环境变量未设置，尝试从项目根目录的 .env 读取（不引入额外依赖，不改变原有默认回退行为）
+        self._load_env_file_if_needed()
+
+        # 从参数/环境变量获取配置（保持原有行为：未配置时仍回退到默认值）
         self.neo4j_uri = neo4j_uri or os.getenv('NEO4J_URI', self.DEFAULT_NEO4J_URI)
         self.neo4j_user = neo4j_user or os.getenv('NEO4J_USER', self.DEFAULT_NEO4J_USER)
         self.neo4j_password = neo4j_password or os.getenv('NEO4J_PASSWORD', self.DEFAULT_NEO4J_PASSWORD)
         self.neo4j_database = neo4j_database or os.getenv('NEO4J_DATABASE', self.DEFAULT_NEO4J_DATABASE)
         self.cache_base_dir = cache_base_dir or os.getenv('GIT_CACHE_BASE_DIR', self.DEFAULT_CACHE_BASE_DIR)
-        
+
+        # 延后依赖 cache_base_dir 的初始化，避免在 _load_env_file_if_needed 中访问未赋值属性
         self.connector = None
         self.git_analyzer = GitIncrementalAnalyzer(self.cache_base_dir)
+
+        # 安全提示：当使用代码内置默认凭据时发出警告（不改变运行结果）
+        if (not neo4j_uri) and (os.getenv('NEO4J_URI') is None) and self.neo4j_uri == self.DEFAULT_NEO4J_URI:
+            logger.warning("NEO4J_URI 未设置，正在使用代码默认值（建议使用环境变量覆盖）")
+        if (not neo4j_user) and (os.getenv('NEO4J_USER') is None) and self.neo4j_user == self.DEFAULT_NEO4J_USER:
+            logger.warning("NEO4J_USER 未设置，正在使用代码默认值（建议使用环境变量覆盖）")
+        if (not neo4j_password) and (os.getenv('NEO4J_PASSWORD') is None) and self.neo4j_password == self.DEFAULT_NEO4J_PASSWORD:
+            logger.warning("NEO4J_PASSWORD 未设置，正在使用代码默认值（强烈建议使用环境变量覆盖，并轮换已泄露的密码）")
+        if (not neo4j_database) and (os.getenv('NEO4J_DATABASE') is None) and self.neo4j_database == self.DEFAULT_NEO4J_DATABASE:
+            logger.warning("NEO4J_DATABASE 未设置，正在使用代码默认值（建议使用环境变量覆盖）")
+
+    @staticmethod
+    def _parse_env_lines(lines: List[str]) -> Dict[str, str]:
+        env: Dict[str, str] = {}
+        for raw in lines:
+            line = raw.strip()
+            if not line or line.startswith("#"):
+                continue
+            if "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key = key.strip()
+            value = value.strip().strip("'").strip('"')
+            if key:
+                env[key] = value
+        return env
+
+    def _load_env_file_if_needed(self) -> None:
+        """
+        从项目根目录读取 .env.local 和 .env，并仅在对应环境变量尚未设置时写入 os.environ。
+        读取优先级（高 -> 低）：
+        1) 系统环境变量
+        2) .env.local
+        3) .env
+        4) 代码默认值（在 __init__ 里回退）
+
+        规则：
+        - 不覆盖已存在的环境变量
+        - 只处理 KEY=VALUE 的简单格式（支持单/双引号包裹）
+        - 读取失败时忽略（不影响原有流程）
+        """
+        try:
+            # 注意：为了实现 .env.local 高于 .env 的优先级，需要先读取 .env.local
+            for filename in [".env.local", ".env"]:
+                env_path = PROJECT_ROOT_PATH / filename
+                if not env_path.exists():
+                    continue
+                content = env_path.read_text(encoding="utf-8")
+                parsed = self._parse_env_lines(content.splitlines())
+                if not parsed:
+                    continue
+
+                # 仅补齐缺失的环境变量，避免覆盖更高优先级来源（系统环境变量或更高优先级文件）
+                for k, v in parsed.items():
+                    if k and (k not in os.environ) and (v is not None):
+                        os.environ[k] = v
+        except Exception:
+            # 静默忽略，保持原有行为不变
+            return
     
     def connect(self) -> bool:
         
@@ -238,6 +294,24 @@ class GitToNeo4jImporter:
             # 如果没有变化,直接返
             if not git_result['has_changes']:
                 logger.info(f"\n[INFO] 代码未变化,无需重新分析")
+                
+                # 但如果用户显式要求清理数据库，则仍然执行“按项目根节点清理子图”
+                if clear_database:
+                    try:
+                        deleted_count = self.connector.delete_project_data(project_name)
+                        logger.info(f"[OK] 已清理项目子图: {project_name}，删除节点数: {deleted_count}")
+                        return {
+                            'success': True,
+                            'status': 'cleared',
+                            'message': '代码未变化，但已按项目清理子图（未重新导入）',
+                            'repo_name': repo_name,
+                            'project_name': project_name,
+                            'commit_hash': git_result['commit_hash'],
+                            'deleted_nodes': deleted_count,
+                        }
+                    except Exception as e:
+                        logger.warning(f"[WARN] 请求清理子图但执行失败: {e}")
+
                 return {
                     'success': True,
                     'status': 'cached',

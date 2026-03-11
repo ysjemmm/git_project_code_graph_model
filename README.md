@@ -576,29 +576,35 @@ class CommentStorageConfig:
 
 ## 📝 更新日志
 
-### v2.1.0 (2026-03-09)
-- ✅ **项目节点 Symbol ID 优化** - Symbol ID 包含项目类型和版本信息
-- ✅ **项目类型区分** - Application 和 Lib 类型项目完全独立
-- ✅ **关系优化** - Application 项目使用 HAVE 关系，Lib 项目使用 CONTAINS_LIB 关系
-- ✅ **外部类链接** - 支持外部定义链接到内部实现（LIB_LINK 关系）
-- ✅ **批量链接优化** - 使用批量查询优化外部类链接性能
-
-### v2.0.0 (2026-03-05)
-- ✅ **符号解析系统** - 完整的类来源解析（内部/外部/未知）
-- ✅ **SQLite 索引数据库** - JAR 类和项目类的快速索引
-- ✅ **嵌套类解析** - 支持任意深度的嵌套类（A.B.C 格式）
-- ✅ **Symbol ID 追踪** - 完整的符号 ID 层级结构
-- ✅ **单例模式** - SymbolManager 每个项目单例
-- ✅ **增量扫描** - 基于文件修改时间的增量更新
-- ✅ **UPSERT 支持** - 使用 INSERT OR REPLACE 实现数据更新
-- ✅ **完整文档** - 添加数据流、UPSERT 行为等文档
-
-### v1.0.0 (2026-03-02)
-- ✅ 完整的 Java AST 解析
-- ✅ 嵌套类型支持
-- ✅ 智能注释存储（方案A）
-- ✅ Neo4j 导出
-- ✅ 增量分析支持
+### v1.0.0
+- **核心能力**
+  - 完整的 Java AST 解析
+  - 嵌套类型支持（A.B.C）
+  - 智能注释存储（方案A）
+  - Neo4j 导出
+  - 增量分析支持
+- **符号与项目建模**
+  - 项目节点 Symbol ID 优化：Symbol ID 包含项目类型与版本信息
+  - 项目类型区分：Application 与 Lib 类型项目独立
+  - 关系优化：Application 项目使用 HAVE 关系，Lib 项目使用 CONTAINS_LIB 关系
+  - 外部类链接：支持外部定义链接到内部实现（LIB_LINK 关系）
+  - 批量链接优化：使用批量查询优化外部类链接性能
+  - 符号解析系统：完整的类来源解析（内部/外部/未知/JDK）
+  - SQLite 索引数据库：JAR 类与项目类的快速索引
+  - SymbolManager 单例模式：每个项目单例
+- **工程与数据一致性**
+  - 增量扫描：支持增量更新（包含 Merkle 树对比）
+  - Git 增量分析修复：Merkle 树对比由“按文件名”改为“按相对路径”，避免同名文件冲突
+  - UPSERT 支持：使用 INSERT OR REPLACE 实现数据更新
+  - 完整文档：补充数据流、UPSERT 行为等说明
+- **配置与安全**
+  - Neo4j / Git 配置读取优先级：环境变量 > `.env.local` > `.env` > 代码默认值
+  - 提供 `.env.example` 示例文件（推荐复制为 `.env.local`）
+  - `clear_database=True` 改为按 `Project(name=..., project_type='Application')` 删除项目子图，避免清空整库
+  - 当代码无变化且 `clear_database=True` 时，仅清理子图直接返回，不重复导入
+- **Windows 控制台输出**
+  - 移除对 `sys.stdout / sys.stderr` 的强制 UTF‑8 包装，避免与终端编码冲突
+  - 测试脚本去除 emoji 字符，避免 GBK 控制台编码错误
 
 ## 📚 相关文档
 

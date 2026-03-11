@@ -43,6 +43,7 @@ logs/
 *.log
 .env
 .env.local
+.env.local.*
 
 # Git repos cache
 .cache
@@ -51,3 +52,4 @@ logs/
 .kiro/
 real_test/
 neo4j_schema_documentation.json
+spy/
