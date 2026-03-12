@@ -7,6 +7,7 @@ import com.timevale.forward.facade.api.request.SearchConditionAddReq;
 import com.timevale.forward.facade.api.request.SearchConditionDefaultReq;
 import com.timevale.forward.facade.api.request.SearchConditionDeleteReq;
 import com.timevale.forward.facade.api.request.SearchConditionModifyReq;
+import com.timevale.forward.facade.api.request.SearchConditionShareReq;
 import com.timevale.forward.facade.api.result.SearchConditionVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 
@@ -53,4 +54,11 @@ public interface SearchConditionService {
      * @param searchConditionDefaultReq 搜索条件-设为默认请求
      */
     BaseResult<Boolean> setDefault(SearchConditionDefaultReq searchConditionDefaultReq);
+
+    /**
+     * 分享查询条件给指定用户
+     *
+     * @param searchConditionShareReq 搜索条件-分享请求
+     */
+    BaseResult<Boolean> share(SearchConditionShareReq searchConditionShareReq);
 }

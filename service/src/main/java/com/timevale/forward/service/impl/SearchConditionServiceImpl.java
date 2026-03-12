@@ -10,6 +10,7 @@ import com.timevale.forward.facade.api.request.SearchConditionAddReq;
 import com.timevale.forward.facade.api.request.SearchConditionDefaultReq;
 import com.timevale.forward.facade.api.request.SearchConditionDeleteReq;
 import com.timevale.forward.facade.api.request.SearchConditionModifyReq;
+import com.timevale.forward.facade.api.request.SearchConditionShareReq;
 import com.timevale.forward.facade.api.result.SearchConditionVO;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.SearchConditionCopier;
@@ -149,6 +150,45 @@ public class SearchConditionServiceImpl implements SearchConditionService {
             conditionDO.setId(id);
             conditionDO.setIsDefault(true);
             searchConditionMapper.update(conditionDO);
+        }
+
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> share(SearchConditionShareReq searchConditionShareReq) {
+        Long id = searchConditionShareReq.getId();
+        List<String> userIds = searchConditionShareReq.getUserIds();
+
+        // 查询原始预设
+        SearchConditionDO source = searchConditionMapper.selectById(id);
+        if (source == null) {
+            throw new BaseBizRuntimeException("查询条件不存在");
+        }
+
+        // 为每个目标用户复制一份
+        for (String userId : userIds) {
+            // 查询目标用户已有的预设，超过10条则跳过
+            List<SearchConditionDO> existList = searchConditionMapper.select(source.getModel(), source.getTabType(), userId);
+            if (existList.size() >= 10) {
+                continue;
+            }
+            // 名称去重：若已存在同名则加后缀
+            String name = source.getName();
+            boolean nameExists = existList.stream().anyMatch(e -> e.getName().equals(name));
+            if (nameExists) {
+                name = name + "(分享)";
+            }
+
+            SearchConditionDO newDO = new SearchConditionDO();
+            newDO.setName(name);
+            newDO.setModel(source.getModel());
+            newDO.setTabType(source.getTabType());
+            newDO.setContent(source.getContent());
+            newDO.setIsDefault(false);
+            newDO.setBelongManId(userId);
+            newDO.setBelongMan(userId);
+            searchConditionMapper.insert(newDO);
         }
 
         return BaseResult.success(true);
