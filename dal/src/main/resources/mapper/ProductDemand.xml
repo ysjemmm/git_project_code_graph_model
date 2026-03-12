@@ -113,6 +113,12 @@
             <if test="types!= null and types!='' ">
                 and a.type REGEXP CONCAT('[', #{types},']')
             </if>
+            <if test="targetCustomer != null and targetCustomer != ''">
+                and a.target_customer like concat('%',#{targetCustomer},'%')
+            </if>
+            <if test="customerGrade != null and customerGrade != ''">
+                and a.customer_grade = #{customerGrade}
+            </if>
             and a.is_deleted =false
         </where>
     </select>
