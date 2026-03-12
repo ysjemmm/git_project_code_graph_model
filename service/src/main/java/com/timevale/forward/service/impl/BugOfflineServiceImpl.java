@@ -314,7 +314,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
         // 校验关联项目状态
         Long projectId = bugOfflineAddReq.getProjectId();
-        if (projectId != 0) {
+        if (projectId != null && !Objects.equals(projectId, 0L)) {
             ProjectDO projectDO = projectMapper.get(projectId);
             if (projectDO == null) {
                 throw new BaseBizRuntimeException("所选关联项目不存在");
@@ -326,6 +326,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
         //1.接收表单参数,状态为:bug打开,经办人所选用户,上一阶段经办人为bug提出人,bug数据入库
         BugOfflineDO bugOfflineDO = BugOfflineCopier.INSTANCE.convert(bugOfflineAddReq);
+        if (bugOfflineDO.getProjectId() == null) {
+            bugOfflineDO.setProjectId(0L);
+        }
         bugOfflineDO.setOpenCount(0);
         bugOfflineDO.setStatus(BugStatusEnum.OPEN.getCode());
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -1452,13 +1455,18 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             throw new BaseBizRuntimeException("关闭状态的bug不能变更项目，请修改后重试");
         }
         
+        Long targetProjectId = Optional.ofNullable(bugOfflineChangeProjectReq.getProjectId()).orElse(0L);
+
         // 校验目标项目是否存在且未发布
-        ProjectDO targetProjectDO = projectMapper.get(bugOfflineChangeProjectReq.getProjectId());
-        if (targetProjectDO == null) {
-            throw new BaseBizRuntimeException("目标项目不存在");
-        }
-        if (ProjectStatusEnum.RELEASED.getCode().equals(targetProjectDO.getStatus())) {
-            throw new BaseBizRuntimeException("目标项目已发布，无法变更");
+        ProjectDO targetProjectDO = null;
+        if (!Objects.equals(targetProjectId, 0L)) {
+            targetProjectDO = projectMapper.get(targetProjectId);
+            if (targetProjectDO == null) {
+                throw new BaseBizRuntimeException("目标项目不存在");
+            }
+            if (ProjectStatusEnum.RELEASED.getCode().equals(targetProjectDO.getStatus())) {
+                throw new BaseBizRuntimeException("目标项目已发布，无法变更");
+            }
         }
         
         // 校验产品线是否存在
@@ -1480,17 +1488,18 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         // 批量更新bug的项目和产品线
         bugOfflineMapper.updateProjectAndProductLine(
             bugOfflineChangeProjectReq.getIds(), 
-            bugOfflineChangeProjectReq.getProjectId(), 
+            targetProjectId,
             bugOfflineChangeProjectReq.getProductLineId()
         );
-        
+
         // 记录变更日志
         List<BugLogDO> bugLogDOList = new ArrayList<>();
+        String targetProjectName = Objects.equals(targetProjectId, 0L) ? "未关联项目" : targetProjectDO.getName();
         for (BugOfflineDO bugOfflineDO : bugOfflineDOList) {
             // 项目变更日志
-            if (!Objects.equals(bugOfflineDO.getProjectId(), bugOfflineChangeProjectReq.getProjectId())) {
+            if (!Objects.equals(bugOfflineDO.getProjectId(), targetProjectId)) {
                 ProjectDO oldProjectDO = projectMapper.get(bugOfflineDO.getProjectId());
-                BugLogDO projectLogDO = getBugLogDO(oldProjectDO != null, oldProjectDO != null ? oldProjectDO.getName() : "", bugOfflineDO, BugFieldEnum.PROJECTS, targetProjectDO.getName());
+                BugLogDO projectLogDO = getBugLogDO(oldProjectDO != null, oldProjectDO != null ? oldProjectDO.getName() : "", bugOfflineDO, BugFieldEnum.PROJECTS, targetProjectName);
                 bugLogDOList.add(projectLogDO);
             }
             

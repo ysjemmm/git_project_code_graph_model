@@ -118,6 +118,30 @@ public class BugOfflineServiceImplTest extends AbstractTestNGSpringContextTests 
     }
 
     @Test
+    public void testAddWithoutProject() {
+        BugOfflineAddReq bugOfflineAddReq = new BugOfflineAddReq();
+        bugOfflineAddReq.setName("1");
+        MockedConstruction<BugOfflineAddMsg> construction = mockConstruction(BugOfflineAddMsg.class);
+        construction.constructed();
+        doNothing().when(messageEventPublisher).publish(any());
+
+        UserInfo userInfo = new UserInfo();
+        userInfo.setId("1");
+        userInfo.setAlias("test");
+        userInfo.setName("user");
+        MockedStatic<LocalSessionUtils> mockStatic = mockStatic(LocalSessionUtils.class);
+        mockStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
+        try {
+            assert bugOfflineService.add(bugOfflineAddReq).ifSuccess();
+            verify(projectMapper, never()).get(any());
+            verify(bugOfflineMapper).insert(argThat(bugOfflineDO -> Long.valueOf(0L).equals(bugOfflineDO.getProjectId())));
+        } finally {
+            construction.close();
+            mockStatic.close();
+        }
+    }
+
+    @Test
     public void testModify() {
         BugOfflineModifyReq bugOfflineModifyReq = new BugOfflineModifyReq();
         bugOfflineModifyReq.setProductLineId(2L);
@@ -451,6 +475,47 @@ public class BugOfflineServiceImplTest extends AbstractTestNGSpringContextTests 
         }
     }
 
+    @Test
+    public void testChangeProjectAllowsUnlinkProject() {
+        BugOfflineChangeProjectReq req = new BugOfflineChangeProjectReq();
+        req.setIds(Lists.newArrayList(1L));
+        req.setProjectId(0L);
+        req.setProductLineId(1L);
+
+        BugOfflineDO bugOfflineDO = new BugOfflineDO();
+        bugOfflineDO.setId(1L);
+        bugOfflineDO.setName("bug-1");
+        bugOfflineDO.setStatus(BugStatusEnum.COMPLETE.getCode());
+        bugOfflineDO.setOperatorId("1");
+        bugOfflineDO.setProposerId("2");
+        bugOfflineDO.setProjectId(2L);
+        bugOfflineDO.setProductLineId(1L);
+        when(bugOfflineMapper.getByIdList(any())).thenReturn(Lists.newArrayList(bugOfflineDO));
+
+        when(projectMapper.get(2L)).thenReturn(new ProjectDO() {{
+            setId(2L);
+            setName("source-project");
+        }});
+        when(productLineMapper.selectById(1L)).thenReturn(new ProductLineDO() {{
+            setId(1L);
+            setName("source-product-line");
+        }});
+        when(innerUserPersonClient.getPersonByAccountNew(any())).thenReturn(Lists.newArrayList(new BaseInfoResponse()));
+
+        UserInfo userInfo = new UserInfo();
+        userInfo.setId("1");
+        MockedStatic<LocalSessionUtils> mockStatic = mockStatic(LocalSessionUtils.class);
+        mockStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
+        try {
+            assert bugOfflineService.changeProject(req).ifSuccess();
+            verify(bugOfflineMapper).updateProjectAndProductLine(req.getIds(), 0L, req.getProductLineId());
+            verify(projectMapper, never()).get(0L);
+            verify(bugLogMapper).batchInsert(any());
+        } finally {
+            mockStatic.close();
+        }
+    }
+
     @Test(expectedExceptions = BaseBizRuntimeException.class,
             expectedExceptionsMessageRegExp = "关闭状态的bug不能变更项目，请修改后重试")
     public void testChangeProjectRejectsClosedBug() {
@@ -485,9 +550,6 @@ public class BugOfflineServiceImplTest extends AbstractTestNGSpringContextTests 
     }
 
 }
-
-
-
 
 
 
