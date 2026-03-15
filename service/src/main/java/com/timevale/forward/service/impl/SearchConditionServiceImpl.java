@@ -174,11 +174,9 @@ public class SearchConditionServiceImpl implements SearchConditionService {
                 continue;
             }
             // 名称去重：若已存在同名则加后缀
-            String name = source.getName();
-            boolean nameExists = existList.stream().anyMatch(e -> e.getName().equals(name));
-            if (nameExists) {
-                name = name + "(分享)";
-            }
+            final String sourceName = source.getName();
+            boolean nameExists = existList.stream().anyMatch(e -> e.getName().equals(sourceName));
+            String name = nameExists ? sourceName + "(分享)" : sourceName;
 
             SearchConditionDO newDO = new SearchConditionDO();
             newDO.setName(name);
