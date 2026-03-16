@@ -1,10 +1,12 @@
 package com.timevale.forward.dal.dao;
 
+import com.timevale.forward.dal.condition.BugOfflineGroupQueryCondition;
 import com.timevale.forward.dal.condition.BugOfflineListCondition;
 import com.timevale.forward.dal.dto.BugOfflineBelongDistributionDTO;
 import com.timevale.forward.dal.dto.BugOfflineCountDTO;
 import com.timevale.forward.dal.dto.BugOfflineReasonDistributionDTO;
 import com.timevale.forward.dal.entity.BugOfflineDO;
+import com.timevale.forward.dal.entity.BugOfflineGroupFieldDO;
 import com.timevale.forward.dal.entity.BugOfflineListDO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -172,4 +174,36 @@ public interface BugOfflineMapper {
      * @return 影响行数
      */
     int updateById(BugOfflineDO bugOfflineDO);
+
+    /**
+     * 分组树查询
+     *
+     * @param bugOfflineGroupQueryCondition 分组查询条件
+     * @return 分组字段DO列表
+     */
+    List<BugOfflineGroupFieldDO> getGroupTree(BugOfflineGroupQueryCondition bugOfflineGroupQueryCondition);
+
+    /**
+     * 分组列表查询
+     *
+     * @param bugOfflineGroupQueryCondition 分组查询条件
+     * @return 线下bug列表
+     */
+    List<BugOfflineListDO> getGroupList(BugOfflineGroupQueryCondition bugOfflineGroupQueryCondition);
+
+    /**
+     * 简单分组列表（多标签分组时使用）
+     *
+     * @param condition 分组查询条件
+     * @return 分组字段DO列表
+     */
+    List<BugOfflineGroupFieldDO> getSimpleGroupList(BugOfflineGroupQueryCondition condition);
+
+    /**
+     * 简单分组计数（不在标签类别的数量）
+     *
+     * @param condition 分组查询条件
+     * @return 数量
+     */
+    Long getSimpleGroupCount(BugOfflineGroupQueryCondition condition);
 }

@@ -3,8 +3,10 @@ package com.timevale.forward.facade.api.client;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.DynamicBizDemandGroupList;
+import com.timevale.forward.facade.api.query.DynamicBugOfflineGroupList;
 import com.timevale.forward.facade.api.query.DynamicProductDemandGroupList;
 import com.timevale.forward.facade.api.result.BizDemandVO;
+import com.timevale.forward.facade.api.result.BugOfflineVO;
 import com.timevale.forward.facade.api.result.DemandGroupNodeVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
@@ -48,4 +50,18 @@ public interface DynamicGroupService {
      * @return
      */
     BaseResult<PageQueryResult<BizDemandVO>> getBizDemandList(DynamicBizDemandGroupList dynamicGroupQueryList);
+
+    /**
+     * 获取线下Bug分组树
+     * @param dynamicGroupQueryList
+     * @return
+     */
+    BaseResult<List<DemandGroupNodeVO>> getBugOfflineGroupTree(DynamicBugOfflineGroupList dynamicGroupQueryList);
+
+    /**
+     * 获取线下Bug分组列表
+     * @param dynamicGroupQueryList
+     * @return
+     */
+    BaseResult<PageQueryResult<BugOfflineVO>> getBugOfflineList(DynamicBugOfflineGroupList dynamicGroupQueryList);
 }

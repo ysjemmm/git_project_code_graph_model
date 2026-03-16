@@ -545,4 +545,579 @@
         </set>
         WHERE id = #{id}
     </update>
+
+    <!-- 线下Bug分组树查询 -->
+    <select id="getGroupTree" resultType="com.timevale.forward.dal.entity.BugOfflineGroupFieldDO">
+        select
+        <if test="selectField!= null and selectField!='' ">
+            ${selectField},
+        </if>
+        count(DISTINCT bo.id) as total
+        from bug_offline bo
+        left join product_line pl on pl.id = bo.product_line_id
+        left join biz_domain bd on pl.biz_domain_id = bd.id
+        left join biz_label e on e.biz_id = bo.id and e.type = 13 and e.is_deleted = false
+        left join label f on f.id = e.label_id and f.is_deleted = false
+        <where>
+            <if test="condition != null">
+                <if test="condition.name != null and condition.name != ''">
+                    and bo.name like concat('%',#{condition.name},'%')
+                </if>
+                <if test="condition.status != null and condition.status.size() > 0">
+                    and bo.status in
+                    <foreach collection="condition.status" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.operatorIds != null and condition.operatorIds.size() > 0">
+                    and bo.operator_id in
+                    <foreach collection="condition.operatorIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.proposerIds != null and condition.proposerIds.size() > 0">
+                    and bo.proposer_id in
+                    <foreach collection="condition.proposerIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.projectIds != null and condition.projectIds.size() > 0">
+                    and bo.project_id in
+                    <foreach collection="condition.projectIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.productLineIds != null and condition.productLineIds.size() > 0">
+                    and bo.product_line_id in
+                    <foreach collection="condition.productLineIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.bizDomainIds != null and condition.bizDomainIds.size() > 0">
+                    and bd.id in
+                    <foreach collection="condition.bizDomainIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.priorities != null and condition.priorities.size() > 0">
+                    and bo.priority in
+                    <foreach collection="condition.priorities" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.severities != null and condition.severities.size() > 0">
+                    and bo.severity in
+                    <foreach collection="condition.severities" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.envs != null and condition.envs.size() > 0">
+                    and bo.env in
+                    <foreach collection="condition.envs" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.reasons != null and condition.reasons.size() > 0">
+                    and bo.reason in
+                    <foreach collection="condition.reasons" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.sources != null and condition.sources.size() > 0">
+                    and bo.source in
+                    <foreach collection="condition.sources" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.belongs != null and condition.belongs.size() > 0">
+                    and bo.belong in
+                    <foreach collection="condition.belongs" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.unhandleReasons != null and condition.unhandleReasons.size() > 0">
+                    and bo.unhandle_reason in
+                    <foreach collection="condition.unhandleReasons" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.createDateLeft != null and condition.createDateRight != null">
+                    and bo.create_date &gt;= #{condition.createDateLeft} and bo.create_date &lt;= #{condition.createDateRight}
+                </if>
+                <if test="condition.modifyDateLeft != null and condition.modifyDateRight != null">
+                    and bo.modify_date &gt;= #{condition.modifyDateLeft} and bo.modify_date &lt;= #{condition.modifyDateRight}
+                </if>
+                <if test="condition.returnCountType != null and condition.returnCount != null">
+                    <if test="condition.returnCountType == 0">and bo.return_count = #{condition.returnCount}</if>
+                    <if test="condition.returnCountType == 1">and bo.return_count &gt; #{condition.returnCount}</if>
+                    <if test="condition.returnCountType == 2">and bo.return_count &gt;= #{condition.returnCount}</if>
+                    <if test="condition.returnCountType == 3">and bo.return_count &lt; #{condition.returnCount}</if>
+                    <if test="condition.returnCountType == 4">and bo.return_count &lt;= #{condition.returnCount}</if>
+                </if>
+                <if test="condition.openCountType != null and condition.openCount != null">
+                    <if test="condition.openCountType == 0">and bo.open_count = #{condition.openCount}</if>
+                    <if test="condition.openCountType == 1">and bo.open_count &gt; #{condition.openCount}</if>
+                    <if test="condition.openCountType == 2">and bo.open_count &gt;= #{condition.openCount}</if>
+                    <if test="condition.openCountType == 3">and bo.open_count &lt; #{condition.openCount}</if>
+                    <if test="condition.openCountType == 4">and bo.open_count &lt;= #{condition.openCount}</if>
+                </if>
+                <if test="condition.copier != null and condition.copier != ''">
+                    and bo.id IN (
+                    select p.main_id
+                    from person p
+                    where p.user_id = #{condition.copier}
+                    and p.type = 50
+                    and p.is_deleted = false
+                    )
+                </if>
+                <if test="condition.containIds != null and condition.containIds.size() > 0">
+                    and bo.id in
+                    <foreach collection="condition.containIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.exclusiveIds != null and condition.exclusiveIds.size() > 0">
+                    and bo.id not in
+                    <foreach collection="condition.exclusiveIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.historyOperators != null and condition.historyOperators.size > 0">
+                    and (bo.id in (
+                    select bl.main_id
+                    from bug_log bl where bl.is_deleted = 0 and bl.type = 0 and bl.field = '经办人'
+                    and (bl.old_value in
+                    <foreach collection="condition.historyOperators" separator="," item="item" open="(" close=")">
+                        #{item}
+                    </foreach>
+                    or bl.new_value in
+                    <foreach collection="condition.historyOperators" separator="," item="item" open="(" close=")">
+                        #{item}
+                    </foreach>
+                    ))
+                    or bo.operator in
+                    <foreach collection="condition.historyOperators" separator="," item="item" open="(" close=")">
+                        #{item}
+                    </foreach>)
+                </if>
+                and bo.is_deleted = false
+            </if>
+            <if test="parentCondition != null">
+                <if test="parentCondition.priority != null">
+                    and bo.priority = #{parentCondition.priority}
+                </if>
+                <if test="parentCondition.productLineId != null">
+                    and bo.product_line_id = #{parentCondition.productLineId}
+                </if>
+                <if test="parentCondition.bizDomainId != null">
+                    and bd.id = #{parentCondition.bizDomainId}
+                </if>
+                <if test="parentCondition.status != null">
+                    and bo.status = #{parentCondition.status}
+                </if>
+                <if test="parentCondition.severity != null">
+                    and bo.severity = #{parentCondition.severity}
+                </if>
+                <if test="parentCondition.operatorId != null and parentCondition.operatorId != ''">
+                    and bo.operator_id = #{parentCondition.operatorId}
+                </if>
+                <if test="parentCondition.notInOperatorIds != null and parentCondition.notInOperatorIds.size() > 0">
+                    and (bo.operator_id not in
+                    <foreach collection="parentCondition.notInOperatorIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                    or bo.operator_id is null)
+                </if>
+                <if test="parentCondition.proposerId != null and parentCondition.proposerId != ''">
+                    and bo.proposer_id = #{parentCondition.proposerId}
+                </if>
+                <if test="parentCondition.notInProposerIds != null and parentCondition.notInProposerIds.size() > 0">
+                    and (bo.proposer_id not in
+                    <foreach collection="parentCondition.notInProposerIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                    or bo.proposer_id is null)
+                </if>
+                <if test="parentCondition.labelCategoryIds != null and parentCondition.labelCategoryIds.size() > 0">
+                    and f.label_category_id in
+                    <foreach collection="parentCondition.labelCategoryIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="parentCondition.labelIds != null and parentCondition.labelIds.size() > 0">
+                    and e.label_id in
+                    <foreach collection="parentCondition.labelIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="parentCondition.notInLabelIds != null and parentCondition.notInLabelIds.size() > 0">
+                    and (e.label_id not in
+                    <foreach collection="parentCondition.notInLabelIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                    or e.label_id is null)
+                </if>
+                <if test="parentCondition.inBugOfflineIds != null and parentCondition.inBugOfflineIds.size() > 0">
+                    and bo.id in
+                    <foreach collection="parentCondition.inBugOfflineIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="parentCondition.notInBugOfflineIds != null and parentCondition.notInBugOfflineIds.size() > 0">
+                    and bo.id not in
+                    <foreach collection="parentCondition.notInBugOfflineIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            </if>
+        </where>
+        <if test="groupField!= null and groupField!='' ">
+            group by ${groupField}
+        </if>
+    </select>
+
+    <!-- 线下Bug分组列表查询 -->
+    <select id="getGroupList" resultType="com.timevale.forward.dal.entity.BugOfflineListDO">
+        select bo.id, bo.status, bo.operator, bo.operator_id, bo.proposer, bo.proposer_id, bo.priority, bo.severity, bo.env,
+        bo.reason, bo.source, bo.belong,
+        bo.return_count, bo.unhandle_reason, bo.open_count, bo.expect_solve_date,
+        bo.create_date, bo.modify_date,
+        bo.name bugName,
+        p.name projectName, p.status projectStatus,
+        pl.name productLineName,
+        bd.name bizDomainName
+        from bug_offline bo
+        left join project p on bo.project_id = p.id
+        join product_line pl on pl.id = bo.product_line_id
+        join biz_domain bd on pl.biz_domain_id = bd.id
+        left join biz_label e on e.biz_id = bo.id and e.type = 13 and e.is_deleted = false
+        left join label f on f.id = e.label_id and f.is_deleted = false
+        <where>
+            <if test="condition != null">
+                <if test="condition.name != null and condition.name != ''">
+                    and bo.name like concat('%',#{condition.name},'%')
+                </if>
+                <if test="condition.status != null and condition.status.size() > 0">
+                    and bo.status in
+                    <foreach collection="condition.status" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.operatorIds != null and condition.operatorIds.size() > 0">
+                    and bo.operator_id in
+                    <foreach collection="condition.operatorIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.proposerIds != null and condition.proposerIds.size() > 0">
+                    and bo.proposer_id in
+                    <foreach collection="condition.proposerIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.projectIds != null and condition.projectIds.size() > 0">
+                    and bo.project_id in
+                    <foreach collection="condition.projectIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.productLineIds != null and condition.productLineIds.size() > 0">
+                    and bo.product_line_id in
+                    <foreach collection="condition.productLineIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.bizDomainIds != null and condition.bizDomainIds.size() > 0">
+                    and bd.id in
+                    <foreach collection="condition.bizDomainIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.priorities != null and condition.priorities.size() > 0">
+                    and bo.priority in
+                    <foreach collection="condition.priorities" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.severities != null and condition.severities.size() > 0">
+                    and bo.severity in
+                    <foreach collection="condition.severities" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.envs != null and condition.envs.size() > 0">
+                    and bo.env in
+                    <foreach collection="condition.envs" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.reasons != null and condition.reasons.size() > 0">
+                    and bo.reason in
+                    <foreach collection="condition.reasons" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.sources != null and condition.sources.size() > 0">
+                    and bo.source in
+                    <foreach collection="condition.sources" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.belongs != null and condition.belongs.size() > 0">
+                    and bo.belong in
+                    <foreach collection="condition.belongs" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.unhandleReasons != null and condition.unhandleReasons.size() > 0">
+                    and bo.unhandle_reason in
+                    <foreach collection="condition.unhandleReasons" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.createDateLeft != null and condition.createDateRight != null">
+                    and bo.create_date &gt;= #{condition.createDateLeft} and bo.create_date &lt;= #{condition.createDateRight}
+                </if>
+                <if test="condition.modifyDateLeft != null and condition.modifyDateRight != null">
+                    and bo.modify_date &gt;= #{condition.modifyDateLeft} and bo.modify_date &lt;= #{condition.modifyDateRight}
+                </if>
+                <if test="condition.copier != null and condition.copier != ''">
+                    and bo.id IN (
+                    select p.main_id
+                    from person p
+                    where p.user_id = #{condition.copier}
+                    and p.type = 50
+                    and p.is_deleted = false
+                    )
+                </if>
+                <if test="condition.containIds != null and condition.containIds.size() > 0">
+                    and bo.id in
+                    <foreach collection="condition.containIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.exclusiveIds != null and condition.exclusiveIds.size() > 0">
+                    and bo.id not in
+                    <foreach collection="condition.exclusiveIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                and bo.is_deleted = false
+            </if>
+            <if test="parentCondition != null">
+                <if test="parentCondition.priority != null">
+                    and bo.priority = #{parentCondition.priority}
+                </if>
+                <if test="parentCondition.productLineId != null">
+                    and bo.product_line_id = #{parentCondition.productLineId}
+                </if>
+                <if test="parentCondition.bizDomainId != null">
+                    and bd.id = #{parentCondition.bizDomainId}
+                </if>
+                <if test="parentCondition.status != null">
+                    and bo.status = #{parentCondition.status}
+                </if>
+                <if test="parentCondition.severity != null">
+                    and bo.severity = #{parentCondition.severity}
+                </if>
+                <if test="parentCondition.operatorId != null and parentCondition.operatorId != ''">
+                    and bo.operator_id = #{parentCondition.operatorId}
+                </if>
+                <if test="parentCondition.notInOperatorIds != null and parentCondition.notInOperatorIds.size() > 0">
+                    and (bo.operator_id not in
+                    <foreach collection="parentCondition.notInOperatorIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                    or bo.operator_id is null)
+                </if>
+                <if test="parentCondition.proposerId != null and parentCondition.proposerId != ''">
+                    and bo.proposer_id = #{parentCondition.proposerId}
+                </if>
+                <if test="parentCondition.notInProposerIds != null and parentCondition.notInProposerIds.size() > 0">
+                    and (bo.proposer_id not in
+                    <foreach collection="parentCondition.notInProposerIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                    or bo.proposer_id is null)
+                </if>
+                <if test="parentCondition.labelCategoryIds != null and parentCondition.labelCategoryIds.size() > 0">
+                    and f.label_category_id in
+                    <foreach collection="parentCondition.labelCategoryIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="parentCondition.inBugOfflineIds != null and parentCondition.inBugOfflineIds.size() > 0">
+                    and bo.id in
+                    <foreach collection="parentCondition.inBugOfflineIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="parentCondition.notInBugOfflineIds != null and parentCondition.notInBugOfflineIds.size() > 0">
+                    and bo.id not in
+                    <foreach collection="parentCondition.notInBugOfflineIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            </if>
+        </where>
+        group by bo.id
+        order by bo.id desc
+    </select>
+
+    <!-- 简单分组列表（多标签分组时使用） -->
+    <select id="getSimpleGroupList" resultType="com.timevale.forward.dal.entity.BugOfflineGroupFieldDO">
+        select
+        bd.id as bizDomainId,
+        bo.product_line_id as productLineId,
+        bo.status,
+        bo.priority,
+        bo.severity,
+        bo.operator_id as operatorId,
+        bo.proposer_id as proposerId,
+        e.label_id as labelId,
+        count(DISTINCT bo.id) as total
+        from bug_offline bo
+        left join product_line pl on pl.id = bo.product_line_id
+        left join biz_domain bd on pl.biz_domain_id = bd.id
+        left join biz_label e on e.biz_id = bo.id and e.type = 13 and e.is_deleted = false
+        left join label f on f.id = e.label_id and f.is_deleted = false
+        <where>
+            <if test="condition != null">
+                <if test="condition.name != null and condition.name != ''">
+                    and bo.name like concat('%',#{condition.name},'%')
+                </if>
+                <if test="condition.status != null and condition.status.size() > 0">
+                    and bo.status in
+                    <foreach collection="condition.status" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.operatorIds != null and condition.operatorIds.size() > 0">
+                    and bo.operator_id in
+                    <foreach collection="condition.operatorIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.proposerIds != null and condition.proposerIds.size() > 0">
+                    and bo.proposer_id in
+                    <foreach collection="condition.proposerIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.productLineIds != null and condition.productLineIds.size() > 0">
+                    and bo.product_line_id in
+                    <foreach collection="condition.productLineIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.bizDomainIds != null and condition.bizDomainIds.size() > 0">
+                    and bd.id in
+                    <foreach collection="condition.bizDomainIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.priorities != null and condition.priorities.size() > 0">
+                    and bo.priority in
+                    <foreach collection="condition.priorities" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.severities != null and condition.severities.size() > 0">
+                    and bo.severity in
+                    <foreach collection="condition.severities" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.containIds != null and condition.containIds.size() > 0">
+                    and bo.id in
+                    <foreach collection="condition.containIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.exclusiveIds != null and condition.exclusiveIds.size() > 0">
+                    and bo.id not in
+                    <foreach collection="condition.exclusiveIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                and bo.is_deleted = false
+            </if>
+            <if test="parentCondition != null">
+                <if test="parentCondition.labelCategoryIds != null and parentCondition.labelCategoryIds.size() > 0">
+                    and f.label_category_id in
+                    <foreach collection="parentCondition.labelCategoryIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="parentCondition.inBugOfflineIds != null and parentCondition.inBugOfflineIds.size() > 0">
+                    and bo.id in
+                    <foreach collection="parentCondition.inBugOfflineIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="parentCondition.notInBugOfflineIds != null and parentCondition.notInBugOfflineIds.size() > 0">
+                    and bo.id not in
+                    <foreach collection="parentCondition.notInBugOfflineIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            </if>
+        </where>
+        group by bd.id, bo.product_line_id, bo.status, bo.priority, bo.severity, bo.operator_id, bo.proposer_id, e.label_id
+    </select>
+
+    <!-- 简单分组计数（不在标签类别的数量） -->
+    <select id="getSimpleGroupCount" resultType="java.lang.Long">
+        select count(DISTINCT bo.id)
+        from bug_offline bo
+        left join product_line pl on pl.id = bo.product_line_id
+        left join biz_domain bd on pl.biz_domain_id = bd.id
+        <where>
+            <if test="condition != null">
+                <if test="condition.name != null and condition.name != ''">
+                    and bo.name like concat('%',#{condition.name},'%')
+                </if>
+                <if test="condition.status != null and condition.status.size() > 0">
+                    and bo.status in
+                    <foreach collection="condition.status" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.operatorIds != null and condition.operatorIds.size() > 0">
+                    and bo.operator_id in
+                    <foreach collection="condition.operatorIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.proposerIds != null and condition.proposerIds.size() > 0">
+                    and bo.proposer_id in
+                    <foreach collection="condition.proposerIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.containIds != null and condition.containIds.size() > 0">
+                    and bo.id in
+                    <foreach collection="condition.containIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="condition.exclusiveIds != null and condition.exclusiveIds.size() > 0">
+                    and bo.id not in
+                    <foreach collection="condition.exclusiveIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                and bo.is_deleted = false
+            </if>
+            <if test="parentCondition != null">
+                <if test="parentCondition.notInBugOfflineIds != null and parentCondition.notInBugOfflineIds.size() > 0">
+                    and bo.id not in
+                    <foreach collection="parentCondition.notInBugOfflineIds" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            </if>
+        </where>
+    </select>
+
 </mapper>

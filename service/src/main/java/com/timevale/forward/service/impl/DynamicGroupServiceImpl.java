@@ -7,17 +7,24 @@ import com.timevale.forward.dal.condition.BizDemandGroupCondition;
 import com.timevale.forward.dal.condition.BizDemandGroupQueryCondition;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.condition.BizGroupCondition;
+import com.timevale.forward.dal.condition.BugOfflineGroupCondition;
+import com.timevale.forward.dal.condition.BugOfflineGroupFieldCondition;
+import com.timevale.forward.dal.condition.BugOfflineGroupQueryCondition;
+import com.timevale.forward.dal.condition.BugOfflineListCondition;
 import com.timevale.forward.dal.condition.ProductDemandGroupCondition;
 import com.timevale.forward.dal.condition.ProductDemandGroupQueryCondition;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.condition.ProductGroupCondition;
 import com.timevale.forward.dal.dao.BizDomainMapper;
 import com.timevale.forward.dal.dao.BizLabelMapper;
+import com.timevale.forward.dal.dao.BugOfflineMapper;
 import com.timevale.forward.dal.dao.LabelMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.entity.BizDemandGroupFieldDO;
 import com.timevale.forward.dal.entity.BizDomainDO;
 import com.timevale.forward.dal.entity.BizLabelDO;
+import com.timevale.forward.dal.entity.BugOfflineGroupFieldDO;
+import com.timevale.forward.dal.entity.BugOfflineListDO;
 import com.timevale.forward.dal.entity.LabelDO;
 import com.timevale.forward.dal.entity.ProductDemandGroupFieldDO;
 import com.timevale.forward.dal.entity.ProductDemandListDO;
@@ -26,28 +33,37 @@ import com.timevale.forward.dal.entity.ProjectProductLineBizDomain;
 import com.timevale.forward.facade.api.client.DynamicGroupService;
 import com.timevale.forward.facade.api.query.BizDemandGroupList;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
+import com.timevale.forward.facade.api.query.BugOfflineGroupList;
+import com.timevale.forward.facade.api.query.BugOfflineQueryList;
 import com.timevale.forward.facade.api.query.DynamicBizDemandGroupList;
+import com.timevale.forward.facade.api.query.DynamicBugOfflineGroupList;
 import com.timevale.forward.facade.api.query.DynamicProductDemandGroupList;
 import com.timevale.forward.facade.api.query.ProductDemandGroupList;
 import com.timevale.forward.facade.api.query.ProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ViewsGroupQueryList;
 import com.timevale.forward.facade.api.result.BizDemandVO;
+import com.timevale.forward.facade.api.result.BugOfflineVO;
 import com.timevale.forward.facade.api.result.DemandGroupNodeVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
+import com.timevale.forward.model.enums.AscriptionEnum;
 import com.timevale.forward.model.enums.BizDemandGroupFieldEnum;
 import com.timevale.forward.model.enums.BizDemandSelectFieldEnum;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.model.enums.BizTypeEnum;
+import com.timevale.forward.model.enums.BugOfflineGroupFieldEnum;
+import com.timevale.forward.model.enums.BugStatusEnum;
 import com.timevale.forward.model.enums.PriorityEnum;
 import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.model.enums.ProductDemandTypeEnum;
 import com.timevale.forward.model.enums.ProductGroupFieldEnum;
 import com.timevale.forward.model.enums.ProductSelectFieldEnum;
+import com.timevale.forward.model.enums.SeverityEnum;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.LabelComponent;
 import com.timevale.forward.service.component.ProductDemandComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
+import com.timevale.forward.service.copy.BugOfflineCopier;
 import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
@@ -120,6 +136,9 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
     @Resource
     private BizDemandComponent bizDemandComponent;
+
+    @Resource
+    private BugOfflineMapper bugOfflineMapper;
 
     private static final Map<String, String> PRODUCT_GROUP_FIELD_MAP = new HashMap<>();
 
@@ -211,6 +230,46 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         QUERY_OTHER_FIELD_MAP.put("labelId", "notInLabelIds");
         QUERY_OTHER_FIELD_MAP.put("ownerId", "notInOwnerIds");
         QUERY_OTHER_FIELD_MAP.put("receiveManId", "notInReceiveManIds");
+        QUERY_OTHER_FIELD_MAP.put("operatorId", "notInOperatorIds");
+        QUERY_OTHER_FIELD_MAP.put("proposerId", "notInProposerIds");
+    }
+
+    private static final Map<String, String> BUG_OFFLINE_GROUP_FIELD_MAP = new HashMap<>();
+
+    private static final Map<String, Function<BugOfflineGroupFieldDO, Object>> BUG_OFFLINE_FUNCTION_FIELD_MAP = new HashMap<>();
+
+    static {
+        BUG_OFFLINE_GROUP_FIELD_MAP.put(BugOfflineGroupFieldEnum.BIZ_DOMAIN.getGroupField(), "bizDomainId");
+        BUG_OFFLINE_GROUP_FIELD_MAP.put(BugOfflineGroupFieldEnum.PRODUCT_LINE.getGroupField(), "productLineId");
+        BUG_OFFLINE_GROUP_FIELD_MAP.put(BugOfflineGroupFieldEnum.LABEL.getGroupField(), "labelId");
+        BUG_OFFLINE_GROUP_FIELD_MAP.put(BugOfflineGroupFieldEnum.LABEL.getGroupField() + "0", "labelId");
+        BUG_OFFLINE_GROUP_FIELD_MAP.put(BugOfflineGroupFieldEnum.LABEL.getGroupField() + "1", "labelId1");
+        BUG_OFFLINE_GROUP_FIELD_MAP.put(BugOfflineGroupFieldEnum.LABEL.getGroupField() + "2", "labelId2");
+        BUG_OFFLINE_GROUP_FIELD_MAP.put(BugOfflineGroupFieldEnum.LABEL.getGroupField() + "3", "labelId3");
+        BUG_OFFLINE_GROUP_FIELD_MAP.put(BugOfflineGroupFieldEnum.LABEL.getGroupField() + "4", "labelId4");
+        BUG_OFFLINE_GROUP_FIELD_MAP.put(BugOfflineGroupFieldEnum.LABEL.getGroupField() + "5", "labelId5");
+        BUG_OFFLINE_GROUP_FIELD_MAP.put(BugOfflineGroupFieldEnum.STATUS.getGroupField(), "status");
+        BUG_OFFLINE_GROUP_FIELD_MAP.put(BugOfflineGroupFieldEnum.PRIORITY.getGroupField(), "priority");
+        BUG_OFFLINE_GROUP_FIELD_MAP.put(BugOfflineGroupFieldEnum.SEVERITY.getGroupField(), "severity");
+        BUG_OFFLINE_GROUP_FIELD_MAP.put(BugOfflineGroupFieldEnum.OPERATOR.getGroupField(), "operatorId");
+        BUG_OFFLINE_GROUP_FIELD_MAP.put(BugOfflineGroupFieldEnum.PROPOSER.getGroupField(), "proposerId");
+    }
+
+    static {
+        BUG_OFFLINE_FUNCTION_FIELD_MAP.put(BugOfflineGroupFieldEnum.BIZ_DOMAIN.getGroupField(), BugOfflineGroupFieldDO::getBizDomainId);
+        BUG_OFFLINE_FUNCTION_FIELD_MAP.put(BugOfflineGroupFieldEnum.PRODUCT_LINE.getGroupField(), BugOfflineGroupFieldDO::getProductLineId);
+        BUG_OFFLINE_FUNCTION_FIELD_MAP.put(BugOfflineGroupFieldEnum.LABEL.getGroupField(), BugOfflineGroupFieldDO::getLabelId);
+        BUG_OFFLINE_FUNCTION_FIELD_MAP.put(BugOfflineGroupFieldEnum.LABEL.getGroupField() + "0", BugOfflineGroupFieldDO::getLabelId);
+        BUG_OFFLINE_FUNCTION_FIELD_MAP.put(BugOfflineGroupFieldEnum.LABEL.getGroupField() + "1", BugOfflineGroupFieldDO::getLabelId1);
+        BUG_OFFLINE_FUNCTION_FIELD_MAP.put(BugOfflineGroupFieldEnum.LABEL.getGroupField() + "2", BugOfflineGroupFieldDO::getLabelId2);
+        BUG_OFFLINE_FUNCTION_FIELD_MAP.put(BugOfflineGroupFieldEnum.LABEL.getGroupField() + "3", BugOfflineGroupFieldDO::getLabelId3);
+        BUG_OFFLINE_FUNCTION_FIELD_MAP.put(BugOfflineGroupFieldEnum.LABEL.getGroupField() + "4", BugOfflineGroupFieldDO::getLabelId4);
+        BUG_OFFLINE_FUNCTION_FIELD_MAP.put(BugOfflineGroupFieldEnum.LABEL.getGroupField() + "5", BugOfflineGroupFieldDO::getLabelId5);
+        BUG_OFFLINE_FUNCTION_FIELD_MAP.put(BugOfflineGroupFieldEnum.STATUS.getGroupField(), BugOfflineGroupFieldDO::getStatus);
+        BUG_OFFLINE_FUNCTION_FIELD_MAP.put(BugOfflineGroupFieldEnum.PRIORITY.getGroupField(), BugOfflineGroupFieldDO::getPriority);
+        BUG_OFFLINE_FUNCTION_FIELD_MAP.put(BugOfflineGroupFieldEnum.SEVERITY.getGroupField(), BugOfflineGroupFieldDO::getSeverity);
+        BUG_OFFLINE_FUNCTION_FIELD_MAP.put(BugOfflineGroupFieldEnum.OPERATOR.getGroupField(), BugOfflineGroupFieldDO::getOperatorId);
+        BUG_OFFLINE_FUNCTION_FIELD_MAP.put(BugOfflineGroupFieldEnum.PROPOSER.getGroupField(), BugOfflineGroupFieldDO::getProposerId);
     }
 
     @Override
@@ -3134,5 +3193,450 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
         copy.setReceiveManId(row.getReceiveManId());
         copy.setTotal(row.getTotal());
         return copy;
+    }
+
+    // ==================== 线下Bug分组树 ====================
+
+    @Override
+    public BaseResult<List<DemandGroupNodeVO>> getBugOfflineGroupTree(DynamicBugOfflineGroupList dynamicGroupQueryList) {
+        List<ViewsGroupQueryList> groupFields = dynamicGroupQueryList.getGroupFields();
+        if (CollUtil.isEmpty(groupFields)) {
+            throw new BaseBizRuntimeException("分组字段不能为空");
+        }
+
+        BugOfflineQueryList bugOfflineQueryList = dynamicGroupQueryList.getFilters();
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        BugOfflineListCondition condition = BugOfflineCopier.INSTANCE.convert(bugOfflineQueryList);
+        BugOfflineGroupCondition parentCondition = BugOfflineGroupCondition.builder().build();
+
+        // 处理 ascription
+        boolean resultIsEmpty = setBugOfflineAscription(bugOfflineQueryList, condition, userInfo.getId());
+        if (resultIsEmpty) {
+            return BaseResult.success(new ArrayList<>());
+        }
+
+        // 标签过滤
+        if (CollectionUtils.isNotEmpty(bugOfflineQueryList.getLabelIds()) || CollectionUtils.isNotEmpty(bugOfflineQueryList.getLabelCategoryIds())) {
+            Boolean containLabel = bugOfflineQueryList.getContainLabel();
+            List<Long> newLabelIds = labelComponent.getLabelIds(bugOfflineQueryList.getLabelIds(), bugOfflineQueryList.getLabelCategoryIds());
+            if (CollectionUtils.isEmpty(newLabelIds) && Boolean.TRUE.equals(containLabel)) {
+                return BaseResult.success(Collections.emptyList());
+            }
+
+            List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.BUG_OFFLINE.getCode());
+            List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+
+            if (Boolean.TRUE.equals(containLabel)) {
+                if (CollectionUtils.isEmpty(bizIds)) {
+                    return BaseResult.success(Collections.emptyList());
+                }
+                condition.setContainIds(bizIds);
+            } else {
+                condition.setExclusiveIds(bizIds);
+            }
+        }
+
+        // 名称字典
+        Map<Long, String> bizDomainNameMap;
+        Map<Long, String> productLineNameMap;
+        Map<String, String> personNameMap = Collections.emptyMap();
+        Map<Long, String> labelNameMap = Collections.emptyMap();
+
+        long labelFieldCount = groupFields.stream().filter(groupField -> groupField.getType() == 1).count();
+        List<Long> labelCategoryId = groupFields.stream()
+                .filter(groupField -> groupField.getType() == 1)
+                .map(groupField -> Long.valueOf(groupField.getKey()))
+                .collect(Collectors.toList());
+
+        Map<Long, Map<Long, String>> labelMaps = new HashMap<>(labelCategoryId.size());
+        if (CollUtil.isNotEmpty(labelCategoryId)) {
+            List<LabelDO> byCategoryIds = labelMapper.getByCategoryIds(labelCategoryId, false);
+            labelMaps = byCategoryIds.stream()
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.groupingBy(LabelDO::getLabelCategoryId,
+                            Collectors.toMap(LabelDO::getId, LabelDO::getName, (a, b) -> b)));
+        }
+
+        List<String> groupFieldKeys = groupFields.stream().map(ViewsGroupQueryList::getKey).collect(Collectors.toList());
+
+        List<Long> bizDomainIds = condition.getBizDomainIds();
+        if (CollectionUtils.isNotEmpty(bizDomainIds)) {
+            bizDomainNameMap = bizDomainMapper.getByIds(bizDomainIds).stream().collect(Collectors.toMap(BizDomainDO::getId, BizDomainDO::getName, (a, b) -> b));
+        } else {
+            bizDomainNameMap = bizDomainMapper.selectAllBizDomain().stream().collect(Collectors.toMap(BizDomainDO::getId, BizDomainDO::getName, (a, b) -> b));
+        }
+
+        List<Long> productLineIds = condition.getProductLineIds();
+        if (CollectionUtils.isNotEmpty(productLineIds)) {
+            productLineNameMap = productLineMapper.getByIds(productLineIds).stream().collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName, (a, b) -> b));
+        } else {
+            productLineNameMap = productLineMapper.selectAllProductLine().stream().collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName, (a, b) -> b));
+        }
+
+        // 构建枚举映射
+        Map<String, Map<String, String>> enumMap = getBugOfflineEnumMap(condition);
+
+        // 单层分组
+        for (ViewsGroupQueryList groupField : groupFields) {
+            if (groupField.getType() == 1) {
+                parentCondition.setLabelCategoryIds(Collections.singletonList(Long.valueOf(groupField.getKey())));
+                groupField.setKey(BugOfflineGroupFieldEnum.LABEL.getGroupField());
+            }
+        }
+
+        String selectField = buildBugOfflineSelectField(groupFields);
+        String groupField = buildBugOfflineGroupField(groupFields);
+        groupFieldKeys = groupFields.stream().map(ViewsGroupQueryList::getKey).collect(Collectors.toList());
+
+        BugOfflineGroupQueryCondition groupCondition = BugOfflineGroupQueryCondition.builder()
+                .condition(condition)
+                .parentCondition(parentCondition)
+                .selectField(selectField)
+                .groupField(groupField)
+                .build();
+
+        List<BugOfflineGroupFieldDO> rows = bugOfflineMapper.getGroupTree(groupCondition);
+
+        Long simpleGroupCount = 0L;
+        if (labelFieldCount > 0) {
+            List<Long> labelIds = labelMapper.getByCategoryIds(parentCondition.getLabelCategoryIds(), false).stream().map(LabelDO::getId).collect(Collectors.toList());
+            List<Long> bizIds = bizLabelMapper.getByLabelIdInType(labelIds, BizTypeEnum.BUG_OFFLINE.getCode()).stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+            parentCondition.setNotInBugOfflineIds(bizIds);
+            parentCondition.setLabelCategoryIds(null);
+            BugOfflineGroupQueryCondition groupCountCondition = BugOfflineGroupQueryCondition.builder()
+                    .condition(condition)
+                    .parentCondition(parentCondition)
+                    .build();
+            simpleGroupCount = bugOfflineMapper.getSimpleGroupCount(groupCountCondition);
+        }
+
+        if (CollectionUtils.isEmpty(rows)) {
+            rows.add(new BugOfflineGroupFieldDO());
+        }
+
+        if (groupFieldKeys.contains(BugOfflineGroupFieldEnum.OPERATOR.getGroupField())) {
+            personNameMap = getPersonMap(personNameMap, rows.stream().map(BugOfflineGroupFieldDO::getOperatorId));
+        }
+        if (groupFieldKeys.contains(BugOfflineGroupFieldEnum.PROPOSER.getGroupField())) {
+            personNameMap = getPersonMap(personNameMap, rows.stream().map(BugOfflineGroupFieldDO::getProposerId));
+        }
+        if (groupFields.stream().anyMatch(e -> e.getType() == 1)) {
+            labelNameMap = getLabelMap(labelNameMap, rows.stream().map(BugOfflineGroupFieldDO::getLabelId));
+        }
+
+        // 构建树
+        List<DemandGroupNodeVO> roots = new ArrayList<>();
+        Map<String, DemandGroupNodeVO> levelNodeMap = new HashMap<>();
+
+        for (BugOfflineGroupFieldDO row : rows) {
+            buildBugOfflineNodesForRow(groupFieldKeys, row, roots, levelNodeMap,
+                    bizDomainNameMap, productLineNameMap, personNameMap, labelNameMap, enumMap);
+        }
+
+        computeTotalsBottomUp(roots);
+        sortTreeByLabel(roots);
+
+        if (labelFieldCount > 0) {
+            addNotInLabelCategoryDemandGroupNode(labelMaps, simpleGroupCount, roots);
+        }
+
+        return BaseResult.success(roots);
+    }
+
+    @Override
+    public BaseResult<PageQueryResult<BugOfflineVO>> getBugOfflineList(DynamicBugOfflineGroupList dynamicGroupQueryList) {
+        if (Objects.isNull(dynamicGroupQueryList.getGroupFilters())) {
+            throw new BaseBizRuntimeException("父分组查询条件不能为空");
+        }
+
+        BugOfflineQueryList bugOfflineQueryList = dynamicGroupQueryList.getFilters();
+        BugOfflineGroupList parentBugOfflineQueryList = dynamicGroupQueryList.getGroupFilters();
+        List<ViewsGroupQueryList> groupFields = dynamicGroupQueryList.getGroupFields();
+        log.info("线下Bug分组列表接收参数:{}", dynamicGroupQueryList);
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        BugOfflineListCondition condition = BugOfflineCopier.INSTANCE.convert(bugOfflineQueryList);
+        BugOfflineGroupCondition parentCondition = BugOfflineCopier.INSTANCE.convert(parentBugOfflineQueryList);
+
+        // 处理 ascription
+        boolean resultIsEmpty = setBugOfflineAscription(bugOfflineQueryList, condition, userInfo.getId());
+        if (resultIsEmpty) {
+            return BaseResult.success(ResultUtil.pageEmpty());
+        }
+
+        // 标签过滤
+        if (CollectionUtils.isNotEmpty(bugOfflineQueryList.getLabelIds()) || CollectionUtils.isNotEmpty(bugOfflineQueryList.getLabelCategoryIds())) {
+            Boolean containLabel = bugOfflineQueryList.getContainLabel();
+            List<Long> newLabelIds = labelComponent.getLabelIds(bugOfflineQueryList.getLabelIds(), bugOfflineQueryList.getLabelCategoryIds());
+            if (CollectionUtils.isEmpty(newLabelIds) && Boolean.TRUE.equals(containLabel)) {
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
+
+            List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.BUG_OFFLINE.getCode());
+            List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+
+            if (Boolean.TRUE.equals(containLabel)) {
+                if (CollectionUtils.isEmpty(bizIds)) {
+                    return BaseResult.success(ResultUtil.pageEmpty());
+                }
+                condition.setContainIds(bizIds);
+            } else {
+                condition.setExclusiveIds(bizIds);
+            }
+        }
+
+        // 处理标签类别分组的父条件
+        List<Long> labelCategoryIds = groupFields.stream().filter(field -> field.getType() == 1).map(field -> Long.valueOf(field.getKey())).collect(Collectors.toList());
+        List<Long> labelIds = parentCondition.getLabelIds();
+        List<Long> notInLabelIds = parentCondition.getNotInLabelIds();
+        if (CollUtil.isNotEmpty(labelCategoryIds) && (CollUtil.isNotEmpty(labelIds) || CollUtil.isNotEmpty(notInLabelIds))) {
+            List<Long> newLabelIds = getNewLabelIds(labelIds, labelCategoryIds, parentCondition.getNotInLabelIds());
+            List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.BUG_OFFLINE.getCode());
+            List<Long> ids = bizLabelDOList.stream().map(BizLabelDO::getBizId).distinct().collect(Collectors.toList());
+            if (CollUtil.isNotEmpty(labelIds)) {
+                parentCondition.setInBugOfflineIds(ids);
+            } else {
+                List<Long> bizIdList = bizLabelMapper.getByLabelIdInType(notInLabelIds, BizTypeEnum.BUG_OFFLINE.getCode())
+                        .stream()
+                        .map(BizLabelDO::getBizId)
+                        .distinct()
+                        .collect(Collectors.toList());
+                parentCondition.setNotInBugOfflineIds(bizIdList);
+            }
+        }
+
+        // 分页查询
+        PageHelper.startPage(bugOfflineQueryList.getPageNum(), bugOfflineQueryList.getPageSize(), "bo.id desc");
+
+        BugOfflineGroupQueryCondition groupCondition = BugOfflineGroupQueryCondition.builder()
+                .condition(condition)
+                .parentCondition(parentCondition)
+                .build();
+
+        List<BugOfflineListDO> bugOfflineListDOList = bugOfflineMapper.getGroupList(groupCondition);
+        List<BugOfflineVO> bugOfflineVOList = bugOfflineListDOList.stream().map(BugOfflineCopier.INSTANCE::convert).collect(Collectors.toList());
+
+        // 填充额外信息
+        for (BugOfflineVO vo : bugOfflineVOList) {
+            vo.setStatusName(BugStatusEnum.getTextByCode(vo.getStatus()));
+            vo.setPriorityName(PriorityEnum.getTextChineseByCode(vo.getPriority()));
+            vo.setSeverityName(SeverityEnum.getTextByCode(vo.getSeverity()));
+        }
+
+        com.github.pagehelper.PageInfo<BugOfflineListDO> pageInfo = new com.github.pagehelper.PageInfo<>(bugOfflineListDOList);
+        PageQueryResult<BugOfflineVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(bugOfflineVOList);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+        return BaseResult.success(pageQueryResult);
+    }
+
+    /**
+     * 处理线下Bug的ascription条件
+     */
+    private boolean setBugOfflineAscription(BugOfflineQueryList bugOfflineQueryList, BugOfflineListCondition condition, String userId) {
+        String ascription = bugOfflineQueryList.getAscription();
+        if (AscriptionEnum.CURRENT_USER.toString().equals(ascription)) {
+            condition.setProposerIds(new ArrayList<>(Collections.singletonList(userId)));
+        } else if (AscriptionEnum.RECEIVE.toString().equals(ascription)) {
+            if (Objects.equals(bugOfflineQueryList.getCurrentOperatorOnly(), false)) {
+                condition.setHistoryOperators(new ArrayList<>(Collections.singletonList(userId)));
+            } else {
+                condition.setOperatorIds(new ArrayList<>(Collections.singletonList(userId)));
+            }
+        } else if (AscriptionEnum.COPIER.toString().equals(ascription)) {
+            condition.setCopier(userId);
+        } else if (AscriptionEnum.TEAM_SUBMIT.toString().equals(ascription) || AscriptionEnum.TEAM_RECEIVE.toString().equals(ascription)) {
+            List<String> teamMemberIdList = innerUserPersonClient.getAllMyStaffWithSelf(userId, true);
+            if (AscriptionEnum.TEAM_SUBMIT.toString().equals(ascription)) {
+                condition.setProposerIds(teamMemberIdList);
+            } else {
+                condition.setOperatorIds(teamMemberIdList);
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 构建线下Bug枚举映射
+     */
+    private Map<String, Map<String, String>> getBugOfflineEnumMap(BugOfflineListCondition condition) {
+        Map<String, Map<String, String>> enumMap = new HashMap<>(3);
+        Map<String, String> priorityMap = new HashMap<>();
+        Map<String, String> statusMap = new HashMap<>();
+        Map<String, String> severityMap = new HashMap<>();
+
+        if (CollectionUtils.isNotEmpty(condition.getPriorities())) {
+            for (Integer priority : condition.getPriorities()) {
+                if (priority != null) {
+                    String text = PriorityEnum.getTextByCode(priority);
+                    if (StringUtils.isNotBlank(text)) {
+                        priorityMap.put(String.valueOf(priority), text);
+                    }
+                }
+            }
+        } else {
+            for (PriorityEnum e : PriorityEnum.values()) {
+                priorityMap.put(String.valueOf(e.getCode()), e.getText());
+            }
+        }
+
+        if (CollectionUtils.isNotEmpty(condition.getStatus())) {
+            for (Integer status : condition.getStatus()) {
+                if (status != null) {
+                    String text = BugStatusEnum.getTextByCode(status);
+                    if (StringUtils.isNotBlank(text)) {
+                        statusMap.put(String.valueOf(status), text);
+                    }
+                }
+            }
+        } else {
+            for (BugStatusEnum e : BugStatusEnum.values()) {
+                statusMap.put(String.valueOf(e.getCode()), e.getText());
+            }
+        }
+
+        if (CollectionUtils.isNotEmpty(condition.getSeverities())) {
+            for (Integer severity : condition.getSeverities()) {
+                if (severity != null) {
+                    String text = SeverityEnum.getTextByCode(severity);
+                    if (StringUtils.isNotBlank(text)) {
+                        severityMap.put(String.valueOf(severity), text);
+                    }
+                }
+            }
+        } else {
+            for (SeverityEnum e : SeverityEnum.values()) {
+                severityMap.put(String.valueOf(e.getCode()), e.getText());
+            }
+        }
+
+        enumMap.put(BugOfflineGroupFieldEnum.STATUS.getGroupField(), statusMap);
+        enumMap.put(BugOfflineGroupFieldEnum.PRIORITY.getGroupField(), priorityMap);
+        enumMap.put(BugOfflineGroupFieldEnum.SEVERITY.getGroupField(), severityMap);
+
+        return enumMap;
+    }
+
+    /**
+     * 构建线下Bug分组查询的selectField
+     */
+    private String buildBugOfflineSelectField(List<ViewsGroupQueryList> groupFields) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < groupFields.size(); i++) {
+            ViewsGroupQueryList field = groupFields.get(i);
+            String sourceField = BugOfflineGroupFieldEnum.getSourceFieldByGroupField(field.getKey());
+            String fieldAlias = BUG_OFFLINE_GROUP_FIELD_MAP.get(field.getKey());
+            if (StringUtils.isNotBlank(sourceField) && StringUtils.isNotBlank(fieldAlias)) {
+                if (sb.length() > 0) {
+                    sb.append(", ");
+                }
+                sb.append(sourceField).append(" as ").append(fieldAlias);
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 构建线下Bug分组查询的groupField
+     */
+    private String buildBugOfflineGroupField(List<ViewsGroupQueryList> groupFields) {
+        StringBuilder sb = new StringBuilder();
+        for (ViewsGroupQueryList field : groupFields) {
+            String sourceField = BugOfflineGroupFieldEnum.getSourceFieldByGroupField(field.getKey());
+            if (StringUtils.isNotBlank(sourceField)) {
+                if (sb.length() > 0) {
+                    sb.append(", ");
+                }
+                sb.append(sourceField);
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 构建线下Bug分组树节点
+     */
+    private void buildBugOfflineNodesForRow(List<String> groupFieldKeys, BugOfflineGroupFieldDO row,
+                                             List<DemandGroupNodeVO> roots, Map<String, DemandGroupNodeVO> levelNodeMap,
+                                             Map<Long, String> bizDomainNameMap, Map<Long, String> productLineNameMap,
+                                             Map<String, String> personNameMap, Map<Long, String> labelNameMap,
+                                             Map<String, Map<String, String>> enumMap) {
+        List<DemandGroupNodeVO> currentLevel = roots;
+        StringBuilder pathBuilder = new StringBuilder();
+
+        for (int i = 0; i < groupFieldKeys.size(); i++) {
+            String fieldKey = groupFieldKeys.get(i);
+            Function<BugOfflineGroupFieldDO, Object> extractor = BUG_OFFLINE_FUNCTION_FIELD_MAP.get(fieldKey);
+            Object value = extractor != null ? extractor.apply(row) : null;
+            String fieldValue = value != null ? String.valueOf(value) : OTHER;
+            String fieldAlias = BUG_OFFLINE_GROUP_FIELD_MAP.get(fieldKey);
+
+            if (pathBuilder.length() > 0) {
+                pathBuilder.append("_");
+            }
+            pathBuilder.append(fieldValue);
+            String path = pathBuilder.toString();
+
+            DemandGroupNodeVO node = levelNodeMap.get(path);
+            if (node == null) {
+                node = new DemandGroupNodeVO();
+                node.setField(fieldAlias);
+                node.setFieldValue(fieldValue);
+                node.setLabel(resolveBugOfflineLabel(fieldKey, fieldValue, bizDomainNameMap, productLineNameMap, personNameMap, labelNameMap, enumMap));
+                node.setTotal(0L);
+                node.setChildren(new ArrayList<>());
+                levelNodeMap.put(path, node);
+                currentLevel.add(node);
+            }
+
+            // 叶子节点累加 total
+            if (i == groupFieldKeys.size() - 1) {
+                node.setTotal(node.getTotal() + Optional.ofNullable(row.getTotal()).orElse(0L));
+            }
+
+            currentLevel = node.getChildren();
+        }
+    }
+
+    /**
+     * 解析线下Bug分组节点的label
+     */
+    private String resolveBugOfflineLabel(String fieldKey, String fieldValue,
+                                           Map<Long, String> bizDomainNameMap, Map<Long, String> productLineNameMap,
+                                           Map<String, String> personNameMap, Map<Long, String> labelNameMap,
+                                           Map<String, Map<String, String>> enumMap) {
+        if (OTHER.equals(fieldValue) || fieldValue == null || "null".equals(fieldValue)) {
+            return OTHER;
+        }
+
+        if (BugOfflineGroupFieldEnum.BIZ_DOMAIN.getGroupField().equals(fieldKey)) {
+            try {
+                return bizDomainNameMap.getOrDefault(Long.valueOf(fieldValue), fieldValue);
+            } catch (NumberFormatException e) {
+                return fieldValue;
+            }
+        } else if (BugOfflineGroupFieldEnum.PRODUCT_LINE.getGroupField().equals(fieldKey)) {
+            try {
+                return productLineNameMap.getOrDefault(Long.valueOf(fieldValue), fieldValue);
+            } catch (NumberFormatException e) {
+                return fieldValue;
+            }
+        } else if (BugOfflineGroupFieldEnum.OPERATOR.getGroupField().equals(fieldKey)
+                || BugOfflineGroupFieldEnum.PROPOSER.getGroupField().equals(fieldKey)) {
+            return personNameMap.getOrDefault(fieldValue, fieldValue);
+        } else if (BugOfflineGroupFieldEnum.LABEL.getGroupField().equals(fieldKey)
+                || fieldKey.startsWith(BugOfflineGroupFieldEnum.LABEL.getGroupField())) {
+            try {
+                return labelNameMap.getOrDefault(Long.valueOf(fieldValue), fieldValue);
+            } catch (NumberFormatException e) {
+                return fieldValue;
+            }
+        } else {
+            // 枚举类型（status, priority, severity）
+            Map<String, String> map = enumMap.get(fieldKey);
+            if (map != null) {
+                return map.getOrDefault(fieldValue, fieldValue);
+            }
+            return fieldValue;
+        }
     }
 }
