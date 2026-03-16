@@ -21,7 +21,8 @@ import lombok.Data;
 )
 @JsonSubTypes({
         @JsonSubTypes.Type(value = ViewsProductDemandReq.class, name = "11"),  // type="PRODUCT_DEMAND" → ViewsProductDemandReq
-        @JsonSubTypes.Type(value = ViewsBizDemandReq.class, name = "10")           // type="BIZ_DEMAND" → ViewsBizDemandReq
+        @JsonSubTypes.Type(value = ViewsBizDemandReq.class, name = "10"),      // type="BIZ_DEMAND" → ViewsBizDemandReq
+        @JsonSubTypes.Type(value = ViewsBugOfflineReq.class, name = "13")      // type="BUG_OFFLINE" → ViewsBugOfflineReq
 })
 public abstract class ViewsFilterReq {
     @JsonProperty("viewsType")

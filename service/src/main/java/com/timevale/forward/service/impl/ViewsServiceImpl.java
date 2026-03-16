@@ -90,6 +90,9 @@ public class ViewsServiceImpl implements ViewsService {
                 case PRODUCT_DEMAND:
                     viewsFilterReq = JSON.parseObject(filterCondition, ViewsProductDemandReq.class);
                     break;
+                case BUG_OFFLINE:
+                    viewsFilterReq = JSON.parseObject(filterCondition, ViewsBugOfflineReq.class);
+                    break;
             }
         }
         return viewsFilterReq;
