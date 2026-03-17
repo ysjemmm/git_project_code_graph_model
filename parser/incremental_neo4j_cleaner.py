@@ -233,12 +233,21 @@ class IncrementalNeo4jCleaner:
         }
 
 class IncrementalExportManager:
-    
-    
-    def __init__(self, neo4j_connector: Neo4jConnector, code_graph_builder, cache_dir: str = ".cache/incremental"):
-        
+    """
+    增量导出：只对变更/新增文件重新分析并写回 Neo4j。
+    要求传入 project_key，写入的节点统一带上该属性，与主流程一致。
+    """
+
+    def __init__(
+        self,
+        neo4j_connector: Neo4jConnector,
+        code_graph_builder,
+        project_key: str,
+        cache_dir: str = ".cache/incremental",
+    ):
         self.connector = neo4j_connector
         self.builder = code_graph_builder
+        self.project_key = project_key
         self.incremental_analyzer = IncrementalAnalyzer(cache_dir)
         self.neo4j_cleaner = IncrementalNeo4jCleaner(neo4j_connector)
     
@@ -287,8 +296,8 @@ class IncrementalExportManager:
             )
             exporter.connector = self.connector  # 使用现有连接
             
-            # 只导出修改和新增的文件中的符
-            export_result = self._export_incremental_symbols(files_to_analyze)
+            # 只导出修改和新增的文件中的符号（统一注入 project_key）
+            export_result = self._export_incremental_symbols(files_to_analyze, self.project_key)
             print(f"  导出的节 {export_result['nodes_count']}")
             print(f"  导出的关 {export_result['relationships_count']}")
             
@@ -316,16 +325,21 @@ class IncrementalExportManager:
                 'error': str(e)
             }
     
-    def _export_incremental_symbols(self, file_paths: List[str]) -> Dict:
-        
+    def _export_incremental_symbols(self, file_paths: List[str], project_key: str) -> Dict:
+        """
+        导出增量符号节点与关系；每个节点统一写入 project_key，与主流程一致。
+        """
         from parser.common.symbol_table import SymbolType
-        
+
         nodes_count = 0
         relationships_count = 0
 
         def _batch_create_nodes(label: str, nodes: List[dict], batch_size: int = 5000) -> int:
             if not nodes:
                 return 0
+            for n in nodes:
+                if isinstance(n, dict) and "project_key" not in n:
+                    n["project_key"] = project_key
             created = 0
             query = f"""
             UNWIND $nodes AS node

@@ -125,10 +125,8 @@ class Neo4jQueries:
     @staticmethod
     def link_all_external_to_internal() -> str:
         """
-        链接所有外部定义到内部定义（全局匹配）
-        
-        返回字段:
-            matched_count, created_count
+        链接所有外部定义到内部定义。按 qualified_name + belong_project 匹配；
+        若节点有 project_key 则同 key 才连，避免 Lib 与 Application 混连。
         """
         return """
         MATCH (external:JavaObject)
@@ -137,9 +135,7 @@ class Neo4jQueries:
         WHERE internal.from_type = 'InnerDefinition'
           AND internal.qualified_name = external.qualified_name
           AND internal.belong_project = external.belong_project
-          AND (
-            external.project_key IS NULL OR external.project_key = "" OR internal.project_key = external.project_key OR internal.project_key IS NULL
-          )
+          AND (external.project_key IS NULL OR external.project_key = "" OR internal.project_key = external.project_key OR internal.project_key IS NULL)
         MERGE (external)-[r:LIB_LINK]->(internal)
         ON CREATE SET r.__tmp_created = 1
         WITH r, coalesce(r.__tmp_created, 0) AS is_new
@@ -151,29 +147,25 @@ class Neo4jQueries:
     @staticmethod
     def link_external_to_internal_by_project() -> str:
         """
-        链接指定项目的外部定义到内部定义
-        
+        链接指定项目的外部定义到内部定义。
+        同时按 belong_project 与 project_key 过滤，以区分同一项目名下的 Lib 与 Application。
+
         参数:
-            project_name: str - 项目名称（兜底）
-            project_key: str|None - 项目唯一键（建议 Project 根 symbol_id），优先用于精确过滤
-        
-        返回字段:
-            matched_count, created_count
+            project_name: str - 项目名称（belong_project）
+            project_key: str - 项目唯一键（Project 根 symbol_id），用于区分 Lib/Application；空时仅用 belong_project
+
+        说明: 若节点无 project_key 属性（如旧数据），Neo4j 可能报 property 不存在警告，查询仍会执行。
         """
         return """
         MATCH (external:JavaObject)
         WHERE external.from_type = 'ExternalDefinition'
           AND external.belong_project = $project_name
-          AND (
-            $project_key IS NULL OR $project_key = "" OR external.project_key = $project_key OR external.project_key IS NULL
-          )
+          AND ($project_key IS NULL OR $project_key = "" OR external.project_key = $project_key OR external.project_key IS NULL)
         MATCH (internal:JavaObject)
         WHERE internal.from_type = 'InnerDefinition'
           AND internal.qualified_name = external.qualified_name
           AND internal.belong_project = external.belong_project
-          AND (
-            external.project_key IS NULL OR external.project_key = "" OR internal.project_key = external.project_key OR internal.project_key IS NULL
-          )
+          AND ($project_key IS NULL OR $project_key = "" OR internal.project_key = $project_key OR internal.project_key IS NULL)
         MERGE (external)-[r:LIB_LINK]->(internal)
         ON CREATE SET r.__tmp_created = 1
         WITH r, coalesce(r.__tmp_created, 0) AS is_new
@@ -186,29 +178,23 @@ class Neo4jQueries:
     def sample_matches_by_project() -> str:
         """
         采样：返回可链接的 external/internal 对，以及是否已存在 LIB_LINK。
+        按 belong_project + project_key 过滤，区分同一项目名下的 Lib 与 Application。
 
         参数:
-            project_name: str - 项目名称（兜底）
-            project_key: str|None - 项目唯一键（建议 Project 根 symbol_id），优先用于精确过滤
+            project_name: str - 项目名称（belong_project）
+            project_key: str - 项目唯一键，空时仅用 belong_project
             limit: int - 返回数量限制
-
-        返回字段:
-            fqn, project, external_symbol_id, internal_symbol_id, is_linked
         """
         return """
         MATCH (external:JavaObject)
         WHERE external.from_type = 'ExternalDefinition'
           AND external.belong_project = $project_name
-          AND (
-            $project_key IS NULL OR $project_key = "" OR external.project_key = $project_key OR external.project_key IS NULL
-          )
+          AND ($project_key IS NULL OR $project_key = "" OR external.project_key = $project_key OR external.project_key IS NULL)
         MATCH (internal:JavaObject)
         WHERE internal.from_type = 'InnerDefinition'
           AND internal.qualified_name = external.qualified_name
           AND internal.belong_project = external.belong_project
-          AND (
-            external.project_key IS NULL OR external.project_key = "" OR internal.project_key = external.project_key OR internal.project_key IS NULL
-          )
+          AND ($project_key IS NULL OR $project_key = "" OR internal.project_key = $project_key OR internal.project_key IS NULL)
         OPTIONAL MATCH (external)-[r:LIB_LINK]->(internal)
         RETURN external.qualified_name AS fqn,
                external.belong_project AS project,
@@ -222,10 +208,7 @@ class Neo4jQueries:
     @staticmethod
     def count_all_matches() -> str:
         """
-        统计所有可以链接的外部-内部定义对（不实际创建链接）
-        
-        返回字段:
-            match_count
+        统计所有可以链接的外部-内部定义对。同 project_key 才计为一对，避免 Lib/Application 混计。
         """
         return """
         MATCH (external:JavaObject)
@@ -234,38 +217,25 @@ class Neo4jQueries:
         WHERE internal.from_type = 'InnerDefinition'
           AND internal.qualified_name = external.qualified_name
           AND internal.belong_project = external.belong_project
-          AND (
-            external.project_key IS NULL OR external.project_key = "" OR internal.project_key = external.project_key OR internal.project_key IS NULL
-          )
+          AND (external.project_key IS NULL OR external.project_key = "" OR internal.project_key = external.project_key OR internal.project_key IS NULL)
         RETURN count(*) as match_count
         """
     
     @staticmethod
     def count_matches_by_project() -> str:
         """
-        统计指定项目可以链接的外部-内部定义对
-        
-        参数:
-            project_name: str - 项目名称（兜底）
-            project_key: str|None - 项目唯一键（建议 Project 根 symbol_id），优先用于精确过滤
-        
-        返回字段:
-            match_count
+        统计指定项目可以链接的外部-内部定义对。按 belong_project + project_key 过滤，区分 Lib/Application。
         """
         return """
         MATCH (external:JavaObject)
         WHERE external.from_type = 'ExternalDefinition'
           AND external.belong_project = $project_name
-          AND (
-            $project_key IS NULL OR $project_key = "" OR external.project_key = $project_key
-          )
+          AND ($project_key IS NULL OR $project_key = "" OR external.project_key = $project_key OR external.project_key IS NULL)
         MATCH (internal:JavaObject)
         WHERE internal.from_type = 'InnerDefinition'
           AND internal.qualified_name = external.qualified_name
           AND internal.belong_project = external.belong_project
-          AND (
-            external.project_key IS NULL OR external.project_key = "" OR internal.project_key = external.project_key OR internal.project_key IS NULL
-          )
+          AND ($project_key IS NULL OR $project_key = "" OR internal.project_key = $project_key OR internal.project_key IS NULL)
         RETURN count(*) as match_count
         """
     
@@ -324,13 +294,7 @@ class Neo4jQueries:
     @staticmethod
     def find_duplicate_definitions() -> str:
         """
-        查找同时存在外部定义和内部定义的类
-        
-        参数:
-            limit: int - 返回结果数量限制
-        
-        返回字段:
-            fqn, project, external_symbol_id, internal_symbol_id, is_linked
+        查找同时存在外部定义和内部定义的类。同 project_key 才成对，区分 Lib/Application。
         """
         return """
         MATCH (external:JavaObject)
@@ -339,9 +303,7 @@ class Neo4jQueries:
         WHERE internal.from_type = 'InnerDefinition'
           AND internal.qualified_name = external.qualified_name
           AND internal.belong_project = external.belong_project
-          AND (
-            external.project_key IS NULL OR external.project_key = "" OR internal.project_key = external.project_key OR internal.project_key IS NULL
-          )
+          AND (external.project_key IS NULL OR external.project_key = "" OR internal.project_key = external.project_key OR internal.project_key IS NULL)
         OPTIONAL MATCH (external)-[r:LIB_LINK]->(internal)
         RETURN external.qualified_name as fqn,
                external.belong_project as project,
