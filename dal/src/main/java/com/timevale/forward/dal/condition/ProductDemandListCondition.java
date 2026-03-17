@@ -114,6 +114,16 @@ public class ProductDemandListCondition extends QueryBase {
      */
     private Date expectScheduleTimeEnd;
 
+    /**
+     * 排序字段
+     */
+    private String orderFiled;
+
+    /**
+     * 排序规则：0正序，1逆序
+     */
+    private Integer orderCollation;
+
     private String targetCustomer;
 
     private String customerGrade;
