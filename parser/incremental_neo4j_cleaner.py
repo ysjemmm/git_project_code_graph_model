@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
+from pathlib import Path
 from typing import List, Dict
 
 from parser.cgm_exporter import CGMExporter
 
 from parser.incremental_analyzer import IncrementalAnalyzer
 from storage.neo4j.connector import Neo4jConnector
+from tools.constants import PROJECT_ROOT_PATH
 
 
 class IncrementalNeo4jCleaner:
@@ -236,6 +238,7 @@ class IncrementalExportManager:
     """
     增量导出：只对变更/新增文件重新分析并写回 Neo4j。
     要求传入 project_key，写入的节点统一带上该属性，与主流程一致。
+    cache_dir 默认使用项目根目录下的 .cache/incremental（与 core/importer 的 .cache 约定一致）。
     """
 
     def __init__(
@@ -243,11 +246,14 @@ class IncrementalExportManager:
         neo4j_connector: Neo4jConnector,
         code_graph_builder,
         project_key: str,
-        cache_dir: str = ".cache/incremental",
+        cache_dir: str = None,
     ):
         self.connector = neo4j_connector
         self.builder = code_graph_builder
         self.project_key = project_key
+        # 默认使用项目根目录下的 .cache/incremental，与 core/importer 的 .cache 约定一致
+        if cache_dir is None:
+            cache_dir = str(PROJECT_ROOT_PATH / ".cache" / "incremental")
         self.incremental_analyzer = IncrementalAnalyzer(cache_dir)
         self.neo4j_cleaner = IncrementalNeo4jCleaner(neo4j_connector)
     
