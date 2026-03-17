@@ -7,35 +7,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-
-def _load_repo_env_from_local():
-    """
-    在调用 os.getenv 之前，先从项目根目录的 .env.local/.env 中加载 REPO_URL/REPO_BRANCH。
-    规则：
-    - 不覆盖已有环境变量（例如你在终端里手动 export 的）
-    - .env.local 优先于 .env
-    """
-    root = Path(__file__).resolve().parent.parent
-    for filename in [".env.local", ".env"]:
-        env_path = root / filename
-        if not env_path.exists():
-            continue
-        try:
-            content = env_path.read_text(encoding="utf-8")
-        except Exception:
-            continue
-        for raw in content.splitlines():
-            line = raw.strip()
-            if not line or line.startswith("#") or "=" not in line:
-                continue
-            key, value = line.split("=", 1)
-            key = key.strip()
-            value = value.strip().strip("'").strip('"')
-            if key in ("REPO_URL", "REPO_BRANCH") and key not in os.environ and value:
-                os.environ[key] = value
+from core.console_utf8 import setup_console_utf8
+from core.env_loader import load_env_vars
 
 
 def main():
+    setup_console_utf8()
     """简化版工作流：
     1. 克隆 Git 仓库
     2. 创建 Merkle Tree
@@ -48,12 +25,14 @@ def main():
     print("简化版导入测试")
     print("=" * 70)
 
-    # 先从 .env.local/.env 补充 REPO_URL/REPO_BRANCH
-    _load_repo_env_from_local()
+    # 先从 .env.local/.env 补充 REPO_URL / REPO_BRANCH / REPO_COMMIT_ID
+    load_env_vars({"REPO_URL", "REPO_BRANCH", "REPO_COMMIT_ID"})
 
     # Git 仓库配置：优先从环境变量/本地配置读取
+    # 若设置 REPO_COMMIT_ID 则按该 commit 拉取；否则按 REPO_BRANCH 拉取
     repo_url = os.getenv("REPO_URL", "http://example")
     branch = os.getenv("REPO_BRANCH", "master")
+    commit_id = os.getenv("REPO_COMMIT_ID", "").strip() or None
 
     # 创建导入器
     # Neo4j 配置读取优先级：环境变量 > .env.local > .env > 默认值
@@ -68,14 +47,18 @@ def main():
         # 步骤 1: 克隆仓库
         print("\n" + "=" * 70)
         print(f"步骤 1: 克隆仓库 {repo_url}")
-        print(f"分支: {branch}")
+        if commit_id:
+            print(f"Commit ID: {commit_id}")
+        else:
+            print(f"分支: {branch}")
         print("=" * 70)
 
         result = git_importer.import_from_git(
             repo_url=repo_url,
             branch=branch,
+            commit_id=commit_id,
             java_source_dir=None,
-            clear_database=True,  # 清空数据库
+            clear_database=False,  # 清空数据库
             async_mode=False
         )
 
@@ -89,8 +72,8 @@ def main():
         print("=" * 70)
 
         print("\n导入成功")
-        print(f"  - 新增节点: {result.get('added_nodes', 0)}")
-        print(f"  - 新增关系: {result.get('added_relationships', 0)}")
+        print(f"  - 本次提交写入条目（attempted）: 节点 {result.get('attempted_nodes', 0)}，关系 {result.get('attempted_relationships', 0)}")
+        print(f"  - 本次新建（created）: 节点 {result.get('added_nodes', 0)}，关系 {result.get('added_relationships', 0)}")
 
         # 步骤 3: 获取数据库统计
         print("\n" + "=" * 70)

@@ -73,7 +73,9 @@ def main():
             f"  清空前: {stats_before.get('total_nodes', 0)} 个节点, {stats_before.get('total_relationships', 0)} 个关系")
 
         project_name = repo_url.split("/")[-1].replace(".git", "")
-        deleted_count = git_importer.connector.delete_project_data(project_name)
+        # 优先按 project_key（Project 根 symbol_id）精确删除，避免多仓库同名项目误删
+        project_key = generate_project_symbol_id(project_name, project_type="Application")
+        deleted_count = git_importer.connector.delete_project_data(project_name, project_key=project_key)
         print(f"  本次删除节点数: {deleted_count}")
 
         stats_after = git_importer.connector.get_statistics()

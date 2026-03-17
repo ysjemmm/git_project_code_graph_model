@@ -1,4 +1,4 @@
-﻿import hashlib
+import hashlib
 import json
 import os
 from dataclasses import dataclass
@@ -23,17 +23,22 @@ class MerkleTreeBuilder:
     def __init__(self):
         self.root: Optional[MerkleNode] = None
         self.file_hashes: Dict[str, str] = {}  # 缓存文件哈希
+        self.extensions: Optional[List[str]] = [".java"]  # 默认保持旧行为：只处理 Java
     
-    def build(self, directory_path: str) -> MerkleNode:
+    def build(self, directory_path: str, extensions: Optional[List[str]] = None) -> MerkleNode:
         
+        if extensions is not None:
+            self.extensions = extensions
         self.root = self._build_node(directory_path)
         return self.root
     
-    def build_incremental(self, directory_path: str, old_tree: Optional[MerkleNode] = None) -> MerkleNode:
+    def build_incremental(self, directory_path: str, old_tree: Optional[MerkleNode] = None, extensions: Optional[List[str]] = None) -> MerkleNode:
         
+        if extensions is not None:
+            self.extensions = extensions
         if old_tree is None:
             # 没有旧树,进行全量构建
-            return self.build(directory_path)
+            return self.build(directory_path, extensions=self.extensions)
         
         # 增量构建
         self.root = self._build_node_incremental(directory_path, old_tree)
@@ -61,7 +66,7 @@ class MerkleTreeBuilder:
                     # 跳过隐藏文件和非 Java 文件
                     if item.startswith('.'):
                         continue
-                    if os.path.isfile(item_path) and not item.endswith('.java'):
+                    if os.path.isfile(item_path) and self.extensions is not None and not any(item.endswith(ext) for ext in self.extensions):
                         continue
                     
                     child_node = self._build_node(item_path)
@@ -125,7 +130,7 @@ class MerkleTreeBuilder:
                     # 跳过隐藏文件和非 Java 文件
                     if item.startswith('.'):
                         continue
-                    if os.path.isfile(item_path) and not item.endswith('.java'):
+                    if os.path.isfile(item_path) and self.extensions is not None and not any(item.endswith(ext) for ext in self.extensions):
                         continue
                     
                     # 获取旧的子节点(如果存在)
@@ -236,7 +241,7 @@ class MerkleTreeComparator:
 class MerkleTreeCache:
     
     
-    def __init__(self, cache_file: str = ".kiro/merkle_tree_cache.json"):
+    def __init__(self, cache_file: str = ".cache/incremental/merkle_tree_cache.json"):
         self.cache_file = cache_file
         self.tree_data: Optional[Dict] = None
         self.load_cache()
@@ -302,7 +307,7 @@ class MerkleTreeCache:
 class MerkleTreeAnalyzer:
     
     
-    def __init__(self, cache_dir: str = ".kiro"):
+    def __init__(self, cache_dir: str = ".cache/incremental"):
         self.cache_dir = cache_dir
         self.cache = MerkleTreeCache(os.path.join(cache_dir, "merkle_tree_cache.json"))
         self.builder = MerkleTreeBuilder()

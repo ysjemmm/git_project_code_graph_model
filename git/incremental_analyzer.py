@@ -7,7 +7,6 @@ from typing import Dict, List, Optional, Tuple
 from git.manager import GitManager
 from storage.cache.git_cache import GitCacheManager
 from storage.cache.merkle_tree import MerkleTreeBuilder, MerkleTreeComparator
-from parser.incremental_analyzer import IncrementalAnalyzer
 
 logger = get_logger("git_incremental_analyzer")
 
@@ -20,14 +19,20 @@ class GitIncrementalAnalyzer:
         self.merkle_builder = MerkleTreeBuilder()
         self.merkle_comparator = MerkleTreeComparator()
     
-    def analyze_git_repo(self, 
-                        repo_url: str, 
-                        branch: str = "master",
-                        repo_name: Optional[str] = None,
-                        java_source_dir: str = "src/main/java",
-                        clone_timeout: Optional[int] = None,
-                        git_config: Optional[Dict[str, str]] = None,
-                        commit_id: Optional[str] = None) -> Dict:
+    def analyze_git_repo(self,
+                         repo_url: str,
+                         branch: str = "master",
+                         repo_name: Optional[str] = None,
+                         source_dir: Optional[str] = "src/main/java",
+                         java_source_dir: Optional[str] = None,
+                         extensions: Optional[List[str]] = None,
+                         include_unchanged_total: bool = False,
+                         clone_timeout: Optional[int] = None,
+                         git_config: Optional[Dict[str, str]] = None,
+                         commit_id: Optional[str] = None) -> Dict:
+        # 兼容：历史参数 java_source_dir 仍然保留；如果两者都传，以 source_dir 为准
+        if source_dir is None:
+            source_dir = java_source_dir
         try:
             # 提取仓库名称
             if repo_name is None:
@@ -159,12 +164,12 @@ class GitIncrementalAnalyzer:
             has_changes, reason = self.cache_manager.has_changes(repo_name, cache_key, current_commit)
             logger.info(f"[INFO] {reason}")
             
-            # 规范java_source_dir 路径
-            if java_source_dir:
-                java_source_dir_normalized = java_source_dir.replace('/', os.sep)
-                java_source_path = os.path.join(repo_cache_dir, java_source_dir_normalized)
+            # 规范 source_dir 路径
+            if source_dir:
+                source_dir_normalized = source_dir.replace('/', os.sep)
+                java_source_path = os.path.join(repo_cache_dir, source_dir_normalized)
             else:
-                # 如果没有指定 java_source_dir,使用仓库根目录
+                # 如果没有指定 source_dir,使用仓库根目录
                 java_source_path = repo_cache_dir
             
             if not os.path.isdir(java_source_path):
@@ -179,7 +184,7 @@ class GitIncrementalAnalyzer:
             
             # 第四步:构建 Merkle 树并对比
             logger.info(f"[INFO] 构建 Merkle  {java_source_path}")
-            new_tree = self.merkle_builder.build(java_source_path)
+            new_tree = self.merkle_builder.build(java_source_path, extensions=extensions or [".java"])
             
             # 加载旧的 Merkle 树(从源分支或同分支的旧版本
             # 如果切换了分支,加载源分支的 Merkle 
@@ -197,6 +202,8 @@ class GitIncrementalAnalyzer:
             changed_files = []
             deleted_files = []
             added_files = []
+            total_files = 0
+            unchanged_files: List[str] = []
             
             if old_tree:
                 logger.info(f"[INFO] 对比 Merkle 树,检测变化文..")
@@ -209,6 +216,7 @@ class GitIncrementalAnalyzer:
                 new_files_dict = {}  # {rel_path: (abs_path, hash)}
                 self._collect_all_files_with_hash(old_tree, old_files_dict, old_tree.path)
                 self._collect_all_files_with_hash(new_tree, new_files_dict, new_tree.path)
+                total_files = len(new_files_dict)
                 
                 # 新增文件
                 for name, (path, hash_val) in new_files_dict.items():
@@ -228,6 +236,20 @@ class GitIncrementalAnalyzer:
                         # 比较文件内容哈希
                         if old_hash != new_hash:
                             changed_files.append(new_path)
+
+                if include_unchanged_total:
+                    changed_set = set(changed_files)
+                    added_set = set(added_files)
+                    deleted_set = set(deleted_files)
+                    unchanged_files = sorted(
+                        [
+                            path
+                            for (_rel, (path, _hash)) in new_files_dict.items()
+                            if (path not in changed_set)
+                            and (path not in added_set)
+                            and (path not in deleted_set)
+                        ]
+                    )
                 
                 # 打印详细的分支切换信
                 logger.info("")
@@ -284,7 +306,11 @@ class GitIncrementalAnalyzer:
                 logger.info(f"[INFO] 发现 {len(added_files)} 个新增文件 {len(changed_files)} 个变更文件  {len(deleted_files)} 个删除文件")
             else:
                 logger.info(f"[INFO] 首次分析")
-                added_files = self._collect_all_java_files(java_source_path)
+                added_files = self._collect_all_source_files(
+                    java_source_path,
+                    extensions=extensions or [".java"],
+                )
+                total_files = len(added_files)
                 
                 # 打印首次导入信息
                 logger.info("")
@@ -327,13 +353,19 @@ class GitIncrementalAnalyzer:
             self.cache_manager.save_merkle_tree(repo_name, cache_key, new_tree)
             self.cache_manager.update_metadata(repo_name, repo_url, cache_key, current_commit)
             
-            # 第六步:执行增量分析
-            logger.info(f"[INFO] 执行增量分析...")
-            incremental_analyzer = IncrementalAnalyzer(
-                os.path.join(self.cache_manager.cache_base_dir, "analysis_cache")
-            )
-            
-            analysis_result = incremental_analyzer.analyze_changes(repo_cache_dir)
+            # 第六步:组装增量分析结果（避免重复 walk/hash）
+            # 说明：本方法已通过 Merkle 树对比得到 changed/added/deleted 文件列表，
+            # 再调用 parser.incremental_analyzer 会造成重复 IO 与重复哈希计算。
+            analysis_result = {
+                "modified": sorted(changed_files),
+                "new": sorted(added_files),
+                "deleted": sorted(deleted_files),
+                # 兼容字段：这里不做二次全量扫描以计算 unchanged/total
+                "unchanged": unchanged_files,
+                "total": total_files,
+                "need_reanalysis": True,
+                "detection_method": "git_merkle_tree",
+            }
             
             return {
                 'success': True,
@@ -359,21 +391,47 @@ class GitIncrementalAnalyzer:
                 'error': f"分析异常: {str(e)}"
             }
     
-    def get_changed_java_files(self, 
-                              repo_url: str, 
-                              branch: str = "master",
-                              repo_name: Optional[str] = None,
-                              java_source_dir: str = "src/main/java") -> Tuple[bool, List[str]]:
-        
-        result = self.analyze_git_repo(repo_url, branch, repo_name, java_source_dir)
-        
-        if result['success']:
-            changed_files = result.get('changed_files', [])
-            # 过滤只保java 文件
-            java_files = [f for f in changed_files if f.endswith('.java')]
-            return True, java_files
-        else:
+    def get_changed_source_files(self,
+                                 repo_url: str,
+                                 branch: str = "master",
+                                 repo_name: Optional[str] = None,
+                                 source_dir: Optional[str] = "src/main/java",
+                                 java_source_dir: Optional[str] = None,
+                                 extensions: Optional[List[str]] = None) -> Tuple[bool, List[str]]:
+        """
+        获取变更的源文件列表（语言无关）。
+
+        - source_dir/java_source_dir: 兼容参数，source_dir 优先
+        - extensions: 需要过滤的扩展名列表（例如 [".java"]）。不传则不过滤。
+        """
+        if source_dir is None:
+            source_dir = java_source_dir
+        result = self.analyze_git_repo(repo_url, branch, repo_name, source_dir=source_dir)
+
+        if not result.get("success"):
             return False, []
+
+        changed_files = result.get("changed_files", [])
+        if extensions:
+            changed_files = [f for f in changed_files if any(f.endswith(ext) for ext in extensions)]
+        return True, changed_files
+
+    # 兼容旧方法名：仅返回 Java 文件
+    def get_changed_java_files(self,
+                               repo_url: str,
+                               branch: str = "master",
+                               repo_name: Optional[str] = None,
+                               source_dir: Optional[str] = "src/main/java",
+                               java_source_dir: Optional[str] = None) -> Tuple[bool, List[str]]:
+        ok, files = self.get_changed_source_files(
+            repo_url=repo_url,
+            branch=branch,
+            repo_name=repo_name,
+            source_dir=source_dir,
+            java_source_dir=java_source_dir,
+            extensions=[".java"],
+        )
+        return ok, files
     
     def cleanup_repo(self, repo_name: str) -> bool:
         
@@ -384,14 +442,22 @@ class GitIncrementalAnalyzer:
         return self.cache_manager.get_cache_info(repo_name)
     
     @staticmethod
-    def _collect_all_java_files(directory: str) -> List[str]:
-        
-        java_files = []
-        for root, dirs, files in os.walk(directory):
+    def _collect_all_source_files(directory: str, extensions: Optional[List[str]] = None) -> List[str]:
+        """
+        收集目录下的源文件（默认不过滤；传 extensions 则按扩展名过滤）。
+        """
+        collected: List[str] = []
+        for root, _dirs, files in os.walk(directory):
             for file in files:
-                if file.endswith('.java'):
-                    java_files.append(os.path.join(root, file))
-        return java_files
+                if extensions and not any(file.endswith(ext) for ext in extensions):
+                    continue
+                collected.append(os.path.join(root, file))
+        return collected
+
+    # 兼容旧方法名：仅收集 .java 文件
+    @staticmethod
+    def _collect_all_java_files(directory: str) -> List[str]:
+        return GitIncrementalAnalyzer._collect_all_source_files(directory, extensions=[".java"])
     
     def _collect_all_files_with_hash(self, node: 'MerkleNode', file_dict: dict, base_dir: str):
         """

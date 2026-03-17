@@ -1,4 +1,4 @@
-﻿
+
 
 import json
 import os
@@ -17,7 +17,7 @@ logger = get_logger("multi_repo_analyzer")
 class MultiRepoAnalyzer:
     
     
-    def __init__(self, cache_base_dir: str = ".kiro", max_workers: int = 4):
+    def __init__(self, cache_base_dir: str = ".cache/incremental", max_workers: int = 4):
         
         self.cache_base_dir = cache_base_dir
         self.max_workers = max_workers

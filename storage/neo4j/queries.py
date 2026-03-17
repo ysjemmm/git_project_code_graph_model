@@ -5,6 +5,12 @@ Neo4j Cypher 查询管理模块
 """
 from typing import Dict, List
 
+from storage.neo4j.java_modules import (
+    REL_ENDPOINT_LABELS,
+    MEMBER_OF_SOURCE_LABELS,
+    MEMBER_OF_TARGET_LABELS,
+)
+
 
 class Neo4jQueries:
     """Neo4j 查询语句集合"""
@@ -17,7 +23,10 @@ class Neo4jQueries:
         批量查找内部定义节点
         
         参数:
-            conditions: List[Dict] - 查询条件列表，每个包含 {'fqn': ..., 'project': ...}
+            conditions: List[Dict] - 查询条件列表
+              - fqn: 完全限定名
+              - project_key: 可选，项目唯一键（建议 Project 根 symbol_id），用于精确过滤
+              - project: 兜底项目名（旧字段）
         
         返回字段:
             fqn, project, symbol_id
@@ -28,6 +37,9 @@ class Neo4jQueries:
         WHERE internal.from_type = 'InnerDefinition'
           AND internal.qualified_name = cond.fqn
           AND internal.belong_project = cond.project
+          AND (
+            cond.project_key IS NULL OR cond.project_key = "" OR internal.project_key = cond.project_key OR internal.project_key IS NULL
+          )
         RETURN internal.qualified_name as fqn,
                internal.belong_project as project,
                internal.symbol_id as symbol_id
@@ -39,7 +51,10 @@ class Neo4jQueries:
         批量查找外部定义节点
         
         参数:
-            conditions: List[Dict] - 查询条件列表，每个包含 {'fqn': ..., 'project': ...}
+            conditions: List[Dict] - 查询条件列表
+              - fqn: 完全限定名
+              - project_key: 可选，项目唯一键（建议 Project 根 symbol_id），用于精确过滤
+              - project: 兜底项目名（旧字段）
         
         返回字段:
             fqn, project, symbol_id
@@ -50,6 +65,9 @@ class Neo4jQueries:
         WHERE external.from_type = 'ExternalDefinition'
           AND external.qualified_name = cond.fqn
           AND external.belong_project = cond.project
+          AND (
+            cond.project_key IS NULL OR cond.project_key = "" OR external.project_key = cond.project_key OR external.project_key IS NULL
+          )
         RETURN external.qualified_name as fqn,
                external.belong_project as project,
                external.symbol_id as symbol_id
@@ -62,7 +80,8 @@ class Neo4jQueries:
         
         参数:
             fqn: str - 完全限定名
-            project_name: str - 项目名称
+            project_name: str - 项目名称（兜底）
+            project_key: str|None - 项目唯一键（建议 Project 根 symbol_id），优先用于精确过滤
         
         返回字段:
             symbol_id
@@ -72,6 +91,9 @@ class Neo4jQueries:
         WHERE internal.from_type = 'InnerDefinition'
           AND internal.qualified_name = $fqn
           AND internal.belong_project = $project_name
+          AND (
+            $project_key IS NULL OR $project_key = "" OR internal.project_key = $project_key OR internal.project_key IS NULL
+          )
         RETURN internal.symbol_id as symbol_id
         LIMIT 1
         """
@@ -83,7 +105,8 @@ class Neo4jQueries:
         
         参数:
             fqn: str - 完全限定名
-            project_name: str - 项目名称
+            project_name: str - 项目名称（兜底）
+            project_key: str|None - 项目唯一键（建议 Project 根 symbol_id），优先用于精确过滤
         
         返回字段:
             symbol_id
@@ -93,6 +116,9 @@ class Neo4jQueries:
         WHERE external.from_type = 'ExternalDefinition'
           AND external.qualified_name = $fqn
           AND external.belong_project = $project_name
+          AND (
+            $project_key IS NULL OR $project_key = "" OR external.project_key = $project_key OR external.project_key IS NULL
+          )
         RETURN external.symbol_id as symbol_id
         """
     
@@ -102,7 +128,7 @@ class Neo4jQueries:
         链接所有外部定义到内部定义（全局匹配）
         
         返回字段:
-            created_count
+            matched_count, created_count
         """
         return """
         MATCH (external:JavaObject)
@@ -111,8 +137,15 @@ class Neo4jQueries:
         WHERE internal.from_type = 'InnerDefinition'
           AND internal.qualified_name = external.qualified_name
           AND internal.belong_project = external.belong_project
+          AND (
+            external.project_key IS NULL OR external.project_key = "" OR internal.project_key = external.project_key OR internal.project_key IS NULL
+          )
         MERGE (external)-[r:LIB_LINK]->(internal)
-        RETURN count(r) as created_count
+        ON CREATE SET r.__tmp_created = 1
+        WITH r, coalesce(r.__tmp_created, 0) AS is_new
+        SET r.__tmp_created = null
+        WITH count(r) AS matched_count, sum(is_new) AS created_count
+        RETURN matched_count, created_count
         """
     
     @staticmethod
@@ -121,21 +154,69 @@ class Neo4jQueries:
         链接指定项目的外部定义到内部定义
         
         参数:
-            project_name: str - 项目名称
+            project_name: str - 项目名称（兜底）
+            project_key: str|None - 项目唯一键（建议 Project 根 symbol_id），优先用于精确过滤
         
         返回字段:
-            created_count
+            matched_count, created_count
         """
         return """
         MATCH (external:JavaObject)
         WHERE external.from_type = 'ExternalDefinition'
           AND external.belong_project = $project_name
+          AND (
+            $project_key IS NULL OR $project_key = "" OR external.project_key = $project_key OR external.project_key IS NULL
+          )
         MATCH (internal:JavaObject)
         WHERE internal.from_type = 'InnerDefinition'
           AND internal.qualified_name = external.qualified_name
           AND internal.belong_project = external.belong_project
+          AND (
+            external.project_key IS NULL OR external.project_key = "" OR internal.project_key = external.project_key OR internal.project_key IS NULL
+          )
         MERGE (external)-[r:LIB_LINK]->(internal)
-        RETURN count(r) as created_count
+        ON CREATE SET r.__tmp_created = 1
+        WITH r, coalesce(r.__tmp_created, 0) AS is_new
+        SET r.__tmp_created = null
+        WITH count(r) AS matched_count, sum(is_new) AS created_count
+        RETURN matched_count, created_count
+        """
+
+    @staticmethod
+    def sample_matches_by_project() -> str:
+        """
+        采样：返回可链接的 external/internal 对，以及是否已存在 LIB_LINK。
+
+        参数:
+            project_name: str - 项目名称（兜底）
+            project_key: str|None - 项目唯一键（建议 Project 根 symbol_id），优先用于精确过滤
+            limit: int - 返回数量限制
+
+        返回字段:
+            fqn, project, external_symbol_id, internal_symbol_id, is_linked
+        """
+        return """
+        MATCH (external:JavaObject)
+        WHERE external.from_type = 'ExternalDefinition'
+          AND external.belong_project = $project_name
+          AND (
+            $project_key IS NULL OR $project_key = "" OR external.project_key = $project_key OR external.project_key IS NULL
+          )
+        MATCH (internal:JavaObject)
+        WHERE internal.from_type = 'InnerDefinition'
+          AND internal.qualified_name = external.qualified_name
+          AND internal.belong_project = external.belong_project
+          AND (
+            external.project_key IS NULL OR external.project_key = "" OR internal.project_key = external.project_key OR internal.project_key IS NULL
+          )
+        OPTIONAL MATCH (external)-[r:LIB_LINK]->(internal)
+        RETURN external.qualified_name AS fqn,
+               external.belong_project AS project,
+               external.symbol_id AS external_symbol_id,
+               internal.symbol_id AS internal_symbol_id,
+               r IS NOT NULL AS is_linked
+        ORDER BY project, fqn
+        LIMIT $limit
         """
     
     @staticmethod
@@ -153,6 +234,9 @@ class Neo4jQueries:
         WHERE internal.from_type = 'InnerDefinition'
           AND internal.qualified_name = external.qualified_name
           AND internal.belong_project = external.belong_project
+          AND (
+            external.project_key IS NULL OR external.project_key = "" OR internal.project_key = external.project_key OR internal.project_key IS NULL
+          )
         RETURN count(*) as match_count
         """
     
@@ -162,7 +246,8 @@ class Neo4jQueries:
         统计指定项目可以链接的外部-内部定义对
         
         参数:
-            project_name: str - 项目名称
+            project_name: str - 项目名称（兜底）
+            project_key: str|None - 项目唯一键（建议 Project 根 symbol_id），优先用于精确过滤
         
         返回字段:
             match_count
@@ -171,10 +256,16 @@ class Neo4jQueries:
         MATCH (external:JavaObject)
         WHERE external.from_type = 'ExternalDefinition'
           AND external.belong_project = $project_name
+          AND (
+            $project_key IS NULL OR $project_key = "" OR external.project_key = $project_key
+          )
         MATCH (internal:JavaObject)
         WHERE internal.from_type = 'InnerDefinition'
           AND internal.qualified_name = external.qualified_name
           AND internal.belong_project = external.belong_project
+          AND (
+            external.project_key IS NULL OR external.project_key = "" OR internal.project_key = external.project_key OR internal.project_key IS NULL
+          )
         RETURN count(*) as match_count
         """
     
@@ -248,6 +339,9 @@ class Neo4jQueries:
         WHERE internal.from_type = 'InnerDefinition'
           AND internal.qualified_name = external.qualified_name
           AND internal.belong_project = external.belong_project
+          AND (
+            external.project_key IS NULL OR external.project_key = "" OR internal.project_key = external.project_key OR internal.project_key IS NULL
+          )
         OPTIONAL MATCH (external)-[r:LIB_LINK]->(internal)
         RETURN external.qualified_name as fqn,
                external.belong_project as project,
@@ -318,12 +412,15 @@ class Neo4jQueries:
         参数:
             file_path: str - 文件路径
             project_name: str - 项目名称
+            project_key: str|None - 项目唯一键（建议 Project 根 symbol_id）；优先用于精确匹配
         
         返回字段:
             deleted_count
         """
         return """
-        MATCH (f:JavaFile {file_path: $file_path, belong_project: $project_name})
+        MATCH (f:JavaFile {file_path: $file_path})
+        WHERE ($project_key IS NOT NULL AND $project_key <> "" AND f.project_key = $project_key)
+           OR (($project_key IS NULL OR $project_key = "") AND f.belong_project = $project_name)
         OPTIONAL MATCH (f)-[r1:CONTAINS]->(obj:JavaObject)
         OPTIONAL MATCH (obj)-[r2:MEMBER_OF]->(method:Method)
         OPTIONAL MATCH (obj)-[r3:MEMBER_OF]->(field:Field)
@@ -369,29 +466,38 @@ class QueryBuilder:
     @staticmethod
     def build_batch_create_relationships_query(rel_type: str) -> str:
         """
-        构建批量创建关系的查询（优化版本）
-        
-        使用 UNWIND 和 MATCH 的优化方式：
-        1. 先 UNWIND 展开所有关系
-        2. 使用单个 MATCH 查询获取所有源节点
-        3. 使用单个 MATCH 查询获取所有目标节点
-        4. 批量创建关系
-        
-        这样可以减少数据库往返次数，提升性能 10-50 倍
-        
-        参数:
-            rel_type: 关系类型
-        
-        返回:
-            完整的 Cypher 查询语句
+        构建批量创建关系的查询（带 label 的 MATCH，走 symbol_id 索引，加速写入）。
+
+        若 REL_ENDPOINT_LABELS 中指定了该 rel_type 的 (source_label, target_label)，
+        则使用 MATCH (source:SourceLabel) / MATCH (target:TargetLabel)，避免全图按 symbol_id 扫描。
         """
-        query = f"""
+        # 带 label 的 MATCH 走各 label 的 symbol_id 索引，避免全图扫描；两条 MATCH 避免笛卡尔积
+        labels = REL_ENDPOINT_LABELS.get(rel_type)
+        if labels:
+            source_label, target_label = labels
+            query = f"""
         UNWIND $relationships AS rel
-        MATCH (source {{symbol_id: rel.source_id}})
-        MATCH (target {{symbol_id: rel.target_id}})
+        MATCH (source:{source_label}) WHERE source.symbol_id = rel.source_id
+        MATCH (target:{target_label}) WHERE target.symbol_id = rel.target_id
         MERGE (source)-[r:{rel_type}]->(target)
-        RETURN count(r) as created
-        """
+        RETURN count(r) AS created
+            """
+        elif rel_type == "MEMBER_OF":
+            query = f"""
+        UNWIND $relationships AS rel
+        MATCH (source) WHERE source.symbol_id = rel.source_id AND ({MEMBER_OF_SOURCE_LABELS})
+        MATCH (target) WHERE target.symbol_id = rel.target_id AND ({MEMBER_OF_TARGET_LABELS})
+        MERGE (source)-[r:{rel_type}]->(target)
+        RETURN count(r) AS created
+            """
+        else:
+            query = f"""
+        UNWIND $relationships AS rel
+        MATCH (source) WHERE source.symbol_id = rel.source_id
+        MATCH (target) WHERE target.symbol_id = rel.target_id
+        MERGE (source)-[r:{rel_type}]->(target)
+        RETURN count(r) AS created
+            """
         return query.strip()
     
     @staticmethod

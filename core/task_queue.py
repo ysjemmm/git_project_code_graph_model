@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 
 import json
 import os
@@ -45,7 +45,14 @@ class GitImportTask:
     repo_name: Optional[str] = None
     java_source_dir: str = "src/main/java"
     project_name: Optional[str] = None
+    language: Optional[str] = None
+    languages: Optional[List[str]] = None
     clear_database: bool = False
+    commit_id: Optional[str] = None
+    clone_timeout: Optional[int] = None
+    git_config: Optional[Dict[str, str]] = None
+    include_unchanged_total: bool = False
+    include_comment_nodes: bool = False
     priority: TaskPriority = TaskPriority.NORMAL
     
     # 任务状
@@ -115,7 +122,14 @@ class TaskQueue:
                    repo_name: Optional[str] = None,
                    java_source_dir: str = "src/main/java",
                    project_name: Optional[str] = None,
+                   language: Optional[str] = None,
+                   languages: Optional[List[str]] = None,
                    clear_database: bool = False,
+                   commit_id: Optional[str] = None,
+                   clone_timeout: Optional[int] = None,
+                   git_config: Optional[Dict[str, str]] = None,
+                   include_unchanged_total: bool = False,
+                   include_comment_nodes: bool = False,
                    priority: TaskPriority = TaskPriority.NORMAL) -> str:
         
         task_id = self._generate_task_id()
@@ -127,7 +141,14 @@ class TaskQueue:
             repo_name=repo_name,
             java_source_dir=java_source_dir,
             project_name=project_name,
+            language=language,
+            languages=languages,
             clear_database=clear_database,
+            commit_id=commit_id,
+            clone_timeout=clone_timeout,
+            git_config=git_config,
+            include_unchanged_total=include_unchanged_total,
+            include_comment_nodes=include_comment_nodes,
             priority=priority
         )
         
@@ -270,14 +291,9 @@ class TaskQueue:
                 task.status = TaskStatus.RUNNING
                 task.started_at = datetime.now().isoformat()
             
-            # 创建导入
-            importer = GitToNeo4jImporter(
-                neo4j_uri="neo4j+s://26fa83e0.databases.neo4j.io",
-                neo4j_user="neo4j",
-                neo4j_password="kJ0iZG0ys9euMz_6rQle5f6-ibVqHtLDzLCgr42wZe4",
-                neo4j_database="neo4j",
-                cache_base_dir=self.cache_base_dir
-            )
+            # 创建导入器（Neo4j 配置读取优先级：环境变量 > .env.local > .env > 默认值）
+            # 线上/生产环境请务必通过环境变量或 secret 注入 Neo4j 凭据，避免硬编码。
+            importer = GitToNeo4jImporter(cache_base_dir=self.cache_base_dir)
             
             # 连接Neo4j
             if not importer.connect():
@@ -291,7 +307,14 @@ class TaskQueue:
                     repo_name=task.repo_name,
                     java_source_dir=task.java_source_dir,
                     project_name=task.project_name,
-                    clear_database=task.clear_database
+                    language=task.language,
+                    languages=task.languages,
+                    clear_database=task.clear_database,
+                    include_unchanged_total=task.include_unchanged_total,
+                    include_comment_nodes=task.include_comment_nodes,
+                    clone_timeout=task.clone_timeout,
+                    git_config=task.git_config,
+                    commit_id=task.commit_id
                 )
                 
                 # 更新任务状

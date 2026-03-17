@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """简化版导入测试：克隆仓库 -> 创建 Merkle Tree -> AST 解析 -> 导入 Neo4j"""
 
+import os
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from core.env_loader import load_env_vars
 
 
 def main():
@@ -20,21 +23,23 @@ def main():
     print("简化版导入测试")
     print("=" * 70)
 
-    # Neo4j 配置
-    neo4j_uri = "neo4j+s://26fa83e0.databases.neo4j.io"
-    neo4j_user = "neo4j"
-    neo4j_password = "kJ0iZG0ys9euMz_6rQle5f6-ibVqHtLDzLCgr42wZe4"
-    neo4j_database = "neo4j"
+    # 配置读取：环境变量 > .env.local > .env > 默认值
+    load_env_vars({"REPO_URL", "REPO_COMMIT_ID"})
 
     # Git 配置
     # repo_url = "http://git.timevale.cn:8081/infra-frame/epaas-gateway.git"
     # branch = "master"
 
-    repo_url = "http://git.timevale.cn:8081/infra-frame/epaas-gateway.git"
-    commit_id = "bedabddf3d8c6f9d3da1562aeca66f2fac9fbeb0"
+    repo_url = os.getenv("REPO_URL", "http://example.git")
+    commit_id = os.getenv("REPO_COMMIT_ID", "")
+    if not commit_id:
+        print("[ERROR] 未设置 REPO_COMMIT_ID（可写入 .env.local）")
+        return 1
 
     # 创建导入器
-    git_importer = GitToNeo4jImporter(neo4j_uri, neo4j_user, neo4j_password, neo4j_database)
+    # Neo4j 配置读取优先级：环境变量 > .env.local > .env > 默认值
+    # 为避免测试脚本占位符覆盖真实配置，这里不再传入连接参数。
+    git_importer = GitToNeo4jImporter()
 
     if not git_importer.connect():
         print("[ERROR] 无法连接到 Neo4j")

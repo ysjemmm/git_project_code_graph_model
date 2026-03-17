@@ -1,4 +1,4 @@
-﻿
+
 import json
 import os
 from datetime import datetime
@@ -11,10 +11,14 @@ class GitCacheManager:
     
     
     def __init__(self, cache_base_dir: str = ".cache/git_repos"):
-        
+        """
+        cache_base_dir: 仓库克隆根目录（如 .cache/git_repos）
+        merkle_trees / metadata 与 maven 同级，放在 cache 根目录（.cache）下
+        """
         self.cache_base_dir = cache_base_dir
-        self.merkle_cache_dir = os.path.join(cache_base_dir, "merkle_trees")
-        self.metadata_dir = os.path.join(cache_base_dir, "metadata")
+        cache_root = os.path.dirname(cache_base_dir.rstrip(os.sep)) or "."
+        self.merkle_cache_dir = os.path.join(cache_root, "merkle_trees")
+        self.metadata_dir = os.path.join(cache_root, "metadata")
         
         # 创建缓存目录
         os.makedirs(self.merkle_cache_dir, exist_ok=True)

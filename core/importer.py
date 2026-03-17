@@ -2,13 +2,10 @@
 
 import os
 import sys
+import time
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from loraxmod import Parser
-
-from parser.languages.java.utils.analyzer_helper import AnalyzerHelper
-from parser.symbol_table_builder import SymbolTableBuilder
 from tools.constants import PROJECT_ROOT_PATH
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -16,20 +13,25 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from parser.utils.logger import get_logger
 from git.incremental_analyzer import GitIncrementalAnalyzer
 from storage.neo4j.connector import Neo4jConnector
-from storage.neo4j.exporter import Neo4jExporterAST
-from parser.languages.java.analyzers.ast_java_file_analyzer import JavaFileAnalyzer
-from parser.languages.java.utils.analyzer_context import AnalyzerContext
-from parser.common.symbol_table import SymbolTable
+from core.language_adapters import get_language_adapter
+from core.language_adapters.protocols import ContextualLanguageAdapter, LanguageAdapter
+from core.import_context import ProjectImportContext
+from core.import_result import ImportResult
+from core.env_loader import load_env_vars
+from core.graph_store import Neo4jGraphStore
+from core.project_ids import generate_project_symbol_id
 
 logger = get_logger("git_importer")
 
 class GitToNeo4jImporter:
     
     # 默认配置
+    # 仓库缓存目录固定为「项目根目录/.cache/git_repos」
     DEFAULT_CACHE_BASE_DIR = str(Path(PROJECT_ROOT_PATH / ".cache/git_repos"))
     DEFAULT_NEO4J_URI = "neo4j+s://26fa83e0.databases.neo4j.io"
     DEFAULT_NEO4J_USER = "neo4j"
-    DEFAULT_NEO4J_PASSWORD = "kJ0iZG0ys9euMz_6rQle5f6-ibVqHtLDzLCgr42wZe4"
+    # 安全：不要在代码中硬编码真实密码。请通过环境变量/secret 注入。
+    DEFAULT_NEO4J_PASSWORD = "password"
     DEFAULT_NEO4J_DATABASE = "neo4j"
     
     def __init__(self,
@@ -37,20 +39,27 @@ class GitToNeo4jImporter:
                  neo4j_user: str = None,
                  neo4j_password: str = None,
                  neo4j_database: str = None,
-                 cache_base_dir: str = None):
-        # 便捷配置：若环境变量未设置，尝试从项目根目录的 .env 读取（不引入额外依赖，不改变原有默认回退行为）
-        self._load_env_file_if_needed()
+                 cache_base_dir: str = None,
+                 language: str = "java",
+                 adapter: LanguageAdapter | None = None):
+        # 便捷配置：从 .env.local/.env 补齐缺失环境变量（不覆盖既有环境变量）
+        load_env_vars({"NEO4J_URI", "NEO4J_USER", "NEO4J_PASSWORD", "NEO4J_DATABASE"})
 
-        # 从参数/环境变量获取配置（保持原有行为：未配置时仍回退到默认值）
+        # 从参数/环境变量获取配置（未配置时仍回退到默认值）
         self.neo4j_uri = neo4j_uri or os.getenv('NEO4J_URI', self.DEFAULT_NEO4J_URI)
         self.neo4j_user = neo4j_user or os.getenv('NEO4J_USER', self.DEFAULT_NEO4J_USER)
         self.neo4j_password = neo4j_password or os.getenv('NEO4J_PASSWORD', self.DEFAULT_NEO4J_PASSWORD)
         self.neo4j_database = neo4j_database or os.getenv('NEO4J_DATABASE', self.DEFAULT_NEO4J_DATABASE)
-        self.cache_base_dir = cache_base_dir or os.getenv('GIT_CACHE_BASE_DIR', self.DEFAULT_CACHE_BASE_DIR)
+        # 仓库缓存目录统一为「项目根目录/.cache/git_repos」，不再受环境变量影响
+        self.cache_base_dir = cache_base_dir or self.DEFAULT_CACHE_BASE_DIR
 
         # 延后依赖 cache_base_dir 的初始化，避免在 _load_env_file_if_needed 中访问未赋值属性
         self.connector = None
         self.git_analyzer = GitIncrementalAnalyzer(self.cache_base_dir)
+        self.language = language
+        # adapter 可选：显式传入时作为默认单语言 adapter 使用
+        # 线上多语言场景建议不传 adapter，在 import_from_git() 按任务动态选择 language/languages
+        self.adapter: LanguageAdapter | None = adapter
 
         # 安全提示：当使用代码内置默认凭据时发出警告（不改变运行结果）
         if (not neo4j_uri) and (os.getenv('NEO4J_URI') is None) and self.neo4j_uri == self.DEFAULT_NEO4J_URI:
@@ -62,55 +71,6 @@ class GitToNeo4jImporter:
         if (not neo4j_database) and (os.getenv('NEO4J_DATABASE') is None) and self.neo4j_database == self.DEFAULT_NEO4J_DATABASE:
             logger.warning("NEO4J_DATABASE 未设置，正在使用代码默认值（建议使用环境变量覆盖）")
 
-    @staticmethod
-    def _parse_env_lines(lines: List[str]) -> Dict[str, str]:
-        env: Dict[str, str] = {}
-        for raw in lines:
-            line = raw.strip()
-            if not line or line.startswith("#"):
-                continue
-            if "=" not in line:
-                continue
-            key, value = line.split("=", 1)
-            key = key.strip()
-            value = value.strip().strip("'").strip('"')
-            if key:
-                env[key] = value
-        return env
-
-    def _load_env_file_if_needed(self) -> None:
-        """
-        从项目根目录读取 .env.local 和 .env，并仅在对应环境变量尚未设置时写入 os.environ。
-        读取优先级（高 -> 低）：
-        1) 系统环境变量
-        2) .env.local
-        3) .env
-        4) 代码默认值（在 __init__ 里回退）
-
-        规则：
-        - 不覆盖已存在的环境变量
-        - 只处理 KEY=VALUE 的简单格式（支持单/双引号包裹）
-        - 读取失败时忽略（不影响原有流程）
-        """
-        try:
-            # 注意：为了实现 .env.local 高于 .env 的优先级，需要先读取 .env.local
-            for filename in [".env.local", ".env"]:
-                env_path = PROJECT_ROOT_PATH / filename
-                if not env_path.exists():
-                    continue
-                content = env_path.read_text(encoding="utf-8")
-                parsed = self._parse_env_lines(content.splitlines())
-                if not parsed:
-                    continue
-
-                # 仅补齐缺失的环境变量，避免覆盖更高优先级来源（系统环境变量或更高优先级文件）
-                for k, v in parsed.items():
-                    if k and (k not in os.environ) and (v is not None):
-                        os.environ[k] = v
-        except Exception:
-            # 静默忽略，保持原有行为不变
-            return
-    
     def connect(self) -> bool:
         
         try:
@@ -135,22 +95,45 @@ class GitToNeo4jImporter:
                        repo_url: str,
                        branch: str = "master",
                        repo_name: Optional[str] = None,
+                       source_dir: Optional[str] = None,
                        java_source_dir: Optional[str] = None,
+                       language: Optional[str] = None,
+                       languages: Optional[List[str]] = None,
                        project_name: Optional[str] = None,
                        clear_database: bool = False,
+                       include_unchanged_total: bool = False,
+                       include_comment_nodes: bool = False,
                        async_mode: bool = False,
                        clone_timeout: Optional[int] = None,
                        git_config: Optional[Dict[str, str]] = None,
                        commit_id: Optional[str] = None) -> Dict:
+        # 兼容：历史参数 java_source_dir 仍然保留；如果两者都传，以 source_dir 为准
+        if source_dir is None:
+            source_dir = java_source_dir
+
+        # 兼容：language 选择
+        # - 显式传 adapter：视为单语言（忽略 language/languages）
+        # - 显式传 languages：按列表顺序逐个执行
+        # - 否则使用 language（若传）或实例默认 self.language
+        if self.adapter is not None:
+            resolved_languages: List[str] = []
+        elif languages:
+            resolved_languages = languages
+        else:
+            resolved_languages = [language or self.language]
         
         if async_mode:
             return self._import_async(
                 repo_url=repo_url,
                 branch=branch,
                 repo_name=repo_name,
-                java_source_dir=java_source_dir,
+                source_dir=source_dir,
+                language=language,
+                languages=languages,
                 project_name=project_name,
                 clear_database=clear_database,
+                include_unchanged_total=include_unchanged_total,
+                include_comment_nodes=include_comment_nodes,
                 commit_id=commit_id
             )
         else:
@@ -158,9 +141,13 @@ class GitToNeo4jImporter:
                 repo_url=repo_url,
                 branch=branch,
                 repo_name=repo_name,
-                java_source_dir=java_source_dir,
+                source_dir=source_dir,
+                language=language,
+                languages=languages,
                 project_name=project_name,
                 clear_database=clear_database,
+                include_unchanged_total=include_unchanged_total,
+                include_comment_nodes=include_comment_nodes,
                 clone_timeout=clone_timeout,
                 git_config=git_config,
                 commit_id=commit_id
@@ -170,9 +157,15 @@ class GitToNeo4jImporter:
                       repo_url: str,
                       branch: str = "master",
                       repo_name: Optional[str] = None,
-                      java_source_dir: Optional[str] = None,
+                      source_dir: Optional[str] = None,
+                      language: Optional[str] = None,
+                      languages: Optional[List[str]] = None,
                       project_name: Optional[str] = None,
                       clear_database: bool = False,
+                      include_unchanged_total: bool = False,
+                      include_comment_nodes: bool = False,
+                      clone_timeout: Optional[int] = None,
+                      git_config: Optional[Dict[str, str]] = None,
                       commit_id: Optional[str] = None) -> Dict:
         """异步导入(提交到任务队列)"""
         try:
@@ -200,10 +193,16 @@ class GitToNeo4jImporter:
                 repo_url=repo_url,
                 branch=branch,
                 repo_name=repo_name,
-                java_source_dir=java_source_dir,
+                java_source_dir=source_dir,
+                language=language,
+                languages=languages,
                 project_name=project_name,
                 clear_database=clear_database,
                 priority=TaskPriority.NORMAL,
+                include_unchanged_total=include_unchanged_total,
+                include_comment_nodes=include_comment_nodes,
+                clone_timeout=clone_timeout,
+                git_config=git_config,
                 commit_id=commit_id
             )
             
@@ -226,9 +225,13 @@ class GitToNeo4jImporter:
                     repo_url: str,
                     branch: str = "master",
                     repo_name: Optional[str] = None,
-                    java_source_dir: Optional[str] = None,
+                    source_dir: Optional[str] = None,
+                    language: Optional[str] = None,
+                    languages: Optional[List[str]] = None,
                     project_name: Optional[str] = None,
                     clear_database: bool = False,
+                    include_unchanged_total: bool = False,
+                    include_comment_nodes: bool = False,
                     clone_timeout: Optional[int] = None,
                     git_config: Optional[Dict[str, str]] = None,
                     commit_id: Optional[str] = None) -> Dict:
@@ -237,7 +240,8 @@ class GitToNeo4jImporter:
                 'success': False,
                 'error': '未连接到 Neo4j,请先调用connect()'
             }
-        
+
+        start_time = time.perf_counter()
         try:
             logger.info("\n" + "=" * 70)
             logger.info("Git 仓库导入工具")
@@ -263,18 +267,29 @@ class GitToNeo4jImporter:
                 logger.info(f"  分支: {branch}")
             logger.info(f"  仓库 {repo_name}")
             logger.info(f"  项目 {project_name}")
-            if java_source_dir:
-                logger.info(f"  Java 源代码目录 {java_source_dir}")
+            if source_dir:
+                logger.info(f"  源代码目录 {source_dir}")
             else:
-                logger.info(f"  Java 源代码目录 自动查找所有目录")
+                logger.info(f"  源代码目录 自动查找所有目录")
             
+            # 解析本次任务的 adapters（支持单语言或多语言列表）
+            if self.adapter is not None:
+                adapters: List[LanguageAdapter] = [self.adapter]
+                adapter_extensions = getattr(self.adapter, "source_extensions", [".java"])
+            else:
+                langs = languages or [language or self.language]
+                adapters = [get_language_adapter(lang) for lang in langs]
+                adapter_extensions = sorted({ext for ad in adapters for ext in getattr(ad, "source_extensions", [])} or [".java"])
+
             # 第一步:Git 增量分析
             logger.info(f"\n执行 Git 增量分析...")
             git_result = self.git_analyzer.analyze_git_repo(
                 repo_url=repo_url,
                 branch=branch,
                 repo_name=repo_name,
-                java_source_dir=java_source_dir,
+                source_dir=source_dir,
+                extensions=adapter_extensions,
+                include_unchanged_total=include_unchanged_total,
                 clone_timeout=clone_timeout,
                 git_config=git_config,
                 commit_id=commit_id
@@ -284,21 +299,28 @@ class GitToNeo4jImporter:
                 logger.info(f"[ERROR] Git 分析失败: {git_result.get('error', '未知错误')}")
                 return {
                     'success': False,
-                    'error': git_result.get('error', '未知错误')
+                    'error': git_result.get('error', '未知错误'),
+                    'duration_ms': int((time.perf_counter() - start_time) * 1000),
                 }
             
             logger.info(f"[OK] Git 分析成功")
             logger.info(f"  Commit: {git_result['commit_hash'][:8]}")
             logger.info(f"  变化文件 {len(git_result.get('changed_files', []))}")
+
+            # 项目根 symbol_id 只生成一次，用作 project_key（多仓库同名项目隔离）
+            root_project_symbol_id = generate_project_symbol_id(project_name, project_type="Application")
             
-            # 如果没有变化,直接返
+            # 如果没有变化,直接返回（不会提交任何写入到 Neo4j）
             if not git_result['has_changes']:
-                logger.info(f"\n[INFO] 代码未变化,无需重新分析")
+                logger.info(f"\n[INFO] 代码未变化,无需重新分析，也不会对 Neo4j 执行任何写入（attempted/created 均为 0）")
                 
                 # 但如果用户显式要求清理数据库，则仍然执行“按项目根节点清理子图”
                 if clear_database:
                     try:
-                        deleted_count = self.connector.delete_project_data(project_name)
+                        deleted_count = self.connector.delete_project_data(
+                            project_name,
+                            project_key=root_project_symbol_id,
+                        )
                         logger.info(f"[OK] 已清理项目子图: {project_name}，删除节点数: {deleted_count}")
                         return {
                             'success': True,
@@ -308,119 +330,125 @@ class GitToNeo4jImporter:
                             'project_name': project_name,
                             'commit_hash': git_result['commit_hash'],
                             'deleted_nodes': deleted_count,
+                            'duration_ms': int((time.perf_counter() - start_time) * 1000),
                         }
                     except Exception as e:
                         logger.warning(f"[WARN] 请求清理子图但执行失败: {e}")
 
-                return {
-                    'success': True,
-                    'status': 'cached',
-                    'message': '代码未变化,使用缓存结果',
-                    'repo_name': repo_name,
-                    'commit_hash': git_result['commit_hash']
-                }
+                ir = ImportResult(
+                    success=True,
+                    status="cached",
+                    message="代码未变化,使用缓存结果（本次未对 Neo4j 执行写入）",
+                    repo_name=repo_name,
+                    project_name=project_name,
+                    project_key=root_project_symbol_id,
+                    commit_hash=git_result["commit_hash"],
+                    duration_ms=int((time.perf_counter() - start_time) * 1000),
+                )
+                return ir.to_dict()
             
             # 第二步:获取仓库缓存目录
             repo_cache_dir = self.git_analyzer.cache_manager.get_repo_cache_dir(repo_name)
-            
-            # 如果没有指定 java_source_dir,自动查找所有Java 源代码目
-            if java_source_dir:
-                java_source_dirs = [java_source_dir]
-            else:
-                java_source_dirs = self._find_all_java_source_dirs(repo_cache_dir)
-                if not java_source_dirs:
-                    return {
-                        'success': False,
-                        'error': '未找到任何Java 源代码目录'
-                    }
-            
-            logger.info(f"\n找到 {len(java_source_dirs)} 个Java 源代码目录")
-            for dir_path in java_source_dirs:
-                logger.info(f"  - {dir_path}")
-            
-            # 第三步:扫描所有Java 文件
-            logger.info(f"\n扫描 Java 源代..")
-            all_java_files = []
-            for source_dir in java_source_dirs:
-                java_source_path = os.path.join(repo_cache_dir, source_dir.replace('/', os.sep))
-                java_files = self._find_java_files(java_source_path)
-                all_java_files.extend(java_files)
-                logger.info(f"  {source_dir}: {len(java_files)} 个文件")
-            
-            logger.info(f"[OK] 总共找到 {len(all_java_files)} 个Java 文件")
-            
-            if not all_java_files:
-                return {
-                    'success': False,
-                    'error': '未找到任何Java 文件'
-                }
-            
-            # 第四步:处理删除的文件
-            if git_result.get('deleted_files'):
-                logger.info(f"\n处理删除的文件..")
-                deleted_files = git_result['deleted_files']
-                logger.info(f"发现 {len(deleted_files)} 个删除的文件")
-                
-                for deleted_file in deleted_files:
-                    if deleted_file.endswith('.java'):
-                        logger.info(f"  删除文件相关节点: {deleted_file}")
-                        self.connector.delete_nodes_by_file(deleted_file, project_name)
-            
-            # 第五步:解析 AST
-            logger.info(f"\n解析 AST...")
-            ast_data_list = []
-            
-            # 需要获取第一个源代码目录作为基础路径
-            # first_source_dir = java_source_dirs[0]
-            # first_source_path = os.path.join(repo_cache_dir, first_source_dir.replace('/', os.sep))
-            
-            # 创建全局符号表
-            global_symbol_table = SymbolTable()
 
-            # 创建分析器上下文
-            context = AnalyzerContext(
+            ctx = ProjectImportContext(
                 project_name=project_name,
-                project_path=repo_cache_dir,
-                root_project_symbol_id=AnalyzerHelper.generate_symbol_id_for_project(project_name, project_type="Application"),
-                parser=Parser("java")
+                project_key=root_project_symbol_id,
+                repo_cache_dir=repo_cache_dir,
+                source_dir=source_dir,
+                language=language,
+                languages=languages,
+                clear_database=bool(clear_database),
+                include_comment_nodes=include_comment_nodes,
             )
+            store = Neo4jGraphStore(self.connector)
+
+            # 清理子图只做一次（多语言场景避免重复删除）
+            # 优先按 project_key/symbol_id 精确删除，避免多仓库同名项目误删串库
+            if ctx.clear_database:
+                deleted_count = store.delete_project_subgraph(ctx)
+                logger.info(f"[OK] 已清理项目子图: {ctx.project_name}，删除节点数: {deleted_count}")
+
+            total_created_nodes = 0
+            total_created_relationships = 0
+            total_attempted_nodes = 0
+            total_attempted_relationships = 0
+
+            # 逐语言执行解析与导出
+            for idx, adapter in enumerate(adapters):
+                # 如果没有指定 source_dir，则由 adapter 自动查找源码目录
+                source_dirs = adapter.find_source_dirs(ctx.repo_cache_dir, ctx.source_dir)
+                if not source_dirs:
+                    logger.warning(f"[WARN] 未找到任何源代码目录（adapter={adapter.__class__.__name__}），跳过")
+                    continue
+
+                logger.info(f"\n找到 {len(source_dirs)} 个源码目录（adapter={adapter.__class__.__name__}）")
+                for dir_path in source_dirs:
+                    logger.info(f"  - {dir_path}")
+
+                # 扫描源码文件
+                logger.info(f"\n扫描源码文件..（adapter={adapter.__class__.__name__}）")
+                source_files = adapter.find_source_files(ctx.repo_cache_dir, source_dirs)
+                logger.info(f"[OK] 总共找到 {len(source_files)} 个源码文件（adapter={adapter.__class__.__name__}）")
+
+                if not source_files:
+                    continue
+
+                # 处理删除的文件（仅对本 adapter 的源文件生效）
+                if git_result.get('deleted_files'):
+                    deleted_files = [f for f in git_result['deleted_files'] if adapter.is_source_file(f)]
+                    if deleted_files:
+                        logger.info(f"\n处理删除的文件..（adapter={adapter.__class__.__name__}）")
+                        logger.info(f"发现 {len(deleted_files)} 个删除的文件")
+                        for deleted_file in deleted_files:
+                            logger.info(f"  删除文件相关节点: {deleted_file}")
+                            store.delete_file_subgraph(ctx, deleted_file)
+
+                # 解析 AST
+                logger.info(f"\n解析 AST...（adapter={adapter.__class__.__name__}）")
+                if isinstance(adapter, ContextualLanguageAdapter):
+                    parse_result = adapter.parse_files_with_context(ctx, source_files)
+                else:
+                    parse_result = adapter.parse_files(
+                        ctx.repo_cache_dir,
+                        ctx.project_name,
+                        source_files,
+                        project_root_symbol_id=ctx.project_key,
+                    )
+                logger.info(f"[OK] 成功解析 {len(parse_result.ast_data_list)}/{len(source_files)} 个文件（adapter={adapter.__class__.__name__}）")
+
+                # 导出到Neo4j（多语言场景此处不再传 clear_database，避免重复删子图）
+                logger.info(f"\n导出到Neo4j...（adapter={adapter.__class__.__name__}）")
+                if isinstance(adapter, ContextualLanguageAdapter):
+                    export_result = adapter.export_to_store_with_context(
+                        ctx=ctx,
+                        store=store,
+                        ast_data_list=parse_result.ast_data_list,
+                        symbol_table=parse_result.symbol_table,
+                        clear_database=False,
+                    )
+                else:
+                    export_result = adapter.export_to_neo4j(
+                        connector=self.connector,
+                        project_name=ctx.project_name,
+                        project_root_symbol_id=ctx.project_key,
+                        repo_path=ctx.repo_cache_dir,
+                        ast_data_list=parse_result.ast_data_list,
+                        symbol_table=parse_result.symbol_table,
+                        clear_database=False,
+                    )
+
+                if not export_result.get("success"):
+                    export_result["duration_ms"] = int((time.perf_counter() - start_time) * 1000)
+                    return export_result
+
+                total_created_nodes += int(export_result.get("created_nodes", 0))
+                total_created_relationships += int(export_result.get("created_relationships", 0))
+                total_attempted_nodes += int(export_result.get("attempted_nodes", 0))
+                total_attempted_relationships += int(export_result.get("attempted_relationships", 0))
             
-            # 顺序解析 AST
-            for i, java_file in enumerate(all_java_files):
-                try:
-                    ast_data = self._parse_java_file(java_file, context, global_symbol_table)
-                    if ast_data is not None:
-                        ast_data_list.append(ast_data)
-                except Exception as e:
-                    logger.warning(f"[WARN] 文件 {java_file} 解析失败: {e}")
-            
-            logger.info(f"[OK] 成功解析 {len(ast_data_list)}/{len(all_java_files)} 个文件")
-            
-            # 第六步:注册关系
-            logger.info(f"\n注册关系...【待定，先不做】")
-            # TODO 待定
-            # builder = SymbolTableBuilder(symbol_table=global_symbol_table)
-            # for java_file_structure in ast_data_list:
-            #     builder.current_file = java_file_structure.file_path
-            #     builder.register_all_method_calls(java_file_structure)
-            #     builder.register_all_field_accesses(java_file_structure)
-            
-            # 第七步:导出到Neo4j
-            logger.info(f"\n导出到Neo4j...")
-            exporter = Neo4jExporterAST(self.connector, project_name, context.root_project_symbol_id, repo_cache_dir)
-            result = exporter.export_from_ast_data(
-                ast_data_list,
-                clear_database,
-                [global_symbol_table]
-            )
-            
-            if result['success']:
-                logger.info(f"[OK] 导出成功")
-                logger.info(f"  - 节点 {result['created_nodes']}")
-                logger.info(f"  - 关系 {result['created_relationships']}")
-            else:
-                logger.info(f"[ERROR] 导出失败: {result.get('error', '未知错误')}")
-                return result
+            logger.info(f"[OK] 导出成功（汇总）")
+            logger.info(f"  - 本次提交写入条目（attempted）: 节点 {total_attempted_nodes}，关系 {total_attempted_relationships}")
+            logger.info(f"  - 本次新建（created）: 节点 {total_created_nodes}，关系 {total_created_relationships}")
             
             # 第八步:获取统计信息
             stats = self.connector.get_statistics()
@@ -437,111 +465,41 @@ class GitToNeo4jImporter:
             logger.info("导入完成")
             logger.info("=" * 70)
             
-            return {
-                'success': True,
-                'repo_name': repo_name,
-                'branch': branch,
-                'commit_hash': git_result['commit_hash'],
-                'nodes_count': result['created_nodes'],
-                'relationships_count': result['created_relationships'],
-                'statistics': stats
-            }
+            ir = ImportResult(
+                success=True,
+                status="imported",
+                message="导入完成",
+                repo_name=repo_name,
+                branch=branch,
+                project_name=project_name,
+                project_key=root_project_symbol_id,
+                commit_hash=git_result["commit_hash"],
+                attempted_nodes=total_attempted_nodes,
+                attempted_relationships=total_attempted_relationships,
+                created_nodes=total_created_nodes,
+                created_relationships=total_created_relationships,
+                statistics=stats,
+                duration_ms=int((time.perf_counter() - start_time) * 1000),
+            )
+            return ir.to_dict()
         
         except Exception as e:
             logger.info(f"[ERROR] 导入过程异常: {e}")
             import traceback
             logger.exception("Exception occurred")
-            return {
-                'success': False,
-                'error': str(e)
-            }
-    
-    def _find_java_files(self, directory_path: str) -> List[str]:
-        
-        java_files = []
-        for root, dirs, files in os.walk(directory_path):
-            for file in files:
-                if file.endswith('.java'):
-                    java_files.append(os.path.join(root, file))
-        return sorted(java_files)
-    
-    def _find_all_java_source_dirs(self, repo_path: str) -> List[str]:
-        """
-        智能查找所有 Java 源代码目录
-        支持多种结构:
-        - src/main/java (Maven 标准)
-        - src/test/java (Maven 测试)
-        - src/java (简单结构)
-        """
-        found_dirs = set()
-        
-        for root, dirs, files in os.walk(repo_path):
-            # 检查是否是 Maven 标准结构: src/main/java 或 src/test/java
-            if 'src' in dirs:
-                src_path = os.path.join(root, 'src')
-                for src_subdir in os.listdir(src_path):
-                    src_subdir_path = os.path.join(src_path, src_subdir)
-                    if os.path.isdir(src_subdir_path) and 'java' in os.listdir(src_subdir_path):
-                        java_path = os.path.join(src_subdir_path, 'java')
-                        # 检查是否有 Java 文件
-                        has_java_files = False
-                        for r, d, f in os.walk(java_path):
-                            if any(file.endswith('.java') for file in f):
-                                has_java_files = True
-                                break
-                        
-                        if has_java_files:
-                            rel_path = os.path.relpath(java_path, repo_path)
-                            found_dirs.add(rel_path)
-            
-            # 检查是否是简单结构: 直接的 java 目录
-            elif 'java' in dirs:
-                java_path = os.path.join(root, 'java')
-                # 检查是否有 Java 文件
-                has_java_files = False
-                for r, d, f in os.walk(java_path):
-                    if any(file.endswith('.java') for file in f):
-                        has_java_files = True
-                        break
-                
-                if has_java_files:
-                    rel_path = os.path.relpath(java_path, repo_path)
-                    found_dirs.add(rel_path)
-        
-        java_source_dirs = sorted(list(found_dirs))
-        return java_source_dirs
-    
-    def _parse_java_file(self, java_file_path: str, context: AnalyzerContext, global_symbol_table=None):
-        """解析单个Java文件"""
-        try:
-            # 使用全局符号表或创建新的
-            if global_symbol_table is None:
-                symbol_table = SymbolTable()
-            else:
-                symbol_table = global_symbol_table
-            
-            # 设置当前文件路径到 context（用于生成 symbol_id）
-            # 计算相对于项目根目录的路径
-            try:
-                relative_path = os.path.relpath(java_file_path, context.project_path)
-                context.file_path = relative_path.replace(os.sep, '/')  # 统一使用 / 分隔符
-            except ValueError:
-                # 如果无法计算相对路径，使用文件名
-                context.file_path = os.path.basename(java_file_path)
-            
-            analyzer = JavaFileAnalyzer(
-                context=context,
-                symbol_table=symbol_table,
-                auto_resolve_types=True,
-                file_path=java_file_path
+            ir = ImportResult(
+                success=False,
+                status="failed",
+                message=str(e),
+                repo_name=repo_name,
+                project_name=project_name,
+                project_key=root_project_symbol_id,
+                commit_hash=git_result.get("commit_hash") if git_result else None,
+                duration_ms=int((time.perf_counter() - start_time) * 1000),
             )
-            return analyzer.analyze_file()
-
-        except Exception as e:
-            logger.info(f"[ERROR] 解析 {java_file_path} 失败: {e}")
-            import traceback
-            logger.error(traceback.format_exc())
-            return None
+            return ir.to_dict()
+    
+    # 语言相关的源码发现/解析/导出逻辑已下沉到 adapter（例如 JavaLanguageAdapter）
     
     def disconnect(self):
         
