@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 
 from typing import List, Dict
 
@@ -88,11 +88,14 @@ class IncrementalNeo4jCleaner:
     
     def _find_symbols_by_file(self, file_path: str) -> List[str]:
         """查找文件中的所有符"""
-        result = self.connector.execute_query(f'''
-        MATCH (n)
-        WHERE n.file_path = "{file_path}"
-        RETURN n.symbol_id as symbol_id
-        ''')
+        result = self.connector.execute_query(
+            """
+            MATCH (n)
+            WHERE n.file_path = $file_path
+            RETURN n.symbol_id as symbol_id
+            """,
+            {"file_path": file_path},
+        )
         
         return [record['symbol_id'] for record in result if record['symbol_id']]
     
@@ -101,30 +104,30 @@ class IncrementalNeo4jCleaner:
         if not symbol_ids:
             return 0, 0
         
-        deleted_nodes = 0
-        deleted_relationships = 0
-        
-        for symbol_id in symbol_ids:
-            # 删除与该符号相关的所有关
-            result = self.connector.execute_query(f'''
-            MATCH (n {{symbol_id: "{symbol_id}"}})-[r]-()
+        # 批量删除关系（UNWIND）
+        rel_result = self.connector.execute_write_query(
+            """
+            UNWIND $ids AS id
+            MATCH (n {symbol_id: id})-[r]-()
             DELETE r
             RETURN count(r) as count
-            ''')
-            
-            if result:
-                deleted_relationships += result[0]['count']
-            
-            # 删除该符号节
-            result = self.connector.execute_query(f'''
-            MATCH (n {{symbol_id: "{symbol_id}"}})
+            """,
+            {"ids": symbol_ids},
+        )
+        deleted_relationships = rel_result[0]["count"] if rel_result else 0
+
+        # 批量删除节点（UNWIND）
+        node_result = self.connector.execute_write_query(
+            """
+            UNWIND $ids AS id
+            MATCH (n {symbol_id: id})
             DELETE n
             RETURN count(n) as count
-            ''')
-            
-            if result:
-                deleted_nodes += result[0]['count']
-        
+            """,
+            {"ids": symbol_ids},
+        )
+        deleted_nodes = node_result[0]["count"] if node_result else 0
+
         return deleted_nodes, deleted_relationships
     
     def _delete_javafile_node(self, file_path: str) -> tuple:
@@ -132,20 +135,26 @@ class IncrementalNeo4jCleaner:
         java_file_id = f"file#{file_path}"
         
         # 删除JAVAFILE 节点相关的所有关
-        result = self.connector.execute_query(f'''
-        MATCH (n {{symbol_id: "{java_file_id}"}})-[r]-()
-        DELETE r
-        RETURN count(r) as count
-        ''')
+        result = self.connector.execute_write_query(
+            """
+            MATCH (n {symbol_id: $sid})-[r]-()
+            DELETE r
+            RETURN count(r) as count
+            """,
+            {"sid": java_file_id},
+        )
         
         deleted_relationships = result[0]['count'] if result else 0
         
         # 删除 JAVAFILE 节点
-        result = self.connector.execute_query(f'''
-        MATCH (n {{symbol_id: "{java_file_id}"}})
-        DELETE n
-        RETURN count(n) as count
-        ''')
+        result = self.connector.execute_write_query(
+            """
+            MATCH (n {symbol_id: $sid})
+            DELETE n
+            RETURN count(n) as count
+            """,
+            {"sid": java_file_id},
+        )
         
         deleted_nodes = result[0]['count'] if result else 0
         
@@ -156,22 +165,30 @@ class IncrementalNeo4jCleaner:
         print("[清理] 删除孤立的关..")
         
         # 查找指向不存在节点的关系
-        result = self.connector.execute_query('''
-        MATCH (a)-[r]->(b)
-        WHERE NOT EXISTS((b))
-        DELETE r
-        RETURN count(r) as count
-        ''')
+        result = self.connector.execute_write_query(
+            """
+            // Neo4j 中关系必须有起点/终点，理论上不会存在“孤立关系”。
+            // 这里保留兼容清理逻辑，但用 Neo4j 5 更推荐的 OPTIONAL MATCH + IS NULL 写法。
+            OPTIONAL MATCH ()-[r]->(b)
+            WITH r, b
+            WHERE r IS NOT NULL AND b IS NULL
+            DELETE r
+            RETURN count(r) as count
+            """
+        )
         
         deleted_count = result[0]['count'] if result else 0
         
         # 查找来自不存在节点的关系
-        result = self.connector.execute_query('''
-        MATCH (a)-[r]->(b)
-        WHERE NOT EXISTS((a))
-        DELETE r
-        RETURN count(r) as count
-        ''')
+        result = self.connector.execute_write_query(
+            """
+            OPTIONAL MATCH (a)-[r]->()
+            WITH a, r
+            WHERE r IS NOT NULL AND a IS NULL
+            DELETE r
+            RETURN count(r) as count
+            """
+        )
         
         deleted_count += result[0]['count'] if result else 0
         
@@ -218,7 +235,7 @@ class IncrementalNeo4jCleaner:
 class IncrementalExportManager:
     
     
-    def __init__(self, neo4j_connector: Neo4jConnector, code_graph_builder, cache_dir: str = ".kiro"):
+    def __init__(self, neo4j_connector: Neo4jConnector, code_graph_builder, cache_dir: str = ".cache/incremental"):
         
         self.connector = neo4j_connector
         self.builder = code_graph_builder
@@ -305,9 +322,43 @@ class IncrementalExportManager:
         
         nodes_count = 0
         relationships_count = 0
+
+        def _batch_create_nodes(label: str, nodes: List[dict], batch_size: int = 5000) -> int:
+            if not nodes:
+                return 0
+            created = 0
+            query = f"""
+            UNWIND $nodes AS node
+            MERGE (n:{label} {{symbol_id: node.symbol_id}})
+            SET n += node
+            RETURN count(n) as created_count
+            """
+            for i in range(0, len(nodes), batch_size):
+                batch = nodes[i:i + batch_size]
+                self.connector.execute_write_query(query, {"nodes": batch})
+                created += len(batch)
+            return created
+
+        def _batch_create_relationships(rel_type: str, rels: List[dict], batch_size: int = 5000) -> int:
+            if not rels:
+                return 0
+            created = 0
+            query = f"""
+            UNWIND $rels AS rel
+            MATCH (a {{symbol_id: rel.s}})
+            MATCH (b {{symbol_id: rel.t}})
+            MERGE (a)-[:{rel_type}]->(b)
+            RETURN count(*) as created_count
+            """
+            for i in range(0, len(rels), batch_size):
+                batch = rels[i:i + batch_size]
+                self.connector.execute_write_query(query, {"rels": batch})
+                created += len(batch)
+            return created
         
         # 1. 导出符号节点
         print("  [导出] 创建符号节点...")
+        nodes_by_label: Dict[str, List[dict]] = {}
         for symbol_id, symbol in self.builder.symbol_table.symbols.items():
             if symbol.file_path not in file_paths:
                 continue
@@ -354,18 +405,17 @@ class IncrementalExportManager:
             elif symbol.symbol_type == SymbolType.PARAMETER:
                 if symbol.type_name:
                     props["type_name"] = symbol.type_name
-            
-            # 创建节点
+            nodes_by_label.setdefault(label, []).append(props)
+
+        for label, nodes in nodes_by_label.items():
             try:
-                prop_str = ", ".join([f"{k}: ${k}" for k in props.keys()])
-                query = f"CREATE (n:{label} {{{prop_str}}})"
-                self.connector.execute_query(query, props)
-                nodes_count += 1
+                nodes_count += _batch_create_nodes(label, nodes)
             except Exception as e:
-                print(f"    警告: 创建节点失败 {symbol_id}: {e}")
+                print(f"    警告: 批量创建节点失败 {label}: {e}")
         
         # 2. 导出 JAVAFILE 节点
         print("  [导出] 创建 JAVAFILE 节点...")
+        javafile_nodes: List[dict] = []
         for file_path in file_paths:
             java_file_id = f"file#{file_path}"
             
@@ -386,8 +436,8 @@ class IncrementalExportManager:
                     types.append(symbol.name)
             
             # 创建 JAVAFILE 节点
-            try:
-                props = {
+            javafile_nodes.append(
+                {
                     "symbol_id": java_file_id,
                     "file_path": file_path,
                     "package_name": package_name,
@@ -398,17 +448,18 @@ class IncrementalExportManager:
                     "end_line": 0,
                     "end_col": 0,
                 }
-                
-                prop_str = ", ".join([f"{k}: ${k}" for k in props.keys()])
-                query = f"CREATE (n:JAVAFILE {{{prop_str}}})"
-                self.connector.execute_query(query, props)
-                nodes_count += 1
-            except Exception as e:
-                print(f"    警告: 创建 JAVAFILE 节点失败 {file_path}: {e}")
+            )
+
+        try:
+            nodes_count += _batch_create_nodes("JAVAFILE", javafile_nodes)
+        except Exception as e:
+            print(f"    警告: 批量创建 JAVAFILE 节点失败: {e}")
         
         # 3. 导出关系
         print("  [导出] 创建关系...")
-        
+
+        rels_by_type: Dict[str, List[dict]] = {}
+
         # 成员属于关系
         for edge in self.builder.symbol_table.membership_edges:
             source_symbol = self.builder.symbol_table.lookup_by_id(edge.source_symbol)
@@ -419,13 +470,7 @@ class IncrementalExportManager:
             
             if source_symbol.file_path not in file_paths and target_symbol.file_path not in file_paths:
                 continue
-            
-            try:
-                query = f"MATCH (a {{symbol_id: $s}}) MATCH (b {{symbol_id: $t}}) CREATE (a)-[:MEMBER_OF]->(b)"
-                self.connector.execute_query(query, {"s": edge.source_symbol, "t": edge.target_symbol})
-                relationships_count += 1
-            except Exception as e:
-                pass
+            rels_by_type.setdefault("MEMBER_OF", []).append({"s": edge.source_symbol, "t": edge.target_symbol})
         
         # JAVAFILE 包含关系
         for symbol_id, symbol in self.builder.symbol_table.symbols.items():
@@ -434,12 +479,7 @@ class IncrementalExportManager:
             
             if symbol.symbol_type in {SymbolType.CLASS, SymbolType.INTERFACE, SymbolType.RECORD, SymbolType.ENUM, SymbolType.ANNOTATION}:
                 java_file_id = f"file#{symbol.file_path}"
-                try:
-                    query = f"MATCH (a {{symbol_id: $s}}) MATCH (b {{symbol_id: $t}}) CREATE (a)-[:CONTAINS]->(b)"
-                    self.connector.execute_query(query, {"s": java_file_id, "t": symbol_id})
-                    relationships_count += 1
-                except Exception as e:
-                    pass
+                rels_by_type.setdefault("CONTAINS", []).append({"s": java_file_id, "t": symbol_id})
         
         # 继承关系
         for edge in self.builder.symbol_table.inheritance_edges:
@@ -453,12 +493,7 @@ class IncrementalExportManager:
                 continue
             
             rel_type = "EXTENDS" if edge.is_extension else "IMPLEMENTS"
-            try:
-                query = f"MATCH (a {{symbol_id: $s}}) MATCH (b {{symbol_id: $t}}) CREATE (a)-[:{rel_type}]->(b)"
-                self.connector.execute_query(query, {"s": edge.source_symbol, "t": edge.target_symbol})
-                relationships_count += 1
-            except Exception as e:
-                pass
+            rels_by_type.setdefault(rel_type, []).append({"s": edge.source_symbol, "t": edge.target_symbol})
         
         # 方法调用关系
         for edge in self.builder.symbol_table.call_edges:
@@ -470,13 +505,7 @@ class IncrementalExportManager:
             
             if source_symbol.file_path not in file_paths and target_symbol.file_path not in file_paths:
                 continue
-            
-            try:
-                query = f"MATCH (a {{symbol_id: $s}}) MATCH (b {{symbol_id: $t}}) CREATE (a)-[:CALLS]->(b)"
-                self.connector.execute_query(query, {"s": edge.source_symbol, "t": edge.target_symbol})
-                relationships_count += 1
-            except Exception as e:
-                pass
+            rels_by_type.setdefault("CALLS", []).append({"s": edge.source_symbol, "t": edge.target_symbol})
         
         # 字段访问关系
         for edge in self.builder.symbol_table.access_edges:
@@ -490,12 +519,13 @@ class IncrementalExportManager:
                 continue
             
             rel_type = "ACCESSES_WRITE" if edge.is_write else "ACCESSES_READ"
+            rels_by_type.setdefault(rel_type, []).append({"s": edge.source_symbol, "t": edge.target_symbol})
+
+        for rel_type, rels in rels_by_type.items():
             try:
-                query = f"MATCH (a {{symbol_id: $s}}) MATCH (b {{symbol_id: $t}}) CREATE (a)-[:{rel_type}]->(b)"
-                self.connector.execute_query(query, {"s": edge.source_symbol, "t": edge.target_symbol})
-                relationships_count += 1
+                relationships_count += _batch_create_relationships(rel_type, rels)
             except Exception as e:
-                pass
+                print(f"    警告: 批量创建关系失败 {rel_type}: {e}")
         
         return {
             'nodes_count': nodes_count,

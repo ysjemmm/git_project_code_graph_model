@@ -104,7 +104,7 @@
 ### 前置要求
 
 - Python 3.8+
-- Neo4j 5.x（可选，用于图数据库导出）
+- Neo4j 5.x（可选，用于图数据库导出；本文档与内置 Cypher 示例默认以 Neo4j 5.x 语法为准）
 - Java 8+（用于分析 Java 项目）
 
 ### 安装
@@ -146,6 +146,42 @@ python scripts/query_project_db.py
 # 导出 AST 到 Neo4j
 python scripts/simple_import.py
 ```
+
+### 导入结果与统计字段
+
+`GitToNeo4jImporter.import_from_git(...)`、测试脚本 `tests/simple_import.py` 和内部导入流程，会统一返回/打印一份导入结果结构（内部使用 `ImportResult`，对外是一个 `dict`）：
+
+- **基本字段**
+  - `success`：导入是否成功（`True/False`）
+  - `status`：导入状态，取值之一：
+    - `cached`：代码未变化，本次未对 Neo4j 执行写入（只使用缓存或仅清理子图）
+    - `cleared`：仅清理了项目子图，未重新导入
+    - `imported`：本次执行了正常导入/写入
+    - `failed`：导入过程中发生异常
+  - `message`：人类可读的提示信息
+- **Git / 项目信息**
+  - `repo_name`：仓库名
+  - `branch`：分支名
+  - `project_name`：项目名称（人类可读）
+  - `project_key`：项目唯一键（推荐使用 Application 根 `Project.symbol_id`）
+  - `commit_hash`：本次导入的 commit
+- **写入统计（重要）**
+  - `attempted_nodes` / `attempted_relationships`：
+    - 本次提交给 Neo4j 执行写入的条目数（经 `GraphBatch` 去重之后）
+    - 即使因为 MERGE 命中已有数据不会新增，这个数字也会反映“本次导入触达了多少节点/关系”
+  - `created_nodes` / `created_relationships`：
+    - 本次 MERGE 实际**新建**的数量
+    - 当重复导入同一份数据（同 `project_key + symbol_id`）时，这两个值可能为 0
+- **兼容别名（历史字段）**
+  - `nodes_count`、`relationships_count`：等同于 `created_nodes / created_relationships`
+  - `added_nodes`、`added_relationships`：等同于 `created_nodes / created_relationships`
+- **数据库统计**
+  - `statistics`：当前 Neo4j 内全库统计（节点总数、关系总数、各类型分布等），由 `connector.get_statistics()` 填充
+
+**推荐理解方式：**
+
+- 想看“本次导入处理了多少数据” → 看 `attempted_nodes / attempted_relationships`
+- 想看“本次导入真正新增了多少” → 看 `created_nodes / created_relationships`（或 `added_nodes / added_relationships`）
 
 ## 📚 项目结构
 
@@ -576,29 +612,40 @@ class CommentStorageConfig:
 
 ## 📝 更新日志
 
-### v2.1.0 (2026-03-09)
-- ✅ **项目节点 Symbol ID 优化** - Symbol ID 包含项目类型和版本信息
-- ✅ **项目类型区分** - Application 和 Lib 类型项目完全独立
-- ✅ **关系优化** - Application 项目使用 HAVE 关系，Lib 项目使用 CONTAINS_LIB 关系
-- ✅ **外部类链接** - 支持外部定义链接到内部实现（LIB_LINK 关系）
-- ✅ **批量链接优化** - 使用批量查询优化外部类链接性能
-
-### v2.0.0 (2026-03-05)
-- ✅ **符号解析系统** - 完整的类来源解析（内部/外部/未知）
-- ✅ **SQLite 索引数据库** - JAR 类和项目类的快速索引
-- ✅ **嵌套类解析** - 支持任意深度的嵌套类（A.B.C 格式）
-- ✅ **Symbol ID 追踪** - 完整的符号 ID 层级结构
-- ✅ **单例模式** - SymbolManager 每个项目单例
-- ✅ **增量扫描** - 基于文件修改时间的增量更新
-- ✅ **UPSERT 支持** - 使用 INSERT OR REPLACE 实现数据更新
-- ✅ **完整文档** - 添加数据流、UPSERT 行为等文档
-
-### v1.0.0 (2026-03-02)
-- ✅ 完整的 Java AST 解析
-- ✅ 嵌套类型支持
-- ✅ 智能注释存储（方案A）
-- ✅ Neo4j 导出
-- ✅ 增量分析支持
+### v1.0.0
+- **核心能力**
+  - 完整的 Java AST 解析
+  - 嵌套类型支持（A.B.C）
+  - 智能注释存储（方案A）
+  - Neo4j 导出
+  - 增量分析支持
+- **符号与项目建模**
+  - 项目节点 Symbol ID 优化：Symbol ID 包含项目类型与版本信息
+  - 项目类型区分：Application 与 Lib 类型项目独立
+  - 关系优化：Application 项目使用 HAVE 关系，Lib 项目使用 CONTAINS_LIB 关系
+  - 外部类链接：支持外部定义链接到内部实现（LIB_LINK 关系）
+  - 批量链接优化：使用批量查询优化外部类链接性能
+  - 符号解析系统：完整的类来源解析（内部/外部/未知/JDK）
+  - SQLite 索引数据库：JAR 类与项目类的快速索引
+  - SymbolManager 单例模式：每个项目单例
+  - 新增项目唯一键 `project_key`：推荐使用 Application 项目的根 `Project.symbol_id`，写入所有业务节点，用于多仓库同名项目的精确隔离
+  - 删除子图、删除单个文件子图、外部类 LIB_LINK 链接等操作，统一优先按 `project_key` 精确过滤，`belong_project` 仅作为兜底，保证“同名不同仓库”不会串项目
+- **工程与数据一致性**
+  - 增量扫描：支持增量更新（包含 Merkle 树对比）
+  - Git 增量分析修复：Merkle 树对比由“按文件名”改为“按相对路径”，避免同名文件冲突
+  - UPSERT 支持：使用 INSERT OR REPLACE 实现数据更新
+  - 完整文档：补充数据流、UPSERT 行为等说明
+  - 导入结果结构化：新增 `ImportResult`（包括 `status/attempted_*/created_*` 等字段），对外仍以 dict 形式返回并兼容历史字段
+- **配置与安全**
+  - Neo4j / Git 配置读取优先级：环境变量 > `.env.local` > `.env` > 代码默认值
+  - 提供 `.env.example` 示例文件（推荐复制为 `.env.local`）
+  - 语言适配器选择：`GitToNeo4jImporter(language=...)` 当前支持 `java`，并支持别名 `jvm-java/java8/java11/java17`
+  - `clear_database=True` 改为按 `Project(name=..., project_type='Application')` 删除项目子图，避免清空整库
+  - 当代码无变化且 `clear_database=True` 时，仅清理子图直接返回，不重复导入
+  - 外部类链接工具脚本 `scripts/link_external_classes.py` 去除明文 Neo4j 凭据，统一从环境变量 / `.env.local` / `.env` 读取连接配置
+- **Windows 控制台输出**
+  - 为 CLI/测试脚本提供 `core.console_utf8.setup_console_utf8()`，在当前进程内尽量使用 UTF‑8 控制台编码（不修改系统全局设置）
+  - 测试脚本去除 emoji 字符，避免 GBK 控制台编码错误
 
 ## 📚 相关文档
 

@@ -1,14 +1,19 @@
-﻿"""
+"""
 Neo4j 数据库连接器
 支持连接到 Neo4j 云数据库并执行 Cypher 查询
 内置连接池管理，避免重复创建连接
 """
 
 import logging
+import re
+import hashlib
 from threading import Lock
 from typing import Dict, List, Optional
 
 from neo4j import GraphDatabase, Driver
+from neo4j.exceptions import ServiceUnavailable, SessionExpired, Neo4jError
+
+from storage.neo4j.java_modules import JavaGraphEdgeType
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +36,10 @@ class Neo4jConnectorPool:
     def get_driver(cls, uri: str, username: str, password: str) -> Driver:
         """获取或创建连接池驱动"""
         pool = cls()
-        key = f"{uri}:{username}"
+        # 注意：连接池 key 必须包含凭据指纹，否则密码轮换/多凭据场景会错误复用旧 driver。
+        # 不保存明文密码，只使用不可逆的短 hash 作为区分。
+        pwd_fp = hashlib.sha256((password or "").encode("utf-8")).hexdigest()[:12]
+        key = f"{uri}:{username}:{pwd_fp}"
         
         if key not in pool._drivers:
             with cls._lock:
@@ -98,8 +106,28 @@ class Neo4jConnector:
             logger.info(f"成功连接到 Neo4j: {self.uri}")
             return True
         
+        except ServiceUnavailable as e:
+            logger.error(f"连接失败（服务不可用/网络异常）: {e}")
+            self.connected = False
+            return False
+        except OSError as e:
+            logger.error(f"连接失败（网络/套接字错误）: {e}")
+            self.connected = False
+            return False
+        except Neo4jError as e:
+            # Neo4jError 会覆盖认证失败、数据库不存在、语句错误等
+            code = getattr(e, "code", None)
+            msg = str(e)
+            if code and "Security" in code:
+                logger.error(f"连接失败（认证/权限问题）[{code}]: {msg}")
+            elif code and "Database" in code:
+                logger.error(f"连接失败（数据库名称可能不存在）[{code}]: {msg}")
+            else:
+                logger.error(f"连接失败（Neo4j 错误）[{code or 'unknown_code'}]: {msg}")
+            self.connected = False
+            return False
         except Exception as e:
-            logger.error(f"连接失败: {e}")
+            logger.error(f"连接失败（未知错误）: {e}")
             self.connected = False
             return False
     
@@ -108,34 +136,85 @@ class Neo4jConnector:
         self.connected = False
         logger.info("已断开连接（连接池保持活跃）")
     
+    def execute_read_query(self, query: str, parameters: Optional[Dict] = None) -> List[Dict]:
+        """在读事务中执行 Cypher 查询（推荐用于所有只读查询）。"""
+        if not self.connected:
+            logger.error("未连接到数据库")
+            return []
+
+        def _run() -> List[Dict]:
+            with self.driver.session(database=self.database) as session:
+                def _tx_run(tx):
+                    result = tx.run(query, parameters or {})
+                    records = [dict(record) for record in result]
+                    if records:
+                        logger.debug(f"查询成功，返回 {len(records)} 条记录")
+                    return records
+
+                return session.execute_read(_tx_run)
+
+        try:
+            return _run()
+        except (ServiceUnavailable, SessionExpired, Neo4jError, OSError) as e:
+            # 连接抖动/会话失效：尝试重连并重试一次
+            logger.warning(f"查询失败（将重试一次）: {e}")
+            try:
+                self.connected = False
+                if not self.connect():
+                    return []
+                return _run()
+            except Exception as e2:
+                logger.error(f"查询重试失败: {e2}")
+                return []
+        except Exception as e:
+            logger.error(f"查询失败: {e}")
+            return []
+
     def execute_query(self, query: str, parameters: Optional[Dict] = None) -> List[Dict]:
-        """执行 Cypher 查询
-        
-        Args:
-            query: Cypher 查询语句
-            parameters: 查询参数字典（可选）
-        
-        Returns:
-            查询结果列表
+        """
+        兼容方法：历史代码中大量使用 execute_query 执行只读查询。
+        新代码建议使用 execute_read_query / execute_write_query 区分读写语义。
+        """
+        return self.execute_read_query(query, parameters)
+
+    def execute_write_query(self, query: str, parameters: Optional[Dict] = None) -> List[Dict]:
+        """
+        在写事务中执行 Cypher（用于批量写入/关系创建等）。
+
+        说明：
+        - 使用 session.execute_write 以符合 Neo4j 官方推荐写法
+        - 连接抖动/会话失效时，重连并重试一次（与 execute_query 策略一致）
         """
         if not self.connected:
             logger.error("未连接到数据库")
             return []
-        
-        try:
+
+        def _run() -> List[Dict]:
             with self.driver.session(database=self.database) as session:
-                result = session.run(query, parameters or {})
-                records = [dict(record) for record in result]
-                if records:
-                    logger.info(f"查询成功，返回 {len(records)} 条记录")
-                return records
-        
+                def _tx_run(tx):
+                    result = tx.run(query, parameters or {})
+                    return [dict(record) for record in result]
+
+                return session.execute_write(_tx_run)
+
+        try:
+            return _run()
+        except (ServiceUnavailable, SessionExpired, Neo4jError, OSError) as e:
+            logger.warning(f"写入失败（将重试一次）: {e}")
+            try:
+                self.connected = False
+                if not self.connect():
+                    return []
+                return _run()
+            except Exception as e2:
+                logger.error(f"写入重试失败: {e2}")
+                return []
         except Exception as e:
-            logger.error(f"查询失败: {e}")
+            logger.error(f"写入失败: {e}")
             return []
     
     def create_node(self, label: str, properties: Dict) -> bool:
-        """创建节点
+        """创建节点（不推荐：优先使用批量 UNWIND/MERGE 写入）
         
         Args:
             label: 节点标签
@@ -148,25 +227,21 @@ class Neo4jConnector:
             logger.error("未连接到数据库")
             return False
         
+        # Neo4j 无法参数化 label，只能做“白名单/正则校验 + 拼接”
+        if not isinstance(label, str) or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", label):
+            logger.error(f"非法节点 label: {label}")
+            return False
+
         try:
-            prop_strs = []
-            for key, value in properties.items():
-                if isinstance(value, str):
-                    prop_strs.append(f"{key}: '{value}'")
-                elif isinstance(value, bool):
-                    prop_strs.append(f"{key}: {str(value).lower()}")
-                else:
-                    prop_strs.append(f"{key}: {value}")
-            
-            props_str = ", ".join(prop_strs)
-            query = f"CREATE (n:{label} {{{props_str}}})"
-            
-            with self.driver.session(database=self.database) as session:
-                session.run(query)
-            
-            logger.info(f"创建节点成功: {label}")
-            return True
-        
+            query = f"""
+            CREATE (n:{label})
+            SET n += $props
+            RETURN count(n) as created
+            """.strip()
+            result = self.execute_write_query(query, {"props": properties or {}})
+            created = int(result[0].get("created", 0)) if result else 0
+            logger.info(f"创建节点成功: {label}（{created}）")
+            return created > 0
         except Exception as e:
             logger.error(f"创建节点失败: {e}")
             return False
@@ -176,7 +251,7 @@ class Neo4jConnector:
                           target_id: str, 
                           rel_type: str,
                           properties: Optional[Dict] = None) -> bool:
-        """创建关系
+        """创建关系（不推荐：优先使用批量 UNWIND/MERGE 写入）
         
         Args:
             source_id: 源节点 ID
@@ -191,28 +266,26 @@ class Neo4jConnector:
             logger.error("未连接到数据库")
             return False
         
+        # Neo4j 无法参数化 rel_type，只能做“白名单/正则校验 + 拼接”
+        if not isinstance(rel_type, str) or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", rel_type):
+            logger.error(f"非法关系类型 rel_type: {rel_type}")
+            return False
+
         try:
-            props_str = ""
-            if properties:
-                prop_strs = []
-                for key, value in properties.items():
-                    if isinstance(value, str):
-                        prop_strs.append(f"{key}: '{value}'")
-                    elif isinstance(value, bool):
-                        prop_strs.append(f"{key}: {str(value).lower()}")
-                    else:
-                        prop_strs.append(f"{key}: {value}")
-                props_str = f" {{{', '.join(prop_strs)}}}"
-            
-            query = (f"MATCH (a {{id: '{source_id}'}}), (b {{id: '{target_id}'}}) "
-                    f"CREATE (a)-[:{rel_type}{props_str}]->(b)")
-            
-            with self.driver.session(database=self.database) as session:
-                session.run(query)
-            
-            logger.info(f"创建关系成功: {rel_type}")
-            return True
-        
+            query = f"""
+            MATCH (a {{symbol_id: $source_id}})
+            MATCH (b {{symbol_id: $target_id}})
+            MERGE (a)-[r:{rel_type}]->(b)
+            SET r += $props
+            RETURN count(r) as created
+            """.strip()
+            result = self.execute_write_query(
+                query,
+                {"source_id": source_id, "target_id": target_id, "props": properties or {}},
+            )
+            created = int(result[0].get("created", 0)) if result else 0
+            logger.info(f"创建关系成功: {rel_type}（{created}）")
+            return created > 0
         except Exception as e:
             logger.error(f"创建关系失败: {e}")
             return False
@@ -234,6 +307,80 @@ class Neo4jConnector:
             logger.error(f"清空数据库失败: {e}")
             return False
     
+    def delete_project_data(self, project_name: str, project_key: Optional[str] = None) -> int:
+        """删除指定项目的子图
+
+        以 Project 节点作为根：
+        - 优先使用 project_key（建议传 Project 根 symbol_id）精确匹配
+        - 否则回退到标签为 Project、name = project_name、project_type = 'Application' 的项目根节点匹配
+        - 删除与这些项目节点存在路径关系的所有节点（子图）
+        - 为降低误删风险，路径只允许经过本项目定义的“结构关系”类型（HAVE/CONTAINS/MEMBER_OF/...）
+        - 避免通过全局属性直接批量删除，降低误删风险
+        """
+        if not self.connected:
+            logger.error("未连接到数据库")
+            return 0
+        
+        # 允许所有在 JavaGraphEdgeType 中声明的关系类型参与项目子图删除
+        allowed_rel_types = [edge_type.value for edge_type in JavaGraphEdgeType]
+        query = """
+        // 找到作为根的 Application 类型项目节点
+        // 优先按 symbol_id 精确匹配（适用于多仓库同名项目场景），否则回退到 name 匹配
+        MATCH (p:Project {project_type: 'Application'})
+        WHERE ($project_key IS NOT NULL AND $project_key <> "" AND p.symbol_id = $project_key)
+           OR (($project_key IS NULL OR $project_key = "") AND p.name = $project_name)
+        WITH collect(p) AS roots
+        WHERE size(roots) > 0
+
+        // 收集与这些项目节点在同一子图中的所有节点
+        // 注意：这里先做全路径展开，再用 ALL(...) 约束路径上的关系类型，避免跨项目意外连边导致误删
+        CALL (roots) {
+          WITH roots AS rlist
+          UNWIND rlist AS r
+          MATCH path = (r)-[*0..]-(n)
+          WHERE ALL(rel IN relationships(path) WHERE type(rel) IN $allowed_rel_types)
+          WITH collect(DISTINCT n) AS nodes
+          RETURN nodes
+        }
+
+        // 删除整个子图
+        WITH nodes
+        FOREACH (n IN nodes | DETACH DELETE n)
+        RETURN size(nodes) AS deleted_count
+        """
+
+        def _run() -> int:
+            with self.driver.session(database=self.database) as session:
+                result = session.run(
+                    query,
+                    {
+                        "project_name": project_name,
+                        "project_key": project_key,
+                        "allowed_rel_types": allowed_rel_types,
+                    },
+                ).single()
+                return result["deleted_count"] if result else 0
+
+        try:
+            deleted_count = _run()
+            logger.info(f"删除项目 {project_name} 相关 {deleted_count} 个节点")
+            return deleted_count
+        except (ServiceUnavailable, SessionExpired, Neo4jError, OSError) as e:
+            logger.warning(f"删除项目子图失败（将重试一次）: {e}")
+            try:
+                self.connected = False
+                if not self.connect():
+                    return 0
+                deleted_count = _run()
+                logger.info(f"删除项目 {project_name} 相关 {deleted_count} 个节点")
+                return deleted_count
+            except Exception as e2:
+                logger.error(f"删除项目子图重试失败: {e2}")
+                return 0
+        except Exception as e:
+            logger.error(f"删除项目子图失败: {e}")
+            return 0
+    
     def get_statistics(self) -> Dict[str, int]:
         """获取数据库统计信息
         
@@ -244,7 +391,7 @@ class Neo4jConnector:
             logger.error("未连接到数据库")
             return {}
         
-        try:
+        def _run() -> Dict[str, int]:
             with self.driver.session(database=self.database) as session:
                 node_count = session.run("MATCH (n) RETURN count(n) as count").single()["count"]
                 rel_count = session.run("MATCH ()-[r]->() RETURN count(r) as count").single()["count"]
@@ -254,17 +401,29 @@ class Neo4jConnector:
                 rel_types = session.run(
                     "MATCH ()-[r]->() RETURN type(r) as type, count(*) as count"
                 ).data()
-            
+
             stats = {
                 "total_nodes": node_count,
                 "total_relationships": rel_count,
                 "node_types": {item["label"]: item["count"] for item in node_types},
-                "relationship_types": {item["type"]: item["count"] for item in rel_types}
+                "relationship_types": {item["type"]: item["count"] for item in rel_types},
             }
-            
-            logger.info(f"获取统计信息成功")
+
+            logger.info("获取统计信息成功")
             return stats
-        
+
+        try:
+            return _run()
+        except (ServiceUnavailable, SessionExpired, Neo4jError, OSError) as e:
+            logger.warning(f"获取统计信息失败（将重试一次）: {e}")
+            try:
+                self.connected = False
+                if not self.connect():
+                    return {}
+                return _run()
+            except Exception as e2:
+                logger.error(f"获取统计信息重试失败: {e2}")
+                return {}
         except Exception as e:
             logger.error(f"获取统计信息失败: {e}")
             return {}
@@ -291,12 +450,13 @@ class Neo4jConnector:
             logger.error(f"CSV 导入失败: {e}")
             return False
     
-    def delete_nodes_by_file(self, file_path: str, project_name: str) -> int:
+    def delete_nodes_by_file(self, file_path: str, project_name: str, project_key: Optional[str] = None) -> int:
         """删除特定文件相关的所有节点及其关系
         
         Args:
             file_path: Java 文件路径
             project_name: 项目名称
+            project_key: 项目唯一键（建议传 Project 根 symbol_id）；优先用于精确匹配，避免同名项目误删
         
         Returns:
             删除的节点数
@@ -308,7 +468,9 @@ class Neo4jConnector:
         try:
             with self.driver.session(database=self.database) as session:
                 query = """
-                MATCH (f:JavaFile {file_path: $file_path, belong_project: $project_name})
+                MATCH (f:JavaFile {file_path: $file_path})
+                WHERE ($project_key IS NOT NULL AND $project_key <> "" AND f.project_key = $project_key)
+                   OR (($project_key IS NULL OR $project_key = "") AND f.belong_project = $project_name)
                 OPTIONAL MATCH (f)-[r1:CONTAINS]->(obj:JavaObject)
                 OPTIONAL MATCH (obj)-[r2:MEMBER_OF]->(method:Method)
                 OPTIONAL MATCH (obj)-[r3:MEMBER_OF]->(field:Field)
@@ -327,7 +489,8 @@ class Neo4jConnector:
                 
                 result = session.run(query, {
                     "file_path": file_path,
-                    "project_name": project_name
+                    "project_name": project_name,
+                    "project_key": project_key,
                 }).single()
                 
                 deleted_count = result["deleted_count"] if result else 0

@@ -1,4 +1,4 @@
-﻿
+
 
 import hashlib
 import json
@@ -147,7 +147,7 @@ class SymbolTableCache:
 class IncrementalAnalyzer:
     """增量分析- 使用默克尔树进行高效的文件变化检"""
     
-    def __init__(self, cache_dir: str = ".kiro"):
+    def __init__(self, cache_dir: str = ".cache/incremental"):
         self.cache_dir = cache_dir
         self.file_tracker = FileChangeTracker(os.path.join(cache_dir, "file_cache.json"))
         self.symbol_cache = SymbolTableCache(os.path.join(cache_dir, "symbol_table_cache.json"))
@@ -245,7 +245,7 @@ class IncrementalAnalyzer:
 class IncrementalCodeGraphBuilder:
     """增量代码图谱构建立"""
     
-    def __init__(self, base_builder, cache_dir: str = ".kiro"):
+    def __init__(self, base_builder, cache_dir: str = ".cache/incremental"):
         
         self.base_builder = base_builder
         self.incremental_analyzer = IncrementalAnalyzer(cache_dir)

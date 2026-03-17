@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 """简化版导入测试：克隆仓库 -> 创建 Merkle Tree -> AST 解析 -> 导入 Neo4j"""
 
+import os
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from core.console_utf8 import setup_console_utf8
+from core.env_loader import load_env_vars
+
 
 def main():
+    setup_console_utf8()
     """简化版工作流：
     1. 克隆 Git 仓库
     2. 创建 Merkle Tree
@@ -20,18 +25,19 @@ def main():
     print("简化版导入测试")
     print("=" * 70)
 
-    # Neo4j 配置
-    neo4j_uri = "neo4j_uri"
-    neo4j_user = "neo4j"
-    neo4j_password = "neo4j_password"
-    neo4j_database = "neo4j"
+    # 先从 .env.local/.env 补充 REPO_URL / REPO_BRANCH / REPO_COMMIT_ID
+    load_env_vars({"REPO_URL", "REPO_BRANCH", "REPO_COMMIT_ID"})
 
-    
-    repo_url = "http://example"
-    branch = "master"
+    # Git 仓库配置：优先从环境变量/本地配置读取
+    # 若设置 REPO_COMMIT_ID 则按该 commit 拉取；否则按 REPO_BRANCH 拉取
+    repo_url = os.getenv("REPO_URL", "http://example")
+    branch = os.getenv("REPO_BRANCH", "master")
+    commit_id = os.getenv("REPO_COMMIT_ID", "").strip() or None
 
     # 创建导入器
-    git_importer = GitToNeo4jImporter(neo4j_uri, neo4j_user, neo4j_password, neo4j_database)
+    # Neo4j 配置读取优先级：环境变量 > .env.local > .env > 默认值
+    # 为了避免测试脚本中的占位符覆盖真实配置，这里不再传入连接参数。
+    git_importer = GitToNeo4jImporter()
 
     if not git_importer.connect():
         print("[ERROR] 无法连接到 Neo4j")
@@ -41,14 +47,18 @@ def main():
         # 步骤 1: 克隆仓库
         print("\n" + "=" * 70)
         print(f"步骤 1: 克隆仓库 {repo_url}")
-        print(f"分支: {branch}")
+        if commit_id:
+            print(f"Commit ID: {commit_id}")
+        else:
+            print(f"分支: {branch}")
         print("=" * 70)
 
         result = git_importer.import_from_git(
             repo_url=repo_url,
             branch=branch,
+            commit_id=commit_id,
             java_source_dir=None,
-            clear_database=True,  # 清空数据库
+            clear_database=False,  # 清空数据库
             async_mode=False
         )
 
@@ -61,9 +71,9 @@ def main():
         print("导入完成")
         print("=" * 70)
 
-        print(f"\n✅ 导入成功")
-        print(f"  - 新增节点: {result.get('added_nodes', 0)}")
-        print(f"  - 新增关系: {result.get('added_relationships', 0)}")
+        print("\n导入成功")
+        print(f"  - 本次提交写入条目（attempted）: 节点 {result.get('attempted_nodes', 0)}，关系 {result.get('attempted_relationships', 0)}")
+        print(f"  - 本次新建（created）: 节点 {result.get('added_nodes', 0)}，关系 {result.get('added_relationships', 0)}")
 
         # 步骤 3: 获取数据库统计
         print("\n" + "=" * 70)
@@ -86,7 +96,7 @@ def main():
                 print(f"  - {rel_type}: {count}")
 
         print("\n" + "=" * 70)
-        print("✅ 测试完成")
+        print("测试完成")
         print("=" * 70)
 
         return 0
@@ -97,3 +107,4 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+

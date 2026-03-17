@@ -131,6 +131,7 @@ class JARScanner:
             如果JAR损坏，记录警告并返回0
         """
         classes = []
+        class_count = 0
         jar_name = Path(jar_path).name  # 提取 JAR 文件名
         
         # 获取当前时间字符串
@@ -141,6 +142,8 @@ class JARScanner:
         pom_info = self._parse_pom_for_jar(jar_path)
         
         try:
+            # 将一次 JAR 扫描的写入合并到单次事务提交，降低 WAL 压力并提升吞吐
+            self.db.begin_transaction()
             with zipfile.ZipFile(jar_path, 'r') as jar:
                 # 提取所有 .class 文件
                 for file_info in jar.namelist():
@@ -171,31 +174,31 @@ class JARScanner:
                             artifact_version=pom_info.version if pom_info else None
                         )
                         classes.append(class_info)
+                        class_count += 1
                         
                         # 批量插入
                         if len(classes) >= self.batch_size:
-                            self.db.batch_insert_classes(classes)
+                            self.db.batch_insert_classes(classes, commit=False)
                             classes.clear()
             
             # 插入剩余的类
             if classes:
-                self.db.batch_insert_classes(classes)
+                self.db.batch_insert_classes(classes, commit=False)
+            self.db.commit()
             
             # 更新 JAR 元数据
-            total_count = len(classes) + (
-                (len(classes) // self.batch_size) * self.batch_size
-            )
-            
-            # 重新计算实际插入的类数量
-            actual_count = self._count_classes_in_jar(jar_path)
-            self.db.update_jar_metadata(jar_path, actual_count)
-            
-            return actual_count
+            # 直接使用扫描过程中统计的 class_count，避免每个 JAR 再回查 DB 做全量计数（性能地雷）
+            self.db.update_jar_metadata(jar_path, class_count)
+            return class_count
             
         except zipfile.BadZipFile:
             print(f"[警告] JAR 文件损坏: {jar_path}")
             return 0
         except Exception as e:
+            try:
+                self.db.rollback()
+            except Exception:
+                pass
             print(f"[错误] 扫描 JAR 文件失败 {jar_path}: {e}")
             raise
     
@@ -260,8 +263,13 @@ class JARScanner:
         返回:
             类数量
         """
-        classes = self.db.query_by_jar(jar_path, include_anonymous=True)
-        return len(classes)
+        # 避免全量拉取列表再 len（会非常慢且占用内存）。
+        # 保留接口用于兼容/调试，但建议不要在批量扫描主流程中调用。
+        try:
+            return int(self.db.count_by_jar_path(jar_path))
+        except Exception:
+            classes = self.db.query_by_jar(jar_path, include_anonymous=True)
+            return len(classes)
     
     def _parse_pom_for_jar(self, jar_path: str) -> Optional[PomInfo]:
         """

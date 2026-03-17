@@ -20,6 +20,12 @@ CREATE INDEX javaobject_link_lookup IF NOT EXISTS
 FOR (n:JavaObject)
 ON (n.from_type, n.qualified_name, n.belong_project);
 
+// 1.2.b 复合索引：from_type + qualified_name + project_key
+// 用于多仓库同名项目下基于 project_key 的精确外部类链接与统计
+CREATE INDEX javaobject_link_lookup_by_project_key IF NOT EXISTS
+FOR (n:JavaObject)
+ON (n.from_type, n.qualified_name, n.project_key);
+
 // 1.3 qualified_name 索引（用于类查找）
 CREATE INDEX javaobject_qualified_name IF NOT EXISTS
 FOR (n:JavaObject)
@@ -75,6 +81,12 @@ CREATE CONSTRAINT FOR (n:JavaFile) REQUIRE n.symbol_id IS UNIQUE;
 CREATE INDEX javafile_path_project IF NOT EXISTS
 FOR (n:JavaFile)
 ON (n.file_path, n.belong_project);
+
+// 3.2.b 复合索引：file_path + project_key
+// 配合 delete_nodes_by_file 中的 project_key 过滤，精确删除同名项目不同仓库的文件子图
+CREATE INDEX javafile_path_project_key IF NOT EXISTS
+FOR (n:JavaFile)
+ON (n.file_path, n.project_key);
 
 // 3.3 belong_project 索引
 CREATE INDEX javafile_belong_project IF NOT EXISTS

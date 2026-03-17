@@ -1,7 +1,7 @@
-﻿
+
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 
 
 class FileType(Enum):
@@ -82,6 +82,29 @@ class JavaNeo4jNodeType(Enum):
     JavaRecordComponent = "JavaRecordComponent"
     Comment = "Comment"
 
+
+# 关系类型 -> (source_label, target_label)，用于批量创建关系时带 label 的 MATCH，走 symbol_id 索引
+# 若未列出则退化为无 label 的 MATCH（兼容未知类型）
+REL_ENDPOINT_LABELS: Dict[str, Optional[Tuple[str, str]]] = {
+    JavaGraphEdgeType.HAVE.value: (JavaNeo4jNodeType.Project.value, JavaNeo4jNodeType.File.value),
+    JavaGraphEdgeType.CONTAINS.value: (JavaNeo4jNodeType.File.value, JavaNeo4jNodeType.JavaObject.value),
+    JavaGraphEdgeType.EXTENDS.value: (JavaNeo4jNodeType.JavaObject.value, JavaNeo4jNodeType.JavaObject.value),
+    JavaGraphEdgeType.IMPLEMENTS.value: (JavaNeo4jNodeType.JavaObject.value, JavaNeo4jNodeType.JavaObject.value),
+    JavaGraphEdgeType.CALLS.value: (JavaNeo4jNodeType.JavaMethod.value, JavaNeo4jNodeType.JavaMethod.value),
+    JavaGraphEdgeType.ACCESSES.value: (JavaNeo4jNodeType.JavaMethod.value, JavaNeo4jNodeType.JavaField.value),
+    JavaGraphEdgeType.HAS_COMMENT.value: (JavaNeo4jNodeType.JavaObject.value, JavaNeo4jNodeType.Comment.value),
+    JavaGraphEdgeType.CONTAINS_LIB.value: (JavaNeo4jNodeType.Project.value, JavaNeo4jNodeType.JavaObject.value),
+    JavaGraphEdgeType.LIB_LINK.value: (JavaNeo4jNodeType.JavaObject.value, JavaNeo4jNodeType.JavaObject.value),
+}
+
+# MEMBER_OF 的 source/target 可能为多种 label，用 OR 限制到已知类型，仍比无 label 快
+MEMBER_OF_SOURCE_LABELS = "source:JavaObject OR source:JavaMethod"
+MEMBER_OF_TARGET_LABELS = (
+    "target:JavaMethod OR target:JavaField OR target:JavaMethodParameter OR "
+    "target:JavaEnumConstant OR target:JavaCodeBlock"
+)
+
+
 class RelationshipProperty:
     """关系属性基类"""
     
@@ -139,6 +162,7 @@ class BaseNode:
     symbol_id: str = ""
     parent_symbol_id: str = None
     belong_project: Optional[str] = None # 节点所属的项目名称
+    project_key: Optional[str] = None  # 项目唯一键（建议使用 Application 项目根 symbol_id）
     version: str = ""
     
     def get_unique_key(self) -> Dict[str, Any]:

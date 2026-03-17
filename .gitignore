@@ -43,10 +43,13 @@ logs/
 *.log
 .env
 .env.local
+.env.local.*
 
 # Git repos cache
 .cache
 
-# Kiro IDE
+# Legacy incremental cache (do not commit)
 .kiro/
 real_test/
+neo4j_schema_documentation.json
+spy/

@@ -164,7 +164,7 @@ class JARClassDB:
         
         self.conn.commit()
     
-    def batch_insert_classes(self, classes: List[ClassInfo]) -> int:
+    def batch_insert_classes(self, classes: List[ClassInfo], commit: bool = True) -> int:
         """
         批量插入类信息
         
@@ -206,13 +206,33 @@ class JARClassDB:
             ])
             
             inserted_count = cursor.rowcount
-            self.conn.commit()
+            if commit:
+                self.conn.commit()
             
         except Exception as e:
             self.conn.rollback()
             raise Exception(f"批量插入失败: {e}")
         
         return inserted_count
+
+    def begin_transaction(self) -> None:
+        """显式开启事务（用于将多个 batch 合并到一次 commit）。"""
+        self.conn.execute("BEGIN")
+
+    def commit(self) -> None:
+        self.conn.commit()
+
+    def rollback(self) -> None:
+        self.conn.rollback()
+
+    def count_by_jar_path(self, jar_path: str) -> int:
+        """按 jar_path 统计类数量（COUNT(*)，避免全量拉取）。"""
+        cursor = self.conn.cursor()
+        row = cursor.execute(
+            "SELECT COUNT(*) as cnt FROM jar_classes WHERE jar_path = ?",
+            (jar_path,),
+        ).fetchone()
+        return int(row["cnt"] if row else 0)
     
     def _row_to_classinfo(self, row) -> ClassInfo:
         """将数据库行转换为 ClassInfo 对象"""

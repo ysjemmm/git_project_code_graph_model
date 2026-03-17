@@ -7,7 +7,7 @@
 - 类 A 作为项目源码导入时，创建 INNER_DEFINITION 节点
 - 链接器将这两个节点通过 LIB_LINK 关系连接起来
 """
-from typing import List, Dict
+from typing import List, Dict, Optional
 from storage.neo4j.connector import Neo4jConnector
 from storage.neo4j.java_modules import JavaGraphEdgeType
 from storage.neo4j.queries import Neo4jQueries
@@ -28,7 +28,7 @@ class ExternalClassLinker:
         """
         self.connector = connector
     
-    def link_all(self, dry_run: bool = False) -> Dict:
+    def link_all(self, dry_run: bool = False, sample_limit: int = 10) -> Dict:
         """
         链接所有外部定义到对应的内部定义
         
@@ -58,32 +58,44 @@ class ExternalClassLinker:
                 'success': True,
                 'matches_found': match_count,
                 'relationships_created': 0,
-                'dry_run': True
+                'dry_run': True,
+                'sample_limit': int(sample_limit),
             }
         else:
             # 实际创建关系
             query = Neo4jQueries.link_all_external_to_internal()
-            result = self.connector.execute_query(query)
+            result = self.connector.execute_write_query(query)
             record = next(iter(result), None)
-            created_count = record['created_count'] if record else 0
+            matched_count = int(record.get('matched_count', 0)) if record else 0
+            created_count = int(record.get('created_count', 0)) if record else 0
             
-            logger.info(f"[INFO] 创建了 {created_count} 个链接关系")
+            logger.info(f"[INFO] 匹配到 {matched_count} 对外部/内部定义，实际新建 {created_count} 条 LIB_LINK")
             
             return {
                 'success': True,
-                'matches_found': created_count,
+                'matches_found': matched_count,
                 'relationships_created': created_count,
-                'dry_run': False
+                'dry_run': False,
+                'matched_count': matched_count,
+                'created_count': created_count,
             }
     
-    def link_by_project(self, project_name: str, dry_run: bool = False) -> Dict:
+    def link_by_project(
+        self,
+        project_name: str,
+        project_key: str = "",
+        dry_run: bool = False,
+        sample_limit: int = 10,
+        include_sample: bool = True,
+    ) -> Dict:
         """
         链接指定项目的外部定义到内部定义
         
         适用场景：刚导入一个新项目后，只链接该项目相关的类
         
         参数:
-            project_name: 项目名称
+            project_name: 项目名称（兜底）
+            project_key: 项目唯一键（建议 Project 根 symbol_id）；优先用于精确过滤
             dry_run: 如果为 True，只统计不实际创建关系
         
         返回:
@@ -91,9 +103,21 @@ class ExternalClassLinker:
         """
         logger.info(f"[INFO] 链接项目 '{project_name}' 的外部类...")
         
+        sample: Optional[list[dict]] = None
+        if include_sample and sample_limit and int(sample_limit) > 0:
+            try:
+                sample_query = Neo4jQueries.sample_matches_by_project()
+                sample_rows = self.connector.execute_query(
+                    sample_query,
+                    {"project_name": project_name, "project_key": project_key, "limit": int(sample_limit)},
+                )
+                sample = [dict(r) for r in (sample_rows or [])]
+            except Exception:
+                sample = None
+
         if dry_run:
             query = Neo4jQueries.count_matches_by_project()
-            result = self.connector.execute_query(query, {'project_name': project_name})
+            result = self.connector.execute_query(query, {'project_name': project_name, 'project_key': project_key})
             record = next(iter(result), None)
             match_count = record['match_count'] if record else 0
             
@@ -102,20 +126,27 @@ class ExternalClassLinker:
                 'project_name': project_name,
                 'matches_found': match_count,
                 'relationships_created': 0,
-                'dry_run': True
+                'dry_run': True,
+                'sample_limit': int(sample_limit),
+                'sample': sample,
             }
         else:
             query = Neo4jQueries.link_external_to_internal_by_project()
-            result = self.connector.execute_query(query, {'project_name': project_name})
+            result = self.connector.execute_write_query(query, {'project_name': project_name, 'project_key': project_key})
             record = next(iter(result), None)
-            created_count = record['created_count'] if record else 0
+            matched_count = int(record.get('matched_count', 0)) if record else 0
+            created_count = int(record.get('created_count', 0)) if record else 0
             
             return {
                 'success': True,
                 'project_name': project_name,
-                'matches_found': created_count,
+                'matches_found': matched_count,
                 'relationships_created': created_count,
-                'dry_run': False
+                'dry_run': False,
+                'matched_count': matched_count,
+                'created_count': created_count,
+                'sample_limit': int(sample_limit),
+                'sample': sample,
             }
     
     def get_statistics(self) -> Dict:
