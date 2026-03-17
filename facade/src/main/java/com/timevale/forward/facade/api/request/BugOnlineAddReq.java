@@ -22,6 +22,7 @@ import java.util.List;
 public class BugOnlineAddReq extends ToString {
     @ApiModelProperty("标题")
     @NotBlank(message = "标题不能为空")
+    @Length(max = 100, message = "标题长度不能超过100")
     private String name;
 
     @ApiModelProperty("提出人:格式 花名-真名")
