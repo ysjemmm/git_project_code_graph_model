@@ -100,6 +100,7 @@ import com.timevale.forward.service.component.ProductDemandTrackEventComponent;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectLogComponent;
 import com.timevale.forward.service.component.ProjectProductDemandComponent;
+import com.timevale.forward.service.component.SqlOrderComponent;
 import com.timevale.forward.service.component.TaskProductDemandComponent;
 import com.timevale.forward.service.component.TrackEventComponent;
 import com.timevale.forward.service.component.impl.ProductDemandDescFlowComponent;
@@ -166,6 +167,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Resource
     private ProductDemandComponent productDemandComponent;
+
+    @Resource
+    private SqlOrderComponent sqlOrderComponent;
 
     @Resource
     private InnerUserPersonClient innerUserPersonClient;
@@ -328,7 +332,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
 
         // 分页查询
-        PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+        String collation = sqlOrderComponent.build(condition.getOrderFiled(), condition.getOrderCollation());
+        PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), collation);
         List<ProductDemandListDO> productDemandListDO = productDemandComponent.list(condition);
 
         PageQueryResult<ProductDemandVO> pageQueryResult = groupDuplicateUtil.getDemandVOQueryResultVO(productDemandListDO);

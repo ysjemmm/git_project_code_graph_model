@@ -61,7 +61,7 @@ import com.timevale.forward.model.enums.SeverityEnum;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.LabelComponent;
 import com.timevale.forward.service.component.ProductDemandComponent;
-import com.timevale.forward.service.constant.CommonConstant;
+import com.timevale.forward.service.component.SqlOrderComponent;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.BugOfflineCopier;
 import com.timevale.forward.service.copy.ProductDemandCopier;
@@ -130,6 +130,9 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
 
     @Resource
     private ProductDemandComponent productDemandComponent;
+
+    @Resource
+    private SqlOrderComponent sqlOrderComponent;
 
     @Resource
     private GroupDuplicateUtil groupDuplicateUtil;
@@ -1454,7 +1457,8 @@ public class DynamicGroupServiceImpl implements DynamicGroupService {
             }
         }
         // 分页查询
-        PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+        String collation = sqlOrderComponent.build(condition.getOrderFiled(), condition.getOrderCollation());
+        PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), collation);
 
         ProductDemandGroupQueryCondition groupCondition = ProductDemandGroupQueryCondition.builder()
                 .condition(condition)

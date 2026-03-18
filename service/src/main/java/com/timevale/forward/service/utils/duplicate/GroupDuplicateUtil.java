@@ -120,6 +120,9 @@ public class GroupDuplicateUtil {
 
     public boolean setOwnerIdByAscription(ProductDemandQueryList productDemandQueryList, String userId, ProductDemandListCondition condition, InnerUserPersonClient innerUserPersonClient) {
         if (AscriptionEnum.CURRENT_USER.name().equals(productDemandQueryList.getAscription())) {
+            if (condition.getOwnerIds() == null) {
+                condition.setOwnerIds(Lists.newArrayList());
+            }
             condition.getOwnerIds().add(userId);
         } else if (AscriptionEnum.TEAM.name().equals(productDemandQueryList.getAscription())) {
             List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userId, true);
