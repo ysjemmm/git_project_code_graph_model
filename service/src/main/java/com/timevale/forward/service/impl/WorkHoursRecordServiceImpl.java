@@ -942,11 +942,11 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             taskVO.setEstimateHours(taskUseTimeMap.getOrDefault(taskId, BigDecimal.ZERO));
 
             List<WorkHoursRecordDO> recordList = taskWorkRecordMap.getOrDefault(taskId, Collections.emptyList());
-            taskVO.setWorkHoursRecords(
-                    recordList.stream()
-                            .map(WorkHoursRecordCopier.INSTANCE::convert)
-                            .collect(Collectors.toList())
-            );
+            List<WorkHoursRecordVO> sortedWorkHoursRecords = recordList.stream()
+                    .map(WorkHoursRecordCopier.INSTANCE::convert)
+                    .sorted(this::compareWorkHoursRecordDesc)
+                    .collect(Collectors.toList());
+            taskVO.setWorkHoursRecords(sortedWorkHoursRecords);
             taskVO.setTotalHours(recordList.stream()
                     .map(WorkHoursRecordDO::getWorkHours)
                     .reduce(BigDecimal.ZERO, BigDecimal::add));
@@ -961,6 +961,7 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             workHoursTaskVOS.add(taskVO);
         }
 
+        workHoursTaskVOS.sort(this::compareWorkHoursTaskDesc);
         vo.setWorkHoursTasks(workHoursTaskVOS);
 
         List<String> notRegisteredDateList = workDays.stream()
@@ -997,9 +998,46 @@ public class WorkHoursRecordServiceImpl implements WorkHoursRecordService {
             }
         }
 
+        taskDateEmptyList.sort(Comparator.reverseOrder());
         vo.setUnregisteredDateList(taskDateEmptyList);
 
         return vo;
+    }
+
+    private int compareWorkHoursRecordDesc(WorkHoursRecordVO left, WorkHoursRecordVO right) {
+        int registrationCompare = Long.compare(getSortTime(right.getRegistrationDate()), getSortTime(left.getRegistrationDate()));
+        if (registrationCompare != 0) {
+            return registrationCompare;
+        }
+        int createCompare = Long.compare(getSortTime(right.getCreateDate()), getSortTime(left.getCreateDate()));
+        if (createCompare != 0) {
+            return createCompare;
+        }
+        return Long.compare(Optional.ofNullable(right.getId()).orElse(0L), Optional.ofNullable(left.getId()).orElse(0L));
+    }
+
+    private int compareWorkHoursTaskDesc(WorkHoursTaskVO left, WorkHoursTaskVO right) {
+        int latestRecordCompare = Long.compare(getLatestRegistrationTime(right), getLatestRegistrationTime(left));
+        if (latestRecordCompare != 0) {
+            return latestRecordCompare;
+        }
+        return Long.compare(Optional.ofNullable(right.getWorkItemId()).orElse(0L), Optional.ofNullable(left.getWorkItemId()).orElse(0L));
+    }
+
+    private long getLatestRegistrationTime(WorkHoursTaskVO task) {
+        return Optional.ofNullable(task.getWorkHoursRecords())
+                .filter(CollectionUtils::isNotEmpty)
+                .map(records -> records.stream()
+                        .map(WorkHoursRecordVO::getRegistrationDate)
+                        .filter(Objects::nonNull)
+                        .mapToLong(Date::getTime)
+                        .max()
+                        .orElse(0L))
+                .orElse(0L);
+    }
+
+    private long getSortTime(Date date) {
+        return Optional.ofNullable(date).map(Date::getTime).orElse(0L);
     }
 
     private PageQueryResult<WorkHoursOverviewVO> paginateResult(List<WorkHoursOverviewVO> workHoursOverviewVOList,
