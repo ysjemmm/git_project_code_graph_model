@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotNull;
 
@@ -32,5 +33,6 @@ public class BugOnlineNoRepairReq extends BaseReq {
     private Long linkBugId;
 
     @ApiModelProperty("临时解决方案")
+    @Length(max = 200, message = "临时解决方案长度不能超过200")
     private String temporarySolution;
 }

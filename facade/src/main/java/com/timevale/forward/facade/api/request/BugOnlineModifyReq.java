@@ -28,15 +28,19 @@ public class BugOnlineModifyReq extends ToString {
     private Integer dismissCause;
 
     @ApiModelProperty("问题原因")
+    @Length(max = 500, message = "问题原因长度不能超过500")
     private String problemReason;
 
     @ApiModelProperty("bug修复方案")
+    @Length(max = 200, message = "bug修复方案长度不能超过200")
     private String solveScheme;
 
     @ApiModelProperty("修复失败原因")
+    @Length(max = 200, message = "修复失败原因长度不能超过200")
     private String repairFailReason;
 
     @ApiModelProperty("重新打开原因")
+    @Length(max = 100, message = "重新打开原因长度不能超过100")
     private String openAgainReason;
 
     @ApiModelProperty("预计上线日期")
@@ -161,6 +165,7 @@ public class BugOnlineModifyReq extends ToString {
     private String customerGrade;
 
     @ApiModelProperty("用户临时解决方案")
+    @Length(max = 200, message = "用户临时解决方案长度不能超过200")
     private String temporarySolution;
 
     @ApiModelProperty("客户数: 1-单客户; 2-2家或2家以上客户")

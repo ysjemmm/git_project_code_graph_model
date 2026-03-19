@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotNull;
 
@@ -21,5 +22,6 @@ public class BugOnlineOpenAgainReq extends BaseReq {
 
     @ApiModelProperty("重新打开原因")
     @NotNull(message = "重新打开原因不能为空")
+    @Length(max = 100, message = "重新打开原因长度不能超过100")
     private String openAgainReason;
 }

@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotNull;
 
@@ -21,5 +22,6 @@ public class BugOnlineRepairFailedReasonReq extends BaseReq {
 
     @ApiModelProperty("修复失败原因")
     @NotNull(message = "修复失败原因不能为空")
+    @Length(max = 200, message = "修复失败原因长度不能超过200")
     private String repairFailReason;
 }

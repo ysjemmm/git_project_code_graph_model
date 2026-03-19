@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotNull;
 import java.util.Date;
@@ -30,10 +31,12 @@ public class BugOnlineStartRepairReq extends BaseReq {
 
     @ApiModelProperty("问题原因")
     @NotNull(message = "问题原因不能为空")
+    @Length(max = 500, message = "问题原因长度不能超过500")
     private String problemReason;
 
     @ApiModelProperty("bug修复方案")
     @NotNull(message = "bug修复方案不能为空")
+    @Length(max = 200, message = "bug修复方案长度不能超过200")
     private String solveScheme;
 
     @ApiModelProperty("预计上线日期")
@@ -44,6 +47,7 @@ public class BugOnlineStartRepairReq extends BaseReq {
     private Long bugOfflineId;
 
     @ApiModelProperty("用户临时解决方案")
+    @Length(max = 200, message = "用户临时解决方案长度不能超过200")
     private String temporarySolution;
 
     @ApiModelProperty("关联的线上bug id")
