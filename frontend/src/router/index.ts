@@ -23,6 +23,12 @@ export const routes = [
     component: () => import('../pages/ProjectMetaPage.vue'),
     meta: { title: '项目元数据' },
   },
+  {
+    path: '/second-party-rules',
+    name: 'second-party-rules',
+    component: () => import('../pages/SecondPartyRulesPage.vue'),
+    meta: { title: '二方包规则' },
+  },
 ] as const
 
 const router = createRouter({

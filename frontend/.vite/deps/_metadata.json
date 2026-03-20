@@ -1,0 +1,32 @@
+{
+  "hash": "4adf1acf",
+  "configHash": "65a5b938",
+  "lockfileHash": "6205916b",
+  "browserHash": "00474054",
+  "optimized": {
+    "ant-design-vue": {
+      "src": "../../node_modules/ant-design-vue/es/index.js",
+      "file": "ant-design-vue.js",
+      "fileHash": "ecb8e062",
+      "needsInterop": false
+    },
+    "vue-router": {
+      "src": "../../node_modules/vue-router/dist/vue-router.js",
+      "file": "vue-router.js",
+      "fileHash": "c6046676",
+      "needsInterop": false
+    },
+    "vue": {
+      "src": "../../node_modules/vue/dist/vue.runtime.esm-bundler.js",
+      "file": "vue.js",
+      "fileHash": "35829dc4",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "vue.runtime.esm-bundler-CKUwx75R": {
+      "file": "vue.runtime.esm-bundler-CKUwx75R.js",
+      "isDynamicEntry": false
+    }
+  }
+}

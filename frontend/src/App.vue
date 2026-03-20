@@ -7,6 +7,7 @@ import {
   DatabaseOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  ToolOutlined,
 } from '@ant-design/icons-vue'
 
 const collapsed = ref(false)
@@ -15,6 +16,7 @@ const route = useRoute()
 
 const selectedKeys = computed(() => {
   if (route.path.startsWith('/project-meta')) return ['project-meta']
+  if (route.path.startsWith('/second-party-rules')) return ['second-party-rules']
   if (route.path.startsWith('/graph')) return ['graph']
   if (route.path.startsWith('/bugfix')) return ['bugfix']
   return ['bugfix']
@@ -26,6 +28,7 @@ function go(key: string) {
     'bugfix': '/bugfix',
     'graph': '/graph',
     'project-meta': '/project-meta',
+    'second-party-rules': '/second-party-rules',
   }
   const target = map[k]
   if (target) void router.push(target)
@@ -73,6 +76,11 @@ watchEffect(() => {
           <a-menu-item key="project-meta">
             <template #icon><DatabaseOutlined /></template>
             <span>项目元数据</span>
+          </a-menu-item>
+
+          <a-menu-item key="second-party-rules">
+            <template #icon><ToolOutlined /></template>
+            <span>二方包规则</span>
           </a-menu-item>
         </a-menu>
 
