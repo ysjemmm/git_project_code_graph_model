@@ -1,0 +1,519 @@
+
+from parser.utils.logger import get_logger
+
+import os
+from typing import Dict, List, Optional, Tuple
+
+from git.manager import GitManager
+from storage.cache.git_cache import GitCacheManager
+from storage.cache.merkle_tree import MerkleTreeBuilder, MerkleTreeComparator
+
+logger = get_logger("git_incremental_analyzer")
+
+
+def _auto_detect_java_source_dir(repo_root: str) -> Optional[str]:
+    """
+    尝试在仓库内自动定位 Java 源码根目录（相对 repo_root 的路径）。
+    优先命中：
+    - src/main/java（根目录）
+    - 任意子模块 */src/main/java（最多向下 4 层）
+    - src（兜底：有些仓库把源码放在 src 直接下）
+    找不到则返回 None。
+    """
+    try:
+        # 1) 根目录优先
+        p = os.path.join(repo_root, "src", "main", "java")
+        if os.path.isdir(p):
+            return "src/main/java"
+
+        # 2) 常见多模块：扫描有限深度查找 */src/main/java
+        root_depth = repo_root.rstrip(os.sep).count(os.sep)
+        for cur, dirs, _ in os.walk(repo_root):
+            # 限制深度，避免全仓库遍历太慢
+            if cur.count(os.sep) - root_depth > 4:
+                dirs[:] = []
+                continue
+            # 快速匹配：当前目录下若存在 src/main/java
+            cand = os.path.join(cur, "src", "main", "java")
+            if os.path.isdir(cand):
+                rel = os.path.relpath(cand, repo_root).replace(os.sep, "/")
+                return rel
+            # 跳过一些明显无关目录
+            skip = {".git", "node_modules", "target", ".idea", ".mvn", ".cache"}
+            dirs[:] = [d for d in dirs if d not in skip]
+
+        # 3) 最后兜底：src
+        p2 = os.path.join(repo_root, "src")
+        if os.path.isdir(p2):
+            return "src"
+    except Exception:
+        return None
+    return None
+
+class GitIncrementalAnalyzer:
+    """Git 增量分析"""
+    
+    def __init__(self, cache_base_dir: str = ".cache/git_repos"):
+        
+        self.cache_manager = GitCacheManager(cache_base_dir)
+        self.merkle_builder = MerkleTreeBuilder()
+        self.merkle_comparator = MerkleTreeComparator()
+    
+    def analyze_git_repo(self,
+                         repo_url: str,
+                         branch: str = "master",
+                         repo_name: Optional[str] = None,
+                         source_dir: Optional[str] = "src/main/java",
+                         java_source_dir: Optional[str] = None,
+                         extensions: Optional[List[str]] = None,
+                         include_unchanged_total: bool = False,
+                         clone_timeout: Optional[int] = None,
+                         git_config: Optional[Dict[str, str]] = None,
+                         commit_id: Optional[str] = None,
+                         maven_scan_enabled: bool = True) -> Dict:
+        # 兼容：历史参数 java_source_dir 仍然保留；如果两者都传，以 source_dir 为准
+        if source_dir is None:
+            source_dir = java_source_dir
+        try:
+            # 提取仓库名称
+            if repo_name is None:
+                repo_name = repo_url.split('/')[-1].replace('.git', '')
+            # 仅透传开关：是否做 Maven 扫描由上层导入器决定（Git 增量分析阶段不执行 Maven 动作）
+            _ = bool(maven_scan_enabled)
+            
+            # 获取仓库缓存目录
+            repo_cache_dir = self.cache_manager.get_repo_cache_dir(repo_name)
+            
+            # 初始化Git 管理
+            git_manager = GitManager(repo_cache_dir)
+            
+            # 如果没有指定超时时间,动态计
+            if clone_timeout is None:
+                clone_timeout = GitManager.calculate_dynamic_timeout(repo_url)
+            
+            # 设置默认 git 配置(禁用CRLF 自动转换
+            default_git_config = {
+                'core.safecrlf': 'false',
+                'core.autocrlf': 'false'
+            }
+            # 合并用户提供的配置
+            if git_config:
+                default_git_config.update(git_config)
+            
+            # 获取commit(切换前)
+            source_commit = None
+            source_branch = None
+            if git_manager.is_repo_exists():
+                source_commit = git_manager.get_current_commit()
+                source_branch = git_manager.get_current_branch()
+            
+            # 第一步:克隆或拉取仓库
+            if not git_manager.is_repo_exists():
+                logger.info(f"[INFO] 首次克隆仓库: {repo_url}")
+                # 如果指定了 commit_id，使用完整克隆（不使用 shallow）
+                shallow = commit_id is None
+                success, msg = git_manager.clone(repo_url, branch, shallow=shallow, timeout=clone_timeout, git_config=default_git_config)
+                if not success:
+                    return {
+                        'success': False,
+                        'repo_name': repo_name,
+                        'repo_url': repo_url,
+                        'branch': branch,
+                        'error': msg
+                    }
+                
+                # 如果指定了 commit_id，切换到该 commit
+                if commit_id:
+                    logger.info(f"[INFO] 切换到指定 commit: {commit_id}")
+                    success, msg = git_manager.checkout(commit_id)
+                    if not success:
+                        return {
+                            'success': False,
+                            'repo_name': repo_name,
+                            'repo_url': repo_url,
+                            'commit_id': commit_id,
+                            'error': msg
+                        }
+            else:
+                logger.info(f"[INFO] 更新本地仓库: {repo_name}")
+                # fetch 获取最新的远程分支信息
+                success, msg = git_manager.fetch()
+                if not success:
+                    return {
+                        'success': False,
+                        'repo_name': repo_name,
+                        'repo_url': repo_url,
+                        'branch': branch,
+                        'error': msg
+                    }
+                
+                # 如果指定了 commit_id，直接切换到该 commit
+                if commit_id:
+                    logger.info(f"[INFO] 切换到指定 commit: {commit_id}")
+                    success, msg = git_manager.checkout(commit_id)
+                    if not success:
+                        return {
+                            'success': False,
+                            'repo_name': repo_name,
+                            'repo_url': repo_url,
+                            'commit_id': commit_id,
+                            'error': msg
+                        }
+                else:
+                    # 获取当前分支
+                    current_branch = git_manager.get_current_branch()
+                    
+                    # 如果目标分支与当前分支不同,需要切换分
+                    if current_branch != branch:
+                        logger.info(f"[INFO] 切换分支: {current_branch} -> {branch}")
+                        success, msg = git_manager.checkout(branch)
+                        if not success:
+                            return {
+                                'success': False,
+                                'repo_name': repo_name,
+                                'repo_url': repo_url,
+                                'branch': branch,
+                                'error': msg
+                            }
+                    
+                    # 执行 pull 更新代码
+                    success, msg = git_manager.pull(branch)
+                    if not success:
+                        return {
+                            'success': False,
+                            'repo_name': repo_name,
+                            'repo_url': repo_url,
+                            'branch': branch,
+                            'error': msg
+                        }
+            
+            # 第二步:获取当前 commit hash
+            current_commit = git_manager.get_current_commit()
+            if not current_commit:
+                return {
+                    'success': False,
+                    'repo_name': repo_name,
+                    'repo_url': repo_url,
+                    'branch': branch if not commit_id else None,
+                    'commit_id': commit_id,
+                    'error': "无法获取 commit hash"
+                }
+            
+            logger.info(f"[INFO] 当前 commit: {current_commit[:8]}")
+            
+            # 第三步:检查是否有代码变化
+            # 如果指定了 commit_id，使用 commit_id 作为缓存键；否则使用 branch
+            cache_key = commit_id if commit_id else branch
+            has_changes, reason = self.cache_manager.has_changes(repo_name, cache_key, current_commit)
+            logger.info(f"[INFO] {reason}")
+            
+            # 规范 source_dir 路径
+            if source_dir:
+                source_dir_normalized = source_dir.replace('/', os.sep)
+                java_source_path = os.path.join(repo_cache_dir, source_dir_normalized)
+            else:
+                # 如果没有指定 source_dir,使用仓库根目录
+                java_source_path = repo_cache_dir
+            
+            if not os.path.isdir(java_source_path):
+                # 自动探测（避免默认 src/main/java 不适配多模块/非标准结构导致直接失败）
+                detected = _auto_detect_java_source_dir(repo_cache_dir)
+                if detected:
+                    logger.warning(f"[WARN] Java 源代码目录不存在，已自动探测 source_dir={detected}")
+                    source_dir = detected
+                    java_source_path = os.path.join(repo_cache_dir, detected.replace("/", os.sep))
+                else:
+                    logger.warning(f"[WARN] Java 源代码目录不存在，回退到仓库根目录进行分析: {java_source_path}")
+                    source_dir = None
+                    java_source_path = repo_cache_dir
+            
+            # 第四步:构建 Merkle 树并对比
+            logger.info(f"[INFO] 构建 Merkle  {java_source_path}")
+            new_tree = self.merkle_builder.build(java_source_path, extensions=extensions or [".java"])
+            
+            # 加载旧的 Merkle 树(从源分支或同分支的旧版本
+            # 如果切换了分支,加载源分支的 Merkle 
+            # 如果没切换分支,加载同分支的旧版
+            # 如果指定了 commit_id，使用 commit_id 作为缓存键
+            cache_key = commit_id if commit_id else branch
+            if source_branch and source_branch != branch and not commit_id:
+                # 切换了分支,加载源分支的 Merkle 
+                old_tree = self.cache_manager.load_merkle_tree(repo_name, source_branch)
+            else:
+                # 没切换分支或首次克隆或使用 commit_id,加载对应的旧版本
+                old_tree = self.cache_manager.load_merkle_tree(repo_name, cache_key)
+            
+            # 对比 Merkle 树,找出变化的文
+            changed_files = []
+            deleted_files = []
+            added_files = []
+            total_files = 0
+            unchanged_files: List[str] = []
+            
+            if old_tree:
+                logger.info(f"[INFO] 对比 Merkle 树,检测变化文..")
+                logger.info(f"[DEBUG] 旧树哈希: {old_tree.hash[:16]}...")
+                logger.info(f"[DEBUG] 新树哈希: {new_tree.hash[:16]}...")
+                
+                # 收集两个树中的所有文件及其哈希
+                # 使用「相对于 Java 源码根目录的相对路径」作为 key，避免同名不同路径文件冲突
+                old_files_dict = {}  # {rel_path: (abs_path, hash)}
+                new_files_dict = {}  # {rel_path: (abs_path, hash)}
+                self._collect_all_files_with_hash(old_tree, old_files_dict, old_tree.path)
+                self._collect_all_files_with_hash(new_tree, new_files_dict, new_tree.path)
+                total_files = len(new_files_dict)
+                
+                # 新增文件
+                for name, (path, hash_val) in new_files_dict.items():
+                    if name not in old_files_dict:
+                        added_files.append(path)
+                
+                # 删除文件
+                for name, (path, hash_val) in old_files_dict.items():
+                    if name not in new_files_dict:
+                        deleted_files.append(path)
+                
+                # 变更文件(名称相同但哈希不同
+                for name in old_files_dict:
+                    if name in new_files_dict:
+                        old_path, old_hash = old_files_dict[name]
+                        new_path, new_hash = new_files_dict[name]
+                        # 比较文件内容哈希
+                        if old_hash != new_hash:
+                            changed_files.append(new_path)
+
+                if include_unchanged_total:
+                    changed_set = set(changed_files)
+                    added_set = set(added_files)
+                    deleted_set = set(deleted_files)
+                    unchanged_files = sorted(
+                        [
+                            path
+                            for (_rel, (path, _hash)) in new_files_dict.items()
+                            if (path not in changed_set)
+                            and (path not in added_set)
+                            and (path not in deleted_set)
+                        ]
+                    )
+                
+                # 打印详细的分支切换信
+                logger.info("")
+                logger.info("=" * 70)
+                if commit_id:
+                    logger.info("Commit 切换详情:")
+                else:
+                    logger.info("分支切换详情:")
+                logger.info("=" * 70)
+                
+                # 源信息
+                if source_commit and source_branch:
+                    logger.info(f"commit = {source_commit[:8]} ({source_branch})")
+                else:
+                    logger.info("commit = 首次克隆")
+                
+                # 目标信息
+                if commit_id:
+                    logger.info(f"目标 commit = {current_commit[:8]} (指定 commit)")
+                else:
+                    logger.info(f"目标 commit = {current_commit[:8]} ({branch})")
+                
+                # 文件变化统计
+                logger.info("")
+                logger.info("文件变化统计:")
+                
+                # 新增文件
+                logger.info(f"新增文件: {len(added_files)} ")
+                if added_files:
+                    for file in added_files:
+                        # 显示相对于仓库根目录的路
+                        rel_file = os.path.relpath(file, repo_cache_dir)
+                        logger.info(f"  + {rel_file}")
+                
+                # 变更文件
+                logger.info(f"变更文件: {len(changed_files)} ")
+                if changed_files:
+                    for file in changed_files:
+                        # 显示相对于仓库根目录的路
+                        rel_file = os.path.relpath(file, repo_cache_dir)
+                        logger.info(f"  ~ {rel_file}")
+                
+                # 删除文件
+                logger.info(f"删除文件: {len(deleted_files)} ")
+                if deleted_files:
+                    for file in deleted_files:
+                        # 显示相对于仓库根目录的路
+                        rel_file = os.path.relpath(file, repo_cache_dir)
+                        logger.info(f"  - {rel_file}")
+                
+                logger.info("=" * 70)
+                logger.info("")
+                
+                logger.info(f"[INFO] 发现 {len(added_files)} 个新增文件 {len(changed_files)} 个变更文件  {len(deleted_files)} 个删除文件")
+            else:
+                logger.info(f"[INFO] 首次分析")
+                added_files = self._collect_all_source_files(
+                    java_source_path,
+                    extensions=extensions or [".java"],
+                )
+                total_files = len(added_files)
+                
+                # 打印首次导入信息
+                logger.info("")
+                logger.info("=" * 70)
+                logger.info("首次导入信息:")
+                logger.info("=" * 70)
+                if commit_id:
+                    logger.info(f"Commit = {current_commit[:8]} (指定 commit)")
+                else:
+                    logger.info(f"分支 = {branch}")
+                    logger.info(f"Commit = {current_commit[:8]}")
+                logger.info(f"新增文件: {len(added_files)} ")
+                if added_files:
+                    for file in added_files:
+                        # 显示相对于仓库根目录的路
+                        rel_file = os.path.relpath(file, repo_cache_dir)
+                        logger.info(f"  + {rel_file}")
+                logger.info("=" * 70)
+                logger.info("")
+            
+            # 如果没有变化,直接返回缓存结
+            if not has_changes and not added_files and not changed_files and not deleted_files:
+                logger.info(f"[INFO] 代码未变化,无需重新分析")
+                return {
+                    'success': True,
+                    'repo_name': repo_name,
+                    'repo_url': repo_url,
+                    'branch': branch,
+                    'commit_hash': current_commit,
+                    'has_changes': False,
+                    'changed_files': [],
+                    'deleted_files': [],
+                    'analysis_result': {
+                        'status': 'cached',
+                        'message': '代码未变化,使用缓存结果'
+                    }
+                }
+            
+            # 第五步:保存 Merkle 树和元数
+            self.cache_manager.save_merkle_tree(repo_name, cache_key, new_tree)
+            self.cache_manager.update_metadata(repo_name, repo_url, cache_key, current_commit)
+            
+            # 第六步:组装增量分析结果（避免重复 walk/hash）
+            # 说明：本方法已通过 Merkle 树对比得到 changed/added/deleted 文件列表，
+            # 再调用 parser.incremental_analyzer 会造成重复 IO 与重复哈希计算。
+            analysis_result = {
+                "modified": sorted(changed_files),
+                "new": sorted(added_files),
+                "deleted": sorted(deleted_files),
+                # 兼容字段：这里不做二次全量扫描以计算 unchanged/total
+                "unchanged": unchanged_files,
+                "total": total_files,
+                "need_reanalysis": True,
+                "detection_method": "git_merkle_tree",
+            }
+            
+            return {
+                'success': True,
+                'repo_name': repo_name,
+                'repo_url': repo_url,
+                'branch': branch,
+                'commit_hash': current_commit,
+                'source_dir': source_dir,
+                'has_changes': True,
+                'changed_files': changed_files,
+                'added_files': added_files,
+                'deleted_files': deleted_files,
+                'analysis_result': analysis_result
+            }
+        
+        except Exception as e:
+            import traceback
+            logger.exception("Exception occurred")
+            return {
+                'success': False,
+                'repo_name': repo_name,
+                'repo_url': repo_url,
+                'branch': branch,
+                'error': f"分析异常: {str(e)}"
+            }
+    
+    def get_changed_source_files(self,
+                                 repo_url: str,
+                                 branch: str = "master",
+                                 repo_name: Optional[str] = None,
+                                 source_dir: Optional[str] = "src/main/java",
+                                 java_source_dir: Optional[str] = None,
+                                 extensions: Optional[List[str]] = None) -> Tuple[bool, List[str]]:
+        """
+        获取变更的源文件列表（语言无关）。
+
+        - source_dir/java_source_dir: 兼容参数，source_dir 优先
+        - extensions: 需要过滤的扩展名列表（例如 [".java"]）。不传则不过滤。
+        """
+        if source_dir is None:
+            source_dir = java_source_dir
+        result = self.analyze_git_repo(repo_url, branch, repo_name, source_dir=source_dir)
+
+        if not result.get("success"):
+            return False, []
+
+        changed_files = result.get("changed_files", [])
+        if extensions:
+            changed_files = [f for f in changed_files if any(f.endswith(ext) for ext in extensions)]
+        return True, changed_files
+
+    # 兼容旧方法名：仅返回 Java 文件
+    def get_changed_java_files(self,
+                               repo_url: str,
+                               branch: str = "master",
+                               repo_name: Optional[str] = None,
+                               source_dir: Optional[str] = "src/main/java",
+                               java_source_dir: Optional[str] = None) -> Tuple[bool, List[str]]:
+        ok, files = self.get_changed_source_files(
+            repo_url=repo_url,
+            branch=branch,
+            repo_name=repo_name,
+            source_dir=source_dir,
+            java_source_dir=java_source_dir,
+            extensions=[".java"],
+        )
+        return ok, files
+    
+    def cleanup_repo(self, repo_name: str) -> bool:
+        
+        return self.cache_manager.cleanup_repo(repo_name)
+    
+    def get_cache_info(self, repo_name: str) -> Dict:
+        
+        return self.cache_manager.get_cache_info(repo_name)
+    
+    @staticmethod
+    def _collect_all_source_files(directory: str, extensions: Optional[List[str]] = None) -> List[str]:
+        """
+        收集目录下的源文件（默认不过滤；传 extensions 则按扩展名过滤）。
+        """
+        collected: List[str] = []
+        for root, _dirs, files in os.walk(directory):
+            for file in files:
+                if extensions and not any(file.endswith(ext) for ext in extensions):
+                    continue
+                collected.append(os.path.join(root, file))
+        return collected
+
+    # 兼容旧方法名：仅收集 .java 文件
+    @staticmethod
+    def _collect_all_java_files(directory: str) -> List[str]:
+        return GitIncrementalAnalyzer._collect_all_source_files(directory, extensions=[".java"])
+    
+    def _collect_all_files_with_hash(self, node: 'MerkleNode', file_dict: dict, base_dir: str):
+        """
+        收集默克尔树中的所有文件:
+        - 使用相对于 base_dir 的相对路径作为 key，避免同名不同目录文件冲突
+        - value 为 (文件绝对路径, 哈希)
+        """
+        if node.is_file:
+            rel_path = os.path.relpath(node.path, base_dir)
+            file_dict[rel_path] = (node.path, node.hash)
+        else:
+            for child in (node.children or {}).values():
+                self._collect_all_files_with_hash(child, file_dict, base_dir)
