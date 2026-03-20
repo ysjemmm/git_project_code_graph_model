@@ -1,0 +1,37 @@
+api/routes/__init__.py
+  1294b3ab03022bc6 11,20-21
+frontend/src/pages/GraphAdminPage.vue
+  1294b3ab03022bc6 6,73-90,406,576
+core/task_queue.py
+  1294b3ab03022bc6 20,102,108,126-127,511,513,515-538,540-541,543,549,551-572,574,576-579,583,585-586,603,613
+frontend/src/main.ts
+  1294b3ab03022bc6 6,11-65
+api/schemas.py
+  1294b3ab03022bc6 135-172
+api/main.py
+  1294b3ab03022bc6 9,23
+frontend/src/components/SiderForm.vue
+  1294b3ab03022bc6 2,79,229
+frontend/src/pages/ProjectMetaPage.vue
+  1294b3ab03022bc6 4,53-77,239,274,276,380-381
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.15",
+  "base_commit_sha": "36b4470cdbab5794868cd8d2a3365db6aa1a008e",
+  "prompts": {
+    "1294b3ab03022bc6": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "fb01f635-b5a6-414e-b62f-f57f8db06eb1",
+        "model": "default"
+      },
+      "human_author": "mayang <mayang@tsign.cn>",
+      "messages": [],
+      "total_additions": 901,
+      "total_deletions": 146,
+      "accepted_lines": 797,
+      "overriden_lines": 0
+    }
+  }
+}
