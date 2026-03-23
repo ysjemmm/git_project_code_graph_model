@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Dict
 
-from tools.constants import PROJECT_ROOT_PATH
+from tools.constants import CACHE_JAR_CLASSES_DB_PATH
 
 
 @dataclass
@@ -61,7 +61,7 @@ class JARClassDB:
         
         # 使用项目根路径
         if db_path is None:
-            db_path = str(PROJECT_ROOT_PATH / ".cache" / "jar_classes.db")
+            db_path = str(CACHE_JAR_CLASSES_DB_PATH)
         
         self.db_path = db_path
         self.conn: Optional[sqlite3.Connection] = None
@@ -163,6 +163,30 @@ class JARClassDB:
         """)
         
         self.conn.commit()
+
+    def delete_by_jar_path_prefix(self, jar_path_prefix: str) -> int:
+        """
+        按 jar_path 前缀删除旧记录（用于“刷新应用 Maven 依赖”）。
+
+        参数:
+            jar_path_prefix: jar_path 的目录前缀，例如 ".../.cache/maven_deps/<repo_name>"
+
+        返回:
+            删除的 jar_classes 行数（jar_metadata 的删除行数不强依赖）。
+        """
+        if not jar_path_prefix:
+            return 0
+
+        prefix = str(jar_path_prefix).rstrip("\\/")
+        like_pattern = f"{prefix}%"
+
+        cur = self.conn.cursor()
+        # 先删 jar_classes（包含最多数据），再删 jar_metadata
+        cur.execute("DELETE FROM jar_classes WHERE jar_path LIKE ?", (like_pattern,))
+        deleted_classes = int(cur.rowcount or 0)
+        cur.execute("DELETE FROM jar_metadata WHERE jar_path LIKE ?", (like_pattern,))
+        self.conn.commit()
+        return deleted_classes
     
     def batch_insert_classes(self, classes: List[ClassInfo], commit: bool = True) -> int:
         """

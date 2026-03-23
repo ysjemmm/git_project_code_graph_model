@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from tools.constants import PROJECT_ROOT_PATH
+from tools.constants import CACHE_MAVEN_DEPS_PATH, CACHE_GIT_REPOS_PATH
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -57,7 +57,12 @@ def _maven_prepare_and_scan(*, repo_root: str, repo_name: str, enabled: bool, fo
         reason = "force_maven=True（强制重新解析 Maven 依赖）"
     logger.info(f"[Maven] {reason}")
 
-    out_dir = Path(PROJECT_ROOT_PATH) / ".cache" / "maven_deps" / repo_name
+    out_dir = CACHE_MAVEN_DEPS_PATH / repo_name
+    # 刷新诉求（force=True）时：清掉目录避免旧 jar 残留导致 jar_classes.db 出现“幽灵依赖”
+    if force and out_dir.exists():
+        import shutil
+
+        shutil.rmtree(out_dir, ignore_errors=True)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     if not skip:
@@ -86,6 +91,12 @@ def _maven_prepare_and_scan(*, repo_root: str, repo_name: str, enabled: bool, fo
     logger.info(f"[JAR] 扫描依赖目录: {out_dir}")
     db = get_jar_class_db()
     db.initialize_schema()
+    if force:
+        try:
+            cleared = db.delete_by_jar_path_prefix(str(out_dir))
+            logger.info(f"[JAR] 刷新前已清空旧依赖记录：jar_classes={cleared}")
+        except Exception as e:
+            logger.warning(f"[WARN] 清空旧 jar_classes 失败（继续尝试重新扫描）：{e}")
     scanner = JARScanner(db)
     scan_result = scanner.scan_directory(
         str(out_dir),
@@ -112,7 +123,7 @@ class GitToNeo4jImporter:
     
     # 默认配置
     # 仓库缓存目录固定为「项目根目录/.cache/git_repos」
-    DEFAULT_CACHE_BASE_DIR = str(Path(PROJECT_ROOT_PATH / ".cache/git_repos"))
+    DEFAULT_CACHE_BASE_DIR = str(CACHE_GIT_REPOS_PATH)
     DEFAULT_NEO4J_URI = "neo4j+s://26fa83e0.databases.neo4j.io"
     DEFAULT_NEO4J_USER = "neo4j"
     # 安全：不要在代码中硬编码真实密码。请通过环境变量/secret 注入。
@@ -194,6 +205,7 @@ class GitToNeo4jImporter:
                        commit_id: Optional[str] = None,
                        maven_scan_enabled: bool = True,
                        force_maven: bool = False,
+                       auto_link_external: bool = True,
                        cancel_event: ThreadEvent | None = None) -> Dict:
         # 兼容：历史参数 java_source_dir 仍然保留；如果两者都传，以 source_dir 为准
         if source_dir is None:
@@ -224,6 +236,7 @@ class GitToNeo4jImporter:
                 include_comment_nodes=include_comment_nodes,
                 commit_id=commit_id,
                 maven_scan_enabled=maven_scan_enabled,
+                auto_link_external=auto_link_external,
             )
         else:
             return self._import_sync(
@@ -242,6 +255,7 @@ class GitToNeo4jImporter:
                 commit_id=commit_id,
                 maven_scan_enabled=maven_scan_enabled,
                 force_maven=force_maven,
+                auto_link_external=auto_link_external,
                 cancel_event=cancel_event,
             )
     
@@ -259,7 +273,8 @@ class GitToNeo4jImporter:
                       clone_timeout: Optional[int] = None,
                       git_config: Optional[Dict[str, str]] = None,
                       commit_id: Optional[str] = None,
-                      maven_scan_enabled: bool = True) -> Dict:
+                      maven_scan_enabled: bool = True,
+                      auto_link_external: bool = True) -> Dict:
         """异步导入(提交到任务队列)"""
         try:
             from core.task_queue import get_task_queue, TaskPriority
@@ -298,6 +313,7 @@ class GitToNeo4jImporter:
                 git_config=git_config,
                 commit_id=commit_id,
                 maven_scan_enabled=bool(maven_scan_enabled),
+                auto_link_external=bool(auto_link_external),
             )
             
             return {
@@ -331,6 +347,7 @@ class GitToNeo4jImporter:
                     commit_id: Optional[str] = None,
                     maven_scan_enabled: bool = True,
                     force_maven: bool = False,
+                    auto_link_external: bool = True,
                     cancel_event: ThreadEvent | None = None) -> Dict:
         if not self.connector:
             return {
@@ -515,6 +532,7 @@ class GitToNeo4jImporter:
                 languages=languages,
                 clear_database=bool(clear_database),
                 include_comment_nodes=include_comment_nodes,
+                auto_link_external=bool(auto_link_external),
             )
             store = Neo4jGraphStore(self.connector)
 

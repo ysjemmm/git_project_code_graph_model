@@ -4,8 +4,136 @@ import { NEO4J_AURA_QUERY_URL } from '../constants'
 import { LinkOutlined } from '@ant-design/icons-vue'
 import { useRepo } from '../composables/useRepo'
 import { message } from 'ant-design-vue'
+import {
+  listImportTasks,
+  cancelImportTask as apiCancelImportTask,
+  createImportTask,
+  getImportSettings,
+  getImportTaskLog,
+  listGraphProjects,
+  runGraphQuery,
+  getGraphDiagnosticsSummary,
+} from '../api'
 
 const active = ref<'overview' | 'query' | 'import' | 'diagnostics'>('overview')
+
+type QueryTemplate = {
+  key: string
+  name: string
+  cypher: string
+  desc: string
+}
+
+const queryTemplates: QueryTemplate[] = [
+  {
+    key: 'project-overview',
+    name: '项目节点概览',
+    desc: '查看每个项目节点数量（Top 30）',
+    cypher: `MATCH (n)
+WHERE coalesce(n.belong_project, '') <> ''
+RETURN n.belong_project AS project, count(*) AS node_count
+ORDER BY node_count DESC
+LIMIT coalesce($limit, 30)`,
+  },
+  {
+    key: 'depends-on-top',
+    name: '依赖关联 Top',
+    desc: '查看 DEPENDS_ON 关联最密集的项目',
+    cypher: `MATCH (a:Project)-[r:DEPENDS_ON]->(b:Project)
+RETURN a.name AS source_project, b.name AS target_project, count(r) AS rel_count
+ORDER BY rel_count DESC
+LIMIT coalesce($limit, 50)`,
+  },
+  {
+    key: 'javaobject-type',
+    name: '对象类型分布',
+    desc: '统计 JavaObject 的 from_type 分布',
+    cypher: `MATCH (n:JavaObject)
+RETURN coalesce(n.from_type, 'UNKNOWN') AS from_type, count(*) AS cnt
+ORDER BY cnt DESC
+LIMIT coalesce($limit, 30)`,
+  },
+]
+
+const selectedTemplateKey = ref(queryTemplates[0]?.key || '')
+const queryText = ref(queryTemplates[0]?.cypher || '')
+const queryLimit = ref(200)
+const queryLoading = ref(false)
+const queryError = ref<string | null>(null)
+const queryResult = ref<{ columns: string[]; rows: Array<Record<string, any>> }>({ columns: [], rows: [] })
+
+function applyQueryTemplate(key: string) {
+  const t = queryTemplates.find((x) => x.key === key)
+  if (!t) return
+  selectedTemplateKey.value = key
+  queryText.value = t.cypher
+}
+
+function formatCell(v: any): string {
+  if (v == null) return '-'
+  if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') return String(v)
+  try {
+    return JSON.stringify(v)
+  } catch {
+    return String(v)
+  }
+}
+
+const queryTableColumns = computed(() =>
+  queryResult.value.columns.map((c) => ({ title: c, dataIndex: c, key: c, ellipsis: true })),
+)
+
+const queryTableData = computed(() =>
+  queryResult.value.rows.map((r, i) => ({ __rowKey: `row-${i}`, ...r })),
+)
+
+const rowCount = computed(() => queryResult.value.rows.length)
+
+const visualMetric = computed(() => {
+  const rows = queryResult.value.rows
+  const columns = queryResult.value.columns
+  if (!rows.length || !columns.length) return null
+  const numberCol = columns.find((col) => rows.every((x) => x[col] == null || typeof x[col] === 'number'))
+  if (!numberCol) return null
+  const dimCol = columns.find((col) => col !== numberCol && rows.some((x) => typeof x[col] === 'string'))
+  if (!dimCol) return null
+  const items = rows
+    .slice(0, 12)
+    .map((x) => ({ name: String(x[dimCol] ?? '-'), value: Number(x[numberCol] ?? 0) }))
+  const max = Math.max(1, ...items.map((x) => x.value))
+  return { dimCol, numberCol, items, max }
+})
+
+async function runQuery() {
+  const cypher = String(queryText.value || '').trim()
+  if (!cypher) {
+    queryError.value = '请先输入 Cypher 查询语句'
+    return
+  }
+  queryLoading.value = true
+  queryError.value = null
+  try {
+    const data = await runGraphQuery({
+      cypher,
+      limit: Number(queryLimit.value || 200),
+      params: { limit: Number(queryLimit.value || 200) },
+    })
+    if (!data?.ok) {
+      queryError.value = data?.message || '查询失败'
+      queryResult.value = { columns: [], rows: [] }
+      return
+    }
+    queryResult.value = {
+      columns: Array.isArray(data.columns) ? data.columns : [],
+      rows: Array.isArray(data.rows) ? data.rows : [],
+    }
+  } catch (e: any) {
+    queryError.value = e?.message ?? String(e)
+    queryResult.value = { columns: [], rows: [] }
+  } finally {
+    queryLoading.value = false
+  }
+}
 
 function statusTag(status: any) {
   const s = String(status || '').toLowerCase()
@@ -38,9 +166,88 @@ const error = ref<string | null>(null)
 const items = ref<GraphProjectItem[]>([])
 const includeCounts = ref(true)
 
-// ---- Graph project selection (metadata -> import form) ----
-type ImportMode = 'metadata' | 'custom'
-const importMode = ref<ImportMode>('custom')
+// ---- Diagnostics ----
+type DiagnosticsSummary = {
+  generated_at: string
+  score: number
+  stats: {
+    project_count: number
+    application_project_count: number
+    node_count: number
+    relationship_count: number
+    unknown_project_node_count: number
+  }
+  schema: {
+    indexes: Array<{
+      name: string
+      state: string
+      type: string
+      entity_type: string
+      labels_or_types: string[]
+      properties: string[]
+      population_percent: number
+    }>
+    constraints: Array<{
+      name: string
+      type: string
+      entity_type: string
+      labels_or_types: string[]
+      properties: string[]
+    }>
+    index_total: number
+    index_online: number
+    index_failed: number
+  }
+  ops: {
+    summary: {
+      window_minutes: number
+      total: number
+      error_count: number
+      slow_count: number
+    }
+    recent: Array<{
+      ts: string
+      op_type: string
+      ok: boolean
+      is_slow: boolean
+      elapsed_ms: number
+      slow_threshold_ms: number
+      row_count: number
+      query: string
+      query_hash: string
+      params: Record<string, any>
+      error: string
+    }>
+  }
+  checks: Array<{ id: string; title: string; status: 'ok' | 'warning' | 'error'; message: string; suggestion?: string }>
+  alerts: { error: number; warning: number; ok: number }
+}
+
+const diagnosticsLoading = ref(false)
+const diagnosticsError = ref<string | null>(null)
+const diagnostics = ref<DiagnosticsSummary | null>(null)
+
+function diagnosticsTag(status: 'ok' | 'warning' | 'error') {
+  if (status === 'ok') return { color: 'green', text: '通过' }
+  if (status === 'warning') return { color: 'orange', text: '警告' }
+  return { color: 'red', text: '失败' }
+}
+
+async function fetchDiagnostics() {
+  diagnosticsLoading.value = true
+  diagnosticsError.value = null
+  try {
+    const data = await getGraphDiagnosticsSummary()
+    diagnostics.value = data as DiagnosticsSummary
+  } catch (e: any) {
+    diagnosticsError.value = e?.message ?? String(e)
+    diagnostics.value = null
+  } finally {
+    diagnosticsLoading.value = false
+  }
+}
+
+// ---- Graph project selection (used only for overview highlight) ----
 const selectedGraphProject = ref<GraphProjectItem | null>(null)
 
 function getProjectRowKey(x: GraphProjectItem) {
@@ -53,8 +260,8 @@ const importForm = ref({
   maven_scan_enabled: true,
   force_maven: false,
   clear_database: false,
+  auto_link_external: true,
 })
-const importErrors = ref<{ repoUrl?: string; ref?: string }>({})
 const importSubmitting = ref(false)
 const importTasks = ref<ImportTask[]>([])
 const importStats = ref<any>(null)
@@ -88,90 +295,83 @@ watch(importStats, (v) => {
   message.info({ content: text, duration: 3 })
 })
 
-// ---- Import repo/ref (same UX as Bugfix page) ----
-const repoState = useRepo({ lazyRefFetch: true })
+// ---- Import: 只需要选择 Application（repo_url/branch/commit_id 自动从缓存落盘信息读取）----
+const repoState = useRepo({
+  lazyRefFetch: true,
+  projectSource: 'cacheApplicationProjects',
+  autoFillRefFromMeta: false,
+})
 const {
-  repoUrl,
+  repoOptions,
+  selectedProjectName,
+  readonlyUrl,
   branch,
   commitId,
+  canRun,
+  canSelectRef,
+  loadingRepos,
   loadingBranches,
   loadingCommits,
   branchOptions,
   commitOptions,
-  canSelectRef,
-  switchRepoMode,
   onBranchSearch,
   onCommitSearch,
   onBranchDropdown,
   onCommitDropdown,
+  fetchRepos,
 } = repoState
 
-// 导入任务为「自定义」时只填 URL，需让 useRepo 按 URL 算 repo，否则 Branch 会一直 disabled
-switchRepoMode('custom')
+const selectedMeta = repoState.selectedMeta
 
 const refType = ref<'branch' | 'commit'>('branch')
+
 watch(
-  refType,
-  (t) => {
-    if (t === 'branch') commitId.value = undefined
-    else branch.value = undefined
+  () => selectedProjectName.value,
+  () => {
+    // 导入/重建默认走 Branch，不根据历史缓存自动切到 Commit
+    refType.value = 'branch'
   },
-  { flush: 'post' },
 )
+
+const importSubmitEnabled = computed(() => {
+  if (!canRun.value) return false
+  if (refType.value === 'commit') return Boolean(String(commitId.value || '').trim())
+  return Boolean(String(branch.value || '').trim())
+})
 
 const selectedProjectRowKey = computed(() =>
   selectedGraphProject.value ? getProjectRowKey(selectedGraphProject.value) : '',
 )
 
 async function selectGraphProject(project: GraphProjectItem) {
-  // 选中元数据后，导入表单会自动填充 repo_url/ref（URL/branch/commitId）
   selectedGraphProject.value = project
-  importMode.value = 'metadata'
-
-  const repo = String(project.repo_url || '').trim()
-  const commit = project.commit_hash ? String(project.commit_hash).trim() : ''
-  const br = project.branch ? String(project.branch).trim() : ''
-
-  if (!repo) {
-    switchToCustom()
-    return
-  }
-
-  // 注意：useRepo 会在 repoUrl 变化时清空 branch/commitId，所以要在 nextTick 后再写回
-  repoUrl.value = repo
-  await nextTick()
-
-  if (commit) {
-    refType.value = 'commit'
-    commitId.value = commit
-    branch.value = undefined
-    return
-  }
-  if (br) {
-    refType.value = 'branch'
-    branch.value = br
-    commitId.value = undefined
-    return
-  }
-
-  // 缺少 branch/commit_hash 的元数据，回退为自定义输入模式
-  switchToCustom()
-}
-
-function switchToCustom() {
-  importMode.value = 'custom'
-  selectedGraphProject.value = null
 }
 
 async function fetchImportTasks() {
-  const r = await fetch('/api/import/tasks')
-  const data = await r.json()
+  const data = await listImportTasks()
   if (data?.ok) {
     importTasks.value = Array.isArray(data.items) ? data.items : []
-    importStats.value = data.stats
+    importStats.value = (data as any).stats
     if (!selectedTaskId.value && importTasks.value.length) {
       selectedTaskId.value = importTasks.value[0].task_id
     }
+    syncImportFormFromSelectedApp()
+  }
+}
+
+async function syncImportFormFromSelectedApp() {
+  const appId = selectedMeta.value?.id
+  if (!appId) return
+  try {
+    const data = await getImportSettings(appId)
+    if (data?.ok && data.settings) {
+      importForm.value.maven_scan_enabled = Boolean(data.settings.maven_scan_enabled ?? true)
+      importForm.value.force_maven = Boolean(data.settings.force_maven ?? false)
+      importForm.value.clear_database = Boolean(data.settings.clear_database ?? false)
+      importForm.value.auto_link_external = Boolean(data.settings.auto_link_external ?? true)
+    }
+  } catch {
+    // 读取失败保持默认值
   }
 }
 
@@ -186,9 +386,7 @@ async function cancelImportTask(taskId: string) {
   if (t && !isCancellableTaskStatus(t.status)) return
   if (!window.confirm('确认终止该导入任务？正在执行中的任务会在可中断点尽快停止。')) return
   try {
-    const r = await fetch(`/api/import/tasks/${taskId}/cancel`, { method: 'POST' })
-    const data = await r.json().catch(() => ({}))
-    if (!r.ok || !data?.ok) throw new Error(data?.message ?? `HTTP ${r.status}`)
+    await apiCancelImportTask(taskId)
     await fetchImportTasks()
   } catch (e: any) {
     error.value = e?.message ?? String(e)
@@ -196,13 +394,28 @@ async function cancelImportTask(taskId: string) {
 }
 
 async function submitImport() {
-  // 前端校验
-  importErrors.value = {}
-  const repo_url = (repoUrl.value || '').trim()
-  const refVal = refType.value === 'branch' ? String(branch.value || '').trim() : String(commitId.value || '').trim()
-  if (!repo_url) importErrors.value.repoUrl = 'Git 仓库地址不能为空'
-  if (!refVal) importErrors.value.ref = refType.value === 'branch' ? '请选择或输入 Branch' : '请选择或输入 CommitId'
-  if (Object.keys(importErrors.value).length) return
+  if (!canRun.value) {
+    message.error({ content: '请先选择应用', duration: 4 })
+    return
+  }
+
+  const repo_url = String(readonlyUrl.value || '').trim()
+  if (!repo_url) {
+    message.error({ content: '应用的 Git 地址为空', duration: 4 })
+    return
+  }
+
+  if (refType.value === 'commit') {
+    if (!commitId.value) {
+      message.error({ content: '请选择或输入 CommitId', duration: 4 })
+      return
+    }
+  } else {
+    if (!branch.value) {
+      message.error({ content: '请选择或输入 Branch', duration: 4 })
+      return
+    }
+  }
 
   importSubmitting.value = true
   try {
@@ -211,19 +424,16 @@ async function submitImport() {
       maven_scan_enabled: Boolean(importForm.value.maven_scan_enabled),
       force_maven: Boolean(importForm.value.force_maven),
       clear_database: Boolean(importForm.value.clear_database),
+      auto_link_external: Boolean(importForm.value.auto_link_external),
     }
-    if (refType.value === 'branch') payload.branch = refVal
-    else payload.commit_id = refVal
 
-    const r = await fetch('/api/import/tasks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-    const data = await r.json().catch(() => ({}))
-    if (!r.ok || !data?.ok) throw new Error(data?.message ?? `HTTP ${r.status}`)
+    if (refType.value === 'commit') payload.commit_id = String(commitId.value || '').trim()
+    else payload.branch = String(branch.value || '').trim()
+
+    const data = await createImportTask(payload)
+    if (!data?.ok) throw new Error('提交失败')
     await fetchImportTasks()
-    selectedTaskId.value = data.task_id
+    selectedTaskId.value = (data as any).task_id
     logOffset.value = 0
     logLines.value = []
     await fetchLogs()
@@ -241,11 +451,7 @@ async function fetchLogs() {
   if (logLoading.value) return
   logLoading.value = true
   try {
-    const url = new URL(`/api/import/tasks/${tid}/logs`, window.location.origin)
-    url.searchParams.set('offset', String(logOffset.value))
-    url.searchParams.set('limit', '2000')
-    const r = await fetch(url.toString())
-    const data = await r.json()
+    const data = await getImportTaskLog(tid, logOffset.value, 2000)
     if (data?.ok) {
       const lines = Array.isArray(data.lines) ? data.lines : []
       if (lines.length) {
@@ -329,11 +535,7 @@ async function fetchProjects() {
   loading.value = true
   error.value = null
   try {
-    const url = new URL('/api/graph/projects', window.location.origin)
-    url.searchParams.set('include_counts', includeCounts.value ? 'true' : 'false')
-    const r = await fetch(url.toString())
-    const data = await r.json()
-    if (!r.ok) throw new Error(data?.message ?? `HTTP ${r.status}`)
+    const data = await listGraphProjects(includeCounts.value)
     items.value = Array.isArray(data?.items) ? data.items : []
   } catch (e: any) {
     error.value = e?.message ?? String(e)
@@ -344,9 +546,13 @@ async function fetchProjects() {
 
 onMounted(() => {
   void fetchProjects()
+  void fetchDiagnostics()
   void fetchImportTasks()
+  void fetchRepos()
   importPollTimer = window.setInterval(async () => {
     await fetchImportTasks()
+    // 任务列表刷新后，尝试把导入参数同步成“应用最近一次配置”
+    syncImportFormFromSelectedApp()
     // 自动拉最新日志（只在弹窗打开时）
     if (logModalOpen.value) {
       if (!logModalTaskDone.value) {
@@ -359,6 +565,15 @@ onMounted(() => {
     }
   }, 5000)
 })
+
+// 选中应用变化后，立即同步导入参数为“应用最近一次导入任务配置”
+watch(
+  readonlyUrl,
+  () => {
+    syncImportFormFromSelectedApp()
+  },
+  { immediate: true },
+)
 
 // 组件卸载时清理 timer
 import { onUnmounted } from 'vue'
@@ -375,7 +590,6 @@ const tableData = computed(() =>
   items.value.map((x) => ({
     key: getProjectRowKey(x),
     ...x,
-    commit_short: (x.commit_hash ?? '').slice(0, 8),
   })),
 )
 
@@ -434,68 +648,128 @@ const columns = [
           </div>
         </a-tab-pane>
 
-        <a-tab-pane key="query" tab="查询模板">
-          <a-empty description="待接入：常用 Cypher 模板 / 一键复制 / 结果渲染" />
+        <a-tab-pane key="query" tab="查询">
+          <div class="query-pane">
+            <div class="query-left">
+              <a-card size="small" title="查询模板与编辑器">
+                <a-alert
+                  type="warning"
+                  show-icon
+                  style="margin-bottom: 10px;"
+                  message="仅支持 Cypher（只读）。禁止 CREATE/MERGE/DELETE/SET 等写操作。"
+                />
+                <a-form layout="vertical" size="small">
+                  <a-form-item label="模板">
+                    <a-select
+                      v-model:value="selectedTemplateKey"
+                      :options="queryTemplates.map(t => ({ value: t.key, label: t.name }))"
+                      @change="(v: string) => applyQueryTemplate(v)"
+                    />
+                    <div class="query-template-desc">
+                      {{ queryTemplates.find(t => t.key === selectedTemplateKey)?.desc || '-' }}
+                    </div>
+                  </a-form-item>
+                  <a-form-item label="最大返回行数">
+                    <a-input-number v-model:value="queryLimit" :min="1" :max="2000" style="width: 180px;" />
+                  </a-form-item>
+                  <a-form-item label="Cypher">
+                    <a-textarea v-model:value="queryText" :rows="16" class="mono query-editor" />
+                  </a-form-item>
+                  <a-space>
+                    <a-button type="primary" :loading="queryLoading" @click="runQuery">执行查询</a-button>
+                    <a-button @click="openAura">
+                      <template #icon><LinkOutlined /></template>
+                      在 Aura 中打开
+                    </a-button>
+                  </a-space>
+                </a-form>
+              </a-card>
+            </div>
+            <div class="query-right">
+              <a-card size="small" title="查询结果与可视化">
+                <a-alert
+                  v-if="queryError"
+                  type="error"
+                  show-icon
+                  :message="queryError"
+                  style="margin-bottom: 10px;"
+                />
+                <div class="query-result-summary">
+                  <a-statistic title="返回行数" :value="rowCount" />
+                </div>
+                <div v-if="visualMetric" class="query-chart">
+                  <div class="query-chart-title">
+                    可视化（{{ visualMetric.numberCol }} by {{ visualMetric.dimCol }}，Top {{ visualMetric.items.length }}）
+                  </div>
+                  <div v-for="it in visualMetric.items" :key="it.name" class="query-chart-row">
+                    <div class="query-chart-name mono">{{ it.name }}</div>
+                    <div class="query-chart-bar-wrap">
+                      <div class="query-chart-bar" :style="{ width: `${Math.max(2, Math.round((it.value / visualMetric.max) * 100))}%` }" />
+                    </div>
+                    <div class="query-chart-value mono">{{ it.value }}</div>
+                  </div>
+                </div>
+                <a-table
+                  :loading="queryLoading"
+                  :columns="queryTableColumns as any"
+                  :data-source="queryTableData as any"
+                  :pagination="{ pageSize: 10, showSizeChanger: true }"
+                  size="small"
+                  bordered
+                  row-key="__rowKey"
+                  :scroll="{ x: true }"
+                >
+                  <template #bodyCell="{ column, record }">
+                    <a-tooltip :title="formatCell(record[column.key])" placement="topLeft">
+                      <span class="mono cell-ellipsis">{{ formatCell(record[column.key]) }}</span>
+                    </a-tooltip>
+                  </template>
+                </a-table>
+              </a-card>
+            </div>
+          </div>
         </a-tab-pane>
 
         <a-tab-pane key="import" tab="导入/重建">
-          <a-row :gutter="16">
-            <a-col :xs="24" :lg="10">
-              <a-card size="small" class="import-card">
-                <a-form layout="vertical" class="import-form">
-                  <div class="import-form-scroll">
+          <a-row :gutter="16" style="height:100%">
+            <a-col :xs="24" :lg="10" style="height:100%; display:flex; flex-direction:column;">
+              <div class="import-card">
+                <div class="import-form-scroll">
+                  <a-form layout="vertical">
+                  <a-form-item label="选择应用" required>
+                    <a-select
+                      v-model:value="selectedProjectName"
+                      placeholder="请选择应用"
+                      :options="repoOptions"
+                      :loading="loadingRepos"
+                      show-search
+                      :filter-option="false"
+                      allow-clear
+                    />
+                  </a-form-item>
+
                   <div
-                    v-if="importMode === 'metadata' && selectedGraphProject"
                     class="import-meta"
                     style="margin-bottom: 12px; padding: 10px 12px; border: 1px solid rgba(0,0,0,.08); border-radius: 8px; background: rgba(0,0,0,.02);"
                   >
                     <div class="import-meta-row">
-                      <span class="import-meta-label" style="display:inline-block; min-width:64px; color: rgba(0,0,0,.65); font-weight:600; margin-right:6px;">来源项目：</span>
-                      <span>{{ selectedGraphProject.project_name }}</span>
-                    </div>
-                    <div class="import-meta-row">
                       <span class="import-meta-label" style="display:inline-block; min-width:64px; color: rgba(0,0,0,.65); font-weight:600; margin-right:6px;">Git：</span>
-                      <span class="mono">{{ selectedGraphProject.repo_url || '-' }}</span>
+                      <span class="mono">{{ readonlyUrl || '-' }}</span>
                     </div>
                     <div class="import-meta-row">
                       <span class="import-meta-label" style="display:inline-block; min-width:64px; color: rgba(0,0,0,.65); font-weight:600; margin-right:6px;">Ref：</span>
-                      <span class="mono">
-                        {{
-                          selectedGraphProject.commit_hash
-                            ? `Commit ${String(selectedGraphProject.commit_hash).slice(0, 8)}`
-                            : String(selectedGraphProject.branch || '-')
-                        }}
-                      </span>
+                      <span class="mono">{{ refType === 'commit' ? String(commitId || '-') : String(branch || '-') }}</span>
                     </div>
-                    <a-button size="small" @click="switchToCustom">
-                      切换为自定义
-                    </a-button>
                   </div>
 
-                  <a-form-item
-                    v-if="importMode === 'custom'"
-                    label="Git 仓库地址"
-                    required
-                    :validate-status="importErrors.repoUrl ? 'error' : ''"
-                    :help="importErrors.repoUrl"
-                  >
-                    <a-input v-model:value="repoUrl" placeholder="http(s)://.../*.git" allow-clear @change="importErrors.repoUrl = undefined" />
-                  </a-form-item>
-
-                  <a-form-item v-if="importMode === 'custom'" label="Ref（Branch / Commit 二选一）" required>
+                  <a-form-item label="Ref（Branch 或 CommitId）" required>
                     <a-radio-group v-model:value="refType" button-style="solid">
                       <a-radio-button value="branch">Branch</a-radio-button>
                       <a-radio-button value="commit">CommitId</a-radio-button>
                     </a-radio-group>
                   </a-form-item>
 
-                  <a-form-item
-                    v-if="importMode === 'custom' && refType === 'branch'"
-                    label="Branch"
-                    required
-                    :validate-status="importErrors.ref ? 'error' : ''"
-                    :help="importErrors.ref"
-                  >
+                  <a-form-item v-if="refType === 'branch'" label="Branch（下拉选择）" required>
                     <a-select
                       v-model:value="branch"
                       placeholder="请选择/搜索 Branch"
@@ -506,26 +780,16 @@ const columns = [
                       :filter-option="false"
                       @search="onBranchSearch"
                       @dropdownVisibleChange="onBranchDropdown"
-                      @change="importErrors.ref = undefined"
                       allow-clear
                     >
                       <template #notFoundContent>
-                        <a-space v-if="loadingBranches" size="small">
-                          <a-spin size="small" />
-                          <span>加载中...</span>
-                        </a-space>
+                        <a-space v-if="loadingBranches" size="small"><a-spin size="small" /><span>加载中...</span></a-space>
                         <span v-else>暂无数据</span>
                       </template>
                     </a-select>
                   </a-form-item>
 
-                  <a-form-item
-                    v-if="importMode === 'custom' && refType === 'commit'"
-                    label="CommitId"
-                    required
-                    :validate-status="importErrors.ref ? 'error' : ''"
-                    :help="importErrors.ref"
-                  >
+                  <a-form-item v-if="refType === 'commit'" label="CommitId（下拉选择）" required>
                     <a-select
                       v-model:value="commitId"
                       placeholder="请选择/搜索 CommitId"
@@ -536,39 +800,40 @@ const columns = [
                       :filter-option="false"
                       @search="onCommitSearch"
                       @dropdownVisibleChange="onCommitDropdown"
-                      @change="importErrors.ref = undefined"
                       allow-clear
                     >
                       <template #notFoundContent>
-                        <a-space v-if="loadingCommits" size="small">
-                          <a-spin size="small" />
-                          <span>加载中...</span>
-                        </a-space>
+                        <a-space v-if="loadingCommits" size="small"><a-spin size="small" /><span>加载中...</span></a-space>
                         <span v-else>暂无数据</span>
                       </template>
                     </a-select>
                   </a-form-item>
 
-                  <a-form-item label="解析 pom 外部依赖（Maven 扫描）">
-                    <a-switch v-model:checked="importForm.maven_scan_enabled" checked-children="启用" un-checked-children="关闭" />
-                  </a-form-item>
-
-                  <a-form-item label="强制重新解析 Maven（force_maven）">
-                    <a-switch v-model:checked="importForm.force_maven" checked-children="强制" un-checked-children="默认" />
-                  </a-form-item>
-
-                  <a-form-item label="导入前清理旧图谱（clear_database）">
-                    <a-switch v-model:checked="importForm.clear_database" checked-children="清理" un-checked-children="不清理" />
-                  </a-form-item>
+                  <div class="import-desc-line">
+                    <span class="import-desc-label">解析 pom 外部依赖（Maven 扫描）</span>
+                    <span class="mono">{{ importForm.maven_scan_enabled ? '启用' : '关闭' }}</span>
                   </div>
-
-                  <div class="import-form-footer">
-                    <a-button type="primary" :loading="importSubmitting" @click="submitImport">
-                      提交导入（并发=1，自动排队）
-                    </a-button>
+                  <div class="import-desc-line">
+                    <span class="import-desc-label">强制重新解析 Maven（可能较慢）</span>
+                    <span class="mono">{{ importForm.force_maven ? '强制' : '关闭' }}</span>
                   </div>
-                </a-form>
-              </a-card>
+                  <div class="import-desc-line">
+                    <span class="import-desc-label">导入前清理旧图谱（clear_database，重建）</span>
+                    <span class="mono">{{ importForm.clear_database ? '清理' : '不清理' }}</span>
+                  </div>
+                  <div class="import-desc-line">
+                    <span class="import-desc-label">自动关联外部类（ExternalClassLinker）</span>
+                    <span class="mono">{{ importForm.auto_link_external ? '启用' : '关闭' }}</span>
+                  </div>
+                  </a-form>
+                </div>
+
+                <div class="import-form-footer">
+                  <a-button type="primary" :loading="importSubmitting" :disabled="!importSubmitEnabled" @click="submitImport">
+                    提交导入（并发=1，自动排队）
+                  </a-button>
+                </div>
+              </div>
             </a-col>
 
             <a-col :xs="24" :lg="14">
@@ -594,9 +859,9 @@ const columns = [
                     </template>
                   </a-table-column>
                   <a-table-column title="repo" data-index="repo_url" key="repo_url" :width="180" ellipsis />
-                  <a-table-column title="ref" key="ref" :width="120">
+                  <a-table-column title="ref" key="ref" :width="280">
                     <template #default="{ record }">
-                      <span class="mono">{{ record.commit_id ? (record.commit_id || '').slice(0,8) : record.branch }}</span>
+                      <span class="mono">{{ record.commit_id ? (record.commit_id || '') : record.branch }}</span>
                     </template>
                   </a-table-column>
                   <a-table-column title="创建时间" key="created_at" :width="160">
@@ -630,6 +895,7 @@ const columns = [
                   :title="`任务日志：${logModalTaskId || '-'}`"
                   width="1180px"
                   :footer="null"
+                  :body-style="{ padding: '12px', height: 'calc(60vh + 60px)', overflow: 'hidden' }"
                   @cancel="closeLogModal"
                 >
                   <div class="logbox">
@@ -655,7 +921,172 @@ const columns = [
         </a-tab-pane>
 
         <a-tab-pane key="diagnostics" tab="诊断">
-          <a-empty description="待接入：约束/索引、节点/关系数量、热点查询、连通性检查" />
+          <div class="diagnostics-pane">
+            <div class="diagnostics-top">
+              <a-space>
+                <a-button :loading="diagnosticsLoading" @click="fetchDiagnostics">刷新诊断</a-button>
+              </a-space>
+              <span v-if="diagnostics?.generated_at" class="mono diagnostics-time">
+                最近诊断：{{ String(diagnostics.generated_at).slice(0, 19).replace('T', ' ') }}
+              </span>
+            </div>
+
+            <a-alert
+              v-if="diagnosticsError"
+              type="error"
+              show-icon
+              :message="diagnosticsError"
+              style="margin-bottom: 12px;"
+            />
+
+            <template v-if="diagnostics">
+              <a-row :gutter="12" style="margin-bottom: 12px;">
+                <a-col :span="6"><a-statistic title="健康分" :value="diagnostics.score" suffix="/ 100" /></a-col>
+                <a-col :span="6"><a-statistic title="失败项" :value="diagnostics.alerts.error" /></a-col>
+                <a-col :span="6"><a-statistic title="警告项" :value="diagnostics.alerts.warning" /></a-col>
+                <a-col :span="6"><a-statistic title="通过项" :value="diagnostics.alerts.ok" /></a-col>
+              </a-row>
+
+              <a-row :gutter="12" style="margin-bottom: 12px;">
+                <a-col :span="6"><a-statistic title="项目节点" :value="diagnostics.stats.project_count" /></a-col>
+                <a-col :span="6"><a-statistic title="Application 项目" :value="diagnostics.stats.application_project_count" /></a-col>
+                <a-col :span="6"><a-statistic title="总节点数" :value="diagnostics.stats.node_count" /></a-col>
+                <a-col :span="6"><a-statistic title="总关系数" :value="diagnostics.stats.relationship_count" /></a-col>
+              </a-row>
+
+              <a-row :gutter="12" style="margin-bottom: 12px;">
+                <a-col :span="8"><a-statistic title="索引总数" :value="diagnostics.schema.index_total" /></a-col>
+                <a-col :span="8"><a-statistic title="ONLINE 索引" :value="diagnostics.schema.index_online" /></a-col>
+                <a-col :span="8"><a-statistic title="异常/构建中索引" :value="diagnostics.schema.index_failed" /></a-col>
+              </a-row>
+
+              <a-card size="small" title="索引与约束" style="margin-bottom: 12px;">
+                <div class="diagnostics-schema-table">
+                  <a-table
+                    :data-source="diagnostics.schema.indexes as any"
+                    :pagination="{ pageSize: 8 }"
+                    size="small"
+                    bordered
+                    row-key="name"
+                    :scroll="{ x: 980 }"
+                    style="margin-bottom: 12px;"
+                  >
+                    <a-table-column title="索引名" data-index="name" key="name" :width="220" ellipsis />
+                    <a-table-column title="状态" key="state" :width="110">
+                      <template #default="{ record }">
+                        <a-tag :color="String(record.state || '').toUpperCase() === 'ONLINE' ? 'green' : 'orange'">
+                          {{ record.state || '-' }}
+                        </a-tag>
+                      </template>
+                    </a-table-column>
+                    <a-table-column title="类型" data-index="type" key="type" :width="140" ellipsis />
+                    <a-table-column title="实体类型" data-index="entity_type" key="entity_type" :width="120" ellipsis />
+                    <a-table-column title="标签/关系" key="labels_or_types" :width="180">
+                      <template #default="{ record }">
+                        <span class="mono">{{ Array.isArray(record.labels_or_types) ? record.labels_or_types.join(', ') : '-' }}</span>
+                      </template>
+                    </a-table-column>
+                    <a-table-column title="属性" key="properties" :width="180">
+                      <template #default="{ record }">
+                        <span class="mono">{{ Array.isArray(record.properties) ? record.properties.join(', ') : '-' }}</span>
+                      </template>
+                    </a-table-column>
+                    <a-table-column title="构建进度%" key="population_percent" :width="110">
+                      <template #default="{ record }">
+                        <span class="mono">{{ Number(record.population_percent || 0).toFixed(1) }}</span>
+                      </template>
+                    </a-table-column>
+                  </a-table>
+                </div>
+
+                <div class="diagnostics-schema-table">
+                  <a-table
+                    :data-source="diagnostics.schema.constraints as any"
+                    :pagination="{ pageSize: 6 }"
+                    size="small"
+                    bordered
+                    row-key="name"
+                    :scroll="{ x: 880 }"
+                  >
+                    <a-table-column title="约束名" data-index="name" key="name" :width="220" ellipsis />
+                    <a-table-column title="类型" data-index="type" key="type" :width="160" ellipsis />
+                    <a-table-column title="实体类型" data-index="entity_type" key="entity_type" :width="120" ellipsis />
+                    <a-table-column title="标签/关系" key="labels_or_types">
+                      <template #default="{ record }">
+                        <span class="mono">{{ Array.isArray(record.labels_or_types) ? record.labels_or_types.join(', ') : '-' }}</span>
+                      </template>
+                    </a-table-column>
+                    <a-table-column title="属性" key="properties">
+                      <template #default="{ record }">
+                        <span class="mono">{{ Array.isArray(record.properties) ? record.properties.join(', ') : '-' }}</span>
+                      </template>
+                    </a-table-column>
+                  </a-table>
+                </div>
+              </a-card>
+
+              <a-card size="small" title="图数据库操作日志（近 60 分钟）" style="margin-bottom: 12px;">
+                <a-row :gutter="12" style="margin-bottom: 10px;">
+                  <a-col :span="8"><a-statistic title="记录条数" :value="diagnostics.ops.summary.total" /></a-col>
+                  <a-col :span="8"><a-statistic title="错误数" :value="diagnostics.ops.summary.error_count" /></a-col>
+                  <a-col :span="8"><a-statistic title="慢查询/慢写入" :value="diagnostics.ops.summary.slow_count" /></a-col>
+                </a-row>
+                <div class="diagnostics-schema-table">
+                  <a-table
+                    :data-source="diagnostics.ops.recent as any"
+                    :pagination="{ pageSize: 8 }"
+                    size="small"
+                    bordered
+                    :row-key="(r: any) => `${r.ts || ''}-${r.query_hash || ''}-${r.op_type || ''}`"
+                    :scroll="{ x: 1180 }"
+                  >
+                    <a-table-column title="时间" key="ts" :width="170">
+                      <template #default="{ record }">
+                        <span class="mono">{{ String(record.ts || '').slice(0, 19).replace('T', ' ') }}</span>
+                      </template>
+                    </a-table-column>
+                    <a-table-column title="类型" data-index="op_type" key="op_type" :width="120" ellipsis />
+                    <a-table-column title="状态" key="ok" :width="90">
+                      <template #default="{ record }">
+                        <a-tag :color="record.ok ? (record.is_slow ? 'orange' : 'green') : 'red'">
+                          {{ record.ok ? (record.is_slow ? '慢' : '正常') : '错误' }}
+                        </a-tag>
+                      </template>
+                    </a-table-column>
+                    <a-table-column title="耗时(ms)" key="elapsed_ms" :width="110">
+                      <template #default="{ record }">
+                        <span class="mono">{{ Number(record.elapsed_ms || 0).toFixed(2) }}</span>
+                      </template>
+                    </a-table-column>
+                    <a-table-column title="返回行数" data-index="row_count" key="row_count" :width="90" />
+                    <a-table-column title="Cypher" data-index="query" key="query" ellipsis />
+                    <a-table-column title="错误信息" data-index="error" key="error" :width="220" ellipsis />
+                  </a-table>
+                </div>
+              </a-card>
+
+              <a-card size="small" title="检查项">
+                <a-table
+                  :data-source="diagnostics.checks as any"
+                  :pagination="false"
+                  size="small"
+                  bordered
+                  row-key="id"
+                >
+                  <a-table-column title="检查项" data-index="title" key="title" :width="180" />
+                  <a-table-column title="状态" key="status" :width="90">
+                    <template #default="{ record }">
+                      <a-tag :color="diagnosticsTag(record.status).color">
+                        {{ diagnosticsTag(record.status).text }}
+                      </a-tag>
+                    </template>
+                  </a-table-column>
+                  <a-table-column title="结果" data-index="message" key="message" />
+                  <a-table-column title="建议" data-index="suggestion" key="suggestion" />
+                </a-table>
+              </a-card>
+            </template>
+          </div>
         </a-tab-pane>
       </a-tabs>
     </a-card>
@@ -738,7 +1169,8 @@ const columns = [
 .log {
   margin: 0;
   padding: 10px 12px;
-  max-height: 66vh;
+  height: 60vh;
+  min-height: 200px;
   overflow: auto;
   background: rgba(0,0,0,.03);
   font-size: 12px;
@@ -760,37 +1192,128 @@ const columns = [
 
 /* 导入表单：中间滚动 + 底部按钮固定 */
 .import-card {
-  height: calc(100vh - 56px - 32px - 48px - 16px);
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-.import-card :deep(.ant-card-body) {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 8px;
+  background: #fff;
   overflow: hidden;
-  padding-bottom: 0;
-}
-.import-form {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
 }
 .import-form-scroll {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding-right: 6px;
+  padding: 16px 16px 8px;
 }
 .import-form-footer {
   flex-shrink: 0;
-  padding-top: 10px;
-  padding-bottom: 10px;
+  padding: 10px 16px;
   border-top: 1px solid rgba(0,0,0,.08);
   background: #fff;
 }
+
+.import-desc-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 10px 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.015);
+}
+
+.import-desc-label {
+  color: rgba(0, 0, 0, 0.65);
+  font-weight: 600;
+}
+
+.diagnostics-pane {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.diagnostics-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.diagnostics-time {
+  color: rgba(0, 0, 0, 0.45);
+}
+.diagnostics-schema-table {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.query-pane {
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(360px, 42%) minmax(420px, 58%);
+  gap: 12px;
+}
+.query-left,
+.query-right {
+  min-height: 0;
+  overflow: auto;
+}
+.query-template-desc {
+  margin-top: 6px;
+  color: rgba(0, 0, 0, 0.5);
+  font-size: 12px;
+}
+.query-editor {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+.query-result-summary {
+  margin-bottom: 10px;
+}
+.query-chart {
+  margin-bottom: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(22, 119, 255, 0.02);
+}
+.query-chart-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.query-chart-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 38%) 1fr 80px;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+}
+.query-chart-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.query-chart-bar-wrap {
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+.query-chart-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #1677ff 0%, #69b1ff 100%);
+}
+.query-chart-value {
+  text-align: right;
+}
+
+@media (max-width: 1320px) {
+  .query-pane {
+    grid-template-columns: 1fr;
+  }
+}
+
 </style>
 

@@ -14,13 +14,13 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Query
 
-from api.config import PROJECT_ROOT
+from tools.constants import CACHE_TASK_LOGS_PATH, CACHE_GIT_REPOS_PATH
 
 router = APIRouter(prefix="/api", tags=["import"])
 
 
 def _log_dir() -> Path:
-    d = PROJECT_ROOT / ".cache" / "task_logs"
+    d = CACHE_TASK_LOGS_PATH
     d.mkdir(parents=True, exist_ok=True)
     return d
 
@@ -29,7 +29,7 @@ def _task_queue():
     # 强制单并发：max_workers=1
     from core.task_queue import get_task_queue
 
-    q = get_task_queue(max_workers=1, cache_base_dir=str(PROJECT_ROOT / ".cache" / "git_repos"))
+    q = get_task_queue(max_workers=1, cache_base_dir=str(CACHE_GIT_REPOS_PATH))
     if not q.running:
         q.start()
     return q
@@ -124,6 +124,7 @@ def submit_import_task(body: Dict[str, Any]) -> Dict[str, Any]:
     maven_scan_enabled = bool(body.get("maven_scan_enabled", True))
     force_maven = bool(body.get("force_maven", False))
     clear_database = bool(body.get("clear_database", False))
+    auto_link_external = bool(body.get("auto_link_external", False))
 
     if not repo_url:
         return {"ok": False, "message": "repo_url 不能为空"}
@@ -144,6 +145,7 @@ def submit_import_task(body: Dict[str, Any]) -> Dict[str, Any]:
         clear_database=clear_database,
         maven_scan_enabled=maven_scan_enabled,
         force_maven=force_maven,
+        auto_link_external=auto_link_external,
         priority=getattr(__import__("core.task_queue", fromlist=["TaskPriority"]), "TaskPriority").NORMAL,
     )
 
@@ -153,16 +155,43 @@ def submit_import_task(body: Dict[str, Any]) -> Dict[str, Any]:
 @router.get("/import/tasks")
 def list_import_tasks(limit: int = Query(50, ge=1, le=500)) -> Dict[str, Any]:
     q = _task_queue()
-    tasks = q.get_all_tasks()
+    # 1) 运行态任务（内存）
+    mem_tasks = q.get_all_tasks()
+    merged: Dict[str, Dict[str, Any]] = {
+        str(t.get("task_id") or ""): t for t in mem_tasks if t.get("task_id")
+    }
+
+    # 2) 历史任务（sqlite），补齐重启后不可见的问题
+    try:
+        db_tasks = q.task_repo.list_all_tasks()  # type: ignore[attr-defined]
+    except Exception:
+        db_tasks = []
+    for t in db_tasks:
+        tid = str(t.get("task_id") or "")
+        if not tid:
+            continue
+        # 内存优先（状态更实时），sqlite 作为历史补齐
+        if tid not in merged:
+            merged[tid] = t
+
+    tasks = list(merged.values())
     # 最新优先
     tasks = sorted(tasks, key=lambda x: (x.get("created_at") or ""), reverse=True)
-    return {"ok": True, "items": tasks[: int(limit)], "stats": q.get_queue_stats()}
+    stats = q.get_queue_stats()
+    stats["history_total"] = len(tasks)
+    return {"ok": True, "items": tasks[: int(limit)], "stats": stats}
 
 
 @router.get("/import/tasks/{task_id}")
 def get_import_task(task_id: str) -> Dict[str, Any]:
     q = _task_queue()
     s = q.get_task_status(task_id)
+    if not s:
+        # 内存中找不到时，回退 sqlite 历史
+        try:
+            s = q.task_repo.get_task(task_id)  # type: ignore[attr-defined]
+        except Exception:
+            s = None
     if not s:
         return {"ok": False, "message": "task not found"}
     return {"ok": True, "item": s}

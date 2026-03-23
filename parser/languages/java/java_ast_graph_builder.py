@@ -55,12 +55,14 @@ class JavaAstGraphBuilderEngine(JavaAstGraphBuilder):
         project_id: str = "",
         project_path: str = "",
         include_comment_nodes: bool = False,
+        include_lib_nodes: bool = True,
     ):
         self.connector = connector
         self.project_id = project_id
         self.project_name = project_name
         self.project_path = project_path
         self.include_comment_nodes = include_comment_nodes
+        self.include_lib_nodes = include_lib_nodes
 
         self.created_nodes: Set[str] = set()
         self.relationships_to_create: List[Tuple[str, str, str]] = []

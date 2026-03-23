@@ -14,6 +14,7 @@ from api.tools import (
     read_uploaded_file_for_llm,
     search_code,
     read_source_file,
+    get_project_dependencies,
     _files_from_names,
 )
 
@@ -128,7 +129,7 @@ def _execute_tool(
             return result
 
         if name == "search_code":
-            proj = (project_name or "").strip()
+            proj = (arguments.get("project_name") or project_name or "").strip()
             if not proj:
                 return "[错误：当前无项目上下文，无法搜索源码]"
             return search_code(
@@ -140,7 +141,7 @@ def _execute_tool(
             )
 
         if name == "read_source_file":
-            proj = (project_name or "").strip()
+            proj = (arguments.get("project_name") or project_name or "").strip()
             if not proj:
                 return "[错误：当前无项目上下文，无法读取源码]"
             return read_source_file(
@@ -150,6 +151,12 @@ def _execute_tool(
                 end_line=int(arguments.get("end_line", 0)),
                 max_lines=int(arguments.get("max_lines", 300)),
             )
+
+        if name == "get_project_dependencies":
+            proj = (arguments.get("project_name") or project_name or "").strip()
+            if not proj:
+                return "[错误：缺少 project_name]"
+            return get_project_dependencies(proj)
 
         if name == "output_analysis_chain":
             return "已记录分析链路，请继续给出你的分析结论。"
@@ -207,14 +214,31 @@ CLAUDE_TOOLS = [
         },
     },
     {
+        "name": "get_project_dependencies",
+        "description": "查询当前项目（或指定项目）依赖了哪些其他已导入项目（二方包）。返回依赖项目名列表，可用于后续用 query_code_graph / search_code / read_source_file 并传入对应 project_name 去查那个项目的图谱或源码。排查问题时若怀疑根因在二方包，应先调用本工具确认依赖关系。",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "project_name": {
+                    "type": "string",
+                    "description": "要查询依赖的项目名，不填则用当前会话项目",
+                },
+            },
+        },
+    },
+    {
         "name": "search_code",
-        "description": "在本地项目源码中用正则搜索，返回匹配行及上下文。适合查找某个类名、方法名、字段名、关键字等在哪些文件中出现。project_name 由系统上下文自动注入，无需传入。",
+        "description": "在本地项目源码中用正则搜索，返回匹配行及上下文。适合查找某个类名、方法名、字段名、关键字等在哪些文件中出现。可通过 project_name 参数指定搜索其他项目（如二方包项目）的源码，不填则搜索当前会话项目。",
         "input_schema": {
             "type": "object",
             "properties": {
                 "pattern": {
                     "type": "string",
                     "description": "正则表达式，如 'processFlow|delayType'",
+                },
+                "project_name": {
+                    "type": "string",
+                    "description": "要搜索的项目名，可显式传入以搜索二方包等其他项目；不填则用当前会话项目",
                 },
                 "search_summary": {
                     "type": "string",
@@ -238,13 +262,17 @@ CLAUDE_TOOLS = [
     },
     {
         "name": "read_source_file",
-        "description": "读取本地项目源码文件内容。file_path 优先使用 query_code_graph 从 File 节点查出的 full_path 绝对路径，也支持相对于仓库根目录的相对路径。建议先用图谱查 File 节点拿到 full_path，再传入此工具。project_name 由系统上下文自动注入，无需传入。",
+        "description": "读取本地项目源码文件内容。可通过 project_name 参数指定读取其他项目（如二方包项目）的源码，不填则读取当前会话项目。file_path 优先使用 query_code_graph 从 File 节点查出的 full_path 绝对路径，也支持相对于仓库根目录的相对路径。建议先用图谱查 File 节点拿到 full_path，再传入此工具。",
         "input_schema": {
             "type": "object",
             "properties": {
                 "file_path": {
                     "type": "string",
                     "description": "相对于仓库根目录的文件路径，如 src/main/java/com/example/Foo.java",
+                },
+                "project_name": {
+                    "type": "string",
+                    "description": "要读取的项目名，可显式传入以读取二方包等其他项目的源码；不填则用当前会话项目",
                 },
                 "start_line": {
                     "type": "integer",
@@ -333,12 +361,26 @@ OPENAI_TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "get_project_dependencies",
+            "description": "查询当前项目（或指定项目）依赖了哪些其他已导入项目（二方包）。排查问题时若怀疑根因在二方包，应先调用本工具确认依赖关系，再用 query_code_graph / search_code / read_source_file 并传入对应 project_name 去查那个项目。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "project_name": {"type": "string", "description": "要查询依赖的项目名，不填则用当前会话项目"},
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "search_code",
-            "description": "在本地项目源码中用正则搜索，返回匹配行及上下文。project_name 由系统上下文自动注入。",
+            "description": "在本地项目源码中用正则搜索，返回匹配行及上下文。可通过 project_name 参数指定搜索其他项目（如二方包项目）的源码，不填则搜索当前会话项目。",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "pattern": {"type": "string", "description": "正则表达式"},
+                    "project_name": {"type": "string", "description": "要搜索的项目名，可显式传入以搜索二方包等其他项目；不填则用当前会话项目"},
                     "search_summary": {"type": "string", "description": "本次搜索的目的说明，会展示在思考过程中"},
                     "file_glob": {"type": "string", "description": "文件匹配模式，默认 **/*.java"},
                     "max_results": {"type": "integer", "description": "最多返回多少处，默认 20"},
@@ -352,11 +394,12 @@ OPENAI_TOOLS = [
         "type": "function",
         "function": {
             "name": "read_source_file",
-            "description": "读取本地项目源码文件内容。file_path 优先使用 query_code_graph 从 File 节点查出的 full_path 绝对路径，也支持相对路径。建议先查图谱拿 full_path 再传入。project_name 由系统上下文自动注入。",
+            "description": "读取本地项目源码文件内容。可通过 project_name 参数指定读取其他项目（如二方包项目）的源码，不填则读取当前会话项目。file_path 优先使用 query_code_graph 从 File 节点查出的 full_path 绝对路径，也支持相对路径。",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "file_path": {"type": "string", "description": "相对路径，如 src/main/java/com/example/Foo.java"},
+                    "project_name": {"type": "string", "description": "要读取的项目名，可显式传入以读取二方包等其他项目的源码；不填则用当前会话项目"},
                     "start_line": {"type": "integer", "description": "起始行（1-based），默认 1"},
                     "end_line": {"type": "integer", "description": "结束行（1-based），0=到末尾，默认 0"},
                     "max_lines": {"type": "integer", "description": "最多返回行数，默认 300"},
@@ -472,7 +515,7 @@ async def _run_claude_agent(
     client = AsyncAnthropic(api_key=key, base_url=base, timeout=timeout_sec)
     m = (model or os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-20250514")).strip()
 
-    system = (system_prompt or "").strip() + "\n\n【重要】你拥有上述工具。你必须先调用 list_uploaded_files 查看可用文件，再按需调用 read_uploaded_file 或 query_code_graph 获取内容与图谱，最后再给出分析结论。禁止只回复一句开场白而不调用任何工具。\n优先用 query_code_graph 从图谱获取信息；若图谱返回的数据已足够分析，则不必再调用 read_source_file，仅在图谱数据不足时再查源码。\n每次调用 query_code_graph 时，必须同时填写 cypher（具体的 Cypher 查询语句）和 query_summary（本次查询的目的说明），不得省略，否则用户无法看到你执行了哪些查询。调用 search_code 时请同时填写 search_summary（本次搜索的目的说明，如「查找 processFlow 的调用位置」），便于用户在思考过程中看到目的。在给出最终分析结论的那一轮，你必须先调用 output_analysis_chain 提交本次分析的完整链路（从「拿到问题」到查图、查文件等每一步的简要说明），再在回复中给出文字结论。"
+    system = (system_prompt or "").strip() + "\n\n【重要】你拥有上述工具。你必须先调用 list_uploaded_files 查看可用文件，再按需调用 read_uploaded_file 或 query_code_graph 获取内容与图谱，最后再给出分析结论。禁止只回复一句开场白而不调用任何工具。\n优先用 query_code_graph 从图谱获取信息；若图谱返回的数据已足够分析，则不必再调用 read_source_file，仅在图谱数据不足时再查源码。\n每次调用 query_code_graph 时，必须同时填写 cypher（具体的 Cypher 查询语句）和 query_summary（本次查询的目的说明），不得省略，否则用户无法看到你执行了哪些查询。调用 search_code 时请同时填写 search_summary（本次搜索的目的说明，如「查找 processFlow 的调用位置」），便于用户在思考过程中看到目的。\n【跨项目排查】若分析过程中怀疑问题根因在某个二方包项目，应先调用 get_project_dependencies 确认当前项目依赖了哪些已导入项目，再用 query_code_graph、search_code 或 read_source_file 并显式传入 project_name=<依赖项目名> 去查那个项目的图谱或源码。\n在给出最终分析结论的那一轮，你必须先调用 output_analysis_chain 提交本次分析的完整链路（从「拿到问题」到查图、查文件等每一步的简要说明），再在回复中给出文字结论。"
     # 历史消息前置，Claude 要求 user/assistant 交替
     history_messages: List[Dict[str, Any]] = []
     for h in (history or []):
@@ -642,7 +685,7 @@ async def _run_openai_agent(
             history_messages.append({"role": role, "content": content})
 
     messages: List[Dict[str, Any]] = [
-        {"role": "system", "content": (system_prompt or "").strip() + "\n\n【重要】你拥有上述工具。你必须先调用 list_uploaded_files 查看可用文件，再按需调用 read_uploaded_file 或 query_code_graph，最后再给出分析结论。禁止只回复一句开场白而不调用任何工具。\n优先用 query_code_graph 从图谱获取信息；若图谱返回的数据已足够分析，则不必再调用 read_source_file，仅在图谱数据不足时再查源码。\n每次调用 query_code_graph 时，必须同时填写 cypher（具体的 Cypher 查询语句）和 query_summary（本次查询的目的说明），不得省略，否则用户无法看到你执行了哪些查询。调用 search_code 时请同时填写 search_summary（本次搜索的目的说明），便于用户在思考过程中看到目的。在给出最终分析结论的那一轮，你必须先调用 output_analysis_chain 提交本次分析的完整链路（从「拿到问题」到查图、查文件等每一步），再在回复中给出文字结论。"},
+        {"role": "system", "content": (system_prompt or "").strip() + "\n\n【重要】你拥有上述工具。你必须先调用 list_uploaded_files 查看可用文件，再按需调用 read_uploaded_file 或 query_code_graph，最后再给出分析结论。禁止只回复一句开场白而不调用任何工具。\n优先用 query_code_graph 从图谱获取信息；若图谱返回的数据已足够分析，则不必再调用 read_source_file，仅在图谱数据不足时再查源码。\n每次调用 query_code_graph 时，必须同时填写 cypher（具体的 Cypher 查询语句）和 query_summary（本次查询的目的说明），不得省略，否则用户无法看到你执行了哪些查询。调用 search_code 时请同时填写 search_summary（本次搜索的目的说明），便于用户在思考过程中看到目的。\n【跨项目排查】若分析过程中怀疑问题根因在某个二方包项目，应先调用 get_project_dependencies 确认当前项目依赖了哪些已导入项目，再用 query_code_graph、search_code 或 read_source_file 并显式传入 project_name=<依赖项目名> 去查那个项目的图谱或源码。\n在给出最终分析结论的那一轮，你必须先调用 output_analysis_chain 提交本次分析的完整链路（从「拿到问题」到查图、查文件等每一步），再在回复中给出文字结论。"},
         *history_messages,
         {"role": "user", "content": user_content},
     ]

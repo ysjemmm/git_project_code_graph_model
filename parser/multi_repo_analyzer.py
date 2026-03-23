@@ -10,6 +10,7 @@ from typing import Dict, List, Optional
 
 from parser.incremental_analyzer import IncrementalAnalyzer
 from parser.utils.logger import get_logger
+from tools.constants import CACHE_INCREMENTAL_PATH
 
 # 获取日志记录
 logger = get_logger("multi_repo_analyzer")
@@ -17,7 +18,7 @@ logger = get_logger("multi_repo_analyzer")
 class MultiRepoAnalyzer:
     
     
-    def __init__(self, cache_base_dir: str = ".cache/incremental", max_workers: int = 4):
+    def __init__(self, cache_base_dir: str = str(CACHE_INCREMENTAL_PATH), max_workers: int = 4):
         
         self.cache_base_dir = cache_base_dir
         self.max_workers = max_workers

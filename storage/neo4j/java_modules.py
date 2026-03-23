@@ -61,6 +61,8 @@ class JavaGraphEdgeType(Enum):
     LIB_LINK = "LIB_LINK"
     # 同名 Lib 与 Application 为同一制品（Lib -> Application，便于从依赖跳到源码项目）
     SAME_ARTIFACT = "SAME_ARTIFACT"
+    # 手动关联的项目间依赖（Application A -> Application/Lib B）
+    DEPENDS_ON = "DEPENDS_ON"
 
     def get_unique_key(self) -> List[str]:
         
@@ -98,6 +100,7 @@ REL_ENDPOINT_LABELS: Dict[str, Optional[Tuple[str, str]]] = {
     JavaGraphEdgeType.CONTAINS_LIB.value: (JavaNeo4jNodeType.Project.value, JavaNeo4jNodeType.JavaObject.value),
     JavaGraphEdgeType.LIB_LINK.value: (JavaNeo4jNodeType.JavaObject.value, JavaNeo4jNodeType.JavaObject.value),
     JavaGraphEdgeType.SAME_ARTIFACT.value: (JavaNeo4jNodeType.Project.value, JavaNeo4jNodeType.Project.value),
+    JavaGraphEdgeType.DEPENDS_ON.value: (JavaNeo4jNodeType.Project.value, JavaNeo4jNodeType.Project.value),
 }
 
 # MEMBER_OF 的 source/target 可能为多种 label，用 OR 限制到已知类型，仍比无 label 快

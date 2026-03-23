@@ -1,4 +1,4 @@
-import type { AnalysisChainStep, ToolStep } from '../api/bugfix'
+import type { AnalysisChainStep, ToolStep } from '../api'
 
 /** 单条消息内的交错段落：一句文字后紧跟这句用到的 tool，按事件顺序 */
 export type ChatMsgSegment =

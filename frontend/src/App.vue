@@ -15,7 +15,7 @@ const router = useRouter()
 const route = useRoute()
 
 const selectedKeys = computed(() => {
-  if (route.path.startsWith('/project-meta')) return ['project-meta']
+  if (route.path.startsWith('/application-admin')) return ['application-admin']
   if (route.path.startsWith('/second-party-rules')) return ['second-party-rules']
   if (route.path.startsWith('/graph')) return ['graph']
   if (route.path.startsWith('/bugfix')) return ['bugfix']
@@ -27,7 +27,7 @@ function go(key: string) {
   const map: Record<string, string> = {
     'bugfix': '/bugfix',
     'graph': '/graph',
-    'project-meta': '/project-meta',
+    'application-admin': '/application-admin',
     'second-party-rules': '/second-party-rules',
   }
   const target = map[k]
@@ -73,9 +73,9 @@ watchEffect(() => {
             <span>管理代码图谱</span>
           </a-menu-item>
 
-          <a-menu-item key="project-meta">
+          <a-menu-item key="application-admin">
             <template #icon><DatabaseOutlined /></template>
-            <span>项目元数据</span>
+            <span>应用管理</span>
           </a-menu-item>
 
           <a-menu-item key="second-party-rules">

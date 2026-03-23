@@ -1,4 +1,4 @@
-﻿"""
+"""
 项目类数据库模块
 用于管理 SQLite 数据库中的项目 Java 类信息
 """
@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import List, Optional
 from datetime import datetime
 
-from tools.constants import PROJECT_ROOT_PATH
+from tools.constants import CACHE_PROJECT_CLASSES_DB_PATH
 
 
 @dataclass
@@ -59,7 +59,7 @@ class ProjectClassDB:
         
         # 使用项目根路径
         if db_path is None:
-            db_path = str(PROJECT_ROOT_PATH / ".cache" / "project_classes.db")
+            db_path = str(CACHE_PROJECT_CLASSES_DB_PATH)
         
         self.db_path = db_path
         self.conn: Optional[sqlite3.Connection] = None

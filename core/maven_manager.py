@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 
 from parser.utils.logger import get_logger
-from tools.constants import PROJECT_ROOT_PATH
+from tools.constants import CACHE_MAVEN_PATH
 
 logger = get_logger("maven_manager")
 
@@ -104,7 +104,7 @@ class MavenIncrementalManager:
         self.repo_cache_key = repo_cache_key or f"{root_name}-{root_fp}"
 
     def marker_path(self) -> Path:
-        return Path(PROJECT_ROOT_PATH) / ".cache" / "maven" / f".{self.repo_cache_key}.marker.json"
+        return CACHE_MAVEN_PATH / f".{self.repo_cache_key}.marker.json"
 
     @staticmethod
     def is_maven_project(repo_root: str) -> bool:

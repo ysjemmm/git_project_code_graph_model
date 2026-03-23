@@ -3,7 +3,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { BulbOutlined, CodeOutlined, FileTextOutlined, FolderOpenOutlined, LinkOutlined, SearchOutlined, ToolOutlined } from '@ant-design/icons-vue'
 import type { ChatMsg } from '../types'
 import { NEO4J_AURA_QUERY_URL } from '../constants'
-import type { ToolStep } from '../api/bugfix'
+import type { ToolStep } from '../api'
 
 const props = defineProps<{
   loading: boolean

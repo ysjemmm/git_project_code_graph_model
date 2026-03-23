@@ -51,16 +51,25 @@ class Neo4jGraphStore(GraphStore):
             project_path=ctx.repo_cache_dir,
             ast_data_list=ast_data_list,
             include_comment_nodes=ctx.include_comment_nodes,
+            include_lib_nodes=getattr(ctx, 'auto_link_external', True),
         )
         result = self.write_batch(ctx, batch)
 
         # 外部类链接统一在落库后执行；用 link_all 全局连一次，避免依赖导入顺序（先 A 后 B 或先 B 后 A 都能连上）
+        if getattr(ctx, 'auto_link_external', True):
+            try:
+                linker = ExternalClassLinker(self.connector)
+                _ = linker.link_all(dry_run=False)
+                _ = linker.link_lib_to_application()
+            except Exception:
+                # 链接失败不影响主导入流程
+                pass
+
+        # 若本次导入的是 Application 项目，将同名 Lib 节点合并进来（去重）
         try:
             linker = ExternalClassLinker(self.connector)
-            _ = linker.link_all(dry_run=False)
-            _ = linker.link_lib_to_application()
+            linker.absorb_lib_node(ctx.project_name)
         except Exception:
-            # 链接失败不影响主导入流程
             pass
 
         return result

@@ -5,12 +5,13 @@ from datetime import datetime
 from typing import Dict, Optional, Tuple
 
 from storage.cache.merkle_tree import MerkleNode
+from tools.constants import CACHE_GIT_REPOS_PATH
 
 
 class GitCacheManager:
     
     
-    def __init__(self, cache_base_dir: str = ".cache/git_repos"):
+    def __init__(self, cache_base_dir: str = str(CACHE_GIT_REPOS_PATH)):
         """
         cache_base_dir: 仓库克隆根目录（如 .cache/git_repos）
         merkle_trees / metadata 与 maven 同级，放在 cache 根目录（.cache）下

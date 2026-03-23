@@ -8,10 +8,12 @@ SQLite 业务数据持久化层（Business DB）
 
 from .business_db import BusinessSqliteDB, get_business_db
 from .git_tasks_repo import GitImportTasksRepo
+from .application_projects_repo import ApplicationProjectsRepo
 
 __all__ = [
     "BusinessSqliteDB",
     "get_business_db",
     "GitImportTasksRepo",
+    "ApplicationProjectsRepo",
 ]
 

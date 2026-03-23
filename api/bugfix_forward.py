@@ -4,6 +4,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Tuple
+from tools.constants import CACHE_GIT_REPOS_PATH
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,9 +72,7 @@ def generate_forward_processflow_npe_fix_patch(
     默认只生成 diff；apply=True 才会真正写文件。
     """
     target = target_file or (
-        workspace_root
-        / ".cache"
-        / "git_repos"
+        CACHE_GIT_REPOS_PATH
         / "forward"
         / "service"
         / "src"
@@ -89,7 +88,7 @@ def generate_forward_processflow_npe_fix_patch(
     if not target.exists():
         return PatchResult(
             ok=False,
-            message="未找到目标文件（请确认已在 .cache/git_repos/forward 拉取仓库）",
+            message="未找到目标文件（请确认已在缓存仓库目录拉取 forward）",
             target_file=str(target),
             unified_diff="",
             applied=False,

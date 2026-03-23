@@ -188,6 +188,39 @@ class ExternalClassLinker:
         except Exception as e:
             logger.warning(f"[WARN] 建立 SAME_ARTIFACT 失败: {e}")
             return {'success': False, 'created_count': 0}
+
+    def absorb_lib_node(self, project_name: str) -> Dict:
+        """
+        将与 Application 同名的 Project(Lib) 节点合并进 Application 节点。
+        先重定向 DEPENDS_ON / CONTAINS_LIB 入边，再删除 Lib 节点。
+        应在 Application 项目导入完成后调用。
+
+        参数:
+            project_name: 刚导入的 Application 项目名称
+        返回: { success, absorbed_count }
+        """
+        try:
+            params = {"project_name": project_name}
+            # 1. 重定向 DEPENDS_ON 入边
+            self.connector.execute_write_query(
+                Neo4jQueries.redirect_depends_on_to_application(), params
+            )
+            # 2. 重定向 CONTAINS_LIB 入边
+            self.connector.execute_write_query(
+                Neo4jQueries.redirect_contains_lib_to_application(), params
+            )
+            # 3. 删除 Lib 节点
+            result = self.connector.execute_write_query(
+                Neo4jQueries.absorb_lib_node_into_application(), params
+            )
+            record = next(iter(result), None)
+            absorbed_count = int(record.get('absorbed_count', 0)) if record else 0
+            if absorbed_count:
+                logger.info(f"[INFO] 已将 {absorbed_count} 个 Project(Lib) 节点合并进 Application '{project_name}'")
+            return {'success': True, 'absorbed_count': absorbed_count}
+        except Exception as e:
+            logger.warning(f"[WARN] 合并 Lib 节点失败 (project={project_name}): {e}")
+            return {'success': False, 'absorbed_count': 0}
     
     def find_unlinked_external_classes(self, limit: int = 100) -> List[Dict]:
         """

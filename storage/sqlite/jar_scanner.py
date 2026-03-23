@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from tools.constants import PROJECT_ROOT_PATH
+from tools.constants import CACHE_MAVEN_PATH
 
 from .class_name_parser import ClassNameParser
 from .jar_class_db import JARClassDB, ClassInfo
@@ -337,7 +337,7 @@ class JARScanner:
         if base:
             repo = Path(base)
         else:
-            repo = PROJECT_ROOT_PATH / ".cache" / "maven"
+            repo = CACHE_MAVEN_PATH
             if not repo.exists():
                 repo = Path.home() / ".m2" / "repository"
         dir_path = repo / group_id / artifact_id / version

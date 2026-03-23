@@ -7,6 +7,7 @@ from typing import Dict, List, Optional, Tuple
 from git.manager import GitManager
 from storage.cache.git_cache import GitCacheManager
 from storage.cache.merkle_tree import MerkleTreeBuilder, MerkleTreeComparator
+from tools.constants import CACHE_GIT_REPOS_PATH
 
 logger = get_logger("git_incremental_analyzer")
 
@@ -53,7 +54,7 @@ def _auto_detect_java_source_dir(repo_root: str) -> Optional[str]:
 class GitIncrementalAnalyzer:
     """Git 增量分析"""
     
-    def __init__(self, cache_base_dir: str = ".cache/git_repos"):
+    def __init__(self, cache_base_dir: str = str(CACHE_GIT_REPOS_PATH)):
         
         self.cache_manager = GitCacheManager(cache_base_dir)
         self.merkle_builder = MerkleTreeBuilder()

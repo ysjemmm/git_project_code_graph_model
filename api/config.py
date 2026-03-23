@@ -3,14 +3,18 @@
 """
 from __future__ import annotations
 
-from pathlib import Path
+from tools.constants import (
+    PROJECT_ROOT_PATH,
+    CACHE_GIT_REPOS_PATH,
+    CACHE_GIT_REFS_PATH,
+)
 
 # 项目根目录（api 的上一级）
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = PROJECT_ROOT_PATH
 STATIC_DIR = PROJECT_ROOT / "static"
-GIT_CACHE_DIR = PROJECT_ROOT / ".cache" / "git_repos"
+GIT_CACHE_DIR = CACHE_GIT_REPOS_PATH
 # 仅用于 refs 下拉（branches/commits）的轻量缓存，避免污染“项目元数据”的 git_repos 列表
-GIT_REFS_CACHE_DIR = PROJECT_ROOT / ".cache" / "git_refs"
+GIT_REFS_CACHE_DIR = CACHE_GIT_REFS_PATH
 
 
 def load_env() -> None:

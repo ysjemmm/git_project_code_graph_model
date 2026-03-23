@@ -73,6 +73,7 @@ class GraphProjectListResponse(BaseModel):
 
 
 class CacheProjectItem(BaseModel):
+    id: Optional[int] = None
     repo_name: str
     project_name: Optional[str] = None
     project_key: Optional[str] = None
@@ -95,6 +96,11 @@ class CacheProjectItem(BaseModel):
     # cache metrics
     cache_size_mb: Optional[float] = None
     merkle_branches: List[str] = []
+
+    # 依赖关联概览
+    linked_by_count: Optional[int] = 0   # 多少项目“关联到我”（入向）
+    linked_to_count: Optional[int] = 0   # 我“关联到”多少项目（出向）
+    linked_by_preview: List[str] = []    # 入向关联预览（来源项目(次数)）
 
 
 class CacheProjectListResponse(BaseModel):
@@ -135,28 +141,28 @@ class CanDeleteApplicationResponse(BaseModel):
 
 
 class SecondPartyRuleCreateRequest(BaseModel):
+    name: str
     enabled: bool = True
     sort_order: int = 0
     group_id_regex: str
     artifact_id_regex: str
-    target_project_name: str
 
 
 class SecondPartyRuleUpdateRequest(BaseModel):
+    name: str
     enabled: bool = True
     sort_order: int = 0
     group_id_regex: str
     artifact_id_regex: str
-    target_project_name: str
 
 
 class SecondPartyRuleResponseItem(BaseModel):
     id: int
+    name: str
     enabled: bool
     sort_order: int
     group_id_regex: str
     artifact_id_regex: str
-    target_project_name: str
     created_at: str
     updated_at: str
 

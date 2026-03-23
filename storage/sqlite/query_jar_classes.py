@@ -11,6 +11,7 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from storage.sqlite import JARClassDB
+from tools.constants import CACHE_JAR_CLASSES_DB_PATH
 
 
 def print_class_info(cls, index=None):
@@ -141,7 +142,7 @@ def query_by_jar(db: JARClassDB):
 
 def main():
     """主函数"""
-    db_path = ".cache/jar_classes.db"
+    db_path = str(CACHE_JAR_CLASSES_DB_PATH)
     
     # 检查数据库是否存在
     if not Path(db_path).exists():

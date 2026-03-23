@@ -7,6 +7,7 @@ Neo4j 数据库连接器
 import logging
 import re
 import hashlib
+import time
 from threading import Lock
 from typing import Dict, List, Optional
 
@@ -14,6 +15,7 @@ from neo4j import GraphDatabase, Driver
 from neo4j.exceptions import ServiceUnavailable, SessionExpired, Neo4jError
 
 from storage.neo4j.java_modules import JavaGraphEdgeType
+from storage.neo4j.query_diagnostics import record_neo4j_operation
 
 logger = logging.getLogger(__name__)
 
@@ -153,21 +155,73 @@ class Neo4jConnector:
 
                 return session.execute_read(_tx_run)
 
+        start = time.perf_counter()
         try:
-            return _run()
+            rows = _run()
+            elapsed_ms = (time.perf_counter() - start) * 1000
+            record_neo4j_operation(
+                op_type="read",
+                query=query,
+                parameters=parameters,
+                elapsed_ms=elapsed_ms,
+                ok=True,
+                row_count=len(rows),
+            )
+            return rows
         except (ServiceUnavailable, SessionExpired, Neo4jError, OSError) as e:
             # 连接抖动/会话失效：尝试重连并重试一次
             logger.warning(f"查询失败（将重试一次）: {e}")
+            elapsed_ms = (time.perf_counter() - start) * 1000
+            record_neo4j_operation(
+                op_type="read",
+                query=query,
+                parameters=parameters,
+                elapsed_ms=elapsed_ms,
+                ok=False,
+                error=str(e),
+                row_count=0,
+            )
             try:
                 self.connected = False
                 if not self.connect():
                     return []
-                return _run()
+                retry_start = time.perf_counter()
+                rows = _run()
+                retry_elapsed_ms = (time.perf_counter() - retry_start) * 1000
+                record_neo4j_operation(
+                    op_type="read-retry",
+                    query=query,
+                    parameters=parameters,
+                    elapsed_ms=retry_elapsed_ms,
+                    ok=True,
+                    row_count=len(rows),
+                )
+                return rows
             except Exception as e2:
                 logger.error(f"查询重试失败: {e2}")
+                retry_elapsed_ms = (time.perf_counter() - start) * 1000
+                record_neo4j_operation(
+                    op_type="read-retry",
+                    query=query,
+                    parameters=parameters,
+                    elapsed_ms=retry_elapsed_ms,
+                    ok=False,
+                    error=str(e2),
+                    row_count=0,
+                )
                 return []
         except Exception as e:
             logger.error(f"查询失败: {e}")
+            elapsed_ms = (time.perf_counter() - start) * 1000
+            record_neo4j_operation(
+                op_type="read",
+                query=query,
+                parameters=parameters,
+                elapsed_ms=elapsed_ms,
+                ok=False,
+                error=str(e),
+                row_count=0,
+            )
             return []
 
     def execute_query(self, query: str, parameters: Optional[Dict] = None) -> List[Dict]:
@@ -197,20 +251,72 @@ class Neo4jConnector:
 
                 return session.execute_write(_tx_run)
 
+        start = time.perf_counter()
         try:
-            return _run()
+            rows = _run()
+            elapsed_ms = (time.perf_counter() - start) * 1000
+            record_neo4j_operation(
+                op_type="write",
+                query=query,
+                parameters=parameters,
+                elapsed_ms=elapsed_ms,
+                ok=True,
+                row_count=len(rows),
+            )
+            return rows
         except (ServiceUnavailable, SessionExpired, Neo4jError, OSError) as e:
             logger.warning(f"写入失败（将重试一次）: {e}")
+            elapsed_ms = (time.perf_counter() - start) * 1000
+            record_neo4j_operation(
+                op_type="write",
+                query=query,
+                parameters=parameters,
+                elapsed_ms=elapsed_ms,
+                ok=False,
+                error=str(e),
+                row_count=0,
+            )
             try:
                 self.connected = False
                 if not self.connect():
                     return []
-                return _run()
+                retry_start = time.perf_counter()
+                rows = _run()
+                retry_elapsed_ms = (time.perf_counter() - retry_start) * 1000
+                record_neo4j_operation(
+                    op_type="write-retry",
+                    query=query,
+                    parameters=parameters,
+                    elapsed_ms=retry_elapsed_ms,
+                    ok=True,
+                    row_count=len(rows),
+                )
+                return rows
             except Exception as e2:
                 logger.error(f"写入重试失败: {e2}")
+                retry_elapsed_ms = (time.perf_counter() - start) * 1000
+                record_neo4j_operation(
+                    op_type="write-retry",
+                    query=query,
+                    parameters=parameters,
+                    elapsed_ms=retry_elapsed_ms,
+                    ok=False,
+                    error=str(e2),
+                    row_count=0,
+                )
                 return []
         except Exception as e:
             logger.error(f"写入失败: {e}")
+            elapsed_ms = (time.perf_counter() - start) * 1000
+            record_neo4j_operation(
+                op_type="write",
+                query=query,
+                parameters=parameters,
+                elapsed_ms=elapsed_ms,
+                ok=False,
+                error=str(e),
+                row_count=0,
+            )
             return []
     
     def create_node(self, label: str, properties: Dict) -> bool:

@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import type { RepoItem } from '../types'
+import { uploadFiles } from '../api'
 
 export function useUpload(
   getRepo: () => RepoItem | undefined,
@@ -25,13 +26,7 @@ export function useUpload(
     uploading.value = true
     uploadResult.value = null
     try {
-      const form = new FormData()
-      form.append('project_name', repo.name)
-      form.append('ref', refVal)
-      form.append('files', file.originFileObj ?? file)
-      const r = await fetch('/api/upload', { method: 'POST', body: form })
-      const data = await r.json()
-      if (!r.ok || !data?.ok) throw new Error(data?.message ?? '上传失败')
+      const data = await uploadFiles(repo.name, refVal, file.originFileObj ?? file)
       const names = (data.saved ?? []).map((x: any) => x.filename).filter(Boolean)
       sessionUploadedFileNames.value.push(...names)
       uploadResult.value = null

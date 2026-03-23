@@ -370,6 +370,139 @@ class Neo4jQueries:
         RETURN created_count
         """
 
+    @staticmethod
+    def absorb_lib_node_into_application() -> str:
+        """
+        将与 Application 同名的 Project(Lib) 节点合并进 Application 节点。
+        重定向 DEPENDS_ON / CONTAINS_LIB 入边，然后删除 Lib 节点。
+        只处理指定 project_name 对应的 Lib 节点。
+
+        参数:
+            project_name: str - Application 项目名称
+        返回字段:
+            absorbed_count (被删除的 Lib 节点数)
+        """
+        return """
+        MATCH (app:Project {project_type: 'Application', name: $project_name})
+        MATCH (lib:Project {project_type: 'Lib', name: $project_name})
+        WHERE lib <> app
+        WITH app, lib, 1 AS one
+        DETACH DELETE lib
+        RETURN sum(one) AS absorbed_count
+        """
+
+    @staticmethod
+    def redirect_depends_on_to_application() -> str:
+        """
+        将指向 Lib 节点的 DEPENDS_ON 边重定向到同名 Application 节点。
+        在 absorb_lib_node_into_application 之前调用。
+
+        参数:
+            project_name: str
+        """
+        return """
+        MATCH (app:Project {project_type: 'Application', name: $project_name})
+        MATCH (src)-[r:DEPENDS_ON]->(lib:Project {project_type: 'Lib', name: $project_name})
+        WHERE lib <> app
+        MERGE (src)-[nr:DEPENDS_ON {group_id: coalesce(r.group_id,''), artifact_id: coalesce(r.artifact_id,'')}]->(app)
+        ON CREATE SET nr.dep_version = coalesce(r.dep_version,''), nr.manually_linked = coalesce(r.manually_linked, false)
+        RETURN count(nr) AS redirected
+        """
+
+    @staticmethod
+    def redirect_contains_lib_to_application() -> str:
+        """
+        将指向 Lib 节点的 CONTAINS_LIB 边重定向到同名 Application 节点。
+        在 absorb_lib_node_into_application 之前调用。
+
+        参数:
+            project_name: str
+        """
+        return """
+        MATCH (app:Project {project_type: 'Application', name: $project_name})
+        MATCH (src)-[r:CONTAINS_LIB]->(lib:Project {project_type: 'Lib', name: $project_name})
+        WHERE lib <> app
+        MERGE (src)-[:CONTAINS_LIB]->(app)
+        RETURN count(*) AS redirected
+        """
+
+    # ==================== 项目摘要查询 ====================
+
+    @staticmethod
+    def project_summary() -> str:
+        """
+        查询某个 Application 项目的节点摘要（周边 2 跳内的节点采样）。
+
+        参数:
+            project_name: str
+        返回字段:
+            projectName, sample
+        """
+        return """
+        MATCH (p:Project {project_type: 'Application'})
+        WHERE p.name = $project_name AND (coalesce(p.is_active,false) = true OR p.is_active IS NULL)
+        OPTIONAL MATCH (p)-[:CONTAINS*0..2]->(m)
+        WHERE m.symbol_id IS NOT NULL
+        WITH p, collect(DISTINCT { label: labels(m)[0], id: m.symbol_id, name: m.name })[0..20] AS sample
+        RETURN p.name AS projectName, sample
+        LIMIT 1
+        """
+
+    # ==================== 项目间依赖关系 ====================
+
+    @staticmethod
+    def get_project_depends_on() -> str:
+        """
+        查询某项目通过 DEPENDS_ON 边依赖的其他已导入项目。
+
+        参数:
+            name: str - 项目名
+        返回字段:
+            dep_project, group_id, artifact_id, project_type
+        """
+        return """
+        MATCH (a:Project {name: $name})-[r:DEPENDS_ON]->(b:Project)
+        RETURN b.name AS dep_project,
+               r.group_id AS group_id,
+               r.artifact_id AS artifact_id,
+               r.dep_version AS dep_version,
+               b.project_type AS project_type
+        ORDER BY r.group_id, r.artifact_id
+        """
+
+    @staticmethod
+    def merge_depends_on_links() -> str:
+        """
+        批量 MERGE 手动关联的 DEPENDS_ON 边（幂等）。
+
+        参数:
+            links: List[{from_project, to_project, group_id, artifact_id, dep_version?}]
+        返回字段:
+            synced
+        """
+        return """
+        UNWIND $links AS lnk
+        MATCH (a:Project {name: lnk.from_project})
+        MATCH (b:Project {name: lnk.to_project})
+        MERGE (a)-[r:DEPENDS_ON {group_id: lnk.group_id, artifact_id: lnk.artifact_id}]->(b)
+        ON CREATE SET r.manually_linked = true, r.created_at = datetime()
+        SET r.dep_version = coalesce(lnk.dep_version, r.dep_version, '')
+        RETURN count(r) AS synced
+        """
+
+    @staticmethod
+    def delete_depends_on_link() -> str:
+        """
+        删除一条 DEPENDS_ON 边。
+
+        参数:
+            from_project, to_project, group_id, artifact_id
+        """
+        return """
+        MATCH (a:Project {name: $from_project})-[r:DEPENDS_ON {group_id: $group_id, artifact_id: $artifact_id}]->(b:Project {name: $to_project})
+        DELETE r
+        """
+
     # ==================== 批量操作查询 ====================
     
     @staticmethod

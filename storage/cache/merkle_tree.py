@@ -4,6 +4,7 @@ import os
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, List, Optional, Set
+from tools.constants import CACHE_ROOT_PATH
 
 @dataclass
 class MerkleNode:
@@ -241,7 +242,7 @@ class MerkleTreeComparator:
 class MerkleTreeCache:
     
     
-    def __init__(self, cache_file: str = ".cache/incremental/merkle_tree_cache.json"):
+    def __init__(self, cache_file: str = str(CACHE_ROOT_PATH / "incremental" / "merkle_tree_cache.json")):
         self.cache_file = cache_file
         self.tree_data: Optional[Dict] = None
         self.load_cache()
@@ -307,7 +308,7 @@ class MerkleTreeCache:
 class MerkleTreeAnalyzer:
     
     
-    def __init__(self, cache_dir: str = ".cache/incremental"):
+    def __init__(self, cache_dir: str = str(CACHE_ROOT_PATH / "incremental")):
         self.cache_dir = cache_dir
         self.cache = MerkleTreeCache(os.path.join(cache_dir, "merkle_tree_cache.json"))
         self.builder = MerkleTreeBuilder()

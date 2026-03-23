@@ -31,11 +31,11 @@ def list_second_party_rules() -> SecondPartyRuleListResponse:
 @router.post("/second-party-rules", response_model=SecondPartyRuleResponse)
 def create_second_party_rule(req: SecondPartyRuleCreateRequest) -> SecondPartyRuleResponse:
     rule = _repo().create_rule(
+        name=req.name,
         enabled=req.enabled,
         sort_order=req.sort_order,
         group_id_regex=req.group_id_regex,
         artifact_id_regex=req.artifact_id_regex,
-        target_project_name=req.target_project_name,
     )
     return SecondPartyRuleResponse(ok=True, item=rule)
 
@@ -44,11 +44,11 @@ def create_second_party_rule(req: SecondPartyRuleCreateRequest) -> SecondPartyRu
 def update_second_party_rule(rule_id: int, req: SecondPartyRuleUpdateRequest) -> SecondPartyRuleResponse:
     rule = _repo().update_rule(
         rule_id=rule_id,
+        name=req.name,
         enabled=req.enabled,
         sort_order=req.sort_order,
         group_id_regex=req.group_id_regex,
         artifact_id_regex=req.artifact_id_regex,
-        target_project_name=req.target_project_name,
     )
     if rule is None:
         return SecondPartyRuleResponse(ok=False, message=f"rule_id={rule_id} 不存在", item=None)

@@ -162,7 +162,8 @@ class JavaExternalTypeResolutionMixin:
 
         # 仅对「能解析到归属」的外部依赖创建 Project(Lib) 与 CONTAINS_LIB，避免 __UNKNOWN__ 撑大 Lib 列表
         if (
-            java_object.belong_project is not None
+            getattr(self, 'include_lib_nodes', True)
+            and java_object.belong_project is not None
             and java_object.belong_project != self.project_name
             and java_object.belong_project != "__UNKNOWN__"
         ):

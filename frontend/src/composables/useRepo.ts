@@ -1,4 +1,5 @@
 import { computed, ref, watch } from 'vue'
+import { listApplicationProjects, listGitRepos, listGraphProjects, listGitBranches, listGitCommits } from '../api'
 
 // 项目元数据（来自图谱）
 interface ProjectMeta {
@@ -6,13 +7,15 @@ interface ProjectMeta {
   url: string
   branch?: string
   commitHash?: string
+  id?: number | null
 }
 
 type ProjectSource = 'graphProjects' | 'cacheApplicationProjects' | 'gitRepos'
 
-export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: ProjectSource }) {
+export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: ProjectSource; autoFillRefFromMeta?: boolean }) {
   const lazyRefFetch = Boolean(opts?.lazyRefFetch)
   const projectSource: ProjectSource = opts?.projectSource ?? 'graphProjects'
+  const autoFillRefFromMeta = opts?.autoFillRefFromMeta !== false
   const repos = ref<ProjectMeta[]>([])
   const loadingRepos = ref(false)
   const repoMode = ref<'select' | 'custom'>('select')
@@ -75,7 +78,8 @@ export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: Project
     branches.value.map((b) => ({ label: b, value: b })),
   )
   const commitOptions = computed(() =>
-    commits.value.map((c) => ({ label: c.slice(0, 8), value: c })),
+    // commit id 可能很长：label 使用完整值，避免用户复制时拿不到 full id
+    commits.value.map((c) => ({ label: c, value: c })),
   )
   const branchDisabled = computed(() => Boolean(commitId.value))
   const commitDisabled = computed(() => Boolean(branch.value))
@@ -86,7 +90,7 @@ export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: Project
     return Boolean(branch.value) || Boolean(commitId.value)
   })
   const uploadRef = computed(
-    () => branch.value ?? (commitId.value ? commitId.value.slice(0, 8) : '') ?? '',
+    () => branch.value ?? (commitId.value ? commitId.value : '') ?? '',
   )
   const canUpload = computed(
     () => Boolean(repo.value?.name) && Boolean(uploadRef.value),
@@ -96,15 +100,8 @@ export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: Project
     try {
       if (projectSource === 'cacheApplicationProjects') {
         loadingRepos.value = true
-        const resp = await fetch('/api/cache/application-projects')
-        if (!resp.ok) throw new Error(`加载 application-projects 失败：${resp.status}`)
-        const data = await resp.json()
-        const items: Array<{
-          project_name: string
-          repo_url?: string
-          branch?: string
-          commit_hash?: string
-        }> = Array.isArray(data?.items) ? data.items : []
+        const data = await listApplicationProjects()
+        const items = Array.isArray(data?.items) ? data.items : []
         repos.value = items
           .filter((x) => x.project_name && String(x.project_name).trim() && x.project_name !== '(error)' && x.project_name !== '(unknown)')
           .map((x) => ({
@@ -112,15 +109,14 @@ export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: Project
             url: String(x.repo_url ?? ''),
             branch: x.branch ? String(x.branch) : '',
             commitHash: x.commit_hash ? String(x.commit_hash) : '',
+            id: x.id ?? null,
           }))
         return
       }
 
       if (projectSource === 'gitRepos') {
         loadingRepos.value = true
-        const resp = await fetch('/api/git-repos')
-        if (!resp.ok) throw new Error(`加载 git-repos 失败：${resp.status}`)
-        const data = await resp.json()
+        const data = await listGitRepos()
         repos.value = (Array.isArray(data?.gitList) ? data.gitList : []).map((x: any) => ({
           name: x.name,
           url: x.url,
@@ -128,38 +124,22 @@ export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: Project
         return
       }
 
-      // graphProjects: 从 Neo4j 里列出 Project 节点（含 branch/commit_hash/次数信息）
+      // graphProjects
       loadingRepos.value = true
-      const resp = await fetch('/api/graph/projects')
-      if (resp.ok) {
-        const data = await resp.json()
-        const items: Array<{
-          project_name: string
-          repo_url?: string
-          branch?: string
-          commit_hash?: string
-        }> = Array.isArray(data?.items) ? data.items : []
-        repos.value = items
-          .filter(
-            (x) =>
-              x.project_name &&
-              x.project_name !== '(error)' &&
-              x.project_name !== '(unknown)',
-          )
-          .map((x) => ({
-            name: x.project_name,
-            url: x.repo_url ?? '',
-            branch: x.branch ?? '',
-            commitHash: x.commit_hash ?? '',
-          }))
-        return
-      }
+      const data = await listGraphProjects()
+      const items = Array.isArray(data?.items) ? data.items : []
+      repos.value = items
+        .filter((x) => x.project_name && x.project_name !== '(error)' && x.project_name !== '(unknown)')
+        .map((x) => ({
+          name: x.project_name,
+          url: x.repo_url ?? '',
+          branch: x.branch ?? '',
+          commitHash: x.commit_hash ?? '',
+        }))
     } catch {
       // 兜底
       try {
-        const resp = await fetch('/api/git-repos')
-        if (!resp.ok) throw new Error(`加载仓库失败：${resp.status}`)
-        const data = await resp.json()
+        const data = await listGitRepos()
         repos.value = (Array.isArray(data?.gitList) ? data.gitList : []).map((x: any) => ({
           name: x.name,
           url: x.url,
@@ -196,10 +176,7 @@ export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: Project
     if (!repo.value?.url) return
     loadingBranches.value = true
     try {
-      const url = new URL('/api/git-branches', window.location.origin)
-      url.searchParams.set('repoUrl', repo.value.url)
-      if (q?.trim()) url.searchParams.set('q', q.trim())
-      const data = await fetch(url.toString()).then((r) => r.json())
+      const data = await listGitBranches(repo.value.url, q)
       branches.value = Array.isArray(data?.items) ? data.items : []
     } finally {
       loadingBranches.value = false
@@ -210,11 +187,7 @@ export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: Project
     if (!repo.value?.url) return
     loadingCommits.value = true
     try {
-      const url = new URL('/api/git-commits', window.location.origin)
-      url.searchParams.set('repoUrl', repo.value.url)
-      if (branch.value) url.searchParams.set('branch', branch.value)
-      if (q?.trim()) url.searchParams.set('q', q.trim())
-      const data = await fetch(url.toString()).then((r) => r.json())
+      const data = await listGitCommits(repo.value.url, branch.value, q)
       commits.value = Array.isArray(data?.items) ? data.items : []
     } finally {
       loadingCommits.value = false
@@ -263,7 +236,7 @@ export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: Project
     }
   })
 
-  // select 模式：选中项目后，自动把元数据里的 ref 写入实际用于后端的字段（只读展示，不给用户编辑）
+  // select 模式：选中项目后，可选地把元数据里的 ref 写入实际用于后端字段
   watch(selectedProjectName, () => {
     if (repoMode.value !== 'select') return
     const meta = selectedMeta.value
@@ -272,6 +245,7 @@ export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: Project
     commitId.value = undefined
 
     if (!meta) return
+    if (!autoFillRefFromMeta) return
 
     const commit = String(meta.commitHash ?? '').trim()
     const br = String(meta.branch ?? '').trim()
@@ -298,6 +272,7 @@ export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: Project
     repoMode,
     repoUrl,
     selectedProjectName,
+    selectedMeta,
     needRef,
     readonlyUrl,
     readonlyBranch,

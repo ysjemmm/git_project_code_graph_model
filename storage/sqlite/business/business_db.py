@@ -17,12 +17,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Iterator, Optional
 
-from tools.constants import PROJECT_ROOT_PATH
+from tools.constants import CACHE_BUSINESS_DB_PATH
 
 
 @dataclass(frozen=True)
 class BusinessDBConfig:
-    db_path: str = str(PROJECT_ROOT_PATH / ".cache" / "business.db")
+    db_path: str = str(CACHE_BUSINESS_DB_PATH)
 
 
 _singleton_lock = threading.Lock()
@@ -88,10 +88,12 @@ class BusinessSqliteDB:
                     continue
                 sql_text = sql_path.read_text(encoding="utf-8")
                 cur.executescript(sql_text)
+                # executescript 会隐式提交，之后需要重新开启事务来写版本记录
                 cur.execute(
-                    "INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)",
+                    "INSERT OR IGNORE INTO schema_migrations(version, applied_at) VALUES (?, ?)",
                     (version, datetime.now().isoformat()),
                 )
+                self.conn.commit()
 
         self.conn.commit()
 

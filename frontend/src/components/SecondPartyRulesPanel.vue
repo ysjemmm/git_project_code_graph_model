@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, computed } from 'vue'
 import { message } from 'ant-design-vue'
 
 import {
@@ -8,46 +8,123 @@ import {
   fetchSecondPartyRules,
   updateSecondPartyRule,
   type SecondPartyRule,
-} from '../api/secondPartyRules'
+} from '../api'
 
+// ── regex escape/unescape helpers ─────────────────────────────────────────────
+// JS equivalent of Python's re.escape: escapes all non-alphanumeric chars
+function reEscape(s: string): string {
+  return s.replace(/[^A-Za-z0-9_]/g, (c) => '\\' + c)
+}
+
+// Reverse: strip backslash escapes added by reEscape
+function reUnescape(s: string): string {
+  return s.replace(/\\([^A-Za-z0-9_])/g, '$1')
+}
+
+// Detect if a stored value was produced by reEscape (round-trip check)
+function isPlainEscaped(s: string): boolean {
+  try {
+    return reEscape(reUnescape(s)) === s
+  } catch {
+    return false
+  }
+}
+
+// ── state ─────────────────────────────────────────────────────────────────────
 const loading = ref(false)
-const rules = ref<SecondPartyRule[]>([])
+const rawRules = ref<SecondPartyRule[]>([])
+
+// 启用的排前面，同组内按 sort_order asc
+const rules = computed(() =>
+  [...rawRules.value].sort((a, b) => {
+    if (a.enabled !== b.enabled) return a.enabled ? -1 : 1
+    return a.sort_order - b.sort_order
+  })
+)
 
 type RuleForm = {
+  name: string
   enabled: boolean
   sort_order: number
-  group_id_regex: string
-  artifact_id_regex: string
-  target_project_name: string
+  group_id_value: string
+  group_id_plain: boolean
+  artifact_id_value: string
+  artifact_id_plain: boolean
 }
 
 const form = reactive<RuleForm>({
+  name: '',
   enabled: true,
   sort_order: 0,
-  group_id_regex: '',
-  artifact_id_regex: '',
-  target_project_name: '',
+  group_id_value: '',
+  group_id_plain: true,
+  artifact_id_value: '',
+  artifact_id_plain: true,
 })
 
 const editingRuleId = ref<number | null>(null)
 const modalOpen = ref(false)
-const mappingEnabled = ref(false)
 
-function resetForm() {
-  editingRuleId.value = null
-  form.enabled = true
-  form.sort_order = 0
-  form.group_id_regex = ''
-  form.artifact_id_regex = ''
-  form.target_project_name = ''
-  mappingEnabled.value = false
+// ── display helpers ───────────────────────────────────────────────────────────
+function displayValue(raw: string): string {
+  return isPlainEscaped(raw) ? reUnescape(raw) : raw
 }
 
+function displayMode(raw: string): string {
+  return isPlainEscaped(raw) ? '文本' : '正则'
+}
+
+// ── presets ───────────────────────────────────────────────────────────────────
+const presets = [
+  {
+    label: '匹配某公司所有包',
+    desc: '例：groupId 前缀是 com.example，所有包都算二方包',
+    group_id: 'com.example',
+    artifact_id: '',
+    group_id_plain: true,
+    artifact_id_plain: false, // artifact_id = .* (regex wildcard)
+    artifact_id_raw: '.*',
+  },
+  {
+    label: '匹配某个具体包',
+    desc: '例：只有 com.example:user-service 这一个包',
+    group_id: 'com.example',
+    artifact_id: 'user-service',
+    group_id_plain: true,
+    artifact_id_plain: true,
+    artifact_id_raw: '',
+  },
+]
+
+function applyPreset(p: typeof presets[0]) {
+  form.group_id_value = p.group_id
+  form.group_id_plain = p.group_id_plain
+  form.artifact_id_plain = p.artifact_id_plain
+  form.artifact_id_value = p.artifact_id_plain ? p.artifact_id : p.artifact_id_raw
+}
+
+// ── form helpers ──────────────────────────────────────────────────────────────
+function resetForm() {
+  editingRuleId.value = null
+  form.name = ''
+  form.enabled = true
+  form.sort_order = 0
+  form.group_id_value = ''
+  form.group_id_plain = true
+  form.artifact_id_value = ''
+  form.artifact_id_plain = true
+}
+
+function toRegex(value: string, plain: boolean): string {
+  return plain ? reEscape(value) : value
+}
+
+// ── API ───────────────────────────────────────────────────────────────────────
 async function loadRules() {
   loading.value = true
   try {
     const resp = await fetchSecondPartyRules()
-    if (resp?.ok) rules.value = Array.isArray(resp.items) ? resp.items : []
+    if (resp?.ok) rawRules.value = Array.isArray(resp.items) ? resp.items : []
   } catch (e: any) {
     message.error({ content: e?.message ?? String(e), duration: 4 })
   } finally {
@@ -60,35 +137,44 @@ function openCreate() {
   modalOpen.value = true
 }
 
+// openEdit 保留供后续启用，当前前端不展示编辑入口
 function openEdit(r: SecondPartyRule) {
   editingRuleId.value = r.id
+  form.name = r.name
   form.enabled = r.enabled
   form.sort_order = r.sort_order
-  form.group_id_regex = r.group_id_regex
-  form.artifact_id_regex = r.artifact_id_regex
-  form.target_project_name = r.target_project_name
-  mappingEnabled.value = Boolean(String(r.target_project_name || '').trim())
+
+  const gPlain = isPlainEscaped(r.group_id_regex)
+  form.group_id_plain = gPlain
+  form.group_id_value = gPlain ? reUnescape(r.group_id_regex) : r.group_id_regex
+
+  const aPlain = isPlainEscaped(r.artifact_id_regex)
+  form.artifact_id_plain = aPlain
+  form.artifact_id_value = aPlain ? reUnescape(r.artifact_id_regex) : r.artifact_id_regex
+
   modalOpen.value = true
 }
 
 async function submit() {
+  const gVal = String(form.group_id_value || '').trim()
+  const aVal = String(form.artifact_id_value || '').trim()
+  const nameVal = String(form.name || '').trim()
+
+  if (!nameVal) {
+    message.error({ content: '请填写规则名称', duration: 4 })
+    return
+  }
+  if (!gVal || !aVal) {
+    message.error({ content: '公司/组织标识和包名都要填写', duration: 4 })
+    return
+  }
+
   const payload: any = {
+    name: nameVal,
     enabled: Boolean(form.enabled),
     sort_order: Number(form.sort_order || 0),
-    group_id_regex: String(form.group_id_regex || '').trim(),
-    artifact_id_regex: String(form.artifact_id_regex || '').trim(),
-    // 允许先不映射：后续再编辑开启 mappingEnabled 并填写 target_project_name
-    target_project_name: mappingEnabled.value ? String(form.target_project_name || '').trim() : '',
-  }
-
-  if (!payload.group_id_regex || !payload.artifact_id_regex) {
-    message.error({ content: 'groupId_regex、artifactId_regex 均不能为空', duration: 4 })
-    return
-  }
-
-  if (mappingEnabled.value && !payload.target_project_name) {
-    message.error({ content: '已开启源码映射，请填写 target_project_name', duration: 4 })
-    return
+    group_id_regex: toRegex(gVal, form.group_id_plain),
+    artifact_id_regex: toRegex(aVal, form.artifact_id_plain),
   }
 
   loading.value = true
@@ -108,6 +194,22 @@ async function submit() {
     message.error({ content: e?.message ?? String(e), duration: 4 })
   } finally {
     loading.value = false
+  }
+}
+
+async function toggleEnabled(r: SecondPartyRule) {
+  try {
+    const resp = await updateSecondPartyRule(r.id, {
+      name: r.name,
+      enabled: !r.enabled,
+      sort_order: r.sort_order,
+      group_id_regex: r.group_id_regex,
+      artifact_id_regex: r.artifact_id_regex,
+    })
+    if (!resp?.ok) throw new Error(resp?.message ?? '操作失败')
+    await loadRules()
+  } catch (e: any) {
+    message.error({ content: e?.message ?? String(e), duration: 4 })
   }
 }
 
@@ -132,8 +234,23 @@ onMounted(() => {
 
 <template>
   <div class="second-party-rules">
+    <a-alert type="info" show-icon style="margin-bottom: 16px;">
+      <template #message>什么是二方包规则？</template>
+      <template #description>
+        <p style="margin: 4px 0 0;">
+          Maven 依赖里，来自<strong>本公司/本团队</strong>的包叫「二方包」，其他的叫「三方包」。
+          系统通过这里配置的规则来自动识别哪些依赖属于二方包。
+        </p>
+        <p style="margin: 6px 0 0;">
+          每个 Maven 包都有 <code>groupId</code>（公司/组织标识，如 <code>com.example</code>）
+          和 <code>artifactId</code>（包名，如 <code>user-service</code>）。
+          直接填写文本即可，无需关心正则语法。
+        </p>
+      </template>
+    </a-alert>
+
     <a-space style="margin-bottom: 12px">
-      <a-button type="primary" :loading="loading" @click="openCreate">新增二方包规则</a-button>
+      <a-button type="primary" :loading="loading" @click="openCreate">新增规则</a-button>
     </a-space>
 
     <a-table
@@ -144,96 +261,157 @@ onMounted(() => {
       size="small"
       bordered
     >
-      <a-table-column title="启用" key="enabled" data-index="enabled" :width="90">
+      <a-table-column title="启用" key="enabled" data-index="enabled" :width="80">
         <template #default="{ record }">
-          <a-tag :color="record.enabled ? 'green' : 'red'">{{ record.enabled ? '是' : '否' }}</a-tag>
+          <a-switch
+            :checked="record.enabled"
+            checked-children="启用"
+            un-checked-children="禁用"
+            size="small"
+            @change="toggleEnabled(record)"
+          />
         </template>
       </a-table-column>
 
-      <a-table-column title="优先级(order)" key="sort_order" data-index="sort_order" :width="160">
+      <a-table-column title="规则名称" key="name" data-index="name">
+        <template #default="{ record }">
+          <span>{{ record.name || '-' }}</span>
+        </template>
+      </a-table-column>
+
+      <a-table-column title="优先级" key="sort_order" data-index="sort_order" :width="80">
         <template #default="{ record }">
           <span class="mono">{{ record.sort_order }}</span>
         </template>
       </a-table-column>
 
-      <a-table-column title="groupId_regex" key="group_id_regex" data-index="group_id_regex" :width="260">
+      <a-table-column title="公司/组织标识（groupId）" key="group_id_regex" data-index="group_id_regex">
         <template #default="{ record }">
-          <span class="mono">{{ record.group_id_regex }}</span>
+          <span class="mono">{{ displayValue(record.group_id_regex) }}</span>
+          <a-tag size="small" style="margin-left: 6px; font-size: 10px;">{{ displayMode(record.group_id_regex) }}</a-tag>
         </template>
       </a-table-column>
 
-      <a-table-column title="artifactId_regex" key="artifact_id_regex" data-index="artifact_id_regex" :width="320">
+      <a-table-column title="包名（artifactId）" key="artifact_id_regex" data-index="artifact_id_regex">
         <template #default="{ record }">
-          <span class="mono">{{ record.artifact_id_regex }}</span>
+          <span class="mono">{{ displayValue(record.artifact_id_regex) }}</span>
+          <a-tag size="small" style="margin-left: 6px; font-size: 10px;">{{ displayMode(record.artifact_id_regex) }}</a-tag>
         </template>
       </a-table-column>
 
-      <a-table-column title="目标 B 源码项目(project_name)" key="target_project_name" data-index="target_project_name" :width="320">
+      <a-table-column title="操作" key="ops" :width="80">
         <template #default="{ record }">
-          <span>{{ record.target_project_name ? record.target_project_name : '未映射' }}</span>
-        </template>
-      </a-table-column>
-
-      <a-table-column title="操作" key="ops" :width="180">
-        <template #default="{ record }">
-          <a-space size="small">
-            <a-button type="link" size="small" @click.stop="openEdit(record)">
-              编辑
-            </a-button>
-            <a-popconfirm
-              title="确认删除该规则？"
-              ok-text="确认"
-              cancel-text="取消"
-              @confirm="remove(record.id)"
-            >
-              <a-button type="link" danger size="small" @click.stop>删除</a-button>
-            </a-popconfirm>
-          </a-space>
+          <a-popconfirm
+            title="确认删除该规则？"
+            ok-text="确认"
+            cancel-text="取消"
+            @confirm="remove(record.id)"
+          >
+            <a-button type="link" danger size="small" @click.stop>删除</a-button>
+          </a-popconfirm>
         </template>
       </a-table-column>
     </a-table>
 
+    <!-- 新增/编辑弹窗 -->
+    <!-- openEdit 保留供后续启用 -->
+    <span v-if="false" @click="openEdit(rules[0])"></span>
     <a-modal
       v-model:open="modalOpen"
       :title="editingRuleId ? '编辑二方包规则' : '新增二方包规则'"
       :footer="null"
-      width="720px"
+      width="600px"
       @cancel="modalOpen = false"
     >
+      <!-- 快速预设（仅新增时显示） -->
+      <template v-if="!editingRuleId">
+        <div class="preset-label">快速填入常见场景：</div>
+        <a-space wrap style="margin-bottom: 16px;">
+          <a-tooltip v-for="p in presets" :key="p.label" :title="p.desc">
+            <a-button size="small" @click="applyPreset(p)">{{ p.label }}</a-button>
+          </a-tooltip>
+        </a-space>
+      </template>
+
       <a-form layout="vertical">
-        <a-form-item label="启用(enabled)">
-          <a-switch v-model:checked="form.enabled" checked-children="启用" un-checked-children="禁用" />
-        </a-form-item>
-
-        <a-form-item label="优先级(sort_order)">
-          <a-input-number v-model:value="form.sort_order" :min="0" style="width: 180px" />
-        </a-form-item>
-
-        <a-form-item label="groupId_regex（正则包含匹配）" required>
-          <a-input v-model:value="form.group_id_regex" placeholder="例如 com\\.xxx\\..* 或 com\\.xxx" />
-        </a-form-item>
-
-        <a-form-item label="artifactId_regex（正则包含匹配）" required>
-          <a-input v-model:value="form.artifact_id_regex" placeholder="例如 epaas-gateway.* 或 epaas-gateway" />
-        </a-form-item>
-
-        <a-form-item label="是否进行源码映射（可选）">
-          <a-switch
-            v-model:checked="mappingEnabled"
-            checked-children="开启"
-            un-checked-children="不映射(仅识别)"
+        <!-- 规则名称 -->
+        <a-form-item label="规则名称" required>
+          <a-input
+            v-model:value="form.name"
+            placeholder="例：公司内部包、timevale 全系列"
+            :maxlength="64"
+            show-count
           />
         </a-form-item>
 
-        <a-form-item v-if="mappingEnabled" label="目标 project_name（B 的 Application 源码项目名）" :required="mappingEnabled">
-          <a-input v-model:value="form.target_project_name" placeholder="例如 epaas-gateway" />
+        <!-- groupId -->
+        <a-form-item>
+          <template #label>
+            <span>公司/组织标识</span>
+            <span class="field-hint">Maven groupId，如 <code>com.example</code></span>
+          </template>
+          <a-input-group compact>
+            <a-select
+              v-model:value="form.group_id_plain"
+              style="width: 90px"
+              size="default"
+            >
+              <a-select-option :value="true">文本</a-select-option>
+              <a-select-option :value="false">正则</a-select-option>
+            </a-select>
+            <a-input
+              v-model:value="form.group_id_value"
+              style="width: calc(100% - 90px)"
+              :placeholder="form.group_id_plain ? '例：com.example（包含匹配）' : '例：^com\\.example\\..*$'"
+            />
+          </a-input-group>
+          <div class="input-tip" v-if="form.group_id_plain">文本模式：只要 groupId 包含这段文字就匹配，无需转义</div>
+          <div class="input-tip" v-else>正则模式：使用 Java/Python 正则语法，<code>.</code> 需写成 <code>\.</code></div>
         </a-form-item>
 
-        <a-space style="margin-top: 12px">
+        <!-- artifactId -->
+        <a-form-item>
+          <template #label>
+            <span>包名</span>
+            <span class="field-hint">Maven artifactId，如 <code>user-service</code></span>
+          </template>
+          <a-input-group compact>
+            <a-select
+              v-model:value="form.artifact_id_plain"
+              style="width: 90px"
+              size="default"
+            >
+              <a-select-option :value="true">文本</a-select-option>
+              <a-select-option :value="false">正则</a-select-option>
+            </a-select>
+            <a-input
+              v-model:value="form.artifact_id_value"
+              style="width: calc(100% - 90px)"
+              :placeholder="form.artifact_id_plain ? '例：user-service，留空则匹配所有包名' : '例：.*（匹配所有）'"
+            />
+          </a-input-group>
+          <div class="input-tip" v-if="form.artifact_id_plain">
+            文本模式：包含匹配。若想匹配该 groupId 下<strong>所有包</strong>，切换到正则模式填 <code>.*</code>
+          </div>
+          <div class="input-tip" v-else>正则模式：<code>.*</code> 匹配所有，<code>gateway.*</code> 匹配 gateway 开头</div>
+        </a-form-item>
+
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item label="优先级（数字越小越先匹配）">
+              <a-input-number v-model:value="form.sort_order" :min="0" style="width: 100%" />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="是否启用">
+              <a-switch v-model:checked="form.enabled" checked-children="启用" un-checked-children="禁用" />
+            </a-form-item>
+          </a-col>
+        </a-row>
+
+        <a-space style="margin-top: 4px">
           <a-button @click="modalOpen = false" :disabled="loading">取消</a-button>
-          <a-button type="primary" @click="submit" :loading="loading">
-            提交
-          </a-button>
+          <a-button type="primary" @click="submit" :loading="loading">保存</a-button>
         </a-space>
       </a-form>
     </a-modal>
@@ -241,8 +419,39 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.second-party-rules {
+  padding-top: 10px;
+}
+
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+}
+
+.preset-label {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.45);
+  margin-bottom: 6px;
+}
+
+.field-hint {
+  margin-left: 8px;
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.4);
+  font-weight: 400;
+}
+
+.input-tip {
+  margin-top: 4px;
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+code {
+  background: rgba(0, 0, 0, 0.06);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
 }
 </style>
-

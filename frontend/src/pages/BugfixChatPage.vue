@@ -3,7 +3,7 @@ import { computed, nextTick, ref } from 'vue'
 import { marked } from 'marked'
 import hljs from 'highlight.js'
 
-import { runForwardProcessflowNpeFixSse, runForwardProcessflowNpeFixTestSse, type BugfixResponse, type BugfixSseEvent, type ToolStep } from '../api/bugfix'
+import { runForwardProcessflowNpeFixSse, runForwardProcessflowNpeFixTestSse, type BugfixResponse, type BugfixSseEvent, type ToolStep } from '../api'
 import { modelOptions, parseModelChoice } from '../constants'
 import type { ChatMsg } from '../types'
 

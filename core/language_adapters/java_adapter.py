@@ -210,16 +210,25 @@ class JavaLanguageAdapter(LanguageAdapter):
             project_path=ctx.repo_cache_dir,
             ast_data_list=ast_data_list,
             include_comment_nodes=ctx.include_comment_nodes,
+            include_lib_nodes=getattr(ctx, 'auto_link_external', True),
         )
         result = store.write_batch(ctx, batch)
 
         # 外部类链接统一在落库后执行（Java 专用增强）；用 link_all 全局连一次，不依赖导入顺序
         connector = getattr(store, "connector", None)
-        if connector is not None:
+        if connector is not None and getattr(ctx, 'auto_link_external', True):
             try:
                 linker = ExternalClassLinker(connector)
                 _ = linker.link_all(dry_run=False)
                 _ = linker.link_lib_to_application()
+            except Exception:
+                pass
+
+        # 若本次导入的是 Application 项目，将同名 Lib 节点合并进来（去重）
+        if connector is not None:
+            try:
+                linker = ExternalClassLinker(connector)
+                linker.absorb_lib_node(ctx.project_name)
             except Exception:
                 pass
 

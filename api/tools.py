@@ -117,17 +117,8 @@ def query_code_graph(
         if cypher:
             rows = conn.execute_query(cypher, {"limit": limit})
         else:
-            # 默认：查该项目下的 Project 及周边节点摘要
-            q = """
-            MATCH (p:Project {project_type: 'Application'})
-            WHERE p.name = $project_name AND (coalesce(p.is_active,false) = true OR p.is_active IS NULL)
-            OPTIONAL MATCH (p)-[:CONTAINS*0..2]->(m)
-            WHERE m.symbol_id IS NOT NULL
-            WITH p, collect(DISTINCT { label: labels(m)[0], id: m.symbol_id, name: m.name })[0..20] AS sample
-            RETURN p.name AS projectName, sample
-            LIMIT 1
-            """
-            rows = conn.execute_query(q, {"project_name": project_name})
+            from storage.neo4j.queries import Neo4jQueries
+            rows = conn.execute_query(Neo4jQueries.project_summary(), {"project_name": project_name})
         if not rows:
             return f"[项目 {project_name} 在图库中无匹配节点或无权限]"
         # 转成格式化 JSON，每行一个结果
@@ -280,6 +271,49 @@ def _repo_dir(project_name: str) -> Optional[Path]:
     return p if p.is_dir() else None
 
 
+def get_project_dependencies(project_name: str) -> str:
+    """
+    查询某项目依赖了哪些其他已导入项目（通过手动关联的 DEPENDS_ON 边）。
+    返回可读文本，供 AI 决定下一步去哪个项目查源码。
+    """
+    uri = os.environ.get("NEO4J_URI", "")
+    user = os.environ.get("NEO4J_USER", "neo4j")
+    password = os.environ.get("NEO4J_PASSWORD", "")
+    database = os.environ.get("NEO4J_DATABASE", "neo4j")
+    if not uri or not password:
+        return "[图数据库未配置：缺少 NEO4J_URI / NEO4J_PASSWORD]"
+
+    try:
+        from storage.neo4j import Neo4jConnector
+    except ImportError:
+        return "[无法导入 Neo4j 连接器]"
+
+    conn = Neo4jConnector(uri=uri, username=user, password=password, database=database)
+    if not conn.connect():
+        return "[图数据库连接失败]"
+
+    try:
+        from storage.neo4j.queries import Neo4jQueries
+        rows = conn.execute_query(Neo4jQueries.get_project_depends_on(), {"name": project_name})
+        if not rows:
+            return f"[项目 {project_name!r} 在图谱中没有 DEPENDS_ON 关系，请先在「应用详情」页手动关联二方包依赖]"
+        lines = [f"项目 {project_name!r} 依赖以下已导入项目：\n"]
+        for r in rows:
+            d = dict(r)
+            lines.append(
+                f"  - {d.get('dep_project')}  "
+                f"({d.get('group_id')}:{d.get('artifact_id')})  "
+                f"[{d.get('project_type', 'Application')}]"
+            )
+        lines.append("\n可用 query_code_graph(project_name=<dep_project>) 查询对应项目的图谱，")
+        lines.append("或用 search_code / read_source_file 并传入 project_name=<dep_project> 读取其源码。")
+        return "\n".join(lines)
+    except Exception as e:
+        return f"[查询依赖关系失败: {e}]"
+    finally:
+        conn.disconnect()
+
+
 def search_code(
     project_name: str,
     pattern: str,
@@ -289,7 +323,7 @@ def search_code(
 ) -> str:
     """
     在本地项目源码中用正则搜索，返回匹配行及上下文（纯 Python 实现，跨平台）。
-    project_name: 项目名，用于定位本地 git 仓库目录
+    project_name: 项目名，用于定位本地 git 仓库目录（可显式传入，不填则用会话上下文项目）
     pattern: 正则表达式
     file_glob: 文件匹配模式，默认 **/*.java
     max_results: 最多返回多少处匹配
@@ -344,6 +378,7 @@ def read_source_file(
 ) -> str:
     """
     读取本地文件内容（源码/配置等文本）。
+    project_name: 项目名，可显式传入以读取其他项目（如二方包项目）的源码，不填则用会话上下文项目。
     file_path 支持两种格式：
       - 相对于仓库根目录的相对路径，如 service/src/main/java/com/timevale/forward/service/impl/ProjectServiceImpl.java
       - 图谱 File 节点的 full_path 绝对路径，会自动转换为相对路径

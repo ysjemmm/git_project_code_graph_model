@@ -5,6 +5,7 @@ from typing import List, Dict
 from parser.cgm_exporter import CGMExporter
 
 from parser.incremental_analyzer import IncrementalAnalyzer
+from tools.constants import CACHE_INCREMENTAL_PATH
 from storage.neo4j.connector import Neo4jConnector
 
 
@@ -235,7 +236,7 @@ class IncrementalNeo4jCleaner:
 class IncrementalExportManager:
     
     
-    def __init__(self, neo4j_connector: Neo4jConnector, code_graph_builder, cache_dir: str = ".cache/incremental"):
+    def __init__(self, neo4j_connector: Neo4jConnector, code_graph_builder, cache_dir: str = str(CACHE_INCREMENTAL_PATH)):
         
         self.connector = neo4j_connector
         self.builder = code_graph_builder

@@ -18,6 +18,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from core.importer import GitToNeo4jImporter, ImportCancelled
 from parser.utils.logger import get_logger
 from storage.sqlite.business.git_tasks_repo import get_git_import_tasks_repo
+from tools.constants import CACHE_GIT_REPOS_PATH, CACHE_ROOT_PATH
 
 # 配置日志
 logger = get_logger("git_task_queue")
@@ -59,6 +60,8 @@ class GitImportTask:
     maven_scan_enabled: bool = True
     # 强制重新解析 Maven（忽略 marker，并对依赖目录 force_rescan）
     force_maven: bool = False
+    # 导入后是否自动执行 ExternalClassLinker（LIB_LINK + SAME_ARTIFACT）
+    auto_link_external: bool = True
     priority: TaskPriority = TaskPriority.NORMAL
     
     # 任务状
@@ -97,9 +100,9 @@ class TaskQueue:
     
     def __init__(self,
                  max_workers: int = 2,
-                 cache_base_dir: str = ".cache/git_repos",
-                 task_db_file: str = ".cache/git_tasks.json",
-                 task_db_sqlite_file: str = ".cache/git_tasks.db",
+                 cache_base_dir: str = str(CACHE_GIT_REPOS_PATH),
+                 task_db_file: str = str(CACHE_ROOT_PATH / "git_tasks.json"),
+                 task_db_sqlite_file: str = str(CACHE_ROOT_PATH / "git_tasks.db"),
                  max_memory_mb: int = 1024):
         
         self.max_workers = max_workers
@@ -143,6 +146,7 @@ class TaskQueue:
                    include_comment_nodes: bool = False,
                    maven_scan_enabled: bool = True,
                    force_maven: bool = False,
+                   auto_link_external: bool = True,
                    priority: TaskPriority = TaskPriority.NORMAL) -> str:
         
         task_id = self._generate_task_id()
@@ -164,6 +168,7 @@ class TaskQueue:
             include_comment_nodes=include_comment_nodes,
             maven_scan_enabled=bool(maven_scan_enabled),
             force_maven=bool(force_maven),
+            auto_link_external=bool(auto_link_external),
             priority=priority
         )
         
@@ -352,6 +357,7 @@ class TaskQueue:
                     commit_id=task.commit_id,
                     maven_scan_enabled=bool(getattr(task, "maven_scan_enabled", True)),
                     force_maven=bool(getattr(task, "force_maven", False)),
+                    auto_link_external=bool(getattr(task, "auto_link_external", True)),
                     cancel_event=cancel_event,
                 )
                 
@@ -598,9 +604,9 @@ class TaskQueue:
 _global_task_queue: Optional[TaskQueue] = None
 
 def get_task_queue(max_workers: int = 2,
-                   cache_base_dir: str = ".cache/git_repos",
-                   task_db_file: str = ".cache/git_tasks.json",
-                   task_db_sqlite_file: str = ".cache/git_tasks.db",
+                   cache_base_dir: str = str(CACHE_GIT_REPOS_PATH),
+                   task_db_file: str = str(CACHE_ROOT_PATH / "git_tasks.json"),
+                   task_db_sqlite_file: str = str(CACHE_ROOT_PATH / "git_tasks.db"),
                    max_memory_mb: int = 1024) -> TaskQueue:
     
     global _global_task_queue
@@ -624,7 +630,7 @@ def main():
     # 创建任务队列
     queue = get_task_queue(
         max_workers=2,
-        cache_base_dir=".cache/git_repos",
+        cache_base_dir=str(CACHE_GIT_REPOS_PATH),
         max_memory_mb=1024
     )
     

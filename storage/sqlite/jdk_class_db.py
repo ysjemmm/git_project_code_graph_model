@@ -7,7 +7,7 @@ import threading
 from pathlib import Path
 from typing import Optional
 
-from tools.constants import PROJECT_ROOT_PATH
+from tools.constants import CACHE_ROOT_PATH
 from .jar_class_db import ClassInfo, JARClassDB
 
 
@@ -26,13 +26,13 @@ class JDKClassDB(JARClassDB):
         # 确定数据库路径
         if db_path is None:
             if jdk_version:
-                db_path = str(PROJECT_ROOT_PATH / ".cache" / f"jdk{jdk_version}_classes.db")
+                db_path = str(CACHE_ROOT_PATH / f"jdk{jdk_version}_classes.db")
             else:
                 # 默认尝试查找已存在的 JDK 数据库
                 db_path = cls._find_existing_jdk_db()
                 if not db_path:
                     # 如果没有找到，使用默认路径
-                    db_path = str(PROJECT_ROOT_PATH / ".cache" / "jdk_classes.db")
+                    db_path = str(CACHE_ROOT_PATH / "jdk_classes.db")
         
         with cls._lock:
             if db_path not in cls._instances:
@@ -57,11 +57,11 @@ class JDKClassDB(JARClassDB):
         # 确定数据库路径
         if db_path is None:
             if jdk_version:
-                db_path = str(PROJECT_ROOT_PATH / ".cache" / f"jdk{jdk_version}_classes.db")
+                db_path = str(CACHE_ROOT_PATH / f"jdk{jdk_version}_classes.db")
             else:
                 db_path = self._find_existing_jdk_db()
                 if not db_path:
-                    db_path = str(PROJECT_ROOT_PATH / ".cache" / "jdk_classes.db")
+                    db_path = str(CACHE_ROOT_PATH / "jdk_classes.db")
         
         # 调用父类初始化
         super().__init__(db_path)
@@ -69,7 +69,7 @@ class JDKClassDB(JARClassDB):
     @staticmethod
     def _find_existing_jdk_db() -> Optional[str]:
         """查找已存在的 JDK 数据库"""
-        cache_dir = PROJECT_ROOT_PATH / ".cache"
+        cache_dir = CACHE_ROOT_PATH
         if not cache_dir.exists():
             return None
         
@@ -89,7 +89,7 @@ class JDKClassDB(JARClassDB):
     @classmethod
     def get_available_versions(cls) -> list:
         """获取所有可用的 JDK 版本"""
-        cache_dir = PROJECT_ROOT_PATH / ".cache"
+        cache_dir = CACHE_ROOT_PATH
         if not cache_dir.exists():
             return []
         

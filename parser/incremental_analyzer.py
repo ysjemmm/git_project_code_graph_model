@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Dict, Set, List, Optional, Tuple
 
 from storage.cache.merkle_tree import MerkleTreeAnalyzer
+from tools.constants import CACHE_INCREMENTAL_PATH
 
 
 class FileChangeTracker:
@@ -147,7 +148,7 @@ class SymbolTableCache:
 class IncrementalAnalyzer:
     """增量分析- 使用默克尔树进行高效的文件变化检"""
     
-    def __init__(self, cache_dir: str = ".cache/incremental"):
+    def __init__(self, cache_dir: str = str(CACHE_INCREMENTAL_PATH)):
         self.cache_dir = cache_dir
         self.file_tracker = FileChangeTracker(os.path.join(cache_dir, "file_cache.json"))
         self.symbol_cache = SymbolTableCache(os.path.join(cache_dir, "symbol_table_cache.json"))
@@ -245,7 +246,7 @@ class IncrementalAnalyzer:
 class IncrementalCodeGraphBuilder:
     """增量代码图谱构建立"""
     
-    def __init__(self, base_builder, cache_dir: str = ".cache/incremental"):
+    def __init__(self, base_builder, cache_dir: str = str(CACHE_INCREMENTAL_PATH)):
         
         self.base_builder = base_builder
         self.incremental_analyzer = IncrementalAnalyzer(cache_dir)
