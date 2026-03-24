@@ -1,0 +1,23 @@
+storage/sqlite/business/migrations/002_import_task_delta_details.sql
+  1d7210d88ba83fee 1-11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.15",
+  "base_commit_sha": "3b3c5c86444819a44dc50aaffff9b4cb81743893",
+  "prompts": {
+    "1d7210d88ba83fee": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "720a2299-0707-4387-a692-081d5f3506ba",
+        "model": "premium"
+      },
+      "human_author": "mayang <mayang@tsign.cn>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 161,
+      "overriden_lines": 0
+    }
+  }
+}
