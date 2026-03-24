@@ -244,8 +244,13 @@ class JavaLanguageAdapter(LanguageAdapter):
             created_nodes=int(result.get("created_nodes", 0) or 0),
             created_relationships=int(result.get("created_relationships", 0) or 0),
         )
-        # 对现有调用方保持 dict 语义不变
-        return ir.to_dict()
+        # 对现有调用方保持 dict 语义不变，同时透传 write_batch 的明细字段
+        out = ir.to_dict()
+        if isinstance(result, dict):
+            out["detail"] = result.get("detail") or {}
+            if "linked_external_classes" in result:
+                out["linked_external_classes"] = result.get("linked_external_classes")
+        return out
 
     def is_source_file(self, file_path: str) -> bool:
         return bool(file_path) and any(file_path.endswith(ext) for ext in self.source_extensions)

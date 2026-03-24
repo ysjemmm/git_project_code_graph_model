@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
+import { BugOutlined } from '@ant-design/icons-vue'
 import { marked } from 'marked'
 import hljs from 'highlight.js'
 
@@ -93,6 +94,65 @@ const streamKind = ref<'text' | 'code' | null>(null)
 const activeAbort = ref<AbortController | null>(null)
 const chatPanelRef = ref<InstanceType<typeof ChatPanel> | null>(null)
 const manualCancelled = ref(false)
+
+// ─── Bug 选择 ─────────────────────────────────────────────────
+type BugItem = { id: string; title: string }
+const selectedBug = ref<BugItem | null>(null)
+const bugModalVisible = ref(false)
+const bugSearchKeyword = ref('')
+
+/** Mock 数据，后续可替换为真实 API */
+const mockBugList: BugItem[] = [
+  { id: 'BUG-1001', title: 'ProjectServiceImpl.processFlow 空指针异常导致线上 500 错误' },
+  { id: 'BUG-1002', title: '前端页面首屏加载缓慢，白屏时间超过 5 秒' },
+  { id: 'BUG-1003', title: '订单状态流转异常：已支付订单未触发发货流程' },
+  { id: 'BUG-1004', title: 'Redis 缓存穿透导致数据库查询 QPS 飙升' },
+  { id: 'BUG-1005', title: '文件上传接口在并发场景下偶现文件内容覆盖问题' },
+  { id: 'BUG-1006', title: '用户登录接口返回 403 但权限配置正确' },
+  { id: 'BUG-1007', title: '定时任务在多节点部署时重复执行导致数据重复' },
+  { id: 'BUG-1008', title: 'Excel 导出超过 10 万行时 OOM，服务重启' },
+  { id: 'BUG-1009', title: 'MQ 消费者偶现消息丢失，消费确认逻辑存在竞态条件' },
+  { id: 'BUG-1010', title: '接口幂等校验失效：相同请求 ID 多次执行写入操作' },
+]
+
+const bugPageSize = 8
+const bugCurrentPage = ref(1)
+
+const filteredBugList = computed(() => {
+  const kw = bugSearchKeyword.value.trim().toLowerCase()
+  if (!kw) return mockBugList
+  return mockBugList.filter(b => b.title.toLowerCase().includes(kw))
+})
+
+// 搜索关键词变化时重置到第 1 页
+watch(bugSearchKeyword, () => { bugCurrentPage.value = 1 })
+
+/** 当前页展示的 bug 列表（分页切片） */
+const pagedBugList = computed(() => {
+  const start = (bugCurrentPage.value - 1) * bugPageSize
+  return filteredBugList.value.slice(start, start + bugPageSize)
+})
+
+function onBugPageChange(page: number) {
+  bugCurrentPage.value = page
+}
+
+function openBugModal() {
+  bugSearchKeyword.value = ''
+  bugCurrentPage.value = 1
+  bugModalVisible.value = true
+}
+
+function onSelectBug(bug: BugItem) {
+  selectedBug.value = bug
+  bugModalVisible.value = false
+}
+
+function onClearBug() {
+  selectedBug.value = null
+}
+
+const selectedBugTitle = computed(() => selectedBug.value?.title ?? '')
 
 /** 是否允许点击发送（仅在不 loading 且 canRun 时；不要求输入框非空，空时点击会聚焦输入框） */
 const canSend = computed(() => !loading.value && canRun.value)
@@ -633,11 +693,136 @@ function cancelActiveRequest() {
         :sendDisabledReason="sendDisabledReason"
         :placeholder="chatInputPlaceholder"
         :renderMarkdown="renderMarkdown"
+        :selectedBugTitle="selectedBugTitle"
         @send="onSendChat"
         @test="onTestChat"
         @cancel="cancelActiveRequest"
+        @selectBug="openBugModal"
       />
+
+      <!-- Bug 选择模态框 -->
+      <a-modal
+        v-model:open="bugModalVisible"
+        title="选择 Bug"
+        :footer="null"
+        :width="620"
+        destroy-on-close
+      >
+        <a-input-search
+          v-model:value="bugSearchKeyword"
+          placeholder="搜索 Bug ID 或标题…"
+          allow-clear
+          style="margin-bottom: 12px"
+        />
+        <div class="bug-list">
+          <div
+            v-for="bug in pagedBugList"
+            :key="bug.id"
+            class="bug-list-item"
+            :class="{ 'bug-list-item-selected': selectedBug?.id === bug.id }"
+            @click="onSelectBug(bug)"
+          >
+            <span class="bug-list-id">{{ bug.id }}</span>
+            <a-tooltip :title="bug.title" placement="topLeft">
+              <span class="bug-list-title">{{ bug.title }}</span>
+            </a-tooltip>
+          </div>
+          <a-empty v-if="filteredBugList.length === 0" description="未找到匹配的 Bug" />
+        </div>
+        <div v-if="filteredBugList.length > bugPageSize" class="bug-pagination">
+          <a-pagination
+            size="small"
+            :current="bugCurrentPage"
+            :page-size="bugPageSize"
+            :total="filteredBugList.length"
+            :show-size-changer="false"
+            @change="onBugPageChange"
+          />
+        </div>
+        <div v-if="selectedBug" class="bug-modal-footer">
+          <span class="bug-modal-current">
+            <BugOutlined style="margin-right: 4px" />
+            当前：{{ selectedBug.id }} - {{ selectedBug.title }}
+          </span>
+          <a-button size="small" danger @click="onClearBug">清除选择</a-button>
+        </div>
+      </a-modal>
     </a-col>
   </a-row>
 </template>
+
+<style scoped>
+.bug-list {
+  border: 1px solid #f0f0f0;
+  border-radius: 6px;
+  min-height: 368px;
+}
+
+.bug-pagination {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.bug-list-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #f5f5f5;
+  transition: background 0.15s;
+}
+
+.bug-list-item:last-child {
+  border-bottom: none;
+}
+
+.bug-list-item:hover {
+  background: #f0f5ff;
+}
+
+.bug-list-item-selected {
+  background: #e6f4ff;
+  border-left: 3px solid #1677ff;
+}
+
+.bug-list-id {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1677ff;
+  min-width: 76px;
+}
+
+.bug-list-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.75);
+}
+
+.bug-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: #fafafa;
+  border-radius: 6px;
+  border: 1px solid #f0f0f0;
+}
+
+.bug-modal-current {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.65);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+  margin-right: 8px;
+}
+</style>
 

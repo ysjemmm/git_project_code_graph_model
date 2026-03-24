@@ -105,3 +105,15 @@ CREATE TABLE IF NOT EXISTS app_dependency_links (
 );
 
 CREATE INDEX IF NOT EXISTS idx_dep_links_app_id ON app_dependency_links(app_id);
+
+-- ── 任务验收 diff 明细（幂等兜底，正式迁移在 002）──────────────
+CREATE TABLE IF NOT EXISTS import_task_delta_details (
+  task_id TEXT PRIMARY KEY,
+  detail_json TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (task_id) REFERENCES git_import_tasks(task_id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_import_task_delta_updated_at
+  ON import_task_delta_details(updated_at);

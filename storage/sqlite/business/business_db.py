@@ -95,7 +95,35 @@ class BusinessSqliteDB:
                 )
                 self.conn.commit()
 
+            # 漂移修复：历史环境可能出现“版本已记录但表不存在”（例如迁移文件后补、版本表被预写入等）。
+            # 对关键表按对应 migration 文件做一次幂等重放（SQL 内均为 IF NOT EXISTS）。
+            self._repair_required_tables(cur=cur, migrations_dir=migrations_dir)
+
         self.conn.commit()
+
+    def _repair_required_tables(self, cur: sqlite3.Cursor, migrations_dir: Path) -> None:
+        assert self.conn is not None
+
+        def has_table(table_name: str) -> bool:
+            row = cur.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name=? LIMIT 1",
+                (table_name,),
+            ).fetchone()
+            return row is not None
+
+        repair_plan = {
+            "git_import_tasks": migrations_dir / "001_init.sql",
+            "import_task_delta_details": migrations_dir / "002_import_task_delta_details.sql",
+        }
+
+        for table_name, sql_path in repair_plan.items():
+            if has_table(table_name):
+                continue
+            if not sql_path.exists():
+                continue
+            sql_text = sql_path.read_text(encoding="utf-8")
+            cur.executescript(sql_text)
+            self.conn.commit()
 
     @contextmanager
     def transaction(self) -> Iterator[sqlite3.Connection]:

@@ -3,15 +3,45 @@ Git 仓库、分支、提交列表接口。
 """
 from __future__ import annotations
 
+import subprocess
 from typing import List, Optional
 
 from fastapi import APIRouter, Query
 
 from api.schemas import GitRefListResponse, GitRepoItem, GitRepoListResponse
 from api.config import GIT_REFS_CACHE_DIR
-from api.utils import run_git, run_git_global, repo_name_from_url
+from api.utils import run_git, run_git_global, repo_name_from_url, repo_dir_from_url
 
 router = APIRouter(prefix="/api", tags=["git"])
+
+
+def _run_git_text(repo_dir, args: List[str]) -> tuple[int, str, str]:
+    r = subprocess.run(
+        ["git", *args],
+        cwd=str(repo_dir),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    return int(r.returncode), (r.stdout or ""), (r.stderr or "")
+
+
+def _resolve_commit(repo_dir, ref: str) -> Optional[str]:
+    cand = (ref or "").strip()
+    if not cand:
+        return None
+    candidates = [cand]
+    if not cand.startswith("origin/"):
+        candidates.append(f"origin/{cand}")
+    for c in candidates:
+        rc, out, _ = _run_git_text(repo_dir, ["rev-parse", "--verify", f"{c}^{{commit}}"])
+        if rc == 0:
+            v = (out or "").strip()
+            if v:
+                return v
+    return None
 
 def _ensure_full_remote_refspec(repo_dir) -> None:
     """
@@ -176,3 +206,143 @@ def git_commits(
         if qq:
             items = [x for x in items if qq in x.lower()]
     return GitRefListResponse(items=items)
+
+
+@router.get("/git-diff/summary")
+def git_diff_summary(
+    repoUrl: str = Query(..., description="Git 仓库 URL"),
+    fromRef: str = Query(..., description="基线 ref（上次发布）"),
+    toRef: str = Query(..., description="目标 ref（本次发布）"),
+    maxFiles: int = Query(500, ge=1, le=2000),
+) -> dict:
+    repo_dir = _ensure_repo_cached(repoUrl)
+    if repo_dir is None:
+        return {"ok": False, "message": "仓库缓存失败，请检查 repoUrl"}
+
+    _ = run_git(repo_dir, ["fetch", "--all", "--prune", "--tags"])
+    from_commit = _resolve_commit(repo_dir, fromRef)
+    to_commit = _resolve_commit(repo_dir, toRef)
+    if not from_commit:
+        return {"ok": False, "message": f"无法解析 fromRef: {fromRef}"}
+    if not to_commit:
+        return {"ok": False, "message": f"无法解析 toRef: {toRef}"}
+    if from_commit == to_commit:
+        return {
+            "ok": True,
+            "from_ref": fromRef,
+            "to_ref": toRef,
+            "from_commit": from_commit,
+            "to_commit": to_commit,
+            "same_commit": True,
+            "stats": {"files": 0, "additions": 0, "deletions": 0},
+            "files": [],
+        }
+
+    rc_num, out_num, err_num = _run_git_text(repo_dir, ["diff", "--numstat", f"{from_commit}..{to_commit}"])
+    if rc_num != 0:
+        return {"ok": False, "message": f"读取 diff numstat 失败: {(err_num or '').strip()}"}
+    rc_name, out_name, err_name = _run_git_text(repo_dir, ["diff", "--name-status", f"{from_commit}..{to_commit}"])
+    if rc_name != 0:
+        return {"ok": False, "message": f"读取 diff name-status 失败: {(err_name or '').strip()}"}
+
+    stats_map: dict[str, dict] = {}
+    total_add = 0
+    total_del = 0
+    for raw in (out_num or "").splitlines():
+        line = (raw or "").rstrip("\n")
+        if not line.strip():
+            continue
+        parts = line.split("\t")
+        if len(parts) < 3:
+            continue
+        add_s, del_s, path = parts[0], parts[1], parts[2]
+        add_n = int(add_s) if add_s.isdigit() else 0
+        del_n = int(del_s) if del_s.isdigit() else 0
+        total_add += add_n
+        total_del += del_n
+        stats_map[path] = {"additions": add_n, "deletions": del_n}
+
+    files: list[dict] = []
+    for raw in (out_name or "").splitlines():
+        line = (raw or "").rstrip("\n")
+        if not line.strip():
+            continue
+        parts = line.split("\t")
+        if len(parts) < 2:
+            continue
+        status_raw = parts[0]
+        status = (status_raw[:1] or "M").upper()
+        old_path = None
+        path = parts[-1]
+        if status == "R" and len(parts) >= 3:
+            old_path = parts[1]
+            path = parts[2]
+        st = stats_map.get(path, {"additions": 0, "deletions": 0})
+        files.append({
+            "status": status,
+            "path": path,
+            "old_path": old_path,
+            "additions": int(st.get("additions", 0)),
+            "deletions": int(st.get("deletions", 0)),
+        })
+
+    files = files[: int(maxFiles)]
+    return {
+        "ok": True,
+        "from_ref": fromRef,
+        "to_ref": toRef,
+        "from_commit": from_commit,
+        "to_commit": to_commit,
+        "same_commit": False,
+        "stats": {
+            "files": len(files),
+            "additions": int(total_add),
+            "deletions": int(total_del),
+        },
+        "files": files,
+    }
+
+
+@router.get("/git-diff/file")
+def git_diff_file(
+    repoUrl: str = Query(..., description="Git 仓库 URL"),
+    fromRef: str = Query(..., description="基线 ref（上次发布）"),
+    toRef: str = Query(..., description="目标 ref（本次发布）"),
+    filePath: str = Query(..., description="文件路径"),
+    context: int = Query(3, ge=0, le=20),
+    maxLines: int = Query(1200, ge=50, le=4000),
+) -> dict:
+    repo_dir = _ensure_repo_cached(repoUrl)
+    if repo_dir is None:
+        return {"ok": False, "message": "仓库缓存失败，请检查 repoUrl"}
+
+    _ = run_git(repo_dir, ["fetch", "--all", "--prune", "--tags"])
+    from_commit = _resolve_commit(repo_dir, fromRef)
+    to_commit = _resolve_commit(repo_dir, toRef)
+    if not from_commit:
+        return {"ok": False, "message": f"无法解析 fromRef: {fromRef}"}
+    if not to_commit:
+        return {"ok": False, "message": f"无法解析 toRef: {toRef}"}
+
+    rc, out, err = _run_git_text(
+        repo_dir,
+        ["diff", f"--unified={int(context)}", f"{from_commit}..{to_commit}", "--", filePath],
+    )
+    if rc != 0:
+        return {"ok": False, "message": f"读取文件 diff 失败: {(err or '').strip()}"}
+
+    lines = (out or "").splitlines()
+    truncated = len(lines) > int(maxLines)
+    if truncated:
+        lines = lines[: int(maxLines)]
+    patch = "\n".join(lines)
+    return {
+        "ok": True,
+        "from_ref": fromRef,
+        "to_ref": toRef,
+        "from_commit": from_commit,
+        "to_commit": to_commit,
+        "file_path": filePath,
+        "truncated": truncated,
+        "patch": patch,
+    }

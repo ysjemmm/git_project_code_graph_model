@@ -167,42 +167,31 @@ def graph_projects(
         active_where = "WHERE coalesce(p.is_active,false) = true OR p.is_active IS NULL"
 
         if include_counts:
-            # 说明：避免 N+1 统计查询，node_count / relationship_count 用全库聚合后再 join 到 Project。
-            # 目前以 belong_project 作为聚合键（兼容旧数据不含 project_key 的情况）。
+            # 说明：
+            # - 旧写法先全图聚合后再按 project_name 过滤，数据量大时会慢（collect + 二次过滤）。
+            # - 新写法先拿 active 项目，再按项目子查询计数，避免构造大型中间列表。
+            # 目前仍以 belong_project 作为聚合键（兼容旧数据不含 project_key 的情况）。
             q = """
-            CALL () {
-              MATCH (n)
-              WITH coalesce(n.belong_project, '') AS project_name
-              WHERE project_name <> ""
-              RETURN project_name, count(*) AS node_count
-            }
-            WITH collect({project_name: project_name, node_count: node_count}) AS node_counts
-            CALL () {
-              MATCH (n)-[r]-()
-              WITH coalesce(n.belong_project, '') AS project_name, r
-              WHERE project_name <> ""
-              RETURN project_name, count(DISTINCT r) AS relationship_count
-            }
-            WITH node_counts, collect({project_name: project_name, relationship_count: relationship_count}) AS rel_counts
             MATCH (p:Project)
             __ACTIVE_WHERE__
-            WITH p, node_counts, rel_counts
             WITH
               coalesce(p.name, p.belong_project, '') AS project_name,
               coalesce(p.symbol_id, '') AS project_key,
               coalesce(p.project_type, '') AS project_type,
               coalesce(p.branch, '') AS branch,
-              coalesce(p.commit_hash, '') AS commit_hash,
-              node_counts,
-              rel_counts
-            WITH
-              project_name,
-              project_key,
-              project_type,
-              branch,
-              commit_hash,
-              [x IN node_counts WHERE x.project_name = project_name | x.node_count][0] AS node_count,
-              [x IN rel_counts WHERE x.project_name = project_name | x.relationship_count][0] AS relationship_count
+              coalesce(p.commit_hash, '') AS commit_hash
+            WHERE project_name <> ""
+            WITH DISTINCT project_name, project_key, project_type, branch, commit_hash
+            CALL (project_name) {
+              MATCH (n)
+              WHERE coalesce(n.belong_project, '') = project_name
+              RETURN count(n) AS node_count
+            }
+            CALL (project_name) {
+              MATCH (n)-[r]-()
+              WHERE coalesce(n.belong_project, '') = project_name
+              RETURN count(DISTINCT r) AS relationship_count
+            }
             RETURN project_name, project_key, project_type, branch, commit_hash,
                    coalesce(node_count, 0) AS node_count,
                    coalesce(relationship_count, 0) AS relationship_count
@@ -465,6 +454,43 @@ def graph_query(payload: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
         return {"ok": True, "columns": columns, "rows": rows, "limit": limit}
     except Exception as e:
         return {"ok": False, "message": f"查询失败: {e}", "columns": [], "rows": []}
+    finally:
+        conn.disconnect()
+
+
+@router.post("/graph/clear")
+def graph_clear(payload: Dict[str, Any] = Body({})) -> Dict[str, Any]:
+    """
+    清空整个图谱（危险操作）。
+    需要 confirm = "CLEAR_ALL" 才执行。
+    """
+    confirm = str(payload.get("confirm") or "").strip().upper()
+    if confirm != "CLEAR_ALL":
+        return {
+            "ok": False,
+            "message": "请提供 confirm=CLEAR_ALL 以确认清理全量图谱",
+        }
+
+    conn, err = _neo4j_connector()
+    if conn is None:
+        return {"ok": False, "message": err or "图数据库不可用"}
+
+    try:
+        with conn.driver.session(database=conn.database) as session:
+            # 先统计，便于前端展示“清理了多少”
+            before_nodes = _to_int(session.run("MATCH (n) RETURN count(n) AS c").single()["c"])
+            before_rels = _to_int(session.run("MATCH ()-[r]-() RETURN count(DISTINCT r) AS c").single()["c"])
+            session.run("MATCH (n) DETACH DELETE n")
+            after_nodes = _to_int(session.run("MATCH (n) RETURN count(n) AS c").single()["c"])
+            return {
+                "ok": True,
+                "message": "图谱已清理",
+                "before_nodes": before_nodes,
+                "before_relationships": before_rels,
+                "after_nodes": after_nodes,
+            }
+    except Exception as e:
+        return {"ok": False, "message": f"清理失败: {e}"}
     finally:
         conn.disconnect()
 

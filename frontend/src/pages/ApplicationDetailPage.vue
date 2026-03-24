@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { computed, h, onMounted, ref } from 'vue'
+import { computed, h, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { ArrowLeftOutlined, ReloadOutlined, SyncOutlined, LinkOutlined, DeleteOutlined, ApartmentOutlined } from '@ant-design/icons-vue'
+import { ArrowLeftOutlined, ReloadOutlined, SyncOutlined, LinkOutlined, DeleteOutlined, ApartmentOutlined, CloudDownloadOutlined } from '@ant-design/icons-vue'
 import MavenGuideModal from '../components/MavenGuideModal.vue'
 import {
   listApplicationProjects,
   listApplicationLinkedBy,
   getImportSettings,
-  getAppDependencies,
+  getAppMavenInfo,
+  getAppDependenciesTree,
   refreshAppDependencies,
   listDependencyLinks,
   listGraphProjects,
@@ -19,6 +20,8 @@ import {
   type CacheProjectItem,
   type AppDependency,
   type AppDependencyLink,
+  type AppMavenInfo,
+  type AppDependencyTreeParent,
   type LinkedByItem,
 } from '../api'
 
@@ -41,6 +44,8 @@ const deps = ref<AppDependency[]>([])
 const depsScannedAt = ref<string | null>(null)
 const depsError = ref<string | null>(null)
 const mavenEnabled = ref<boolean | null>(null)
+const mavenInfoLoading = ref(false)
+const mavenInfo = ref<AppMavenInfo | null>(null)
 const linkedByLoading = ref(false)
 const linkedByItems = ref<LinkedByItem[]>([])
 const showOnlySecondParty = ref(false)
@@ -56,170 +61,35 @@ const scopeOptions = [
   { label: 'runtime', value: 'runtime' },
 ]
 
-onMounted(async () => {
+watch([scopeFilter, showOnlySecondParty], () => {
+  void fetchDeps()
+})
+
+async function reloadPageDataByRepo() {
   await fetchDetail({ refresh: false })
   await fetchImportSettings()
+  void fetchMavenInfo()
   void fetchDeps()
   void fetchLinks()
   void fetchLinkedBy()
   void fetchAllProjects()
+}
+
+onMounted(async () => {
+  await reloadPageDataByRepo()
 })
 
-const filteredDeps = computed(() => {
-  let list = deps.value
-  if (scopeFilter.value !== 'all') list = list.filter(d => d.scope === scopeFilter.value)
-  if (showOnlySecondParty.value) list = list.filter(d => d.is_second_party)
-  return list
-})
-const secondPartyCount = computed(() => deps.value.filter((d) => d.is_second_party).length)
-const thirdPartyCount = computed(() => deps.value.filter((d) => !d.is_second_party).length)
-
-function isParentLikeDep(dep: AppDependency): boolean {
-  const artifact = String(dep.artifact_id || '').toLowerCase()
-  const scope = String(dep.scope || '').toLowerCase()
-  if (scope === 'import') return true
-  return artifact.endsWith('-parent') || artifact.endsWith('-bom') || artifact.endsWith('-dependencies')
-}
-
-function parentPriority(dep: AppDependency): number {
-  const artifact = String(dep.artifact_id || '').toLowerCase()
-  if (artifact.endsWith('-parent')) return 1
-  if (artifact.endsWith('-bom')) return 2
-  if (artifact.endsWith('-dependencies')) return 3
-  if (String(dep.scope || '').toLowerCase() === 'import') return 4
-  return 9
-}
-
-const parentLabelMap = computed(() => {
-  const map = new Map<string, string>()
-  const parents = deps.value
-    .filter(isParentLikeDep)
-    .slice()
-    .sort((a, b) => parentPriority(a) - parentPriority(b))
-
-  const keyExact = (g: string, v: string) => `${g}::${v}`
-  const keyGroup = (g: string) => `${g}::`
-  const labelOf = (d: AppDependency) =>
-    `${d.group_id}:${d.artifact_id}${d.version ? `:${d.version}` : ''}`
-
-  const exactMap = new Map<string, AppDependency>()
-  const groupMap = new Map<string, AppDependency>()
-
-  for (const p of parents) {
-    const g = String(p.group_id || '')
-    const v = String(p.version || '')
-    if (!g) continue
-    if (v && !exactMap.has(keyExact(g, v))) exactMap.set(keyExact(g, v), p)
-    if (!groupMap.has(keyGroup(g))) groupMap.set(keyGroup(g), p)
-  }
-
-  const depKey = (d: AppDependency) =>
-    `${d.group_id}:${d.artifact_id}:${d.scope}:${d.parent_group_id || ''}:${d.parent_artifact_id || ''}:${d.parent_version || ''}`
-
-  for (const d of deps.value) {
-    const g = String(d.group_id || '')
-    const v = String(d.version || '')
-    if (!g) {
-      map.set(depKey(d), '-')
-      continue
-    }
-    const selfKey = depKey(d)
-    if (isParentLikeDep(d)) {
-      map.set(selfKey, labelOf(d))
-      continue
-    }
-    const p = (v ? exactMap.get(keyExact(g, v)) : undefined) || groupMap.get(keyGroup(g))
-    map.set(selfKey, p ? labelOf(p) : '-')
-  }
-
-  return map
+watch(repoName, () => {
+  void reloadPageDataByRepo()
 })
 
-function getParentLabel(dep: AppDependency): string {
-  // 优先使用后端返回的 parent 字段
-  const pg = String(dep.parent_group_id || '').trim()
-  const pa = String(dep.parent_artifact_id || '').trim()
-  const pv = String(dep.parent_version || '').trim()
-  if (pg && pa) {
-    return `${pg}:${pa}${pv ? `:${pv}` : ''}`
-  }
-  const key = `${dep.group_id}:${dep.artifact_id}:${dep.scope}:${dep.parent_group_id || ''}:${dep.parent_artifact_id || ''}:${dep.parent_version || ''}`
-  return parentLabelMap.value.get(key) || '-'
-}
-
-type ParentTreeRow = {
-  key: string
-  __is_parent_group: true
-  parent: string
-  parent_group_id: string
-  parent_artifact_id: string
-  parent_version: string
-  child_count: number
-  second_party_count: number
-  children: Array<AppDependency & { key: string; __is_parent_group: false; parent: string }>
-}
-
-function parseParentLabel(label: string): { group_id: string; artifact_id: string; version: string } {
-  if (!label || label === '-') return { group_id: '', artifact_id: '', version: '' }
-  const parts = String(label).split(':')
-  return {
-    group_id: parts[0] || '',
-    artifact_id: parts[1] || '',
-    version: parts.slice(2).join(':') || '',
-  }
-}
+type ParentTreeRow = AppDependencyTreeParent
 
 const DEFAULT_PARENT_LABEL = 'default'
-
-const depsTreeData = computed(() => {
-  const grouped = new Map<string, Array<AppDependency & { key: string; __is_parent_group: false; parent: string }>>()
-  for (const dep of filteredDeps.value) {
-    let parent = getParentLabel(dep)
-    if (!parent || parent === '-' || parent.trim() === '') {
-      parent = DEFAULT_PARENT_LABEL
-    }
-    const list = grouped.get(parent) || []
-    list.push({
-      ...dep,
-      key: `dep::${dep.group_id}:${dep.artifact_id}:${dep.scope}:${dep.parent_group_id || ''}:${dep.parent_artifact_id || ''}:${dep.parent_version || ''}`,
-      __is_parent_group: false,
-      parent,
-    })
-    grouped.set(parent, list)
-  }
-
-  const rows: ParentTreeRow[] = []
-  for (const [parent, children] of grouped.entries()) {
-    children.sort((a, b) => {
-      const aKey = `${a.artifact_id || ''}:${a.group_id || ''}:${a.version || ''}:${a.scope || ''}`
-      const bKey = `${b.artifact_id || ''}:${b.group_id || ''}:${b.version || ''}:${b.scope || ''}`
-      return aKey.localeCompare(bKey)
-    })
-    const p = parseParentLabel(parent)
-    const secondPartyCount = children.filter((x) => Boolean(x.is_second_party)).length
-    rows.push({
-      key: `parent::${parent}`,
-      __is_parent_group: true,
-      parent,
-      parent_group_id: p.group_id,
-      parent_artifact_id: p.artifact_id,
-      parent_version: p.version,
-      child_count: children.length,
-      second_party_count: secondPartyCount,
-      children,
-    })
-  }
-
-  rows.sort((a, b) => {
-    const aHasSecond = a.second_party_count > 0
-    const bHasSecond = b.second_party_count > 0
-    if (aHasSecond !== bHasSecond) return aHasSecond ? -1 : 1
-    if (a.parent === DEFAULT_PARENT_LABEL && b.parent !== DEFAULT_PARENT_LABEL) return 1
-    if (a.parent !== DEFAULT_PARENT_LABEL && b.parent === DEFAULT_PARENT_LABEL) return -1
-    return a.parent.localeCompare(b.parent)
-  })
-  return rows
-})
+const depsTreeData = ref<ParentTreeRow[]>([])
+const filteredDepsCount = ref(0)
+const secondPartyCount = ref(0)
+const thirdPartyCount = ref(0)
 
 async function fetchDetail({ refresh = false }: { refresh?: boolean } = {}) {
   if (!repoName.value) return
@@ -247,16 +117,42 @@ async function fetchImportSettings() {
   }
 }
 
+async function fetchMavenInfo() {
+  if (!item.value?.id) return
+  mavenInfoLoading.value = true
+  try {
+    const data = await getAppMavenInfo(item.value.id as number)
+    mavenInfo.value = data?.maven || null
+  } catch {
+    mavenInfo.value = null
+  } finally {
+    mavenInfoLoading.value = false
+  }
+}
+
 async function fetchDeps() {
   if (!item.value?.id) return
   depsLoading.value = true
   depsError.value = null
   try {
-    const data = await getAppDependencies(item.value.id as number)
-    deps.value = Array.isArray(data.items) ? data.items : []
+    const data = await getAppDependenciesTree(item.value.id as number, {
+      scope: scopeFilter.value,
+      secondOnly: showOnlySecondParty.value,
+    })
+    const tree = Array.isArray(data.items) ? data.items : []
+    depsTreeData.value = tree
+    deps.value = tree.flatMap((x) => Array.isArray(x.children) ? x.children : [])
     depsScannedAt.value = data.scanned_at ?? null
+    filteredDepsCount.value = Number(data.filtered_count || 0)
+    secondPartyCount.value = Number(data.second_party_count || 0)
+    thirdPartyCount.value = Number(data.third_party_count || 0)
   } catch (e: any) {
     depsError.value = e?.message ?? String(e)
+    depsTreeData.value = []
+    deps.value = []
+    filteredDepsCount.value = 0
+    secondPartyCount.value = 0
+    thirdPartyCount.value = 0
   } finally {
     depsLoading.value = false
   }
@@ -279,6 +175,11 @@ async function doRefreshDeps() {
   } finally {
     depsRefreshing.value = false
   }
+}
+
+async function refreshMavenInfo() {
+  await fetchMavenInfo()
+  message.success('已重新拉取 pom 信息')
 }
 
 function backToList() {
@@ -314,6 +215,7 @@ function openLinkGraphView(row: ParentTreeRow, link?: AppDependencyLink | null) 
 async function refresh() {
   await fetchDetail({ refresh: true })
   await fetchImportSettings()
+  void fetchMavenInfo()
   void fetchDeps()
   void fetchLinks()
   void fetchLinkedBy()
@@ -336,11 +238,13 @@ const linkModalSaving = ref(false)
 // 同步到 Neo4j
 const syncing = ref(false)
 
-async function fetchLinks() {
+async function fetchLinks(refreshTree = false) {
   if (!item.value?.id) return
   try {
     const data = await listDependencyLinks(item.value.id as number)
     links.value = Array.isArray(data.items) ? data.items : []
+    // 关联变化后，后端 tree 的锁定/整组状态也会变化，按需刷新树数据
+    if (refreshTree) await fetchDeps()
   } catch { /* 静默 */ }
 }
 
@@ -376,9 +280,22 @@ async function fetchAllProjects() {
   } catch { /* 静默 */ }
 }
 
-function goSourceAppDetail(repoName: string) {
-  const target = String(repoName || '').trim()
-  if (!target) return
+function goSourceAppDetail(sourceRepoName?: string, sourceProjectName?: string, sourceAppId?: number) {
+  let target = String(sourceRepoName || '').trim()
+  if (!target) {
+    const appId = Number(sourceAppId || 0)
+    const projectName = String(sourceProjectName || '').trim()
+    const matched = allProjects.value.find((p) =>
+      (appId > 0 && Number(p.id || 0) === appId) ||
+      (projectName && String(p.project_name || '').trim() === projectName) ||
+      (projectName && String(p.repo_name || '').trim() === projectName),
+    )
+    target = String(matched?.repo_name || '').trim()
+  }
+  if (!target) {
+    message.warning('未找到来源项目的 repo_name，暂时无法打开详情')
+    return
+  }
   void router.push(`/application-admin/${encodeURIComponent(target)}`)
 }
 
@@ -416,47 +333,12 @@ const linkProjectOptions = computed(() => {
   }))
 })
 
-function depLinkKey(dep: Pick<AppDependency, 'group_id' | 'artifact_id'>): string {
-  return `${String(dep.group_id || '')}::${String(dep.artifact_id || '')}`
-}
-
-const linkByKey = computed(() => {
-  const m = new Map<string, AppDependencyLink>()
-  for (const l of links.value) {
-    m.set(`${String(l.group_id || '')}::${String(l.artifact_id || '')}`, l)
-  }
-  return m
-})
-
-const parentLockedChildKeySet = computed(() => {
-  const locked = new Set<string>()
-  for (const row of depsTreeData.value) {
-    if (row.parent === DEFAULT_PARENT_LABEL) continue
-    if (row.child_count <= 0 || row.second_party_count !== row.child_count) continue
-    const childLinks = row.children
-      .map((c) => linkByKey.value.get(depLinkKey(c)))
-      .filter(Boolean) as AppDependencyLink[]
-    if (childLinks.length !== row.children.length) continue
-    const linkedIds = new Set(childLinks.map((x) => Number(x.linked_app_id)))
-    if (linkedIds.size !== 1) continue
-    for (const c of row.children) locked.add(depLinkKey(c))
-  }
-  return locked
-})
-
 function isDepLockedByParent(dep: AppDependency): boolean {
-  return parentLockedChildKeySet.value.has(depLinkKey(dep))
+  return Boolean((dep as any).locked_by_parent)
 }
 
 function getParentUniformLink(row: ParentTreeRow): AppDependencyLink | null {
-  if (!row || !Array.isArray(row.children) || row.children.length === 0) return null
-  const childLinks = row.children
-    .map((c) => linkByKey.value.get(depLinkKey(c)))
-    .filter(Boolean) as AppDependencyLink[]
-  if (childLinks.length !== row.children.length) return null
-  const linkedIds = new Set(childLinks.map((x) => Number(x.linked_app_id)))
-  if (linkedIds.size !== 1) return null
-  return childLinks[0] ?? null
+  return (row as any).uniform_link || null
 }
 
 function openLinkModal(dep: AppDependency) {
@@ -538,7 +420,7 @@ async function saveLinkModal() {
       }
     }
     linkModalVisible.value = false
-    await fetchLinks()
+    await fetchLinks(true)
   } catch (e: any) {
     message.error(e?.message ?? String(e))
   } finally {
@@ -567,7 +449,7 @@ async function removeLink(dep: AppDependency) {
       try {
         await deleteDependencyLink(existing.id)
         message.success('关联已删除')
-        await fetchLinks()
+        await fetchLinks(true)
       } catch (e: any) {
         message.error(e?.message ?? String(e))
       }
@@ -593,6 +475,8 @@ async function doSyncToNeo4j() {
 
 // 给依赖行查找已有关联
 function getLinkForDep(dep: AppDependency): AppDependencyLink | undefined {
+  const fromTree = (dep as any).linked as AppDependencyLink | undefined
+  if (fromTree) return fromTree
   return links.value.find(l => l.group_id === dep.group_id && l.artifact_id === dep.artifact_id)
 }
 
@@ -603,6 +487,15 @@ const ruleDetailDep = ref<AppDependency | null>(null)
 function openRuleDetail(dep: AppDependency) {
   ruleDetailDep.value = dep
   ruleDetailVisible.value = true
+}
+
+function openParentRuleDetail(row: ParentTreeRow) {
+  const firstSecond = (Array.isArray(row.children) ? row.children : []).find((x) => Boolean((x as any).is_second_party))
+  if (!firstSecond) {
+    message.info('该分组下暂无可查看的二方包规则')
+    return
+  }
+  openRuleDetail(firstSecond as AppDependency)
 }
 
 const depColumns = [
@@ -666,6 +559,43 @@ const linkedByColumns = [
         </a-descriptions-item>
       </a-descriptions>
 
+      <div class="section-title">
+        Maven 信息
+        <a-tooltip title="重新拉取 pom 信息" placement="top">
+          <CloudDownloadOutlined
+            :class="['section-refresh-icon', { 'section-refresh-icon--spinning': mavenInfoLoading }]"
+            @click="refreshMavenInfo"
+          />
+        </a-tooltip>
+      </div>
+      <a-card size="small" style="margin-bottom: 12px;">
+        <a-spin :spinning="mavenInfoLoading">
+          <a-descriptions bordered size="small" :column="2">
+            <a-descriptions-item label="groupId">
+              <span class="mono">{{ mavenInfo?.group_id || '-' }}</span>
+            </a-descriptions-item>
+            <a-descriptions-item label="artifactId">
+              <span class="mono">{{ mavenInfo?.artifact_id || '-' }}</span>
+            </a-descriptions-item>
+            <a-descriptions-item label="version">
+              <span class="mono">{{ mavenInfo?.version || '-' }}</span>
+            </a-descriptions-item>
+            <a-descriptions-item label="packaging">
+              <span class="mono">{{ mavenInfo?.packaging || '-' }}</span>
+            </a-descriptions-item>
+            <a-descriptions-item label="parent" :span="2">
+              <span class="mono">
+                {{
+                  mavenInfo?.parent_group_id && mavenInfo?.parent_artifact_id
+                    ? `${mavenInfo.parent_group_id}:${mavenInfo.parent_artifact_id}${mavenInfo.parent_version ? `:${mavenInfo.parent_version}` : ''}`
+                    : '-'
+                }}
+              </span>
+            </a-descriptions-item>
+          </a-descriptions>
+        </a-spin>
+      </a-card>
+
       <div class="section-title">被哪些项目关联</div>
       <a-table
         :columns="linkedByColumns as any"
@@ -690,7 +620,13 @@ const linkedByColumns = [
             </a-tag>
           </template>
           <template v-else-if="column.key === 'action'">
-            <a-button type="link" size="small" @click.stop="goSourceAppDetail(record.source_repo_name)">视图</a-button>
+            <a-button
+              type="link"
+              size="small"
+              @click.stop="goSourceAppDetail(record.source_repo_name, record.source_project_name, record.source_app_id)"
+            >
+              来源详情
+            </a-button>
           </template>
         </template>
       </a-table>
@@ -760,7 +696,7 @@ const linkedByColumns = [
               :disabled="depsLoading || depsRefreshing"
             />
 
-            <span class="deps-count">共 {{ filteredDeps.length }} 个</span>
+            <span class="deps-count">共 {{ filteredDepsCount }} 个</span>
           </div>
 
           <a-alert
@@ -797,7 +733,6 @@ const linkedByColumns = [
             size="small"
             bordered
             row-key="key"
-            :default-expand-all-rows="true"
             :scroll="{ x: 800 }"
           >
             <template #bodyCell="{ column, record }">
@@ -817,8 +752,18 @@ const linkedByColumns = [
               </template>
               <template v-else-if="column.key === 'is_second_party' && record.__is_parent_group">
                 <a-space size="small" wrap>
-                  <a-tag v-if="record.child_count > 0 && record.second_party_count === record.child_count" color="blue">二方包</a-tag>
-                  <a-tag v-else-if="record.second_party_count > 0" color="orange">混合</a-tag>
+                  <a-tag
+                    v-if="record.child_count > 0 && record.second_party_count === record.child_count"
+                    color="blue"
+                    style="cursor: pointer;"
+                    @click.stop="openParentRuleDetail(record)"
+                  >二方包</a-tag>
+                  <a-tag
+                    v-else-if="record.second_party_count > 0"
+                    color="orange"
+                    style="cursor: pointer;"
+                    @click.stop="openParentRuleDetail(record)"
+                  >混合</a-tag>
                   <a-tag v-else color="default">三方包</a-tag>
                   <a-tag v-if="getParentUniformLink(record)" color="green">整组关联</a-tag>
                 </a-space>
@@ -889,10 +834,10 @@ const linkedByColumns = [
               </template>
               <template v-else-if="column.key === 'parent'">
                 <template v-if="record.__is_parent_group">
-                  <a-tooltip :title="record.parent || getParentLabel(record)" placement="topLeft">
+                  <a-tooltip :title="record.parent || '-'" placement="topLeft">
                     <span class="parent-cell-wrap parent-cell-wrap--stack">
                       <span class="parent-cell-main">
-                        <span class="mono cell-ellipsis">{{ record.parent || getParentLabel(record) }}</span>
+                        <span class="mono cell-ellipsis">{{ record.parent || '-' }}</span>
                         <span v-if="getParentUniformLink(record)" class="parent-linked-hint mono cell-ellipsis">
                           已整组关联：{{ getParentUniformLink(record)!.linked_project_name }}
                         </span>
@@ -1061,6 +1006,26 @@ const linkedByColumns = [
   margin: 20px 0 10px;
   display: flex;
   align-items: center;
+  gap: 6px;
+}
+
+.section-refresh-icon {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+}
+
+.section-refresh-icon:hover {
+  color: #1677ff;
+}
+
+.section-refresh-icon--spinning {
+  animation: section-icon-spin 0.9s linear infinite;
+}
+
+@keyframes section-icon-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .scanned-at {

@@ -206,6 +206,7 @@ class GitToNeo4jImporter:
                        maven_scan_enabled: bool = True,
                        force_maven: bool = False,
                        auto_link_external: bool = True,
+                       task_type: str = "auto",
                        cancel_event: ThreadEvent | None = None) -> Dict:
         # 兼容：历史参数 java_source_dir 仍然保留；如果两者都传，以 source_dir 为准
         if source_dir is None:
@@ -237,6 +238,7 @@ class GitToNeo4jImporter:
                 commit_id=commit_id,
                 maven_scan_enabled=maven_scan_enabled,
                 auto_link_external=auto_link_external,
+                task_type=task_type,
             )
         else:
             return self._import_sync(
@@ -256,6 +258,7 @@ class GitToNeo4jImporter:
                 maven_scan_enabled=maven_scan_enabled,
                 force_maven=force_maven,
                 auto_link_external=auto_link_external,
+                task_type=task_type,
                 cancel_event=cancel_event,
             )
     
@@ -274,7 +277,8 @@ class GitToNeo4jImporter:
                       git_config: Optional[Dict[str, str]] = None,
                       commit_id: Optional[str] = None,
                       maven_scan_enabled: bool = True,
-                      auto_link_external: bool = True) -> Dict:
+                      auto_link_external: bool = True,
+                      task_type: str = "auto") -> Dict:
         """异步导入(提交到任务队列)"""
         try:
             from core.task_queue import get_task_queue, TaskPriority
@@ -314,6 +318,7 @@ class GitToNeo4jImporter:
                 commit_id=commit_id,
                 maven_scan_enabled=bool(maven_scan_enabled),
                 auto_link_external=bool(auto_link_external),
+                task_type=str(task_type or "auto"),
             )
             
             return {
@@ -348,6 +353,7 @@ class GitToNeo4jImporter:
                     maven_scan_enabled: bool = True,
                     force_maven: bool = False,
                     auto_link_external: bool = True,
+                    task_type: str = "auto",
                     cancel_event: ThreadEvent | None = None) -> Dict:
         if not self.connector:
             return {
@@ -421,6 +427,53 @@ class GitToNeo4jImporter:
                     'error': git_result.get('error', '未知错误'),
                     'duration_ms': int((time.perf_counter() - start_time) * 1000),
                 }
+
+            task_type_norm = str(task_type or "auto").strip().lower()
+            if task_type_norm not in {"auto", "full", "incremental"}:
+                task_type_norm = "auto"
+            changed_files_raw = list(git_result.get('changed_files', []) or [])
+            added_files_raw = list(git_result.get('added_files', []) or [])
+            deleted_files_raw = list(git_result.get('deleted_files', []) or [])
+            def _norm_rel_file_path(p: Any) -> str:
+                return str(p or "").replace("\\", "/").strip()
+            changed_or_added_files = changed_files_raw + added_files_raw
+            changed_or_added_set = {
+                os.path.normcase(os.path.normpath(str(p)))
+                for p in changed_or_added_files
+                if str(p).strip()
+            }
+            source_exts = tuple(sorted({str(x).lower() for x in (adapter_extensions or []) if str(x).strip()}))
+            if source_exts:
+                non_source_changes = [
+                    p for p in changed_or_added_files
+                    if not str(p).lower().endswith(source_exts)
+                ]
+            else:
+                non_source_changes = list(changed_or_added_files)
+            auto_fallback_reason: Optional[str] = None
+            incremental_enabled = False
+            if clear_database:
+                auto_fallback_reason = "clear_database=true"
+                incremental_enabled = False
+            elif task_type_norm == "full":
+                incremental_enabled = False
+            elif task_type_norm == "incremental":
+                incremental_enabled = True
+            else:
+                # auto：保守策略，只有“纯源码小范围变更”才走增量，其他场景自动降级全量
+                if deleted_files_raw:
+                    auto_fallback_reason = "存在删除文件，降级全量以确保关系一致性"
+                elif non_source_changes:
+                    auto_fallback_reason = "存在非源码文件变更，降级全量"
+                elif len(changed_or_added_set) > 120:
+                    auto_fallback_reason = f"变更文件过多({len(changed_or_added_set)})，降级全量"
+                else:
+                    incremental_enabled = True
+            effective_mode = "incremental" if incremental_enabled else "full"
+            logger.info(
+                f"[INFO] task_type={task_type_norm} -> effective_mode={effective_mode}"
+                + (f"（reason={auto_fallback_reason}）" if auto_fallback_reason else "")
+            )
             
             logger.info(f"[OK] Git 分析成功")
             logger.info(f"  Commit: {git_result['commit_hash'][:8]}")
@@ -546,6 +599,45 @@ class GitToNeo4jImporter:
             total_created_relationships = 0
             total_attempted_nodes = 0
             total_attempted_relationships = 0
+            delta_detail: Dict[str, Any] = {
+                "files": {
+                    "added": [_norm_rel_file_path(x) for x in added_files_raw if _norm_rel_file_path(x)],
+                    "changed": [_norm_rel_file_path(x) for x in changed_files_raw if _norm_rel_file_path(x)],
+                    "deleted": [_norm_rel_file_path(x) for x in deleted_files_raw if _norm_rel_file_path(x)],
+                },
+                "added_nodes": {
+                    "total": 0,
+                    "by_label": {},
+                    "samples": [],
+                    "truncated": False,
+                },
+                "added_relationships": {
+                    "total": 0,
+                    "by_type": {},
+                    "samples": [],
+                    "truncated": False,
+                },
+                "deleted_nodes": {
+                    "total": 0,
+                    "by_file": [],
+                    "samples": [],
+                    "truncated": False,
+                },
+                "deleted_relationships": {
+                    "total": 0,
+                    "by_file": [],
+                },
+                "changed_nodes": {
+                    "files": [],
+                },
+                "changed_relationships": {
+                    "files": [],
+                    "by_type": {},
+                },
+            }
+            _node_sample_keys = set()
+            _rel_sample_keys = set()
+            _deleted_sample_keys = set()
 
             # 逐语言执行解析与导出
             for idx, adapter in enumerate(adapters):
@@ -565,9 +657,6 @@ class GitToNeo4jImporter:
                 source_files = adapter.find_source_files(ctx.repo_cache_dir, source_dirs)
                 logger.info(f"[OK] 总共找到 {len(source_files)} 个源码文件（adapter={adapter.__class__.__name__}）")
 
-                if not source_files:
-                    continue
-
                 _raise_if_cancelled(cancel_event)
 
                 # 处理删除的文件（仅对本 adapter 的源文件生效）
@@ -578,7 +667,75 @@ class GitToNeo4jImporter:
                         logger.info(f"发现 {len(deleted_files)} 个删除的文件")
                         for deleted_file in deleted_files:
                             logger.info(f"  删除文件相关节点: {deleted_file}")
-                            store.delete_file_subgraph(ctx, deleted_file)
+                            detail = store.delete_file_subgraph_with_details(ctx, deleted_file)
+                            deleted_nodes = int(detail.get("deleted_nodes") or 0)
+                            deleted_rels = int(detail.get("deleted_relationships") or 0)
+                            delta_detail["deleted_nodes"]["total"] += deleted_nodes
+                            delta_detail["deleted_relationships"]["total"] += deleted_rels
+                            delta_detail["deleted_nodes"]["by_file"].append(
+                                {"file": _norm_rel_file_path(deleted_file), "count": deleted_nodes}
+                            )
+                            delta_detail["deleted_relationships"]["by_file"].append(
+                                {"file": _norm_rel_file_path(deleted_file), "count": deleted_rels}
+                            )
+                            for n in list(detail.get("sample_nodes") or []):
+                                if len(delta_detail["deleted_nodes"]["samples"]) >= 120:
+                                    delta_detail["deleted_nodes"]["truncated"] = True
+                                    break
+                                key = f"{n.get('label','')}::{n.get('symbol_id','')}"
+                                if key in _deleted_sample_keys:
+                                    continue
+                                _deleted_sample_keys.add(key)
+                                delta_detail["deleted_nodes"]["samples"].append(
+                                    {
+                                        "file": _norm_rel_file_path(deleted_file),
+                                        "label": n.get("label"),
+                                        "symbol_id": n.get("symbol_id"),
+                                        "display": n.get("display"),
+                                    }
+                                )
+
+                # 处理修改文件：先删旧子图再重建，避免方法/字段变更后残留脏节点和脏边
+                if git_result.get('changed_files'):
+                    changed_files = [f for f in git_result['changed_files'] if adapter.is_source_file(f)]
+                    if changed_files:
+                        logger.info(f"\n处理修改文件（先删后建）..（adapter={adapter.__class__.__name__}）")
+                        logger.info(f"发现 {len(changed_files)} 个修改文件")
+                        delta_detail["changed_nodes"]["files"].extend(
+                            [_norm_rel_file_path(x) for x in changed_files if _norm_rel_file_path(x)]
+                        )
+                        delta_detail["changed_relationships"]["files"].extend(
+                            [_norm_rel_file_path(x) for x in changed_files if _norm_rel_file_path(x)]
+                        )
+                        for changed_file in changed_files:
+                            logger.info(f"  重建文件相关节点: {changed_file}")
+                            detail = store.delete_file_subgraph_with_details(ctx, changed_file)
+                            deleted_nodes = int(detail.get("deleted_nodes") or 0)
+                            deleted_rels = int(detail.get("deleted_relationships") or 0)
+                            delta_detail["deleted_nodes"]["total"] += deleted_nodes
+                            delta_detail["deleted_relationships"]["total"] += deleted_rels
+                            delta_detail["deleted_nodes"]["by_file"].append(
+                                {"file": _norm_rel_file_path(changed_file), "count": deleted_nodes, "reason": "changed-rebuild"}
+                            )
+                            delta_detail["deleted_relationships"]["by_file"].append(
+                                {"file": _norm_rel_file_path(changed_file), "count": deleted_rels, "reason": "changed-rebuild"}
+                            )
+
+                # 增量模式：仅处理“新增 + 修改”文件
+                if incremental_enabled:
+                    before = len(source_files)
+                    source_files = [
+                        f for f in source_files
+                        if os.path.normcase(os.path.normpath(str(f))) in changed_or_added_set
+                    ]
+                    logger.info(
+                        f"[INFO] 增量过滤（adapter={adapter.__class__.__name__}）："
+                        f"{before} -> {len(source_files)}（仅新增/修改）"
+                    )
+
+                if not source_files:
+                    logger.info(f"[INFO] 无需解析文件（adapter={adapter.__class__.__name__}），跳过 AST 与导出")
+                    continue
 
                 # 解析 AST
                 logger.info(f"\n解析 AST...（adapter={adapter.__class__.__name__}）")
@@ -624,7 +781,60 @@ class GitToNeo4jImporter:
                 total_created_relationships += int(export_result.get("created_relationships", 0))
                 total_attempted_nodes += int(export_result.get("attempted_nodes", 0))
                 total_attempted_relationships += int(export_result.get("attempted_relationships", 0))
+                detail = export_result.get("detail") if isinstance(export_result, dict) else None
+                if isinstance(detail, dict):
+                    for k, v in (detail.get("created_nodes_by_label") or {}).items():
+                        key = str(k or "").strip()
+                        if not key:
+                            continue
+                        delta_detail["added_nodes"]["by_label"][key] = int(delta_detail["added_nodes"]["by_label"].get(key, 0) or 0) + int(v or 0)
+                    for k, v in (detail.get("created_relationships_by_type") or {}).items():
+                        key = str(k or "").strip()
+                        if not key:
+                            continue
+                        delta_detail["added_relationships"]["by_type"][key] = int(delta_detail["added_relationships"]["by_type"].get(key, 0) or 0) + int(v or 0)
+                    for k, v in (detail.get("attempted_relationships_by_type") or {}).items():
+                        key = str(k or "").strip()
+                        if not key:
+                            continue
+                        delta_detail["changed_relationships"]["by_type"][key] = int(delta_detail["changed_relationships"]["by_type"].get(key, 0) or 0) + int(v or 0)
+
+                    for n in list(detail.get("node_samples") or []):
+                        if len(delta_detail["added_nodes"]["samples"]) >= 120:
+                            delta_detail["added_nodes"]["truncated"] = True
+                            break
+                        key = f"{n.get('label','')}::{n.get('symbol_id','')}"
+                        if key in _node_sample_keys:
+                            continue
+                        _node_sample_keys.add(key)
+                        delta_detail["added_nodes"]["samples"].append(
+                            {
+                                "label": n.get("label"),
+                                "symbol_id": n.get("symbol_id"),
+                                "display": n.get("display"),
+                                "file_path": _norm_rel_file_path(n.get("file_path")),
+                            }
+                        )
+                    for r in list(detail.get("relationship_samples") or []):
+                        if len(delta_detail["added_relationships"]["samples"]) >= 120:
+                            delta_detail["added_relationships"]["truncated"] = True
+                            break
+                        key = f"{r.get('type','')}::{r.get('source_id','')}::{r.get('target_id','')}"
+                        if key in _rel_sample_keys:
+                            continue
+                        _rel_sample_keys.add(key)
+                        delta_detail["added_relationships"]["samples"].append(
+                            {
+                                "type": r.get("type"),
+                                "source_id": r.get("source_id"),
+                                "target_id": r.get("target_id"),
+                            }
+                        )
             
+            delta_detail["added_nodes"]["total"] = int(total_created_nodes)
+            delta_detail["added_relationships"]["total"] = int(total_created_relationships)
+            delta_detail["changed_nodes"]["files"] = sorted(set(delta_detail["changed_nodes"]["files"]))
+            delta_detail["changed_relationships"]["files"] = sorted(set(delta_detail["changed_relationships"]["files"]))
             logger.info(f"[OK] 导出成功（汇总）")
             logger.info(f"  - 本次提交写入条目（attempted）: 节点 {total_attempted_nodes}，关系 {total_attempted_relationships}")
             logger.info(f"  - 本次新建（created）: 节点 {total_created_nodes}，关系 {total_created_relationships}")
@@ -658,6 +868,19 @@ class GitToNeo4jImporter:
                 created_nodes=total_created_nodes,
                 created_relationships=total_created_relationships,
                 statistics=stats,
+                extra={
+                    "task_type": task_type_norm,
+                    "incremental_enabled": bool(incremental_enabled),
+                    "effective_mode": effective_mode,
+                    "fallback_reason": auto_fallback_reason,
+                    "changed_or_added_files": len(changed_or_added_set),
+                    "deleted_files": len(deleted_files_raw),
+                    "non_source_changes": len(non_source_changes),
+                    "changed_files_list": [_norm_rel_file_path(x) for x in changed_files_raw if _norm_rel_file_path(x)],
+                    "added_files_list": [_norm_rel_file_path(x) for x in added_files_raw if _norm_rel_file_path(x)],
+                    "deleted_files_list": [_norm_rel_file_path(x) for x in deleted_files_raw if _norm_rel_file_path(x)],
+                    "delta_detail": delta_detail,
+                },
                 duration_ms=int((time.perf_counter() - start_time) * 1000),
             )
             return ir.to_dict()

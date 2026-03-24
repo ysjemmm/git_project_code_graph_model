@@ -351,17 +351,18 @@ onMounted(() => {
             <span class="field-hint">Maven groupId，如 <code>com.example</code></span>
           </template>
           <a-input-group compact>
-            <a-select
+            <a-radio-group
               v-model:value="form.group_id_plain"
-              style="width: 90px"
-              size="default"
+              option-type="button"
+              button-style="solid"
+              style="width: 120px"
             >
-              <a-select-option :value="true">文本</a-select-option>
-              <a-select-option :value="false">正则</a-select-option>
-            </a-select>
+              <a-radio-button :value="true">文本</a-radio-button>
+              <a-radio-button :value="false">正则</a-radio-button>
+            </a-radio-group>
             <a-input
               v-model:value="form.group_id_value"
-              style="width: calc(100% - 90px)"
+              style="width: calc(100% - 120px)"
               :placeholder="form.group_id_plain ? '例：com.example（包含匹配）' : '例：^com\\.example\\..*$'"
             />
           </a-input-group>
@@ -376,17 +377,18 @@ onMounted(() => {
             <span class="field-hint">Maven artifactId，如 <code>user-service</code></span>
           </template>
           <a-input-group compact>
-            <a-select
+            <a-radio-group
               v-model:value="form.artifact_id_plain"
-              style="width: 90px"
-              size="default"
+              option-type="button"
+              button-style="solid"
+              style="width: 120px"
             >
-              <a-select-option :value="true">文本</a-select-option>
-              <a-select-option :value="false">正则</a-select-option>
-            </a-select>
+              <a-radio-button :value="true">文本</a-radio-button>
+              <a-radio-button :value="false">正则</a-radio-button>
+            </a-radio-group>
             <a-input
               v-model:value="form.artifact_id_value"
-              style="width: calc(100% - 90px)"
+              style="width: calc(100% - 120px)"
               :placeholder="form.artifact_id_plain ? '例：user-service，留空则匹配所有包名' : '例：.*（匹配所有）'"
             />
           </a-input-group>

@@ -9,7 +9,7 @@ import re
 import hashlib
 import time
 from threading import Lock
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from neo4j import GraphDatabase, Driver
 from neo4j.exceptions import ServiceUnavailable, SessionExpired, Neo4jError
@@ -584,16 +584,16 @@ class Neo4jConnector:
         try:
             with self.driver.session(database=self.database) as session:
                 query = """
-                MATCH (f:JavaFile {file_path: $file_path})
-                WHERE ($project_key IS NOT NULL AND $project_key <> "" AND f.project_key = $project_key)
+                MATCH (f:File {file_path: $file_path})
+                WHERE ($project_key IS NOT NULL AND $project_key <> "" AND coalesce(f['project_key'], "") = $project_key)
                    OR (($project_key IS NULL OR $project_key = "") AND f.belong_project = $project_name)
                 OPTIONAL MATCH (f)-[r1:CONTAINS]->(obj:JavaObject)
-                OPTIONAL MATCH (obj)-[r2:MEMBER_OF]->(method:Method)
-                OPTIONAL MATCH (obj)-[r3:MEMBER_OF]->(field:Field)
+                OPTIONAL MATCH (obj)-[r2:MEMBER_OF]->(method:JavaMethod)
+                OPTIONAL MATCH (obj)-[r3:MEMBER_OF]->(field:JavaField)
                 OPTIONAL MATCH (method)-[r4:CALLS]->()
                 OPTIONAL MATCH (method)-[r5:ACCESSES]->()
                 OPTIONAL MATCH (field)-[r6:ACCESSES]->()
-                OPTIONAL MATCH (method)-[r7:MEMBER_OF]->(param:Parameter)
+                OPTIONAL MATCH (method)-[r7:MEMBER_OF]->(param:JavaMethodParameter)
                 OPTIONAL MATCH (obj)-[r8:EXTENDS]->()
                 OPTIONAL MATCH (obj)-[r9:IMPLEMENTS]->()
                 WITH f, obj, method, field, param, 
@@ -616,6 +616,83 @@ class Neo4jConnector:
         except Exception as e:
             logger.error(f"删除节点失败: {e}")
             return 0
+
+    def delete_nodes_by_file_with_details(
+        self,
+        file_path: str,
+        project_name: str,
+        project_key: Optional[str] = None,
+        sample_limit: int = 60,
+    ) -> Dict[str, Any]:
+        """
+        删除文件子图，并返回删除明细（用于验收详情展示）。
+        """
+        out: Dict[str, Any] = {
+            "deleted_nodes": 0,
+            "deleted_relationships": 0,
+            "sample_nodes": [],
+        }
+        if not self.connected:
+            logger.error("未连接到数据库")
+            return out
+
+        details_query = """
+        MATCH (f:File {file_path: $file_path})
+        WHERE ($project_key IS NOT NULL AND $project_key <> "" AND coalesce(f['project_key'], "") = $project_key)
+           OR (($project_key IS NULL OR $project_key = "") AND f.belong_project = $project_name)
+        OPTIONAL MATCH (f)-[:CONTAINS]->(obj:JavaObject)
+        OPTIONAL MATCH (obj)-[:MEMBER_OF]->(method:JavaMethod)
+        OPTIONAL MATCH (obj)-[:MEMBER_OF]->(field:JavaField)
+        OPTIONAL MATCH (method)-[:MEMBER_OF]->(param:JavaMethodParameter)
+        WITH [f, obj, method, field, param] AS raw_nodes
+        UNWIND raw_nodes AS n
+        WITH collect(DISTINCT n) AS nodes
+        CALL (nodes) {
+          WITH nodes
+          UNWIND nodes AS x
+          WITH x WHERE x IS NOT NULL
+          OPTIONAL MATCH (x)-[r]-()
+          RETURN count(DISTINCT r) AS rel_count
+        }
+        CALL (nodes) {
+          WITH nodes
+          UNWIND nodes AS x
+          WITH x WHERE x IS NOT NULL
+          RETURN labels(x)[0] AS label,
+                 coalesce(x.symbol_id, '') AS symbol_id,
+                 coalesce(x.qualified_name, x.name, x.file_path, x.symbol_id, '') AS display
+          LIMIT $sample_limit
+        }
+        RETURN size([x IN nodes WHERE x IS NOT NULL]) AS node_count,
+               rel_count AS rel_count,
+               collect({label: label, symbol_id: symbol_id, display: display}) AS samples
+        """
+        try:
+            with self.driver.session(database=self.database) as session:
+                row = session.run(
+                    details_query,
+                    {
+                        "file_path": file_path,
+                        "project_name": project_name,
+                        "project_key": project_key,
+                        "sample_limit": max(0, int(sample_limit or 0)),
+                    },
+                ).single()
+                if row:
+                    out["deleted_relationships"] = int(row.get("rel_count") or 0)
+                    out["sample_nodes"] = list(row.get("samples") or [])
+        except Exception as e:
+            logger.warning(f"读取文件删除明细失败（降级仅返回计数）: {e}")
+
+        out["deleted_nodes"] = int(
+            self.delete_nodes_by_file(
+                file_path=file_path,
+                project_name=project_name,
+                project_key=project_key,
+            )
+            or 0
+        )
+        return out
 
 
 def create_test_data(connector: Neo4jConnector) -> bool:

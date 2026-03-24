@@ -15,6 +15,7 @@ from api.tools import (
     search_code,
     read_source_file,
     get_project_dependencies,
+    get_bug_detail,
     _files_from_names,
 )
 
@@ -158,6 +159,15 @@ def _execute_tool(
                 return "[错误：缺少 project_name]"
             return get_project_dependencies(proj)
 
+        if name == "get_bug_detail":
+            try:
+                bid = int(arguments.get("bug_id", 0))
+            except (TypeError, ValueError):
+                return "[错误：bug_id 必须为整数]"
+            if not bid:
+                return "[错误：缺少参数 bug_id]"
+            return get_bug_detail(bid)
+
         if name == "output_analysis_chain":
             return "已记录分析链路，请继续给出你的分析结论。"
 
@@ -291,6 +301,20 @@ CLAUDE_TOOLS = [
         },
     },
     {
+        "name": "get_bug_detail",
+        "description": "从 Forward 产研系统获取指定 Bug 的详情。返回内容包括：标题(name)、状态(status/statusName)、描述(describe)、附件列表(files)。当用户已选择 Bug 且需要了解 Bug 具体内容时必须调用此工具。",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "bug_id": {
+                    "type": "integer",
+                    "description": "Bug ID，如 4518",
+                }
+            },
+            "required": ["bug_id"],
+        },
+    },
+    {
         "name": "output_analysis_chain",
         "description": "在给出最终分析结论之前，你必须调用本工具一次，提交本次分析的完整链路（从「拿到问题」到查图、查文件、读源码等每一步），便于用户看到流程图。steps 为数组，每项 {label: 步骤名称, detail: 本步具体说明, tool_kind: 本步对应的工具名（可选）}。detail 必填且要写清本步做了什么、查了什么或得到什么结论，例如：查图步写「在图谱中查询 ProjectServiceImpl.processFlow 方法的定义与调用关系」；查文件步写「读取用户上传的 bugfix-context.csv，确认第19行报错内容」；读源码步写「查看 BugfixController.java 第12-34行实现」；结论步写「定位到 NPE 来自 processFlow 入参未校验」。tool_kind 填本步实际调用的工具名，如 query_code_graph、read_uploaded_file、search_code、read_source_file，没有对应工具的步骤（如「拿到问题」「结论」）不填。",
         "input_schema": {
@@ -405,6 +429,23 @@ OPENAI_TOOLS = [
                     "max_lines": {"type": "integer", "description": "最多返回行数，默认 300"},
                 },
                 "required": ["file_path"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_bug_detail",
+            "description": "从 Forward 产研系统获取指定 Bug 的详情。返回内容包括：标题(name)、状态(status/statusName)、描述(describe)、附件列表(files)。当用户已选择 Bug 且需要了解 Bug 具体内容时必须调用此工具。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "bug_id": {
+                        "type": "integer",
+                        "description": "Bug ID，如 4518",
+                    }
+                },
+                "required": ["bug_id"],
             },
         },
     },

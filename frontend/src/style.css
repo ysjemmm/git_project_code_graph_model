@@ -1,0 +1,122 @@
+/* ─── 全局滚动条样式 ────────────────────────────────────────────────────────
+ * 统一管理所有滚动条外观，不写在 Vue 单文件组件里
+ * ──────────────────────────────────────────────────────────────────────── */
+
+/* CSS 变量：亮色主题默认值 */
+:root {
+  --sb-size: 6px;
+  --sb-track: transparent;
+  --sb-thumb-grad: linear-gradient(
+    180deg,
+    rgba(132, 145, 168, 0.72) 0%,
+    rgba(114, 127, 149, 0.72) 45%,
+    rgba(98, 111, 134, 0.72) 100%
+  );
+  --sb-thumb-grad-hover: linear-gradient(
+    180deg,
+    rgba(120, 134, 158, 0.86) 0%,
+    rgba(102, 116, 140, 0.86) 45%,
+    rgba(86, 101, 126, 0.86) 100%
+  );
+}
+
+/* ─── Webkit（Chrome / Edge / Safari） ─── */
+*::-webkit-scrollbar {
+  width: var(--sb-size);
+  height: var(--sb-size);
+}
+*::-webkit-scrollbar-track {
+  background: var(--sb-track);
+}
+/* 默认透明，悬停容器后显示 */
+*::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: transparent;
+  transition: background 0.25s;
+}
+*:hover::-webkit-scrollbar-thumb {
+  background: var(--sb-thumb-grad);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--sb-thumb-grad-hover) !important;
+}
+/* 去掉上下按钮 */
+*::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* ─── Firefox ─── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.25s;
+}
+*:hover {
+  scrollbar-color: rgba(110, 124, 148, 0.78) transparent;
+}
+
+/* ─── 深色背景区域：覆盖为浅色滚动条 ─── */
+
+/* 代码块（hljs dark theme） */
+.md-body .hljs-block,
+.tool-content.md-body .hljs-block {
+  --sb-thumb-grad: linear-gradient(
+    180deg,
+    rgba(191, 203, 224, 0.72) 0%,
+    rgba(172, 185, 208, 0.72) 45%,
+    rgba(154, 168, 192, 0.72) 100%
+  );
+  --sb-thumb-grad-hover: linear-gradient(
+    180deg,
+    rgba(213, 222, 238, 0.9) 0%,
+    rgba(191, 202, 222, 0.9) 45%,
+    rgba(171, 183, 206, 0.9) 100%
+  );
+}
+.md-body .hljs-block:hover,
+.tool-content.md-body .hljs-block:hover {
+  scrollbar-color: rgba(188, 200, 221, 0.82) transparent;
+}
+
+/* GraphAdminPage log 区域（#111 / #151821） */
+.log {
+  --sb-thumb-grad: linear-gradient(
+    180deg,
+    rgba(180, 190, 210, 0.65) 0%,
+    rgba(160, 172, 194, 0.65) 100%
+  );
+  --sb-thumb-grad-hover: linear-gradient(
+    180deg,
+    rgba(210, 220, 235, 0.85) 0%,
+    rgba(188, 200, 218, 0.85) 100%
+  );
+}
+.log:hover {
+  scrollbar-color: rgba(180, 190, 210, 0.65) transparent;
+}
+
+/* ─── Ant Design Drawer：防止抽屉动画时产生临时滚动条 ─── */
+/* Drawer 打开时 antd 会给挂载容器注入 overflow:hidden，但动画帧内容宽度变化会短暂闪出滚动条 */
+/* 用 overflow:hidden 强制锁定所有相关容器 */
+html, body {
+  overflow: hidden !important;
+}
+.bp-page,
+.bp-canvas,
+.layout-content,
+.page {
+  overflow: hidden !important;
+}
+
+/* ─── scrollbar-gutter：防止滚动条出现时挤压内容 ─── */
+.chat-log,
+.tool-content,
+.tool-tags,
+.acn-tool-content {
+  scrollbar-gutter: stable;
+}

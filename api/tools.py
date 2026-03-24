@@ -369,6 +369,95 @@ def search_code(
     return header + "\n\n".join(f"```java\n{r}\n```" for r in results)
 
 
+# --------------- Forward 系统 Bug 详情 ---------------
+
+# 无需 AI 修复的终态（已关闭/已完成/已转需求/修复中/等待上线等）
+_BUG_TERMINAL_STATUSES: dict[int, str] = {
+    2: "关闭",
+    4: "问题修复（已有人在修复中）",
+    5: "QA修复确认（修复已提交）",
+    6: "待上线（修复已完成）",
+    8: "完成",
+    9: "已转需求",
+    11: "待验收（修复已提交等待验收）",
+}
+
+
+def get_bug_detail(bug_id: int) -> str:
+    """
+    从 Forward 产研系统获取线上 Bug 详情。
+    只返回 AI 分析必要的字段：name、status、describe、files。
+    返回格式化文本，供 LLM 上下文使用。
+    """
+    import os as _os
+    import json as _json
+    try:
+        from api.clients.forward_client import ForwardClient
+    except ImportError:
+        return "[无法导入 ForwardClient，请检查项目依赖]"
+
+    try:
+        with ForwardClient.from_env() as c:
+            raw = c.get_bug(bug_id)
+    except Exception as e:
+        return f"[获取 Bug 详情失败: {e}]"
+
+    if not raw:
+        return f"[Bug #{bug_id} 不存在或返回为空]"
+
+    # 只提取 AI 需要的字段
+    name        = raw.get("name") or ""
+    status      = raw.get("status")
+    status_name = raw.get("statusName") or ""
+    describe    = raw.get("describe") or "无描述信息"
+    attaches    = raw.get("attaches") or []
+
+    # 检查是否处于无需修复的终态
+    if status in _BUG_TERMINAL_STATUSES:
+        reason = _BUG_TERMINAL_STATUSES[status]
+        return (
+            f"## Bug #{bug_id} 无需 AI 修复\n"
+            f"**标题**: {name}\n"
+            f"**状态**: {status_name}(状态码={status})\n"
+            f"**原因**: {reason}，该 Bug 已处于无需 AI 介入的状态，请告知用户无需进行修复分析。"
+        )
+
+    lines = [
+        f"## Bug #{bug_id} 详情",
+        f"**标题**: {name}",
+        f"**状态**: {status_name}(状态码={status})",
+        f"**描述**:\n{describe}",
+    ]
+
+    # 附件列表：无 downloadUrl 的附件直接寻过
+    valid_files: list[str] = []
+    skipped_files: list[str] = []
+    for f in (attaches if isinstance(attaches, list) else []):
+        if not isinstance(f, dict):
+            continue
+        fname = f.get("fileName") or ""
+        furl  = (f.get("downloadUrl") or "").strip()
+        if not furl:
+            skipped_files.append(fname or "(未知文件)")
+            continue
+        valid_files.append(f"  - {fname}\n    下载地址: {furl}")
+
+    if valid_files:
+        lines.append("**附件列表**:")
+        lines.extend(valid_files)
+    else:
+        lines.append("**附件列表**: 无可用附件")
+
+    result = "\n".join(lines)
+
+    # 被跳过的附件通过 SSE hint 提示（返回给调用方，由上层在工具结果中展示）
+    if skipped_files:
+        skipped_hint = "\n\n> ℹ️ 以下附件因无下载地址已忽略：" + "、".join(skipped_files)
+        result += skipped_hint
+
+    return result
+
+
 def read_source_file(
     project_name: str,
     file_path: str,

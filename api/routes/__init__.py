@@ -9,6 +9,7 @@ from api.routes.graph import router as graph_router
 from api.routes.cache import router as cache_router
 from api.routes.import_tasks import router as import_router
 from api.routes.second_party_rules import router as second_party_rules_router
+from api.routes.invoke import router as invoke_router
 
 __all__ = [
     "llm_router",
@@ -19,4 +20,5 @@ __all__ = [
     "cache_router",
     "import_router",
     "second_party_rules_router",
+    "invoke_router",
 ]

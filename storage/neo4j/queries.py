@@ -38,7 +38,7 @@ class Neo4jQueries:
           AND internal.qualified_name = cond.fqn
           AND internal.belong_project = cond.project
           AND (
-            cond.project_key IS NULL OR cond.project_key = "" OR internal.project_key = cond.project_key OR internal.project_key IS NULL
+            cond.project_key IS NULL OR cond.project_key = "" OR coalesce(internal['project_key'], "") = cond.project_key OR coalesce(internal['project_key'], "") = ""
           )
         RETURN internal.qualified_name as fqn,
                internal.belong_project as project,
@@ -66,7 +66,7 @@ class Neo4jQueries:
           AND external.qualified_name = cond.fqn
           AND external.belong_project = cond.project
           AND (
-            cond.project_key IS NULL OR cond.project_key = "" OR external.project_key = cond.project_key OR external.project_key IS NULL
+            cond.project_key IS NULL OR cond.project_key = "" OR coalesce(external['project_key'], "") = cond.project_key OR coalesce(external['project_key'], "") = ""
           )
         RETURN external.qualified_name as fqn,
                external.belong_project as project,
@@ -92,7 +92,7 @@ class Neo4jQueries:
           AND internal.qualified_name = $fqn
           AND internal.belong_project = $project_name
           AND (
-            $project_key IS NULL OR $project_key = "" OR internal.project_key = $project_key OR internal.project_key IS NULL
+            $project_key IS NULL OR $project_key = "" OR coalesce(internal['project_key'], "") = $project_key OR coalesce(internal['project_key'], "") = ""
           )
         RETURN internal.symbol_id as symbol_id
         LIMIT 1
@@ -117,7 +117,7 @@ class Neo4jQueries:
           AND external.qualified_name = $fqn
           AND external.belong_project = $project_name
           AND (
-            $project_key IS NULL OR $project_key = "" OR external.project_key = $project_key OR external.project_key IS NULL
+            $project_key IS NULL OR $project_key = "" OR coalesce(external['project_key'], "") = $project_key OR coalesce(external['project_key'], "") = ""
           )
         RETURN external.symbol_id as symbol_id
         """
@@ -138,7 +138,7 @@ class Neo4jQueries:
           AND internal.qualified_name = external.qualified_name
           AND internal.belong_project = external.belong_project
           AND (
-            external.project_key IS NULL OR external.project_key = "" OR internal.project_key = external.project_key OR internal.project_key IS NULL
+            coalesce(external['project_key'], "") = "" OR coalesce(internal['project_key'], "") = coalesce(external['project_key'], "") OR coalesce(internal['project_key'], "") = ""
           )
         MERGE (external)-[r:LIB_LINK]->(internal)
         ON CREATE SET r.__tmp_created = 1
@@ -165,14 +165,14 @@ class Neo4jQueries:
         WHERE external.from_type = 'ExternalDefinition'
           AND external.belong_project = $project_name
           AND (
-            $project_key IS NULL OR $project_key = "" OR external.project_key = $project_key OR external.project_key IS NULL
+            $project_key IS NULL OR $project_key = "" OR coalesce(external['project_key'], "") = $project_key OR coalesce(external['project_key'], "") = ""
           )
         MATCH (internal:JavaObject)
         WHERE internal.from_type = 'InnerDefinition'
           AND internal.qualified_name = external.qualified_name
           AND internal.belong_project = external.belong_project
           AND (
-            external.project_key IS NULL OR external.project_key = "" OR internal.project_key = external.project_key OR internal.project_key IS NULL
+            coalesce(external['project_key'], "") = "" OR coalesce(internal['project_key'], "") = coalesce(external['project_key'], "") OR coalesce(internal['project_key'], "") = ""
           )
         MERGE (external)-[r:LIB_LINK]->(internal)
         ON CREATE SET r.__tmp_created = 1
@@ -200,14 +200,14 @@ class Neo4jQueries:
         WHERE external.from_type = 'ExternalDefinition'
           AND external.belong_project = $project_name
           AND (
-            $project_key IS NULL OR $project_key = "" OR external.project_key = $project_key OR external.project_key IS NULL
+            $project_key IS NULL OR $project_key = "" OR coalesce(external['project_key'], "") = $project_key OR coalesce(external['project_key'], "") = ""
           )
         MATCH (internal:JavaObject)
         WHERE internal.from_type = 'InnerDefinition'
           AND internal.qualified_name = external.qualified_name
           AND internal.belong_project = external.belong_project
           AND (
-            external.project_key IS NULL OR external.project_key = "" OR internal.project_key = external.project_key OR internal.project_key IS NULL
+            coalesce(external['project_key'], "") = "" OR coalesce(internal['project_key'], "") = coalesce(external['project_key'], "") OR coalesce(internal['project_key'], "") = ""
           )
         OPTIONAL MATCH (external)-[r:LIB_LINK]->(internal)
         RETURN external.qualified_name AS fqn,
@@ -235,7 +235,7 @@ class Neo4jQueries:
           AND internal.qualified_name = external.qualified_name
           AND internal.belong_project = external.belong_project
           AND (
-            external.project_key IS NULL OR external.project_key = "" OR internal.project_key = external.project_key OR internal.project_key IS NULL
+            coalesce(external['project_key'], "") = "" OR coalesce(internal['project_key'], "") = coalesce(external['project_key'], "") OR coalesce(internal['project_key'], "") = ""
           )
         RETURN count(*) as match_count
         """
@@ -257,14 +257,14 @@ class Neo4jQueries:
         WHERE external.from_type = 'ExternalDefinition'
           AND external.belong_project = $project_name
           AND (
-            $project_key IS NULL OR $project_key = "" OR external.project_key = $project_key
+            $project_key IS NULL OR $project_key = "" OR coalesce(external['project_key'], "") = $project_key
           )
         MATCH (internal:JavaObject)
         WHERE internal.from_type = 'InnerDefinition'
           AND internal.qualified_name = external.qualified_name
           AND internal.belong_project = external.belong_project
           AND (
-            external.project_key IS NULL OR external.project_key = "" OR internal.project_key = external.project_key OR internal.project_key IS NULL
+            coalesce(external['project_key'], "") = "" OR coalesce(internal['project_key'], "") = coalesce(external['project_key'], "") OR coalesce(internal['project_key'], "") = ""
           )
         RETURN count(*) as match_count
         """
@@ -340,7 +340,7 @@ class Neo4jQueries:
           AND internal.qualified_name = external.qualified_name
           AND internal.belong_project = external.belong_project
           AND (
-            external.project_key IS NULL OR external.project_key = "" OR internal.project_key = external.project_key OR internal.project_key IS NULL
+            coalesce(external['project_key'], "") = "" OR coalesce(internal['project_key'], "") = coalesce(external['project_key'], "") OR coalesce(internal['project_key'], "") = ""
           )
         OPTIONAL MATCH (external)-[r:LIB_LINK]->(internal)
         RETURN external.qualified_name as fqn,
@@ -384,11 +384,14 @@ class Neo4jQueries:
         """
         return """
         MATCH (app:Project {project_type: 'Application', name: $project_name})
+        WITH app
+        ORDER BY coalesce(app.is_active, false) DESC, coalesce(app.commit_hash, '') DESC
+        LIMIT 1
         MATCH (lib:Project {project_type: 'Lib', name: $project_name})
-        WHERE lib <> app
-        WITH app, lib, 1 AS one
+        WITH collect(lib) AS libs
+        UNWIND libs AS lib
         DETACH DELETE lib
-        RETURN sum(one) AS absorbed_count
+        RETURN count(lib) AS absorbed_count
         """
 
     @staticmethod
@@ -569,16 +572,16 @@ class Neo4jQueries:
             deleted_count
         """
         return """
-        MATCH (f:JavaFile {file_path: $file_path})
-        WHERE ($project_key IS NOT NULL AND $project_key <> "" AND f.project_key = $project_key)
+        MATCH (f:File {file_path: $file_path})
+        WHERE ($project_key IS NOT NULL AND $project_key <> "" AND coalesce(f['project_key'], "") = $project_key)
            OR (($project_key IS NULL OR $project_key = "") AND f.belong_project = $project_name)
         OPTIONAL MATCH (f)-[r1:CONTAINS]->(obj:JavaObject)
-        OPTIONAL MATCH (obj)-[r2:MEMBER_OF]->(method:Method)
-        OPTIONAL MATCH (obj)-[r3:MEMBER_OF]->(field:Field)
+        OPTIONAL MATCH (obj)-[r2:MEMBER_OF]->(method:JavaMethod)
+        OPTIONAL MATCH (obj)-[r3:MEMBER_OF]->(field:JavaField)
         OPTIONAL MATCH (method)-[r4:CALLS]->()
         OPTIONAL MATCH (method)-[r5:ACCESSES]->()
         OPTIONAL MATCH (field)-[r6:ACCESSES]->()
-        OPTIONAL MATCH (method)-[r7:MEMBER_OF]->(param:Parameter)
+        OPTIONAL MATCH (method)-[r7:MEMBER_OF]->(param:JavaMethodParameter)
         OPTIONAL MATCH (obj)-[r8:EXTENDS]->()
         OPTIONAL MATCH (obj)-[r9:IMPLEMENTS]->()
         WITH f, obj, method, field, param, 

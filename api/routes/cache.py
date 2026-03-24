@@ -25,6 +25,26 @@ from api.routes.cache_link_stats import attach_link_stats_to_projects, list_link
 
 router = APIRouter(prefix="/api", tags=["cache"])
 
+
+def _find_child_any_ns(elem: Optional[Any], tag: str) -> Optional[Any]:
+    if elem is None:
+        return None
+    child = elem.find(tag)
+    if child is not None:
+        return child
+    return elem.find(f"{{*}}{tag}")
+
+
+def _text_path_any_ns(elem: Any, *tags: str) -> str:
+    cur = elem
+    for tag in tags:
+        if cur is None:
+            return ""
+        cur = _find_child_any_ns(cur, tag)
+    if cur is not None and cur.text:
+        return str(cur.text).strip()
+    return ""
+
 def _scan_application_projects_from_filesystem(*, include_libs: bool) -> List[CacheProjectItem]:
     """
     从本地 `.cache/git_repos` + metadata/merkle 文件扫描应用列表，并转换为 `CacheProjectItem`。
@@ -568,6 +588,186 @@ def get_app_dependencies(app_id: int) -> Dict[str, Any]:
     items = dep_repo.list_by_app(app_id)
     scanned_at = dep_repo.scanned_at(app_id)
     return {"ok": True, "app_id": app_id, "scanned_at": scanned_at, "items": items}
+
+
+@router.get("/cache/application-projects/{app_id}/maven-info")
+def get_app_maven_info(app_id: int) -> Dict[str, Any]:
+    """
+    读取应用根 pom.xml 的 Maven 坐标信息（groupId/artifactId/version/parent）。
+    """
+    import xml.etree.ElementTree as _ET
+    from fastapi import HTTPException
+    from storage.sqlite.business import get_business_db
+
+    db = get_business_db()
+    row = db.conn.cursor().execute(
+        "SELECT id, repo_name, cache_dir FROM application_projects_cache WHERE id = ?",
+        (app_id,),
+    ).fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail=f"应用 id={app_id} 不存在")
+
+    repo_name = str(row["repo_name"] or "")
+    cache_dir = str(row["cache_dir"] or "") or str(CACHE_GIT_REPOS_PATH / repo_name)
+    repo_root = Path(cache_dir)
+    pom_path = repo_root / "pom.xml"
+    if not pom_path.exists():
+        raise HTTPException(status_code=422, detail=f"未找到 pom.xml：{pom_path}")
+
+    try:
+        root = _ET.parse(str(pom_path)).getroot()
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=f"解析 pom.xml 失败：{e}")
+
+    parent_group_id = _text_path_any_ns(root, "parent", "groupId")
+    parent_artifact_id = _text_path_any_ns(root, "parent", "artifactId")
+    parent_version = _text_path_any_ns(root, "parent", "version")
+    group_id = _text_path_any_ns(root, "groupId") or parent_group_id
+    artifact_id = _text_path_any_ns(root, "artifactId")
+    version = _text_path_any_ns(root, "version") or parent_version
+    packaging = _text_path_any_ns(root, "packaging") or "jar"
+
+    return {
+        "ok": True,
+        "app_id": app_id,
+        "maven": {
+            "group_id": group_id or "",
+            "artifact_id": artifact_id or "",
+            "version": version or "",
+            "packaging": packaging or "",
+            "parent_group_id": parent_group_id or "",
+            "parent_artifact_id": parent_artifact_id or "",
+            "parent_version": parent_version or "",
+            "pom_path": str(pom_path),
+        },
+    }
+
+
+@router.get("/cache/application-projects/{app_id}/dependencies-tree")
+def get_app_dependencies_tree(
+    app_id: int,
+    scope: str = Query("all", description="all/compile/test/provided/runtime"),
+    second_only: bool = Query(False, description="是否只返回二方包"),
+) -> Dict[str, Any]:
+    """
+    返回后端已分组的 parent-tree 依赖结构，前端直接渲染，避免大规模计算导致卡顿。
+    """
+    from storage.sqlite.business import get_business_db
+    from storage.sqlite.business.app_dependencies_repo import AppDependenciesRepo
+    from storage.sqlite.business.app_dependency_links_repo import AppDependencyLinksRepo
+
+    db = get_business_db()
+    row = db.conn.cursor().execute(
+        "SELECT id FROM application_projects_cache WHERE id = ?", (app_id,)
+    ).fetchone()
+    if row is None:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail=f"应用 id={app_id} 不存在")
+
+    dep_repo = AppDependenciesRepo(db=db)
+    all_items = dep_repo.list_by_app(app_id)
+    scanned_at = dep_repo.scanned_at(app_id)
+    total_count = len(all_items)
+    second_party_count = sum(1 for x in all_items if bool(x.get("is_second_party")))
+    third_party_count = max(0, total_count - second_party_count)
+
+    scope_norm = str(scope or "all").strip().lower()
+    if scope_norm not in {"all", "compile", "test", "provided", "runtime"}:
+        scope_norm = "all"
+    filtered = all_items
+    if scope_norm != "all":
+        filtered = [x for x in filtered if str(x.get("scope") or "").strip().lower() == scope_norm]
+    if bool(second_only):
+        filtered = [x for x in filtered if bool(x.get("is_second_party"))]
+
+    links_repo = AppDependencyLinksRepo(db=db)
+    links = links_repo.list_by_app(app_id)
+    link_map: Dict[str, Dict[str, Any]] = {
+        f"{str(l.get('group_id') or '')}::{str(l.get('artifact_id') or '')}": l for l in links
+    }
+
+    DEFAULT_PARENT_LABEL = "default"
+    grouped: Dict[str, List[Dict[str, Any]]] = {}
+    for d in filtered:
+        pg = str(d.get("parent_group_id") or "").strip()
+        pa = str(d.get("parent_artifact_id") or "").strip()
+        pv = str(d.get("parent_version") or "").strip()
+        parent = f"{pg}:{pa}{(':' + pv) if pv else ''}" if pg and pa else DEFAULT_PARENT_LABEL
+
+        group_id = str(d.get("group_id") or "")
+        artifact_id = str(d.get("artifact_id") or "")
+        linked = link_map.get(f"{group_id}::{artifact_id}")
+        child = {
+            **d,
+            "key": f"dep::{group_id}:{artifact_id}:{str(d.get('scope') or '')}:{pg}:{pa}:{pv}",
+            "__is_parent_group": False,
+            "parent": parent,
+            "linked": linked,
+            "locked_by_parent": False,
+        }
+        grouped.setdefault(parent, []).append(child)
+
+    rows: List[Dict[str, Any]] = []
+    for parent, children in grouped.items():
+        children.sort(
+            key=lambda x: (
+                str(x.get("artifact_id") or ""),
+                str(x.get("group_id") or ""),
+                str(x.get("version") or ""),
+                str(x.get("scope") or ""),
+            )
+        )
+
+        second_count = sum(1 for x in children if bool(x.get("is_second_party")))
+        child_links = [x.get("linked") for x in children if x.get("linked")]
+        linked_ids = {int(x.get("linked_app_id")) for x in child_links if x and x.get("linked_app_id") is not None}
+        uniform = len(children) > 0 and len(child_links) == len(children) and len(linked_ids) == 1
+        uniform_link = child_links[0] if uniform and child_links else None
+        parent_locked = bool(parent != DEFAULT_PARENT_LABEL and len(children) > 0 and second_count == len(children) and uniform)
+        if parent_locked:
+            for c in children:
+                c["locked_by_parent"] = True
+
+        parts = parent.split(":")
+        parent_group_id = parts[0] if len(parts) >= 1 and parent != DEFAULT_PARENT_LABEL else ""
+        parent_artifact_id = parts[1] if len(parts) >= 2 and parent != DEFAULT_PARENT_LABEL else ""
+        parent_version = ":".join(parts[2:]) if len(parts) >= 3 and parent != DEFAULT_PARENT_LABEL else ""
+        rows.append(
+            {
+                "key": f"parent::{parent}",
+                "__is_parent_group": True,
+                "parent": parent,
+                "parent_group_id": parent_group_id,
+                "parent_artifact_id": parent_artifact_id,
+                "parent_version": parent_version,
+                "child_count": len(children),
+                "second_party_count": second_count,
+                "uniform_link": uniform_link,
+                "parent_locked": parent_locked,
+                "children": children,
+            }
+        )
+
+    rows.sort(
+        key=lambda x: (
+            0 if int(x.get("second_party_count") or 0) > 0 else 1,
+            1 if str(x.get("parent") or "") == DEFAULT_PARENT_LABEL else 0,
+            str(x.get("parent") or ""),
+        )
+    )
+
+    return {
+        "ok": True,
+        "app_id": app_id,
+        "scanned_at": scanned_at,
+        "scope": scope_norm,
+        "second_only": bool(second_only),
+        "total_count": total_count,
+        "second_party_count": second_party_count,
+        "third_party_count": third_party_count,
+        "filtered_count": len(filtered),
+        "items": rows,
+    }
 
 
 @router.post("/cache/application-projects/{app_id}/refresh-dependencies")

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import { BulbOutlined, CodeOutlined, FileTextOutlined, FolderOpenOutlined, LinkOutlined, SearchOutlined, ToolOutlined } from '@ant-design/icons-vue'
+import { BugOutlined, BulbOutlined, CodeOutlined, FileTextOutlined, FolderOpenOutlined, LinkOutlined, SearchOutlined, ToolOutlined, DatabaseOutlined, ApiOutlined, BranchesOutlined, ContainerOutlined, CloudServerOutlined, ExperimentOutlined } from '@ant-design/icons-vue'
 import type { ChatMsg } from '../types'
 import { NEO4J_AURA_QUERY_URL } from '../constants'
 import type { ToolStep } from '../api'
@@ -10,11 +10,17 @@ const props = defineProps<{
   chatMessages: ChatMsg[]
   chatInput: string
   canSend: boolean
-  /** 发送按钮禁用时的原因，用于 title 提示 */
+  /** 发送按鈕禁用时的原因，用于 title 提示 */
   sendDisabledReason?: string
   /** 输入框占位符 */
   placeholder?: string
   renderMarkdown: (s: string) => string
+  /** 已选中的 Bug 标题，为空表示未选择 */
+  selectedBugTitle?: string
+  /** 为 true 时隐藏底部输入区（纯阅读模式，如执行进度面板） */
+  hideInput?: boolean
+  /** 是否展示思考详情（工具调用步骤），为 false 时隐藏所有工具步骤 */
+  showThinkingDetail?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -23,6 +29,7 @@ const emit = defineEmits<{
   (e: 'test'): void
   (e: 'cancel'): void
   (e: 'openNeo4j'): void
+  (e: 'selectBug'): void
 }>()
 
 const chatInputModel = computed({
@@ -34,6 +41,13 @@ const chatLogRef = ref<HTMLElement | null>(null)
 const msgRefs = ref<HTMLElement[]>([])
 const stickyQuestion = ref<string>('')
 let scrollRaf: number | null = null
+
+function toolSteps(seg: any): ToolStep[] {
+  if (!seg || typeof seg !== 'object') return []
+  if (String((seg as any).type) !== 'tool') return []
+  const steps = (seg as any).steps
+  return Array.isArray(steps) ? (steps as ToolStep[]) : []
+}
 
 function setMsgRef(idx: number, el: Element | null) {
   if (el) msgRefs.value[idx] = el as HTMLElement
@@ -186,12 +200,32 @@ function getReadTags(step: ToolStep): ReadTag[] {
 }
 
 function getToolIcon(kind: string) {
-  if (kind === 'read_uploaded_file' || kind === 'file_read') return FileTextOutlined
-  if (kind === 'list_uploaded_files' || kind === 'file_list') return FolderOpenOutlined
-  if (kind === 'query_code_graph' || kind === 'graph_query') return SearchOutlined
-  if (kind === 'reasoning') return BulbOutlined
-  if (kind === 'read_source_file') return CodeOutlined
-  return ToolOutlined
+  if (kind === 'read_uploaded_file' || kind === 'file_read') return FileTextOutlined      // 读取文件
+  if (kind === 'list_uploaded_files' || kind === 'file_list') return ContainerOutlined   // 文件列表
+  if (kind === 'query_code_graph' || kind === 'graph_query') return DatabaseOutlined    // 代码图谱
+  if (kind === 'reasoning') return ExperimentOutlined                                  // 思考过程
+  if (kind === 'read_source_file') return CodeOutlined                               // 源代码
+  if (kind === 'search_code') return SearchOutlined                                   // 代码搜索
+  if (kind === 'api_call' || kind === 'http_request') return ApiOutlined             // API调用
+  if (kind === 'git_operations') return BranchesOutlined                              // Git操作
+  if (kind === 'bug_analysis') return BugOutlined                                     // Bug分析
+  if (kind === 'cloud_deploy' || kind === 'deployment') return CloudServerOutlined    // 云部署
+  return ToolOutlined                                                                  // 默认工具
+}
+
+function getToolIconClass(kind: string): string {
+  const icon = getToolIcon(kind)
+  if (icon === DatabaseOutlined) return 'color-cyan'
+  if (icon === ContainerOutlined) return 'color-orange'
+  if (icon === ExperimentOutlined) return 'color-purple'
+  if (icon === SearchOutlined) return 'color-green'
+  if (icon === BugOutlined) return 'color-red'
+  if (icon === ApiOutlined) return 'color-gold'
+  if (icon === BranchesOutlined) return 'color-orange'
+  if (icon === CloudServerOutlined) return 'color-cyan'
+  if (icon === CodeOutlined) return 'color-blue'
+  if (icon === FileTextOutlined) return 'color-blue'
+  return ''
 }
 
 function getToolTitle(step: ToolStep): string {
@@ -205,6 +239,17 @@ function getToolTitle(step: ToolStep): string {
   if (kind === 'query_code_graph' || kind === 'graph_query') return '代码图谱查询'
   if (kind === 'search_code') return '代码搜索'
   if (kind === 'reasoning') return '思考过程'
+  if (kind === 'bug_detail' || kind === 'get_bug_detail') {
+    // Bug 详情工具：展示「获取 Bug 详情：#ID + 标题」
+    const title = step?.title ?? ''
+    const content = step?.content ?? ''
+    // 尝试从 content 中解析 Bug 标题（格式：**标题**: xxx）
+    const m = content.match(/\*\*标题\*\*:\s*(.+?)(?:\n|$)/)
+    if (m?.[1]) {
+      return `获取 Bug 详情：${title} - ${m[1].trim()}`
+    }
+    return title || '获取 Bug 详情'
+  }
   return step?.title ?? ''
 }
 
@@ -349,18 +394,19 @@ defineExpose({ scrollToBottom, forceScrollToBottom, maybeScrollToBottom, isNearB
                 <div v-if="seg.type === 'text'" class="bubble" :class="{ 'bubble-streaming': m.streaming && segIdx === m.segments.length - 1 }">
                   <div class="md-body" v-html="renderMarkdown(seg.content)" />
                 </div>
-                <div v-else-if="seg.type === 'tool' && seg.steps.length" class="thinking-wrap" :class="{ 'thinking-active': loading && idx === chatMessages.length - 1 && segIdx === m.segments.length - 1 }">
-                  <a-collapse :default-active-key="[]" ghost>
+                <div v-else-if="seg.type === 'tool' && toolSteps(seg).length" class="thinking-wrap" :class="{ 'thinking-active': loading && idx === chatMessages.length - 1 && segIdx === m.segments.length - 1 }">
+                  <!-- 展示思考详情：可折叠 -->
+                  <a-collapse v-if="showThinkingDetail !== false" :default-active-key="[]" ghost>
                     <a-collapse-panel
-                      v-for="(step, si) in seg.steps"
+                      v-for="(step, si) in toolSteps(seg)"
                       :key="'step-' + idx + '-' + segIdx + '-' + si"
-                      :class="{ 'tool-running': loading && idx === chatMessages.length - 1 && segIdx === m.segments.length - 1 && si === seg.steps.length - 1 }"
+                      :class="{ 'tool-running': loading && idx === chatMessages.length - 1 && segIdx === m.segments.length - 1 && si === toolSteps(seg).length - 1 }"
                     >
                       <template #header>
                         <div class="tool-header">
                           <div class="tool-header-main">
                             <div class="tool-header-main-row">
-                              <span class="tool-icon">
+                              <span class="tool-icon" :class="getToolIconClass(step.kind)">
                                 <component :is="getToolIcon(step.kind)" />
                               </span>
                               <span class="tool-header-text">{{ getToolTitle(step) }}</span>
@@ -377,7 +423,6 @@ defineExpose({ scrollToBottom, forceScrollToBottom, maybeScrollToBottom, isNearB
                             </div>
                             <span v-if="getQuerySummary(step) || getToolStepDetail(step)" class="tool-query-summary">{{ getQuerySummary(step) || getToolStepDetail(step) }}</span>
                           </div>
-
                           <div v-if="getReadTags(step).length" class="tool-tags">
                             <a-tag
                               v-for="t in getReadTags(step)"
@@ -396,6 +441,51 @@ defineExpose({ scrollToBottom, forceScrollToBottom, maybeScrollToBottom, isNearB
                       <div class="tool-content md-body" v-html="renderMarkdown(step.content)" />
                     </a-collapse-panel>
                   </a-collapse>
+                  <!-- 不展示思考详情：仅展示 header，不可折叠，无箭头 -->
+                  <div
+                    v-else
+                    v-for="(step, si) in toolSteps(seg)"
+                    :key="'step-plain-' + idx + '-' + segIdx + '-' + si"
+                    class="ant-collapse-item"
+                    :class="{ 'tool-running': loading && idx === chatMessages.length - 1 && segIdx === m.segments.length - 1 && si === toolSteps(seg).length - 1 }"
+                  >
+                    <div class="ant-collapse-header" style="padding: 8px 12px;min-height: 35px;">
+                      <div class="tool-header">
+                        <div class="tool-header-main">
+                          <div class="tool-header-main-row">
+                            <span class="tool-icon" :class="getToolIconClass(step.kind)">
+                              <component :is="getToolIcon(step.kind)" />
+                            </span>
+                            <span class="tool-header-text">{{ getToolTitle(step) }}</span>
+                            <a-button
+                              v-if="step.kind === 'query_code_graph' || step.kind === 'graph_query'"
+                              type="text"
+                              size="small"
+                              class="tool-link-btn"
+                              title="打开 Neo4j Aura 控制台"
+                              @click.stop="openNeo4jAuraQuery"
+                            >
+                              <template #icon><LinkOutlined /></template>
+                            </a-button>
+                          </div>
+                          <span v-if="getQuerySummary(step) || getToolStepDetail(step)" class="tool-query-summary">{{ getQuerySummary(step) || getToolStepDetail(step) }}</span>
+                        </div>
+                        <div v-if="getReadTags(step).length" class="tool-tags">
+                          <a-tag
+                            v-for="t in getReadTags(step)"
+                            :key="t.file + ':' + (t.start ?? '-') + '-' + (t.end ?? '-')"
+                            :title="t.file"
+                            class="tool-file-tag"
+                          >
+                            <span class="tool-tag-file">{{ basename(t.file) }}</span>
+                            <span v-if="t.start != null && t.end != null" class="tool-tag-range">
+                              行{{ t.start }}-{{ t.end }}
+                            </span>
+                          </a-tag>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </template>
             </template>
@@ -414,7 +504,8 @@ defineExpose({ scrollToBottom, forceScrollToBottom, maybeScrollToBottom, isNearB
               </div>
 
               <div v-if="m.toolSteps?.length" class="thinking-wrap" :class="{ 'thinking-active': loading && idx === chatMessages.length - 1 }">
-                <a-collapse :default-active-key="[]" ghost>
+                <!-- 展示思考详情：可折叠 -->
+                <a-collapse v-if="showThinkingDetail !== false" :default-active-key="[]" ghost>
                   <a-collapse-panel
                     v-for="(step, si) in m.toolSteps"
                     :key="'step-' + idx + '-' + si"
@@ -424,7 +515,7 @@ defineExpose({ scrollToBottom, forceScrollToBottom, maybeScrollToBottom, isNearB
                       <div class="tool-header">
                         <div class="tool-header-main">
                           <div class="tool-header-main-row">
-                            <span class="tool-icon">
+                            <span class="tool-icon" :class="getToolIconClass(step.kind)">
                               <component :is="getToolIcon(step.kind)" />
                             </span>
                             <span class="tool-header-text">{{ getToolTitle(step) }}</span>
@@ -441,7 +532,6 @@ defineExpose({ scrollToBottom, forceScrollToBottom, maybeScrollToBottom, isNearB
                           </div>
                           <span v-if="getQuerySummary(step) || getToolStepDetail(step)" class="tool-query-summary">{{ getQuerySummary(step) || getToolStepDetail(step) }}</span>
                         </div>
-
                         <div v-if="getReadTags(step).length" class="tool-tags">
                           <a-tag
                             v-for="t in getReadTags(step)"
@@ -460,6 +550,51 @@ defineExpose({ scrollToBottom, forceScrollToBottom, maybeScrollToBottom, isNearB
                     <div class="tool-content md-body" v-html="renderMarkdown(step.content)" />
                   </a-collapse-panel>
                 </a-collapse>
+                <!-- 不展示思考详情：仅展示 header，不可折叠，无箭头 -->
+                <div
+                  v-else
+                  v-for="(step, si) in m.toolSteps"
+                  :key="'step-plain-' + idx + '-' + si"
+                  class="ant-collapse-item"
+                  :class="{ 'tool-running': loading && idx === chatMessages.length - 1 && si === m.toolSteps.length - 1 }"
+                >
+                  <div class="ant-collapse-header" style="padding: 8px 12px;">
+                    <div class="tool-header">
+                    <div class="tool-header-main">
+                      <div class="tool-header-main-row">
+                        <span class="tool-icon" :class="getToolIconClass(step.kind)">
+                          <component :is="getToolIcon(step.kind)" />
+                        </span>
+                        <span class="tool-header-text">{{ getToolTitle(step) }}</span>
+                        <a-button
+                          v-if="step.kind === 'query_code_graph' || step.kind === 'graph_query'"
+                          type="text"
+                          size="small"
+                          class="tool-link-btn"
+                          title="打开 Neo4j Aura 控制台"
+                          @click.stop="openNeo4jAuraQuery"
+                        >
+                          <template #icon><LinkOutlined /></template>
+                        </a-button>
+                      </div>
+                      <span v-if="getQuerySummary(step) || getToolStepDetail(step)" class="tool-query-summary">{{ getQuerySummary(step) || getToolStepDetail(step) }}</span>
+                    </div>
+                    <div v-if="getReadTags(step).length" class="tool-tags">
+                      <a-tag
+                        v-for="t in getReadTags(step)"
+                        :key="t.file + ':' + (t.start ?? '-') + '-' + (t.end ?? '-')"
+                        :title="t.file"
+                        class="tool-file-tag"
+                      >
+                        <span class="tool-tag-file">{{ basename(t.file) }}</span>
+                        <span v-if="t.start != null && t.end != null" class="tool-tag-range">
+                          行{{ t.start }}-{{ t.end }}
+                        </span>
+                      </a-tag>
+                    </div>
+                  </div>
+                  </div>
+                </div>
               </div>
             </template>
 
@@ -483,7 +618,7 @@ defineExpose({ scrollToBottom, forceScrollToBottom, maybeScrollToBottom, isNearB
                       class="acn-tool-detail"
                     >
                       <summary class="acn-tool-summary">
-                        <span class="acn-tool-icon"><component :is="getToolIcon(getChainToolStep(m, ci)!.kind)" /></span>
+                        <span class="acn-tool-icon" :class="getToolIconClass(getChainToolStep(m, ci)!.kind)"><component :is="getToolIcon(getChainToolStep(m, ci)!.kind)" /></span>
                         <span>{{ getToolTitle(getChainToolStep(m, ci)!) }}</span>
                         <span class="acn-tool-expand-hint">展开查看</span>
                       </summary>
@@ -508,7 +643,7 @@ defineExpose({ scrollToBottom, forceScrollToBottom, maybeScrollToBottom, isNearB
       </div>
     </div>
 
-    <div class="chat-input">
+    <div v-if="!props.hideInput" class="chat-input">
       <div class="toolbar">
         <div v-if="loading" class="chat-keepalive" aria-live="polite">
           <span class="keepalive-dots" aria-hidden="true">
@@ -518,7 +653,18 @@ defineExpose({ scrollToBottom, forceScrollToBottom, maybeScrollToBottom, isNearB
           </span>
           <span class="chat-keepalive-text">还在继续…</span>
         </div>
-        <div v-else />
+        <div v-else class="bug-select-area">
+          <a-tooltip v-if="selectedBugTitle" :title="selectedBugTitle" placement="topLeft">
+            <div class="bug-selected-display" @click="emit('selectBug')">
+              <BugOutlined class="bug-icon" />
+              <span class="bug-title-text">{{ selectedBugTitle }}</span>
+            </div>
+          </a-tooltip>
+          <a-button v-else size="small" @click="emit('selectBug')">
+            <template #icon><BugOutlined /></template>
+            选择 Bug
+          </a-button>
+        </div>
         <div class="toolbar-buttons">
           <div class="toolbar-action-row">
             <a-button
@@ -609,6 +755,47 @@ defineExpose({ scrollToBottom, forceScrollToBottom, maybeScrollToBottom, isNearB
   50% { transform: translateY(-4px); opacity: 1; }
 }
 
+.bug-select-area {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 320px;
+}
+
+.bug-selected-display {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  cursor: pointer;
+  max-width: 320px;
+  min-width: 0;
+  transition: border-color 0.2s, background 0.2s;
+  background: #fafafa;
+}
+
+.bug-selected-display:hover {
+  border-color: #1677ff;
+  background: #f0f5ff;
+}
+
+.bug-icon {
+  flex-shrink: 0;
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 14px;
+}
+
+.bug-title-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.75);
+  line-height: 1.4;
+}
+
 .chat-input .toolbar-button{
   width: 100px;
 }
@@ -648,6 +835,7 @@ defineExpose({ scrollToBottom, forceScrollToBottom, maybeScrollToBottom, isNearB
 /* AI 消息整体：消息在上、工具在下，统一左对齐 */
 .ai-msg-body {
   width: 100%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -657,6 +845,8 @@ defineExpose({ scrollToBottom, forceScrollToBottom, maybeScrollToBottom, isNearB
 .ai-msg-body > .analysis-chain-wrap {
   margin-left: 0;
   margin-right: 0;
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* 整个 thinking-wrap 执行中：左侧蓝色呼吸边框 */
@@ -869,7 +1059,14 @@ details[open] .acn-tool-expand-hint {
   flex-direction: row;
   flex-wrap: nowrap;
   align-items: center;
+  justify-content: space-between;
+  width: 100%;
   gap: 8px;
+  user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  -o-user-select: none;
 }
 
 .tool-header-main {
@@ -890,8 +1087,15 @@ details[open] .acn-tool-expand-hint {
 .tool-icon {
   display: inline-flex;
   align-items: center;
-  color: rgba(0, 0, 0, 0.45);
+  color: #1677ff;
 }
+
+.tool-icon.color-purple { color: #722ed1; }
+.tool-icon.color-green { color: #52c41a; }
+.tool-icon.color-orange { color: #fa8c16; }
+.tool-icon.color-red { color: #f5222d; }
+.tool-icon.color-cyan { color: #13c2c2; }
+.tool-icon.color-gold { color: #faad14; }
 
 .tool-icon :deep(svg) {
   width: 14px;
@@ -940,9 +1144,23 @@ details[open] .acn-tool-expand-hint {
   max-width: 100%;
 }
 
+.tool-content {
+  overflow-x: auto;
+  word-break: break-word;
+}
+
 /* 让 Ant Collapse 的箭头与自定义 header 内容垂直居中 */
 :deep(.thinking-wrap .ant-collapse-header) {
   align-items: center;
+}
+
+/* 不展示思考详情时，ant-collapse-header 也需要垂直居中且样式一致 */
+.thinking-wrap .ant-collapse-item > .ant-collapse-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  min-height: 35px;
+  padding: 8px 12px !important;
 }
 
 :deep(.tool-tags .ant-tag) {

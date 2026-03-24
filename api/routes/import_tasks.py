@@ -110,7 +110,11 @@ def submit_import_task(body: Dict[str, Any]) -> Dict[str, Any]:
       "commit_id": "xxxx",       // commit 或 ""
       "project_name": "forward", // 可选
       "maven_scan_enabled": true,// 是否解析 pom 外部依赖
-      "force_maven": true        // 强制重新解析/拉取 maven 依赖并重扫 jar（忽略 marker 与 jar_metadata）
+      "force_maven": true,       // 强制重新解析/拉取 maven 依赖并重扫 jar（忽略 marker 与 jar_metadata）
+      "task_type": "auto",       // auto | full | incremental
+      "acceptance_enabled": true, // 是否启用导入验收闭环（前后快照+delta）
+      "acceptance_block_on_fail": false, // 验收失败时是否阻断后续 auto 任务
+      "acceptance_max_drop_ratio": 0.3   // 非 clear_database 场景下最大允许降幅
     }
     """
     _ensure_patched()
@@ -125,6 +129,12 @@ def submit_import_task(body: Dict[str, Any]) -> Dict[str, Any]:
     force_maven = bool(body.get("force_maven", False))
     clear_database = bool(body.get("clear_database", False))
     auto_link_external = bool(body.get("auto_link_external", False))
+    task_type = str(body.get("task_type") or "auto").strip().lower()
+    acceptance_enabled = bool(body.get("acceptance_enabled", True))
+    acceptance_block_on_fail = bool(body.get("acceptance_block_on_fail", False))
+    acceptance_max_drop_ratio = body.get("acceptance_max_drop_ratio", 0.3)
+    if task_type not in {"auto", "full", "incremental"}:
+        return {"ok": False, "message": "task_type 仅支持 auto/full/incremental"}
 
     if not repo_url:
         return {"ok": False, "message": "repo_url 不能为空"}
@@ -135,19 +145,26 @@ def submit_import_task(body: Dict[str, Any]) -> Dict[str, Any]:
 
     # repo_name 默认从 url 推断（与 importer 一致）
     repo_name = repo_url.split("/")[-1].replace(".git", "")
-    task_id = q.submit_task(
-        repo_url=repo_url,
-        branch=branch or "main",
-        repo_name=repo_name,
-        project_name=project_name or repo_name,
-        java_source_dir=java_source_dir,
-        commit_id=commit_id or None,
-        clear_database=clear_database,
-        maven_scan_enabled=maven_scan_enabled,
-        force_maven=force_maven,
-        auto_link_external=auto_link_external,
-        priority=getattr(__import__("core.task_queue", fromlist=["TaskPriority"]), "TaskPriority").NORMAL,
-    )
+    try:
+        task_id = q.submit_task(
+            repo_url=repo_url,
+            branch=branch or "main",
+            repo_name=repo_name,
+            project_name=project_name or repo_name,
+            java_source_dir=java_source_dir,
+            commit_id=commit_id or None,
+            clear_database=clear_database,
+            maven_scan_enabled=maven_scan_enabled,
+            force_maven=force_maven,
+            auto_link_external=auto_link_external,
+            task_type=task_type,
+            acceptance_enabled=acceptance_enabled,
+            acceptance_block_on_fail=acceptance_block_on_fail,
+            acceptance_max_drop_ratio=acceptance_max_drop_ratio,
+            priority=getattr(__import__("core.task_queue", fromlist=["TaskPriority"]), "TaskPriority").NORMAL,
+        )
+    except Exception as e:
+        return {"ok": False, "message": str(e)}
 
     return {"ok": True, "task_id": task_id}
 
@@ -197,6 +214,38 @@ def get_import_task(task_id: str) -> Dict[str, Any]:
     return {"ok": True, "item": s}
 
 
+@router.get("/import/tasks/{task_id}/acceptance-detail")
+def get_import_task_acceptance_detail(task_id: str) -> Dict[str, Any]:
+    q = _task_queue()
+    detail = None
+    try:
+        detail = q.task_repo.get_task_delta_detail(task_id)  # type: ignore[attr-defined]
+    except Exception:
+        detail = None
+    if detail is None:
+        s = q.get_task_status(task_id)
+        if not s:
+            try:
+                s = q.task_repo.get_task(task_id)  # type: ignore[attr-defined]
+            except Exception:
+                s = None
+        extra = (s or {}).get("result", {}).get("extra", {}) if isinstance(s, dict) else {}
+        detail = {
+            "snapshot_before": extra.get("snapshot_before"),
+            "snapshot_after": extra.get("snapshot_after"),
+            "snapshot_delta": extra.get("snapshot_delta"),
+            "acceptance": extra.get("acceptance"),
+            "delta_detail": extra.get("delta_detail"),
+            "task_type": extra.get("task_type"),
+            "effective_mode": extra.get("effective_mode"),
+            "fallback_reason": extra.get("fallback_reason"),
+            "changed_files_list": extra.get("changed_files_list"),
+            "added_files_list": extra.get("added_files_list"),
+            "deleted_files_list": extra.get("deleted_files_list"),
+        }
+    return {"ok": True, "task_id": task_id, "detail": detail or {}}
+
+
 @router.post("/import/tasks/{task_id}/cancel")
 def cancel_import_task(task_id: str) -> Dict[str, Any]:
     """
@@ -208,6 +257,20 @@ def cancel_import_task(task_id: str) -> Dict[str, Any]:
     ok = bool(q.cancel_task(task_id))
     if not ok:
         return {"ok": False, "message": "task not found or not cancellable"}
+    return {"ok": True}
+
+
+@router.post("/import/tasks/unblock-auto")
+def unblock_auto_import_tasks(body: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """
+    手动解除“后续 auto 任务阻断”状态。
+    用于人工确认验收失败已处理后，恢复自动任务提交能力。
+    """
+    q = _task_queue()
+    reason = ""
+    if isinstance(body, dict):
+        reason = str(body.get("reason") or "").strip()
+    q.clear_auto_submission_block(reason=reason)
     return {"ok": True}
 
 

@@ -237,12 +237,16 @@ export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: Project
   })
 
   // select 模式：选中项目后，可选地把元数据里的 ref 写入实际用于后端字段
-  watch(selectedProjectName, () => {
+  watch(selectedProjectName, async () => {
     if (repoMode.value !== 'select') return
     const meta = selectedMeta.value
-    // 清空，避免切换项目后残留
+    // 切换应用时，清空已选 ref + 下拉候选，避免沿用上一个应用的缓存列表
     branch.value = undefined
     commitId.value = undefined
+    branches.value = []
+    commits.value = []
+    branchSearch.value = ''
+    commitSearch.value = ''
 
     if (!meta) return
     if (!autoFillRefFromMeta) return
@@ -255,6 +259,12 @@ export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: Project
       commitId.value = commit
     } else if (br) {
       branch.value = br
+    }
+
+    // 非 lazy 模式下，切换应用后立即加载该应用 refs
+    if (!lazyRefFetch) {
+      await fetchBranches()
+      await fetchCommits()
     }
   })
 

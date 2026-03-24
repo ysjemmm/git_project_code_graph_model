@@ -1,9 +1,16 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { fetchAndCacheUserInfo } from '../auth'
 
 export const routes = [
   {
     path: '/',
     redirect: '/bugfix',
+  },
+  {
+    path: '/login',
+    name: 'login',
+    component: () => import('../pages/LoginPage.vue'),
+    meta: { title: '登录' },
   },
   {
     path: '/bugfix',
@@ -12,10 +19,22 @@ export const routes = [
     meta: { title: 'Bugfix 对话' },
   },
   {
+    path: '/bugfix-workflow',
+    name: 'bugfix-workflow',
+    component: () => import('../pages/BugfixWorkflowPage.vue'),
+    meta: { title: 'Bugfix 流程编排' },
+  },
+  {
+    path: '/bugfix-workflow/bugfix-details/:id',
+    name: 'bugfix-details',
+    component: () => import('../pages/BugfixDetailsPage.vue'),
+    meta: { title: 'Bugfix 执行详情' },
+  },
+  {
     path: '/graph',
     name: 'graph',
     component: () => import('../pages/GraphAdminPage.vue'),
-    meta: { title: '管理代码图谱' },
+    meta: { title: '代码图谱' },
   },
   {
     path: '/application-admin',
@@ -47,6 +66,12 @@ const router = createRouter({
   history: createWebHistory(),
   routes: routes as any,
   scrollBehavior: () => ({ top: 0 }),
+})
+
+// 全局路由守卫：静默获取用户信息，不做认证拦截
+router.beforeEach(async (to, from, next) => {
+  await fetchAndCacheUserInfo()
+  next()
 })
 
 export default router

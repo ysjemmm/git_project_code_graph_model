@@ -8,6 +8,8 @@ GitImportTasksRepo
 from __future__ import annotations
 
 import json
+import sqlite3
+from datetime import datetime
 from dataclasses import asdict, is_dataclass
 from typing import Any, Dict, Iterable, List, Optional
 
@@ -166,6 +168,51 @@ class GitImportTasksRepo:
         assert conn is not None
         with self.db.transaction():
             conn.execute("DELETE FROM git_import_tasks WHERE task_id = ?", (task_id,))
+
+    def upsert_task_delta_detail(self, task_id: str, detail: Dict[str, Any]) -> None:
+        conn = self.db.conn
+        assert conn is not None
+        payload = json.dumps(detail or {}, ensure_ascii=False)
+        now = datetime.now().isoformat()
+        try:
+            with self.db.transaction() as tx:
+                tx.execute(
+                    """
+                    INSERT INTO import_task_delta_details(task_id, detail_json, created_at, updated_at)
+                    VALUES (?, ?, ?, ?)
+                    ON CONFLICT(task_id) DO UPDATE SET
+                      detail_json=excluded.detail_json,
+                      updated_at=excluded.updated_at
+                    """,
+                    (task_id, payload, now, now),
+                )
+        except sqlite3.OperationalError as e:
+            if "no such table: import_task_delta_details" in str(e):
+                raise RuntimeError(
+                    "缺少表 import_task_delta_details，请先执行数据库迁移（002_import_task_delta_details.sql）再部署服务"
+                ) from e
+            raise
+
+    def get_task_delta_detail(self, task_id: str) -> Optional[Dict[str, Any]]:
+        conn = self.db.conn
+        assert conn is not None
+        try:
+            row = conn.execute(
+                "SELECT detail_json FROM import_task_delta_details WHERE task_id = ?",
+                (task_id,),
+            ).fetchone()
+        except sqlite3.OperationalError as e:
+            if "no such table: import_task_delta_details" in str(e):
+                raise RuntimeError(
+                    "缺少表 import_task_delta_details，请先执行数据库迁移（002_import_task_delta_details.sql）再部署服务"
+                ) from e
+            raise
+        if not row:
+            return None
+        try:
+            return json.loads(row["detail_json"])
+        except Exception:
+            return None
 
 
 def get_git_import_tasks_repo(db_path: str | None = None) -> GitImportTasksRepo:

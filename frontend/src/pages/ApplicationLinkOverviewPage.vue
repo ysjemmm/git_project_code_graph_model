@@ -221,22 +221,31 @@ const targetYs = computed(() => {
 })
 
 const maxTargetCount = computed(() => Math.max(1, ...linkedTargets.value.map((x) => Number(x.count || 0))))
-const linkedCoverage = computed(() => {
-  const total = Math.max(0, Number(scopedDeps.value.length || 0))
-  if (total <= 0) return 0
-  return Math.round((Number(scopedLinks.value.length || 0) / total) * 1000) / 10
-})
 
 function edgeWidth(count: number): number {
   const max = Math.max(1, maxTargetCount.value)
   const ratio = Math.max(0, Number(count || 0)) / max
-  return Math.max(2, Math.round(2 + ratio * 4))
+  return Math.max(1, Math.round(1 + ratio * 2))
 }
 
 function targetShare(count: number): string {
   const total = Math.max(0, Number(scopedLinks.value.length || 0))
   if (total <= 0) return '0%'
   return `${Math.round((Math.max(0, Number(count || 0)) / total) * 1000) / 10}%`
+}
+
+function edgePath(targetY: number): string {
+  const x1 = sourceX + 44
+  const y1 = sourceY.value
+  const x2 = targetX - 44
+  const y2 = targetY
+  const c1x = x1 + (x2 - x1) * 0.36
+  const c2x = x1 + (x2 - x1) * 0.64
+  return `M ${x1} ${y1} C ${c1x} ${y1}, ${c2x} ${y2}, ${x2} ${y2}`
+}
+
+function nodeAnimStyle(i: number): Record<string, string> {
+  return { animationDelay: `${80 + i * 70}ms` }
 }
 
 function back() {
@@ -344,29 +353,38 @@ const detailDepColumns = [
       </a-row>
 
       <a-card :size="'small'" :title="scopeHint ? '关联拓扑（当前筛选）' : '关联拓扑（应用 -> 目标项目）'" style="margin-bottom: 12px;">
-        <a-alert
-          type="info"
-          show-icon
-          style="margin-bottom: 10px;"
-          :message="`覆盖率：${scopedLinks.length}/${scopedDeps.length}（${linkedCoverage}%）`"
-          description="线宽代表该目标项目关联依赖数量；节点副标题展示该目标在当前视图中的占比。"
-        />
         <div class="graph-board" :style="{ height: `${boardHeight}px` }">
           <svg class="graph-svg" :viewBox="`0 0 ${viewWidth} ${boardHeight}`" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="edgeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="rgba(22,119,255,0.12)" />
+                <stop offset="60%" stop-color="rgba(22,119,255,0.58)" />
+                <stop offset="100%" stop-color="rgba(82,196,26,0.62)" />
+              </linearGradient>
+              <marker id="edgeArrow" markerWidth="6" markerHeight="6" refX="5.5" refY="3" orient="auto">
+                <path d="M0,0 L6,3 L0,6 Z" fill="rgba(82,196,26,0.68)" />
+              </marker>
+            </defs>
             <g v-for="(t, i) in linkedTargets" :key="`edge-${t.linked_app_id}`">
-              <line
-                :x1="sourceX + 44"
-                :y1="sourceY"
-                :x2="targetX - 44"
-                :y2="targetYs[i]"
-                stroke="rgba(22,119,255,.45)"
+              <path
+                :id="`edge-path-${i}`"
+                :d="edgePath(targetYs[i])"
+                class="edge-line"
                 :stroke-width="edgeWidth(t.count)"
+                marker-end="url(#edgeArrow)"
+              />
+              <path
+                :d="edgePath(targetYs[i])"
+                class="edge-flow"
+                :stroke-width="edgeWidth(t.count)"
+                :style="nodeAnimStyle(i)"
               />
               <text
                 :x="(sourceX + targetX) / 2 - 14"
                 :y="(sourceY + targetYs[i]) / 2 - 4"
-                fill="rgba(0,0,0,.55)"
+                fill="rgba(4,26,53,.72)"
                 font-size="12"
+                class="edge-label"
               >{{ t.count }} ({{ targetShare(t.count) }})</text>
             </g>
           </svg>
@@ -380,7 +398,7 @@ const detailDepColumns = [
             v-for="(t, i) in linkedTargets"
             :key="`node-${t.linked_app_id}`"
             class="node target-node"
-            :style="{ top: `${targetYs[i]}px`, left: `${(targetX / viewWidth) * 100}%` }"
+            :style="{ top: `${targetYs[i]}px`, left: `${(targetX / viewWidth) * 100}%`, ...nodeAnimStyle(i) }"
             :title="`${t.linked_project_name}（${t.count}）`"
           >
             <div class="node-title">{{ t.linked_project_name }}</div>
@@ -517,7 +535,10 @@ const detailDepColumns = [
   position: relative;
   width: 100%;
   min-height: 240px;
-  background: linear-gradient(180deg, #fbfdff 0%, #f5f9ff 100%);
+  background:
+    radial-gradient(circle at 20% 20%, rgba(22, 119, 255, 0.15) 0%, rgba(22, 119, 255, 0) 42%),
+    radial-gradient(circle at 86% 76%, rgba(82, 196, 26, 0.14) 0%, rgba(82, 196, 26, 0) 48%),
+    linear-gradient(180deg, #f8fbff 0%, #eef6ff 100%);
   border: 1px solid rgba(22, 119, 255, 0.14);
   border-radius: 10px;
   overflow: hidden;
@@ -530,6 +551,30 @@ const detailDepColumns = [
   height: 100%;
 }
 
+.edge-line {
+  fill: none;
+  stroke: url(#edgeGradient);
+  opacity: 0.82;
+}
+
+.edge-flow {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.9);
+  stroke-width: 1.2;
+  stroke-dasharray: 8 16;
+  stroke-linecap: round;
+  opacity: 0.62;
+  animation: edgeFlow 2.4s linear infinite;
+}
+
+.edge-label {
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: rgba(255, 255, 255, 0.88);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
 .node {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -538,15 +583,18 @@ const detailDepColumns = [
   border-radius: 10px;
   border: 1px solid rgba(0, 0, 0, 0.08);
   background: #fff;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 10px 22px rgba(5, 31, 73, 0.14);
+  backdrop-filter: blur(2px);
 }
 
 .source-node {
   border-color: rgba(22, 119, 255, 0.35);
+  box-shadow: 0 0 0 1px rgba(22, 119, 255, 0.22), 0 12px 24px rgba(22, 119, 255, 0.18);
 }
 
 .target-node {
   border-color: rgba(82, 196, 26, 0.35);
+  animation: nodePopIn 0.4s ease-out both, nodeFloat 3.6s ease-in-out infinite;
 }
 
 .node-title {
@@ -580,5 +628,26 @@ const detailDepColumns = [
   text-overflow: ellipsis;
   white-space: nowrap;
   vertical-align: bottom;
+}
+
+@keyframes edgeFlow {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -48; }
+}
+
+@keyframes nodePopIn {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes nodeFloat {
+  0%, 100% { transform: translate(-50%, -50%); }
+  50% { transform: translate(-50%, calc(-50% - 3px)); }
 }
 </style>

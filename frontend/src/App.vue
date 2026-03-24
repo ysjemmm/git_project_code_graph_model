@@ -7,8 +7,12 @@ import {
   DatabaseOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  NodeIndexOutlined,
   ToolOutlined,
+  LogoutOutlined,
+  UserOutlined,
 } from '@ant-design/icons-vue'
+import { getUserInfo, logout } from './auth'
 
 const collapsed = ref(false)
 const router = useRouter()
@@ -18,6 +22,7 @@ const selectedKeys = computed(() => {
   if (route.path.startsWith('/application-admin')) return ['application-admin']
   if (route.path.startsWith('/second-party-rules')) return ['second-party-rules']
   if (route.path.startsWith('/graph')) return ['graph']
+  if (route.path.startsWith('/bugfix-workflow')) return ['bugfix-workflow']
   if (route.path.startsWith('/bugfix')) return ['bugfix']
   return ['bugfix']
 })
@@ -26,6 +31,7 @@ function go(key: string) {
   const k = String(key || '').trim()
   const map: Record<string, string> = {
     'bugfix': '/bugfix',
+    'bugfix-workflow': '/bugfix-workflow',
     'graph': '/graph',
     'application-admin': '/application-admin',
     'second-party-rules': '/second-party-rules',
@@ -40,6 +46,17 @@ watchEffect(() => {
   pageTitle.value = t ? `Bugfix 管理台 · ${t}` : 'Bugfix 管理台'
   document.title = pageTitle.value
 })
+
+// 用户信息（从本地缓存获取）
+const userInfo = computed(() => {
+  const info = getUserInfo()
+  return info || { alias: '未知用户', name: '未知用户' }
+})
+
+// 登出
+function handleLogout() {
+  logout()
+}
 </script>
 
 <template>
@@ -68,9 +85,14 @@ watchEffect(() => {
             <span>Bugfix 对话</span>
           </a-menu-item>
 
+          <a-menu-item key="bugfix-workflow">
+            <template #icon><NodeIndexOutlined /></template>
+            <span>Bugfix 流程编排</span>
+          </a-menu-item>
+
           <a-menu-item key="graph">
             <template #icon><ApartmentOutlined /></template>
-            <span>管理代码图谱</span>
+            <span>代码图谱</span>
           </a-menu-item>
 
           <a-menu-item key="application-admin">
@@ -84,9 +106,22 @@ watchEffect(() => {
           </a-menu-item>
         </a-menu>
 
-        <div class="sider-user" :title="collapsed ? 'mayang' : undefined">
-          <a-avatar class="sider-avatar">M</a-avatar>
-          <span v-if="!collapsed" class="sider-username">mayang</span>
+        <div class="sider-user" :title="collapsed ? `${userInfo.alias} (${userInfo.name})` : undefined">
+          <a-avatar class="sider-avatar">
+            <template #icon><UserOutlined /></template>
+          </a-avatar>
+          <div v-if="!collapsed" class="sider-user-info">
+            <div class="sider-username">{{ userInfo.alias }}</div>
+            <div class="sider-user-id">{{ userInfo.name }}</div>
+          </div>
+        </div>
+        
+        <!-- 登出按钮 -->
+        <div v-if="!collapsed" class="sider-logout">
+          <a-button type="text" size="small" @click="handleLogout" style="width: 100%; color: rgba(255,255,255,.75)">
+            <template #icon><LogoutOutlined /></template>
+            登出
+          </a-button>
         </div>
       </a-layout-sider>
 
@@ -148,12 +183,27 @@ watchEffect(() => {
   font-weight: 600;
   flex-shrink: 0;
 }
+.sider-user-info {
+  flex: 1;
+  min-width: 0;
+}
 .sider-username {
-  color: rgba(255,255,255,.75);
-  font-size: 13px;
+  color: rgba(255,255,255,.95);
+  font-size: 14px;
+  font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.sider-user-id {
+  color: rgba(255,255,255,.65);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sider-logout {
+  padding: 0 16px 16px;
 }
 .brand {
   height: 56px;
@@ -186,9 +236,14 @@ watchEffect(() => {
 .panel { height: 100%; min-height: 0; display: flex; flex-direction: column; }
 .panel .ant-card-body { flex: 1; min-height: 0; overflow: hidden; }
 .panel-sider .ant-card-body { overflow: auto; }
-.panel-chat .ant-card-body { display: flex; flex-direction: column; }
+.panel-chat .ant-card-body { display: flex; flex-direction: column; padding: 0 10px; }
 
-.chat-log { flex: 1; min-height: 0; overflow: auto; padding-right: 4px; }
+.chat-log {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
 
 .sticky-q {
   position: sticky; top: 0; z-index: 2;
@@ -202,7 +257,7 @@ watchEffect(() => {
 .msg.ai { flex-direction: column; align-items: flex-start; gap: 8px; }
 
 .bubble {
-  max-width: 85%; padding: 10px 14px; border-radius: 12px;
+  padding: 10px 14px; border-radius: 12px;
   line-height: 1.6; word-break: break-word; text-align: left; position: relative;
 }
 .msg.user .bubble { background: #1677ff; color: #fff; }
@@ -255,7 +310,7 @@ watchEffect(() => {
 .md-body th, .md-body td { border: 1px solid rgba(0,0,0,.12); padding: 6px 10px; }
 .md-body th { background: rgba(0,0,0,.04); font-weight: 600; }
 
-.thinking-wrap { width: 100%; max-width: 85%; }
+.thinking-wrap { width: 100%; }
 .thinking-wrap .ant-collapse { background: transparent; border: none; }
 .thinking-wrap .ant-collapse-item {
   border: 1px solid rgba(0,0,0,.08) !important; border-radius: 8px !important;

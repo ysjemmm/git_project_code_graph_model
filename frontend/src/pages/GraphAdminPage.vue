@@ -1,18 +1,24 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import hljs from 'highlight.js/lib/common'
 import { NEO4J_AURA_QUERY_URL } from '../constants'
-import { LinkOutlined } from '@ant-design/icons-vue'
+import { LinkOutlined, EyeOutlined } from '@ant-design/icons-vue'
 import { useRepo } from '../composables/useRepo'
 import { message } from 'ant-design-vue'
 import {
   listImportTasks,
   cancelImportTask as apiCancelImportTask,
+  unblockAutoImportTasks,
   createImportTask,
   getImportSettings,
+  getImportTaskAcceptanceDetail,
   getImportTaskLog,
   listGraphProjects,
   runGraphQuery,
   getGraphDiagnosticsSummary,
+  clearGraphDatabase,
+  getGitDiffSummary,
+  getGitDiffFile,
 } from '../api'
 
 const active = ref<'overview' | 'query' | 'import' | 'diagnostics'>('overview')
@@ -145,6 +151,173 @@ function statusTag(status: any) {
   return { color: 'default', text: s || '-' }
 }
 
+function taskTypeTag(task: any) {
+  const t = String(task?.task_type || 'auto').toLowerCase()
+  if (t === 'full') return { color: 'orange', text: '全量(full)' }
+  if (t === 'incremental') return { color: 'green', text: '增量(incremental)' }
+  return { color: 'blue', text: '自动(auto)' }
+}
+
+function effectiveModeTag(task: any) {
+  const mode = String(task?.result?.extra?.effective_mode || '').toLowerCase()
+  if (mode === 'incremental') return { color: 'green', text: '实际:增量' }
+  if (mode === 'full') return { color: 'orange', text: '实际:全量' }
+  return null
+}
+
+function taskFallbackReason(task: any): string {
+  return String(task?.result?.extra?.fallback_reason || '').trim()
+}
+
+function taskAcceptance(task: any): any | null {
+  const v = task?.result?.extra?.acceptance
+  return v && typeof v === 'object' ? v : null
+}
+
+function acceptanceTag(task: any): { color: string; text: string } {
+  const acceptance = taskAcceptance(task)
+  if (!acceptance?.enabled) return { color: 'default', text: '未启用' }
+  const s = String(acceptance?.status || '').toLowerCase()
+  if (s === 'passed') return { color: 'green', text: '通过' }
+  if (s === 'failed') return { color: 'red', text: '失败' }
+  if (s === 'skipped') return { color: 'orange', text: '跳过' }
+  return { color: 'default', text: '-' }
+}
+
+function acceptanceSummary(task: any): string {
+  const acceptance = taskAcceptance(task)
+  if (!acceptance) return '-'
+  return String(acceptance.summary || '-')
+}
+
+function acceptanceDeltaText(task: any): string {
+  const detail = task?.result?.extra?.delta_detail
+  const snapshot = task?.result?.extra?.snapshot_delta
+  const addedNodes = Number((detail as any)?.added_nodes?.total ?? 0)
+  const deletedNodes = Number((detail as any)?.deleted_nodes?.total ?? 0)
+  const addedRels = Number((detail as any)?.added_relationships?.total ?? 0)
+  const deletedRels = Number((detail as any)?.deleted_relationships?.total ?? 0)
+
+  if (
+    Number.isFinite(addedNodes) &&
+    Number.isFinite(deletedNodes) &&
+    Number.isFinite(addedRels) &&
+    Number.isFinite(deletedRels) &&
+    (addedNodes > 0 || deletedNodes > 0 || addedRels > 0 || deletedRels > 0)
+  ) {
+    return `节点：+${addedNodes} -${deletedNodes} / 边：+${addedRels} -${deletedRels}`
+  }
+
+  const nodeDelta = Number((snapshot as any)?.node_count || 0)
+  const relDelta = Number((snapshot as any)?.relationship_count || 0)
+  const nodeAdd = nodeDelta > 0 ? nodeDelta : 0
+  const nodeDel = nodeDelta < 0 ? Math.abs(nodeDelta) : 0
+  const relAdd = relDelta > 0 ? relDelta : 0
+  const relDel = relDelta < 0 ? Math.abs(relDelta) : 0
+  return `节点：+${nodeAdd} -${nodeDel} / 边：+${relAdd} -${relDel}`
+}
+
+function acceptanceDetail(task: any): any | null {
+  const persisted = acceptanceDetailData.value?.delta_detail
+  if (persisted && typeof persisted === 'object' && Object.keys(persisted).length > 0) return persisted
+  const v = task?.result?.extra?.delta_detail
+  return v && typeof v === 'object' ? v : null
+}
+
+function acceptanceFiles(): { added: string[]; changed: string[]; deleted: string[] } {
+  const p = acceptanceDetailData.value
+  if (p?.delta_detail?.files && typeof p.delta_detail.files === 'object') {
+    return {
+      added: Array.isArray(p.delta_detail.files.added) ? p.delta_detail.files.added : [],
+      changed: Array.isArray(p.delta_detail.files.changed) ? p.delta_detail.files.changed : [],
+      deleted: Array.isArray(p.delta_detail.files.deleted) ? p.delta_detail.files.deleted : [],
+    }
+  }
+  return {
+    added: Array.isArray(p?.added_files_list) ? p.added_files_list : [],
+    changed: Array.isArray(p?.changed_files_list) ? p.changed_files_list : [],
+    deleted: Array.isArray(p?.deleted_files_list) ? p.deleted_files_list : [],
+  }
+}
+
+function hasEntries(v: any): boolean {
+  return Boolean(v && typeof v === 'object' && Object.keys(v).length > 0)
+}
+
+function acceptanceTypeStats(task: any): {
+  nodeByLabel: Record<string, number>
+  relByType: Record<string, number>
+  changedRelByType: Record<string, number>
+} {
+  const detail = acceptanceDetail(task)
+  const snapshotDelta =
+    acceptanceDetailData.value?.snapshot_delta ||
+    task?.result?.extra?.snapshot_delta ||
+    {}
+
+  const nodeByLabelRaw = (detail as any)?.added_nodes?.by_label
+  const relByTypeRaw = (detail as any)?.added_relationships?.by_type
+  const changedRelByTypeRaw = (detail as any)?.changed_relationships?.by_type
+
+  const snapshotNodeByLabel = (snapshotDelta as any)?.node_count_by_label
+  const snapshotRelByType = (snapshotDelta as any)?.relationship_count_by_type
+  // 优先展示前后快照真实 delta（可同时体现新增与删除）；缺失时再回退导出明细
+  const nodeByLabel = hasEntries(snapshotNodeByLabel)
+    ? snapshotNodeByLabel
+    : (hasEntries(nodeByLabelRaw) ? nodeByLabelRaw : {})
+  const relByType = hasEntries(snapshotRelByType)
+    ? snapshotRelByType
+    : (hasEntries(relByTypeRaw) ? relByTypeRaw : {})
+  const changedRelByType = hasEntries(changedRelByTypeRaw) ? changedRelByTypeRaw : {}
+
+  return { nodeByLabel, relByType, changedRelByType }
+}
+
+function typeDeltaRows(typeMap: Record<string, number>): Array<{
+  key: string
+  type: string
+  added: number
+  deleted: number
+  delta: number
+}> {
+  return Object.entries(typeMap || {})
+    .map(([k, v]) => {
+      const delta = Number(v || 0)
+      return {
+        key: String(k || ''),
+        type: String(k || ''),
+        added: delta > 0 ? delta : 0,
+        deleted: delta < 0 ? Math.abs(delta) : 0,
+        delta,
+      }
+    })
+    .filter((x) => x.type && Number.isFinite(x.delta) && (x.added > 0 || x.deleted > 0))
+    .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
+}
+
+function topTypeDeltaRows(typeMap: Record<string, number>, limit = 10): Array<{
+  key: string
+  type: string
+  added: number
+  deleted: number
+  delta: number
+  total: number
+  addPercent: number
+  delPercent: number
+}> {
+  const rows = typeDeltaRows(typeMap).slice(0, limit)
+  const maxTotal = Math.max(1, ...rows.map((r) => r.added + r.deleted))
+  return rows.map((r) => {
+    const total = r.added + r.deleted
+    return {
+      ...r,
+      total,
+      addPercent: total > 0 ? (r.added / maxTotal) * 100 : 0,
+      delPercent: total > 0 ? (r.deleted / maxTotal) * 100 : 0,
+    }
+  })
+}
+
 function openAura() {
   window.open(NEO4J_AURA_QUERY_URL, '_blank', 'noopener,noreferrer')
 }
@@ -261,11 +434,312 @@ const importForm = ref({
   force_maven: false,
   clear_database: false,
   auto_link_external: true,
+  acceptance_enabled: true,
+  acceptance_block_on_fail: false,
+  acceptance_max_drop_ratio: 0.3,
 })
 const importSubmitting = ref(false)
+const unblockingAutoTasks = ref(false)
+const clearingGraph = ref(false)
 const importTasks = ref<ImportTask[]>([])
 const importStats = ref<any>(null)
 const selectedTaskId = ref<string | null>(null)
+const publishRecordModalOpen = ref(false)
+const publishRecordProjectName = ref('')
+const publishRecordHistory = ref<any[]>([])
+const publishRecordTask = ref<any | null>(null)
+const diffLoading = ref(false)
+const diffError = ref<string | null>(null)
+const diffSummary = ref<any | null>(null)
+const diffSummaryModalOpen = ref(false)
+const diffFileModalOpen = ref(false)
+const diffFileLoading = ref(false)
+const diffFilePatch = ref('')
+const diffFilePath = ref('')
+const acceptanceDetailModalOpen = ref(false)
+const acceptanceDetailTask = ref<any | null>(null)
+const acceptanceDetailData = ref<any | null>(null)
+const acceptanceDetailLoading = ref(false)
+
+function escapeHtml(s: string): string {
+  return String(s || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+}
+
+function detectCodeLanguageByFilePath(filePath: string): string {
+  const p = String(filePath || '').toLowerCase()
+  if (p.endsWith('.java')) return 'java'
+  if (p.endsWith('.xml') || p.endsWith('.pom')) return 'xml'
+  if (p.endsWith('.yml') || p.endsWith('.yaml')) return 'yaml'
+  if (p.endsWith('.json')) return 'json'
+  if (p.endsWith('.ts')) return 'typescript'
+  if (p.endsWith('.tsx')) return 'typescript'
+  if (p.endsWith('.js')) return 'javascript'
+  if (p.endsWith('.jsx')) return 'javascript'
+  if (p.endsWith('.py')) return 'python'
+  if (p.endsWith('.sql') || p.endsWith('.cypher')) return 'sql'
+  if (p.endsWith('.md')) return 'markdown'
+  if (p.endsWith('.sh') || p.endsWith('.bash')) return 'bash'
+  if (p.endsWith('.properties')) return 'properties'
+  return ''
+}
+
+function highlightCodeLine(code: string, language: string): string {
+  const text = String(code ?? '')
+  if (!text) return '&nbsp;'
+  try {
+    if (language && hljs.getLanguage(language)) {
+      return hljs.highlight(text, { language, ignoreIllegals: true }).value
+    }
+    return hljs.highlightAuto(text).value
+  } catch {
+    return escapeHtml(text)
+  }
+}
+
+type DiffLineKind = 'meta' | 'hunk' | 'ctx' | 'add' | 'del'
+type DiffRenderLine = {
+  key: string
+  kind: DiffLineKind
+  oldLine: number | null
+  newLine: number | null
+  prefix: string
+  html: string
+}
+
+const diffRenderLines = computed<DiffRenderLine[]>(() => {
+  const patch = String(diffFilePatch.value || '')
+  if (!patch) return []
+  const lines = patch.split('\n')
+  const language = detectCodeLanguageByFilePath(diffFilePath.value)
+  let oldCursor = 0
+  let newCursor = 0
+  const out: DiffRenderLine[] = []
+  for (let i = 0; i < lines.length; i += 1) {
+    const raw = lines[i] ?? ''
+    const mk = (kind: DiffLineKind, oldLine: number | null, newLine: number | null, prefix: string, text: string) => {
+      out.push({
+        key: `${i}-${kind}-${oldLine ?? ''}-${newLine ?? ''}`,
+        kind,
+        oldLine,
+        newLine,
+        prefix,
+        html: highlightCodeLine(text, language),
+      })
+    }
+    if (raw.startsWith('@@')) {
+      const m = raw.match(/^@@\s*-(\d+)(?:,\d+)?\s+\+(\d+)(?:,\d+)?\s*@@(.*)$/)
+      if (m) {
+        oldCursor = Number(m[1] || 0)
+        newCursor = Number(m[2] || 0)
+      }
+      mk('hunk', null, null, '@@', raw)
+      continue
+    }
+    // 隐藏 git patch 文件头噪音，只保留 hunk 与增删改正文
+    if (
+      raw.startsWith('diff ') ||
+      raw.startsWith('index ') ||
+      raw.startsWith('--- ') ||
+      raw.startsWith('+++ ') ||
+      raw.startsWith('new file mode ') ||
+      raw.startsWith('deleted file mode ')
+    ) {
+      continue
+    }
+    if (raw.startsWith('Binary files ')) {
+      mk('meta', null, null, '', raw)
+      continue
+    }
+    if (raw.startsWith('+')) {
+      const lineNo = newCursor > 0 ? newCursor : null
+      if (newCursor > 0) newCursor += 1
+      mk('add', null, lineNo, '+', raw.slice(1))
+      continue
+    }
+    if (raw.startsWith('-')) {
+      const lineNo = oldCursor > 0 ? oldCursor : null
+      if (oldCursor > 0) oldCursor += 1
+      mk('del', lineNo, null, '-', raw.slice(1))
+      continue
+    }
+    if (raw.startsWith(' ')) {
+      const oldLine = oldCursor > 0 ? oldCursor : null
+      const newLine = newCursor > 0 ? newCursor : null
+      if (oldCursor > 0) oldCursor += 1
+      if (newCursor > 0) newCursor += 1
+      mk('ctx', oldLine, newLine, ' ', raw.slice(1))
+      continue
+    }
+    mk('meta', null, null, '', raw)
+  }
+  return out
+})
+
+function normalizeProjectKey(name: string): string {
+  return String(name || '').trim().toLowerCase()
+}
+
+function projectNameFromRepoUrl(repoUrl: string): string {
+  const raw = String(repoUrl || '').trim()
+  if (!raw) return ''
+  const parts = raw.split('/').filter(Boolean)
+  const last = parts[parts.length - 1] || ''
+  return last.replace(/\.git$/i, '')
+}
+
+function getPublishHistoryForProject(projectName: string): any[] {
+  const k = normalizeProjectKey(projectName)
+  if (!k) return []
+  const list = Array.isArray(importTasks.value) ? importTasks.value : []
+  return list
+    .filter((t) => {
+      const p1 = normalizeProjectKey(String(t?.project_name || ''))
+      const p2 = normalizeProjectKey(projectNameFromRepoUrl(String(t?.repo_url || '')))
+      return p1 === k || p2 === k
+    })
+    .sort((a, b) => String(b?.created_at || '').localeCompare(String(a?.created_at || '')))
+}
+
+function isPublishSuccess(status: any): boolean {
+  const s = String(status || '').toLowerCase()
+  return s === 'success' || s === 'succeeded' || s === 'done'
+}
+
+function getLatestSuccessfulTaskForProject(projectName: string): any | null {
+  const rows = getPublishHistoryForProject(projectName)
+  const hit = rows.find((x) => isPublishSuccess(x?.status))
+  return hit || (rows.length ? rows[0] : null)
+}
+
+const selectedProjectPublishBaseTask = computed(() => {
+  return getLatestSuccessfulTaskForProject(String(selectedProjectName.value || ''))
+})
+
+const selectedProjectBaseRef = computed(() => {
+  const t = selectedProjectPublishBaseTask.value
+  if (!t) return ''
+  return String(t?.commit_id || t?.branch || '').trim()
+})
+
+const selectedProjectBaseRefLabel = computed(() => {
+  const t = selectedProjectPublishBaseTask.value
+  if (!t) return '-'
+  const ref = String(t?.commit_id || t?.branch || '').trim() || '-'
+  const k = t?.commit_id ? 'CommitId' : 'Branch'
+  return `${k}: ${ref}`
+})
+
+const selectedProjectTargetRef = computed(() => {
+  const v = refType.value === 'commit' ? commitId.value : branch.value
+  return String(v || '').trim()
+})
+
+const canLoadImportDiff = computed(() => {
+  const repo = String(readonlyUrl.value || '').trim()
+  const fromRef = selectedProjectBaseRef.value
+  const toRef = selectedProjectTargetRef.value
+  return Boolean(repo && fromRef && toRef && fromRef !== toRef)
+})
+
+function selectPublishHistoryTask(record: any) {
+  publishRecordTask.value = record || null
+}
+
+function openPublishRecord(record: any) {
+  const projectName = String(record?.project_name || '')
+  const history = getPublishHistoryForProject(projectName)
+  if (!history.length) {
+    message.info('该项目暂无导入/发布记录')
+    return
+  }
+  publishRecordProjectName.value = projectName
+  publishRecordHistory.value = history
+  publishRecordTask.value = history[0]
+  publishRecordModalOpen.value = true
+}
+
+function boolLabel(v: any): string {
+  return Boolean(v) ? '启用' : '关闭'
+}
+
+function resetDiffPreview() {
+  diffError.value = null
+  diffSummary.value = null
+  diffFilePatch.value = ''
+  diffFilePath.value = ''
+}
+
+async function loadImportDiffPreview() {
+  const repoUrl = String(readonlyUrl.value || '').trim()
+  const fromRef = selectedProjectBaseRef.value
+  const toRef = selectedProjectTargetRef.value
+  diffSummaryModalOpen.value = true
+  if (!repoUrl || !fromRef || !toRef) {
+    diffError.value = '请先确保已选应用，且有“上次发布 Ref”和“本次 Ref”'
+    return
+  }
+  if (fromRef === toRef) {
+    diffError.value = '上次发布 Ref 与本次 Ref 相同，无需对比'
+    diffSummary.value = null
+    return
+  }
+  diffLoading.value = true
+  diffError.value = null
+  diffSummary.value = null
+  try {
+    const data = await getGitDiffSummary({
+      repo_url: repoUrl,
+      from_ref: fromRef,
+      to_ref: toRef,
+      max_files: 1200,
+    })
+    if (!data?.ok) {
+      diffError.value = data?.message || '加载差异失败'
+      return
+    }
+    diffSummary.value = data
+  } catch (e: any) {
+    diffError.value = e?.message ?? String(e)
+  } finally {
+    diffLoading.value = false
+  }
+}
+
+async function openDiffFilePatch(fileRecord: any) {
+  const repoUrl = String(readonlyUrl.value || '').trim()
+  const fromRef = selectedProjectBaseRef.value
+  const toRef = selectedProjectTargetRef.value
+  const filePath = String(fileRecord?.path || '').trim()
+  if (!repoUrl || !fromRef || !toRef || !filePath) return
+  diffFileModalOpen.value = true
+  diffFileLoading.value = true
+  diffFilePath.value = filePath
+  diffFilePatch.value = ''
+  try {
+    const data = await getGitDiffFile({
+      repo_url: repoUrl,
+      from_ref: fromRef,
+      to_ref: toRef,
+      file_path: filePath,
+      context: 3,
+      max_lines: 2000,
+    })
+    if (!data?.ok) {
+      diffFilePatch.value = `读取文件差异失败：${data?.message || '-'}`
+      return
+    }
+    const body = String(data.patch || '').trim()
+    const tail = data.truncated ? '\n\n... [已截断，差异过长]' : ''
+    diffFilePatch.value = body ? `${body}${tail}` : '(该文件无文本差异或为二进制文件)'
+  } catch (e: any) {
+    diffFilePatch.value = e?.message ?? String(e)
+  } finally {
+    diffFileLoading.value = false
+  }
+}
 
 const logModalOpen = ref(false)
 const logModalTaskId = ref<string | null>(null)
@@ -274,16 +748,26 @@ const logLines = ref<string[]>([])
 const logLoading = ref(false)
 const logHasMore = ref(true)
 const logStickToBottom = ref(true)
+let _programmaticScroll = false
 const logViewEl = ref<HTMLElement | null>(null)
 let importPollTimer: number | undefined
 
 let lastImportStatsText = ''
+let lastBlockedState = false
 
 watch(importStats, (v) => {
   if (!v) {
     lastImportStatsText = ''
+    lastBlockedState = false
     return
   }
+  const blocked = Boolean(v.auto_submission_blocked)
+  if (blocked && !lastBlockedState) {
+    const reason = String(v.auto_submission_block_reason || '验收失败，已阻断后续 auto 任务')
+    message.error({ content: reason, duration: 6 })
+  }
+  lastBlockedState = blocked
+
   const running = Number(v.running ?? 0)
   const pending = Number(v.pending ?? 0)
   // 噪音控制：并发监控只在有“运行中/排队”时提示
@@ -330,6 +814,14 @@ watch(
   () => {
     // 导入/重建默认走 Branch，不根据历史缓存自动切到 Commit
     refType.value = 'branch'
+    resetDiffPreview()
+  },
+)
+
+watch(
+  [refType, branch, commitId, readonlyUrl],
+  () => {
+    resetDiffPreview()
   },
 )
 
@@ -425,13 +917,17 @@ async function submitImport() {
       force_maven: Boolean(importForm.value.force_maven),
       clear_database: Boolean(importForm.value.clear_database),
       auto_link_external: Boolean(importForm.value.auto_link_external),
+      task_type: 'auto',
+      acceptance_enabled: Boolean(importForm.value.acceptance_enabled),
+      acceptance_block_on_fail: Boolean(importForm.value.acceptance_block_on_fail),
+      acceptance_max_drop_ratio: Number(importForm.value.acceptance_max_drop_ratio || 0.3),
     }
 
     if (refType.value === 'commit') payload.commit_id = String(commitId.value || '').trim()
     else payload.branch = String(branch.value || '').trim()
 
     const data = await createImportTask(payload)
-    if (!data?.ok) throw new Error('提交失败')
+    if (!data?.ok) throw new Error(String((data as any)?.message || '提交失败'))
     await fetchImportTasks()
     selectedTaskId.value = (data as any).task_id
     logOffset.value = 0
@@ -442,6 +938,63 @@ async function submitImport() {
   } finally {
     importSubmitting.value = false
   }
+}
+
+async function unblockAutoTasks() {
+  const { Modal } = await import('ant-design-vue')
+  Modal.confirm({
+    title: '确认解除阻断？',
+    content: '仅当你已确认“验收失败原因已处理”时再执行。确认后还需输入口令二次校验。',
+    okText: '继续',
+    okType: 'danger',
+    cancelText: '取消',
+    async onOk() {
+      const token = String(window.prompt('二次确认：请输入 UNBLOCK 以解除后续 auto 任务阻断', '') || '').trim().toUpperCase()
+      if (token !== 'UNBLOCK') {
+        message.warning('口令不正确，已取消解除阻断')
+        return
+      }
+      unblockingAutoTasks.value = true
+      try {
+        const data = await unblockAutoImportTasks('manual-confirm')
+        if (!data?.ok) throw new Error(String((data as any)?.message || '解除阻断失败'))
+        message.success('已解除后续 auto 任务阻断，可继续提交导入任务')
+        await fetchImportTasks()
+      } catch (e: any) {
+        message.error(e?.message ?? String(e))
+      } finally {
+        unblockingAutoTasks.value = false
+      }
+    },
+  })
+}
+
+async function clearGraphWithConfirm() {
+  const { Modal } = await import('ant-design-vue')
+  Modal.confirm({
+    title: '确认清理整个图谱？',
+    content: '该操作会删除 Neo4j 中所有节点和关系，且不可恢复。通常用于图谱污染后重建。',
+    okText: '确认清理',
+    okType: 'danger',
+    cancelText: '取消',
+    async onOk() {
+      clearingGraph.value = true
+      try {
+        const data = await clearGraphDatabase('CLEAR_ALL')
+        if (!data?.ok) {
+          message.error(data?.message || '图谱清理失败')
+          return
+        }
+        message.success(`图谱已清理（节点 ${data.before_nodes ?? 0}，关系 ${data.before_relationships ?? 0}）`)
+        await fetchProjects()
+        await fetchDiagnostics()
+      } catch (e: any) {
+        message.error(e?.message ?? String(e))
+      } finally {
+        clearingGraph.value = false
+      }
+    },
+  })
 }
 
 async function fetchLogs() {
@@ -464,15 +1017,35 @@ async function fetchLogs() {
   } finally {
     logLoading.value = false
     if (logStickToBottom.value) {
+      _programmaticScroll = true
       await nextTick()
       const el = logViewEl.value
       if (el) el.scrollTop = el.scrollHeight
+      // 短暂延迟后重置标志，避免 scroll 事件误判
+      setTimeout(() => { _programmaticScroll = false }, 50)
     }
   }
 }
 
 function selectTask(id: string) {
   selectedTaskId.value = id
+}
+
+async function openAcceptanceDetail(task: any) {
+  acceptanceDetailTask.value = task || null
+  acceptanceDetailData.value = null
+  acceptanceDetailModalOpen.value = true
+  const tid = String(task?.task_id || '').trim()
+  if (!tid) return
+  acceptanceDetailLoading.value = true
+  try {
+    const data = await getImportTaskAcceptanceDetail(tid)
+    acceptanceDetailData.value = data?.detail || null
+  } catch (e: any) {
+    message.warning(e?.message ?? String(e))
+  } finally {
+    acceptanceDetailLoading.value = false
+  }
 }
 
 async function openLogModal(taskId: string) {
@@ -525,6 +1098,8 @@ async function drainLogsIfDone() {
 function onLogScroll() {
   const el = logViewEl.value
   if (!el) return
+  // 忽略程序触发的滚动，只响应用户手动滚动
+  if (_programmaticScroll) return
   const threshold = 80
   const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - threshold
   logStickToBottom.value = atBottom
@@ -599,12 +1174,13 @@ const columns = [
   { title: '节点数', dataIndex: 'node_count', key: 'node_count', width: 110 },
   { title: '关系数', dataIndex: 'relationship_count', key: 'relationship_count', width: 110 },
   { title: '更新时间', dataIndex: 'last_update_time', key: 'last_update_time', width: 210, ellipsis: true },
+  { title: '上次发布记录', key: 'release_record', width: 140 },
 ] as const
 </script>
 
 <template>
   <div class="graph-page">
-    <a-card title="管理代码图谱" class="panel">
+    <a-card title="代码图谱" class="panel">
       <a-tabs v-model:activeKey="active">
         <a-tab-pane key="overview" tab="概览">
           <div class="overview-pane">
@@ -641,6 +1217,12 @@ const columns = [
                   </template>
                   <template v-else-if="column.key === 'node_count' || column.key === 'relationship_count'">
                     <span class="mono">{{ record[column.dataIndex] ?? '-' }}</span>
+                  </template>
+                  <template v-else-if="column.key === 'release_record'">
+                    <a-button type="link" size="small" @click.stop="openPublishRecord(record)">
+                      <template #icon><EyeOutlined /></template>
+                      查看
+                    </a-button>
                   </template>
                 </template>
               </a-table>
@@ -809,6 +1391,25 @@ const columns = [
                     </a-select>
                   </a-form-item>
 
+                  <div class="import-diff-card">
+                    <div class="import-diff-head">
+                      <div class="import-diff-title">发布差异预览</div>
+                      <a-button type="primary" size="small" :loading="diffLoading" :disabled="!canLoadImportDiff" @click="loadImportDiffPreview">
+                        查看前后代码差异
+                      </a-button>
+                    </div>
+                    <div class="import-diff-meta">
+                      <div class="import-diff-meta-row">
+                        <span class="import-diff-meta-label">上次发布：</span>
+                        <span class="mono">{{ selectedProjectBaseRefLabel }}</span>
+                      </div>
+                      <div class="import-diff-meta-row">
+                        <span class="import-diff-meta-label">本次发布：</span>
+                        <span class="mono">{{ refType === 'commit' ? `CommitId: ${selectedProjectTargetRef || '-'}` : `Branch: ${selectedProjectTargetRef || '-'}` }}</span>
+                      </div>
+                    </div>
+                  </div>
+
                   <div class="import-desc-line">
                     <span class="import-desc-label">解析 pom 外部依赖（Maven 扫描）</span>
                     <span class="mono">{{ importForm.maven_scan_enabled ? '启用' : '关闭' }}</span>
@@ -825,13 +1426,57 @@ const columns = [
                     <span class="import-desc-label">自动关联外部类（ExternalClassLinker）</span>
                     <span class="mono">{{ importForm.auto_link_external ? '启用' : '关闭' }}</span>
                   </div>
+                  <a-alert
+                    type="info"
+                    show-icon
+                    style="margin: 8px 0 10px;"
+                    message="新手提示：建议保持“导入验收闭环”开启。系统会自动对比导入前后指标，帮助你快速判断这次导入是否可信。"
+                    description="防呆增强已启用：即使关闭验收判定，系统也会保留前后 snapshot 与 delta，便于事后回溯。开启后会额外给出通过/失败结论与阻断能力。"
+                  />
+                  <a-form-item
+                    label="导入验收判定（前后 snapshot + delta）"
+                    style="margin-top: 8px;"
+                    extra="关闭时：仍会采集快照并展示 delta（仅不做通过/失败判定）；开启时：会输出验收结论，并可联动阻断后续 auto 任务。"
+                  >
+                    <a-switch v-model:checked="importForm.acceptance_enabled" />
+                  </a-form-item>
+                  <a-form-item
+                    label="验收失败时阻断后续 auto 任务（可选）"
+                    extra="开启后：若本次验收失败，系统会暂停后续自动任务，防止坏数据连续写入；可在右侧任务区手动解除。"
+                  >
+                    <a-switch
+                      v-model:checked="importForm.acceptance_block_on_fail"
+                      :disabled="!importForm.acceptance_enabled"
+                    />
+                  </a-form-item>
+                  <a-form-item
+                    label="最大允许降幅（非 clear_database 场景）"
+                    extra="例如 30%：表示导入后节点/关系相比导入前最多允许下降 30%。下降过大通常意味着解析异常或数据丢失风险。"
+                  >
+                    <a-input-number
+                      v-model:value="importForm.acceptance_max_drop_ratio"
+                      :min="0"
+                      :max="0.95"
+                      :step="0.05"
+                      :precision="2"
+                      style="width: 180px;"
+                      :disabled="!importForm.acceptance_enabled"
+                    />
+                    <span class="mono" style="margin-left: 8px;">{{ (Number(importForm.acceptance_max_drop_ratio || 0) * 100).toFixed(0) }}%</span>
+                  </a-form-item>
+
                   </a-form>
                 </div>
 
                 <div class="import-form-footer">
-                  <a-button type="primary" :loading="importSubmitting" :disabled="!importSubmitEnabled" @click="submitImport">
-                    提交导入（并发=1，自动排队）
-                  </a-button>
+                  <a-space>
+                    <a-button danger :loading="clearingGraph" @click="clearGraphWithConfirm">
+                      清理图谱（危险）
+                    </a-button>
+                    <a-button type="primary" :loading="importSubmitting" :disabled="!importSubmitEnabled" @click="submitImport">
+                      提交导入（并发=1，自动排队）
+                    </a-button>
+                  </a-space>
                 </div>
               </div>
             </a-col>
@@ -839,6 +1484,20 @@ const columns = [
             <a-col :xs="24" :lg="14">
               <a-card size="small" title="任务队列与日志">
                 <!-- 并发信息由 watch(importStats) 使用 message 提示 -->
+                <a-alert
+                  v-if="importStats?.auto_submission_blocked"
+                  type="error"
+                  show-icon
+                  style="margin-bottom: 10px;"
+                  :message="String(importStats?.auto_submission_block_reason || '验收失败，后续 auto 任务已阻断')"
+                >
+                  <template #description>
+                    <a-space>
+                      <span>系统已暂停后续自动任务，避免异常数据继续写入。确认问题已处理后，可手动解除阻断。</span>
+                      <a-button size="small" :loading="unblockingAutoTasks" @click="unblockAutoTasks">手动解除阻断</a-button>
+                    </a-space>
+                  </template>
+                </a-alert>
 
                 <div class="import-tasks-table-wrap">
                 <a-table
@@ -846,16 +1505,41 @@ const columns = [
                   :pagination="{ pageSize: 6 }"
                   size="small"
                   bordered
-                  :scroll="{ x: 800 }"
+                  :scroll="{ x: 980 }"
                   :row-class-name="(r: any) => (r.task_id === selectedTaskId ? 'row-selected' : '')"
                   :custom-row="(record: any) => ({ onClick: () => selectTask(record.task_id) })"
                 >
-                  <a-table-column title="task_id" data-index="task_id" key="task_id" :width="100" ellipsis />
+                  <a-table-column title="task_id" data-index="task_id" key="task_id" :width="120" ellipsis />
                   <a-table-column title="状态" data-index="status" key="status" :width="90">
                     <template #default="{ record }">
                       <a-tag :color="statusTag(record.status).color">
                         {{ statusTag(record.status).text }}
                       </a-tag>
+                    </template>
+                  </a-table-column>
+                  <a-table-column title="任务类型" key="task_type" :width="180">
+                    <template #default="{ record }">
+                      <div class="task-type-tags">
+                        <a-tag :color="taskTypeTag(record).color">{{ taskTypeTag(record).text }}</a-tag>
+                        <a-tag v-if="effectiveModeTag(record)" :color="effectiveModeTag(record)?.color">
+                          {{ effectiveModeTag(record)?.text }}
+                        </a-tag>
+                      </div>
+                    </template>
+                  </a-table-column>
+                  <a-table-column title="验收" key="acceptance" :width="380">
+                    <template #default="{ record }">
+                      <a-space direction="vertical" :size="2">
+                        <a-tag
+                          :color="acceptanceTag(record).color"
+                          style="cursor: pointer;"
+                          @click.stop="openAcceptanceDetail(record)"
+                        >
+                          {{ acceptanceTag(record).text }}
+                        </a-tag>
+                        <span class="mono" style="font-size: 12px;">{{ acceptanceDeltaText(record) }}</span>
+                        
+                      </a-space>
                     </template>
                   </a-table-column>
                   <a-table-column title="repo" data-index="repo_url" key="repo_url" :width="180" ellipsis />
@@ -895,10 +1579,10 @@ const columns = [
                   :title="`任务日志：${logModalTaskId || '-'}`"
                   width="1180px"
                   :footer="null"
-                  :body-style="{ padding: '12px', height: 'calc(60vh + 60px)', overflow: 'hidden' }"
+                  :body-style="{ padding: '0', height: 'calc(70vh)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }"
                   @cancel="closeLogModal"
                 >
-                  <div class="logbox">
+                  <div class="logbox logbox--modal">
                     <div class="logbox-hd">
                       <div class="mono">日志</div>
                       <a-space>
@@ -914,6 +1598,238 @@ const columns = [
                       <pre v-else class="log-pre">{{ logLines.join('\n') }}</pre>
                     </div>
                   </div>
+                </a-modal>
+                <a-modal
+                  v-model:open="acceptanceDetailModalOpen"
+                  :title="`验收详情：${acceptanceDetailTask?.task_id || '-'}`"
+                  width="1180px"
+                  :footer="null"
+                  :body-style="{ maxHeight: '72vh', overflow: 'auto', padding: '12px' }"
+                >
+                  <a-alert
+                    type="info"
+                    show-icon
+                    style="margin-bottom: 10px;"
+                    :message="`点击验收可查看本次导入实体变化明细（新增/删除/变更）`"
+                  />
+                  <div v-if="acceptanceDetailLoading" style="padding: 36px 0; text-align: center;">
+                    <a-spin />
+                    <div style="margin-top: 8px; color: rgba(0,0,0,.45)">正在从 SQLite 加载验收明细...</div>
+                  </div>
+                  <template v-else-if="acceptanceDetail(acceptanceDetailTask)">
+                    <a-row :gutter="10" style="margin-bottom: 12px;">
+                      <a-col :span="6"><a-statistic title="新增节点" :value="acceptanceDetail(acceptanceDetailTask)?.added_nodes?.total || 0" /></a-col>
+                      <a-col :span="6"><a-statistic title="新增关系" :value="acceptanceDetail(acceptanceDetailTask)?.added_relationships?.total || 0" /></a-col>
+                      <a-col :span="6"><a-statistic title="删除节点" :value="acceptanceDetail(acceptanceDetailTask)?.deleted_nodes?.total || 0" /></a-col>
+                      <a-col :span="6"><a-statistic title="删除关系" :value="acceptanceDetail(acceptanceDetailTask)?.deleted_relationships?.total || 0" /></a-col>
+                    </a-row>
+                    <a-card size="small" title="类型统计（你关心的重点）" style="margin-bottom: 12px;">
+                      <div style="margin-bottom: 10px;">
+                        <b>节点类型变化：</b>
+                        <div class="accept-chart" style="margin-top: 6px;">
+                          <div
+                            v-for="row in topTypeDeltaRows(acceptanceTypeStats(acceptanceDetailTask).nodeByLabel || {}, 10)"
+                            :key="`node-chart-${row.key}`"
+                            class="accept-chart-row"
+                          >
+                            <div class="accept-chart-name mono">{{ row.type }}</div>
+                            <div class="accept-chart-track">
+                              <div
+                                v-if="row.added > 0"
+                                class="accept-chart-segment accept-chart-segment--add"
+                                :style="{ width: `${row.addPercent}%` }"
+                              />
+                              <div
+                                v-if="row.deleted > 0"
+                                class="accept-chart-segment accept-chart-segment--del"
+                                :style="{ width: `${row.delPercent}%` }"
+                              />
+                            </div>
+                            <div class="accept-chart-value mono">
+                              <span class="accept-chart-plus">+{{ row.added }}</span>
+                              <span style="margin: 0 6px; color: rgba(0,0,0,.35)">/</span>
+                              <span class="accept-chart-minus">-{{ row.deleted }}</span>
+                            </div>
+                          </div>
+                          <a-empty
+                            v-if="topTypeDeltaRows(acceptanceTypeStats(acceptanceDetailTask).nodeByLabel || {}, 10).length === 0"
+                            description="暂无节点类型变化"
+                          />
+                        </div>
+                      </div>
+                      <div style="margin-bottom: 10px;">
+                        <b>关系类型变化：</b>
+                        <div class="accept-chart" style="margin-top: 6px;">
+                          <div
+                            v-for="row in topTypeDeltaRows(acceptanceTypeStats(acceptanceDetailTask).relByType || {}, 10)"
+                            :key="`rel-chart-${row.key}`"
+                            class="accept-chart-row"
+                          >
+                            <div class="accept-chart-name mono">{{ row.type }}</div>
+                            <div class="accept-chart-track">
+                              <div
+                                v-if="row.added > 0"
+                                class="accept-chart-segment accept-chart-segment--add"
+                                :style="{ width: `${row.addPercent}%` }"
+                              />
+                              <div
+                                v-if="row.deleted > 0"
+                                class="accept-chart-segment accept-chart-segment--del"
+                                :style="{ width: `${row.delPercent}%` }"
+                              />
+                            </div>
+                            <div class="accept-chart-value mono">
+                              <span class="accept-chart-plus">+{{ row.added }}</span>
+                              <span style="margin: 0 6px; color: rgba(0,0,0,.35)">/</span>
+                              <span class="accept-chart-minus">-{{ row.deleted }}</span>
+                            </div>
+                          </div>
+                          <a-empty
+                            v-if="topTypeDeltaRows(acceptanceTypeStats(acceptanceDetailTask).relByType || {}, 10).length === 0"
+                            description="暂无关系类型变化"
+                          />
+                        </div>
+                      </div>
+                      <div style="margin-bottom: 10px;">
+                        <a-collapse>
+                          <a-collapse-panel key="type-table-details" header="查看类型变化明细表（可选）">
+                            <a-row :gutter="10">
+                              <a-col :span="12">
+                                <a-table
+                                  :data-source="typeDeltaRows(acceptanceTypeStats(acceptanceDetailTask).nodeByLabel || {}) as any"
+                                  :pagination="{ pageSize: 8 }"
+                                  size="small"
+                                  bordered
+                                  :row-key="(r: any) => `node-${r.key}`"
+                                >
+                                  <a-table-column title="节点类型" data-index="type" key="type" />
+                                  <a-table-column title="新增" key="added" :width="90">
+                                    <template #default="{ record }">
+                                      <a-tag v-if="record.added > 0" color="green">+{{ record.added }}</a-tag>
+                                      <span v-else class="mono">0</span>
+                                    </template>
+                                  </a-table-column>
+                                  <a-table-column title="删除" key="deleted" :width="90">
+                                    <template #default="{ record }">
+                                      <a-tag v-if="record.deleted > 0" color="red">-{{ record.deleted }}</a-tag>
+                                      <span v-else class="mono">0</span>
+                                    </template>
+                                  </a-table-column>
+                                </a-table>
+                              </a-col>
+                              <a-col :span="12">
+                                <a-table
+                                  :data-source="typeDeltaRows(acceptanceTypeStats(acceptanceDetailTask).relByType || {}) as any"
+                                  :pagination="{ pageSize: 8 }"
+                                  size="small"
+                                  bordered
+                                  :row-key="(r: any) => `rel-${r.key}`"
+                                >
+                                  <a-table-column title="关系类型" data-index="type" key="type" />
+                                  <a-table-column title="新增" key="added" :width="90">
+                                    <template #default="{ record }">
+                                      <a-tag v-if="record.added > 0" color="green">+{{ record.added }}</a-tag>
+                                      <span v-else class="mono">0</span>
+                                    </template>
+                                  </a-table-column>
+                                  <a-table-column title="删除" key="deleted" :width="90">
+                                    <template #default="{ record }">
+                                      <a-tag v-if="record.deleted > 0" color="red">-{{ record.deleted }}</a-tag>
+                                      <span v-else class="mono">0</span>
+                                    </template>
+                                  </a-table-column>
+                                </a-table>
+                              </a-col>
+                            </a-row>
+                          </a-collapse-panel>
+                        </a-collapse>
+                      </div>
+                      <div>
+                        <b>重建关系类型（changed 文件引起）：</b>
+                        <span class="mono">{{ JSON.stringify(acceptanceTypeStats(acceptanceDetailTask).changedRelByType || {}, null, 2) }}</span>
+                      </div>
+                    </a-card>
+                    <a-collapse style="margin-bottom: 12px;">
+                      <a-collapse-panel key="file-changes">
+                        <template #header>
+                          <span>
+                            文件变化
+                            <span class="mono" style="margin-left: 8px; color: rgba(0,0,0,.55);">
+                              (+{{ acceptanceFiles().added.length }} / ~{{ acceptanceFiles().changed.length }} / -{{ acceptanceFiles().deleted.length }})
+                            </span>
+                          </span>
+                        </template>
+                        <div style="margin-bottom:8px;">
+                          <b>新增文件：</b>
+                          <span class="mono">{{ acceptanceFiles().added.join(', ') || '-' }}</span>
+                        </div>
+                        <div style="margin-bottom:8px;">
+                          <b>修改文件：</b>
+                          <span class="mono">{{ acceptanceFiles().changed.join(', ') || '-' }}</span>
+                        </div>
+                        <div>
+                          <b>删除文件：</b>
+                          <span class="mono">{{ acceptanceFiles().deleted.join(', ') || '-' }}</span>
+                        </div>
+                      </a-collapse-panel>
+                    </a-collapse>
+                    <a-collapse style="margin-bottom: 12px;">
+                      <a-collapse-panel key="detail-samples">
+                        <template #header>
+                          <span>
+                            详细样本（可选）
+                            <span class="mono" style="margin-left: 8px; color: rgba(0,0,0,.55);">
+                              节点样本 {{ (acceptanceDetail(acceptanceDetailTask)?.added_nodes?.samples || []).length }} 条，
+                              关系样本 {{ (acceptanceDetail(acceptanceDetailTask)?.added_relationships?.samples || []).length }} 条
+                            </span>
+                          </span>
+                        </template>
+                        <a-card size="small" title="新增节点（示例）" style="margin-bottom: 12px;">
+                          <a-table
+                            :data-source="(acceptanceDetail(acceptanceDetailTask)?.added_nodes?.samples || []) as any"
+                            :pagination="{ pageSize: 8 }"
+                            size="small"
+                            bordered
+                            :scroll="{ x: 980 }"
+                            :row-key="(r: any, i: number) => `${r.symbol_id || ''}-${i}`"
+                          >
+                            <a-table-column title="类型" data-index="label" key="label" :width="140" ellipsis />
+                            <a-table-column title="展示名" data-index="display" key="display" ellipsis />
+                            <a-table-column title="symbol_id" data-index="symbol_id" key="symbol_id" :width="300" ellipsis />
+                            <a-table-column title="文件" data-index="file_path" key="file_path" :width="220" ellipsis />
+                          </a-table>
+                        </a-card>
+                        <a-card size="small" title="新增关系（示例）" style="margin-bottom: 12px;">
+                          <a-table
+                            :data-source="(acceptanceDetail(acceptanceDetailTask)?.added_relationships?.samples || []) as any"
+                            :pagination="{ pageSize: 8 }"
+                            size="small"
+                            bordered
+                            :scroll="{ x: 980 }"
+                            :row-key="(r: any, i: number) => `${r.type || ''}-${r.source_id || ''}-${r.target_id || ''}-${i}`"
+                          >
+                            <a-table-column title="关系类型" data-index="type" key="type" :width="140" ellipsis />
+                            <a-table-column title="source" data-index="source_id" key="source_id" :width="320" ellipsis />
+                            <a-table-column title="target" data-index="target_id" key="target_id" :width="320" ellipsis />
+                          </a-table>
+                        </a-card>
+                        <a-card size="small" title="删除明细（按文件）" style="margin-bottom: 12px;">
+                          <a-table
+                            :data-source="(acceptanceDetail(acceptanceDetailTask)?.deleted_nodes?.by_file || []) as any"
+                            :pagination="{ pageSize: 8 }"
+                            size="small"
+                            bordered
+                            :row-key="(r: any, i: number) => `${r.file || ''}-${r.reason || ''}-${i}`"
+                          >
+                            <a-table-column title="文件" data-index="file" key="file" ellipsis />
+                            <a-table-column title="删除节点数" data-index="count" key="count" :width="120" />
+                            <a-table-column title="原因" data-index="reason" key="reason" :width="140" ellipsis />
+                          </a-table>
+                        </a-card>
+                      </a-collapse-panel>
+                    </a-collapse>
+                  </template>
+                  <a-empty v-else description="暂无验收详情" />
                 </a-modal>
               </a-card>
             </a-col>
@@ -1090,6 +2006,263 @@ const columns = [
         </a-tab-pane>
       </a-tabs>
     </a-card>
+    <a-modal
+      v-model:open="publishRecordModalOpen"
+      title="发布历史记录"
+      :footer="null"
+      width="980px"
+      @cancel="publishRecordModalOpen = false"
+    >
+      <template v-if="publishRecordHistory.length">
+        <a-alert
+          type="info"
+          show-icon
+          style="margin-bottom: 12px;"
+          :message="`项目：${publishRecordProjectName || '-'}，共 ${publishRecordHistory.length} 条发布记录`"
+        />
+        <a-table
+          :data-source="publishRecordHistory as any"
+          :pagination="{ pageSize: 6, showSizeChanger: true }"
+          size="small"
+          bordered
+          row-key="task_id"
+          :row-class-name="(r: any) => (r === publishRecordTask ? 'row-selected' : '')"
+          :custom-row="(record: any) => ({ onClick: () => selectPublishHistoryTask(record) })"
+          :scroll="{ x: 980 }"
+          style="margin-bottom: 12px;"
+        >
+          <a-table-column title="task_id" data-index="task_id" key="task_id" :width="110" ellipsis />
+          <a-table-column title="状态" key="status" :width="90">
+            <template #default="{ record }">
+              <a-tag :color="statusTag(record.status).color">
+                {{ statusTag(record.status).text }}
+              </a-tag>
+            </template>
+          </a-table-column>
+          <a-table-column title="任务类型" key="task_type" :width="180">
+            <template #default="{ record }">
+              <div class="task-type-tags">
+                <a-tag :color="taskTypeTag(record).color">{{ taskTypeTag(record).text }}</a-tag>
+                <a-tag v-if="effectiveModeTag(record)" :color="effectiveModeTag(record)?.color">
+                  {{ effectiveModeTag(record)?.text }}
+                </a-tag>
+              </div>
+            </template>
+          </a-table-column>
+          <a-table-column title="验收" key="acceptance" :width="380">
+            <template #default="{ record }">
+              <a-space direction="vertical" :size="2">
+                <a-tag
+                  :color="acceptanceTag(record).color"
+                  style="cursor: pointer;"
+                  @click.stop="openAcceptanceDetail(record)"
+                >
+                  {{ acceptanceTag(record).text }}
+                </a-tag>
+                <span class="mono" style="font-size: 12px;">{{ acceptanceDeltaText(record) }}</span>
+                
+              </a-space>
+            </template>
+          </a-table-column>
+          <a-table-column title="Ref 类型" key="ref_type" :width="90">
+            <template #default="{ record }">
+              <span class="mono">{{ record.commit_id ? 'CommitId' : 'Branch' }}</span>
+            </template>
+          </a-table-column>
+          <a-table-column title="Ref" key="ref" :width="240" ellipsis>
+            <template #default="{ record }">
+              <span class="mono">{{ record.commit_id || record.branch || '-' }}</span>
+            </template>
+          </a-table-column>
+          <a-table-column title="创建时间" key="created_at" :width="170">
+            <template #default="{ record }">
+              <span class="mono">{{ String(record.created_at || '').slice(0, 19).replace('T', ' ') || '-' }}</span>
+            </template>
+          </a-table-column>
+          <a-table-column title="完成时间" key="completed_at" :width="170">
+            <template #default="{ record }">
+              <span class="mono">{{ String(record.completed_at || '').slice(0, 19).replace('T', ' ') || '-' }}</span>
+            </template>
+          </a-table-column>
+        </a-table>
+
+        <a-descriptions v-if="publishRecordTask" bordered size="small" :column="2">
+          <a-descriptions-item label="选中 task_id">
+            <span class="mono">{{ publishRecordTask.task_id || '-' }}</span>
+          </a-descriptions-item>
+          <a-descriptions-item label="项目">
+            <span class="mono">{{ publishRecordTask.project_name || projectNameFromRepoUrl(publishRecordTask.repo_url || '') || '-' }}</span>
+          </a-descriptions-item>
+          <a-descriptions-item label="状态">
+            <a-tag :color="statusTag(publishRecordTask.status).color">{{ statusTag(publishRecordTask.status).text }}</a-tag>
+          </a-descriptions-item>
+          <a-descriptions-item label="任务类型">
+            <div class="task-type-tags">
+              <a-tag :color="taskTypeTag(publishRecordTask).color">{{ taskTypeTag(publishRecordTask).text }}</a-tag>
+              <a-tag v-if="effectiveModeTag(publishRecordTask)" :color="effectiveModeTag(publishRecordTask)?.color">
+                {{ effectiveModeTag(publishRecordTask)?.text }}
+              </a-tag>
+            </div>
+          </a-descriptions-item>
+          <a-descriptions-item label="降级原因" :span="2">
+            <span class="mono">{{ taskFallbackReason(publishRecordTask) || '-' }}</span>
+          </a-descriptions-item>
+          <a-descriptions-item label="验收结论">
+            <a-tag :color="acceptanceTag(publishRecordTask).color">{{ acceptanceTag(publishRecordTask).text }}</a-tag>
+          </a-descriptions-item>
+          <a-descriptions-item label="验收摘要">
+            <span class="mono">{{ acceptanceSummary(publishRecordTask) }}</span>
+          </a-descriptions-item>
+          <a-descriptions-item label="快照 Delta" :span="2">
+            <span class="mono">{{ acceptanceDeltaText(publishRecordTask) }}</span>
+          </a-descriptions-item>
+          <a-descriptions-item label="repo_url" :span="2">
+            <span class="mono">{{ publishRecordTask.repo_url || '-' }}</span>
+          </a-descriptions-item>
+          <a-descriptions-item label="Ref 类型">
+            <span class="mono">{{ publishRecordTask.commit_id ? 'CommitId' : 'Branch' }}</span>
+          </a-descriptions-item>
+          <a-descriptions-item label="Ref">
+            <span class="mono">{{ publishRecordTask.commit_id || publishRecordTask.branch || '-' }}</span>
+          </a-descriptions-item>
+          <a-descriptions-item label="Maven 扫描">
+            <span class="mono">{{ boolLabel(publishRecordTask.maven_scan_enabled) }}</span>
+          </a-descriptions-item>
+          <a-descriptions-item label="强制 Maven">
+            <span class="mono">{{ boolLabel(publishRecordTask.force_maven) }}</span>
+          </a-descriptions-item>
+          <a-descriptions-item label="清理旧图谱">
+            <span class="mono">{{ boolLabel(publishRecordTask.clear_database) }}</span>
+          </a-descriptions-item>
+          <a-descriptions-item label="自动关联外部类">
+            <span class="mono">{{ boolLabel(publishRecordTask.auto_link_external) }}</span>
+          </a-descriptions-item>
+          <a-descriptions-item label="创建时间">
+            <span class="mono">{{ String(publishRecordTask.created_at || '').slice(0, 19).replace('T', ' ') || '-' }}</span>
+          </a-descriptions-item>
+          <a-descriptions-item label="完成时间">
+            <span class="mono">{{ String(publishRecordTask.completed_at || '').slice(0, 19).replace('T', ' ') || '-' }}</span>
+          </a-descriptions-item>
+        </a-descriptions>
+      </template>
+    </a-modal>
+    <a-modal
+      v-model:open="diffSummaryModalOpen"
+      title="发布代码差异"
+      :footer="null"
+      width="1120px"
+      :body-style="{ maxHeight: '72vh', overflow: 'auto', padding: '12px' }"
+      @cancel="diffSummaryModalOpen = false"
+    >
+      <a-alert
+        type="info"
+        show-icon
+        style="margin-bottom: 12px;"
+        :message="`上次发布：${selectedProjectBaseRefLabel}；本次发布：${refType === 'commit' ? `CommitId: ${selectedProjectTargetRef || '-'}` : `Branch: ${selectedProjectTargetRef || '-'}`}`"
+      />
+      <a-alert
+        v-if="diffError"
+        type="error"
+        show-icon
+        :message="diffError"
+        style="margin: 10px 0;"
+      />
+      <template v-if="diffSummary">
+        <a-row :gutter="8" style="margin: 8px 0 10px;">
+          <a-col :span="8">
+            <a-statistic title="变更文件数" :value="diffSummary.stats?.files || 0" />
+          </a-col>
+          <a-col :span="8">
+            <a-statistic title="新增行" :value="diffSummary.stats?.additions || 0" />
+          </a-col>
+          <a-col :span="8">
+            <a-statistic title="删除行" :value="diffSummary.stats?.deletions || 0" />
+          </a-col>
+        </a-row>
+        <a-table
+          :loading="diffLoading"
+          :data-source="(diffSummary.files || []) as any"
+          :pagination="{ pageSize: 10, showSizeChanger: true }"
+          size="small"
+          bordered
+          row-key="path"
+          :scroll="{ x: 980 }"
+        >
+          <a-table-column title="状态" key="status" :width="82">
+            <template #default="{ record }">
+              <a-tag :color="record.status === 'A' ? 'green' : (record.status === 'D' ? 'red' : (record.status === 'R' ? 'blue' : 'gold'))">
+                {{ record.status || '-' }}
+              </a-tag>
+            </template>
+          </a-table-column>
+          <a-table-column title="文件" key="path" ellipsis>
+            <template #default="{ record }">
+              <a-tooltip :title="record.old_path ? `${record.old_path} -> ${record.path}` : record.path">
+                <span class="mono">{{ record.old_path ? `${record.old_path} -> ${record.path}` : record.path }}</span>
+              </a-tooltip>
+            </template>
+          </a-table-column>
+          <a-table-column title="+行" key="additions" :width="82">
+            <template #default="{ record }">
+              <span class="mono" style="color:#237804;">{{ record.additions ?? 0 }}</span>
+            </template>
+          </a-table-column>
+          <a-table-column title="-行" key="deletions" :width="82">
+            <template #default="{ record }">
+              <span class="mono" style="color:#cf1322;">{{ record.deletions ?? 0 }}</span>
+            </template>
+          </a-table-column>
+          <a-table-column title="操作" key="ops" :width="90">
+            <template #default="{ record }">
+              <a-button type="link" size="small" @click.stop="openDiffFilePatch(record)">代码差异</a-button>
+            </template>
+          </a-table-column>
+        </a-table>
+      </template>
+      <a-spin v-else-if="diffLoading" />
+    </a-modal>
+    <a-modal
+      v-model:open="diffFileModalOpen"
+      :title="`文件差异：${diffFilePath || '-'}`"
+      :footer="null"
+      width="1100px"
+      :body-style="{ height: '68vh', overflow: 'hidden', padding: '12px' }"
+      @cancel="diffFileModalOpen = false"
+    >
+      <div class="file-diff-box">
+        <div v-if="diffFileLoading" class="log-loading">
+          <a-spin size="large" />
+          <div style="margin-top: 10px; color: rgba(0,0,0,.45);">正在加载文件差异...</div>
+        </div>
+        <template v-else>
+          <div class="file-diff-legend">
+            <a-space size="small">
+              <a-tag color="green">+ 新增</a-tag>
+              <a-tag color="red">- 删除</a-tag>
+              <a-tag color="blue">@@ 区块</a-tag>
+            </a-space>
+          </div>
+          <div class="file-diff-lines">
+            <div
+              v-for="row in diffRenderLines"
+              :key="row.key"
+              class="file-diff-line"
+              :class="[
+                row.kind === 'add' ? 'file-diff-line--add' : '',
+                row.kind === 'del' ? 'file-diff-line--del' : '',
+                row.kind === 'hunk' ? 'file-diff-line--hunk' : '',
+                row.kind === 'meta' ? 'file-diff-line--meta' : '',
+              ]"
+            >
+              <span class="file-diff-ln">{{ row.oldLine ?? '' }}</span>
+              <span class="file-diff-ln">{{ row.newLine ?? '' }}</span>
+              <span class="file-diff-prefix">{{ row.prefix }}</span>
+              <code class="file-diff-code hljs" v-html="row.html" />
+            </div>
+          </div>
+        </template>
+      </div>
+    </a-modal>
   </div>
 </template>
 
@@ -1154,11 +2327,20 @@ const columns = [
   box-shadow: -4px 0 6px rgba(0, 0, 0, 0.06);
 }
 .logbox {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   border: 1px solid rgba(0,0,0,.08);
   border-radius: 8px;
   overflow: hidden;
 }
+.logbox--modal {
+  flex: 1;
+  min-height: 0;
+  margin: 12px;
+}
 .logbox-hd {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1167,16 +2349,43 @@ const columns = [
   border-bottom: 1px solid rgba(0,0,0,.08);
 }
 .log {
+  flex: 1;
+  min-height: 0;
   margin: 0;
   padding: 10px 12px;
-  height: 60vh;
-  min-height: 200px;
   overflow: auto;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.28) transparent;
   background: rgba(0,0,0,.03);
   font-size: 12px;
   line-height: 1.5;
-  white-space: pre-wrap;
-  word-break: break-word;
+}
+.log::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.log::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.log::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.35);
+  background-clip: content-box;
+}
+.log::-webkit-scrollbar-track {
+  background: transparent;
+}
+.log-pre {
+  margin: 0;
+  padding: 0;
+  white-space: pre;
+  word-break: normal;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
 }
 .log-loading {
   display: flex;
@@ -1229,6 +2438,110 @@ const columns = [
 .import-desc-label {
   color: rgba(0, 0, 0, 0.65);
   font-weight: 600;
+}
+
+.task-type-tags {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+:deep(.task-type-tags .ant-tag) {
+  margin-inline-end: 0;
+}
+
+.import-diff-card {
+  margin: 12px 0 4px;
+  padding: 10px;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 8px;
+  background: rgba(0,0,0,.012);
+}
+.import-diff-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.import-diff-title {
+  font-weight: 600;
+  color: rgba(0,0,0,.85);
+}
+.import-diff-meta {
+  margin-top: 8px;
+}
+.import-diff-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0;
+}
+.import-diff-meta-label {
+  min-width: 72px;
+  color: rgba(0,0,0,.65);
+}
+
+.file-diff-box {
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 8px;
+  height: calc(68vh - 8px);
+  overflow: auto;
+  background: #111;
+}
+.file-diff-legend {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  background: #151821;
+}
+.file-diff-lines {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.file-diff-line {
+  display: grid;
+  grid-template-columns: 64px 64px 24px 1fr;
+  align-items: stretch;
+}
+.file-diff-line:hover {
+  background: rgba(255,255,255,.04);
+}
+.file-diff-line--add {
+  background: rgba(18, 133, 76, 0.24);
+}
+.file-diff-line--del {
+  background: rgba(170, 46, 37, 0.28);
+}
+.file-diff-line--hunk {
+  background: rgba(22, 119, 255, 0.24);
+}
+.file-diff-line--meta {
+  background: rgba(255,255,255,.06);
+}
+.file-diff-ln {
+  padding: 2px 8px;
+  text-align: right;
+  color: rgba(255,255,255,.58);
+  border-right: 1px solid rgba(255,255,255,.08);
+  user-select: none;
+}
+.file-diff-prefix {
+  padding: 2px 6px;
+  text-align: center;
+  color: rgba(255,255,255,.72);
+  border-right: 1px solid rgba(255,255,255,.08);
+  user-select: none;
+}
+.file-diff-code {
+  margin: 0;
+  padding: 2px 10px;
+  color: #e6edf3;
+  white-space: pre;
+  overflow-x: auto;
+  background: transparent !important;
 }
 
 .diagnostics-pane {
@@ -1307,6 +2620,50 @@ const columns = [
 }
 .query-chart-value {
   text-align: right;
+}
+
+.accept-chart {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.01);
+}
+.accept-chart-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 34%) 1fr 130px;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+.accept-chart-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.accept-chart-track {
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  display: flex;
+}
+.accept-chart-segment {
+  height: 100%;
+}
+.accept-chart-segment--add {
+  background: linear-gradient(90deg, #52c41a 0%, #95de64 100%);
+}
+.accept-chart-segment--del {
+  background: linear-gradient(90deg, #ff4d4f 0%, #ff7875 100%);
+}
+.accept-chart-value {
+  text-align: right;
+}
+.accept-chart-plus {
+  color: #237804;
+}
+.accept-chart-minus {
+  color: #a8071a;
 }
 
 @media (max-width: 1320px) {

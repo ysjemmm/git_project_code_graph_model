@@ -55,6 +55,73 @@ class JavaNeo4jAstExporter:
     def _count_external_links(self, *args, **kwargs):
         return self._builder._count_external_links(*args, **kwargs)
 
+    @staticmethod
+    def _to_label_name(v: Any) -> str:
+        if hasattr(v, "value"):
+            try:
+                return str(getattr(v, "value"))
+            except Exception:
+                return str(v)
+        return str(v)
+
+    @staticmethod
+    def _to_node_dict(node: Any) -> Dict[str, Any]:
+        if isinstance(node, dict):
+            return node
+        if hasattr(node, "__dict__"):
+            try:
+                return dict(node.__dict__)
+            except Exception:
+                return {}
+        return {}
+
+    def _build_fallback_detail(self) -> Dict[str, Any]:
+        created_nodes_by_label: Dict[str, int] = {}
+        created_relationships_by_type: Dict[str, int] = {}
+        node_samples: List[Dict[str, Any]] = []
+        relationship_samples: List[Dict[str, Any]] = []
+
+        for raw_label, nodes in (self._builder.nodes_to_create or {}).items():
+            label = self._to_label_name(raw_label)
+            count = len(nodes or [])
+            created_nodes_by_label[label] = created_nodes_by_label.get(label, 0) + count
+            for n in nodes or []:
+                if len(node_samples) >= 120:
+                    break
+                d = self._to_node_dict(n)
+                node_samples.append(
+                    {
+                        "label": label,
+                        "symbol_id": d.get("symbol_id"),
+                        "display": d.get("qualified_name") or d.get("name") or d.get("file_path") or d.get("symbol_id") or "",
+                        "file_path": d.get("file_path") or d.get("belong_file") or "",
+                    }
+                )
+
+        for rel in (self._builder.relationships_to_create or []):
+            if not isinstance(rel, (list, tuple)) or len(rel) < 3:
+                continue
+            source_id, target_id, raw_rel_type = rel[0], rel[1], rel[2]
+            rel_type = self._to_label_name(raw_rel_type)
+            created_relationships_by_type[rel_type] = created_relationships_by_type.get(rel_type, 0) + 1
+            if len(relationship_samples) < 120:
+                relationship_samples.append(
+                    {
+                        "type": rel_type,
+                        "source_id": source_id,
+                        "target_id": target_id,
+                    }
+                )
+
+        return {
+            "attempted_nodes_by_label": created_nodes_by_label,
+            "created_nodes_by_label": created_nodes_by_label,
+            "attempted_relationships_by_type": created_relationships_by_type,
+            "created_relationships_by_type": created_relationships_by_type,
+            "node_samples": node_samples,
+            "relationship_samples": relationship_samples,
+        }
+
     def export_from_ast_data(
         self,
         ast_data_list: List[JavaFileStructure],
@@ -135,9 +202,12 @@ class JavaNeo4jAstExporter:
                     "attempted_relationships": int(
                         write_result.get("attempted_relationships", 0) or 0
                     ),
+                    # 透传写入层明细（created_*_by_type / samples），供验收 diff 详情展示
+                    "detail": write_result.get("detail") or {},
                     "linked_external_classes": linked_count,
                 }
-            except Exception:
+            except Exception as e:
+                logger.warning(f"[EXPORT] write_batch 失败，回退 legacy writer: {e}")
                 if auto_link_external:
                     self._builder._prepare_external_links()
 
@@ -158,6 +228,7 @@ class JavaNeo4jAstExporter:
                 "message": f"Successfully exported {len(self._builder.created_nodes)} nodes",
                 "created_nodes": len(self._builder.created_nodes),
                 "created_relationships": len(self._builder.relationships_to_create),
+                "detail": self._build_fallback_detail(),
                 "linked_external_classes": linked_count,
             }
         except Exception as e:

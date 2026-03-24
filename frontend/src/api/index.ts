@@ -31,6 +31,53 @@ export type ImportTask = {
   status: string
   error?: string | null
   message?: string | null
+  task_type?: 'auto' | 'full' | 'incremental' | string
+  project_name?: string | null
+  repo_url?: string | null
+  branch?: string | null
+  commit_id?: string | null
+  created_at?: string | null
+  completed_at?: string | null
+  maven_scan_enabled?: boolean
+  force_maven?: boolean
+  clear_database?: boolean
+  auto_link_external?: boolean
+}
+
+export type GitDiffSummaryFile = {
+  status: 'A' | 'M' | 'D' | 'R' | string
+  path: string
+  old_path?: string | null
+  additions: number
+  deletions: number
+}
+
+export type GitDiffSummaryResult = {
+  ok: boolean
+  message?: string
+  from_ref: string
+  to_ref: string
+  from_commit: string
+  to_commit: string
+  same_commit: boolean
+  stats: {
+    files: number
+    additions: number
+    deletions: number
+  }
+  files: GitDiffSummaryFile[]
+}
+
+export type GitDiffFileResult = {
+  ok: boolean
+  message?: string
+  from_ref: string
+  to_ref: string
+  from_commit: string
+  to_commit: string
+  file_path: string
+  truncated: boolean
+  patch: string
 }
 
 export type GraphProject = {
@@ -231,8 +278,63 @@ export type AppDependency = {
   } | null
 }
 
+export type AppDependencyTreeChild = AppDependency & {
+  key: string
+  __is_parent_group: false
+  parent: string
+  linked?: AppDependencyLink | null
+  locked_by_parent?: boolean
+}
+
+export type AppDependencyTreeParent = {
+  key: string
+  __is_parent_group: true
+  parent: string
+  parent_group_id: string
+  parent_artifact_id: string
+  parent_version: string
+  child_count: number
+  second_party_count: number
+  uniform_link?: AppDependencyLink | null
+  parent_locked?: boolean
+  children: AppDependencyTreeChild[]
+}
+
+export type AppMavenInfo = {
+  group_id: string
+  artifact_id: string
+  version: string
+  packaging: string
+  parent_group_id: string
+  parent_artifact_id: string
+  parent_version: string
+  pom_path: string
+}
+
 export async function getAppDependencies(appId: number): Promise<{ ok: boolean; scanned_at: string | null; items: AppDependency[] }> {
   return request(`/api/cache/application-projects/${appId}/dependencies`)
+}
+
+export async function getAppDependenciesTree(
+  appId: number,
+  params?: { scope?: string; secondOnly?: boolean },
+): Promise<{
+  ok: boolean
+  scanned_at: string | null
+  total_count: number
+  second_party_count: number
+  third_party_count: number
+  filtered_count: number
+  items: AppDependencyTreeParent[]
+}> {
+  const url = new URL(`/api/cache/application-projects/${appId}/dependencies-tree`, window.location.origin)
+  if (params?.scope) url.searchParams.set('scope', params.scope)
+  if (params?.secondOnly) url.searchParams.set('second_only', '1')
+  return request(url.toString())
+}
+
+export async function getAppMavenInfo(appId: number): Promise<{ ok: boolean; app_id: number; maven: AppMavenInfo }> {
+  return request(`/api/cache/application-projects/${appId}/maven-info`)
 }
 
 export async function refreshAppDependencies(appId: number): Promise<{ ok: boolean; total: number; second_party_count: number; parent_classified_count?: number }> {
@@ -290,7 +392,11 @@ export async function createImportTask(payload: {
   force_maven?: boolean
   clear_database?: boolean
   auto_link_external?: boolean
-}): Promise<{ ok: boolean; task_id?: string }> {
+  task_type?: 'auto' | 'full' | 'incremental'
+  acceptance_enabled?: boolean
+  acceptance_block_on_fail?: boolean
+  acceptance_max_drop_ratio?: number
+}): Promise<{ ok: boolean; task_id?: string; message?: string }> {
   return request('/api/import/tasks', json('POST', payload))
 }
 
@@ -302,8 +408,16 @@ export async function getImportTask(taskId: string): Promise<{ ok: boolean; item
   return request(`/api/import/tasks/${taskId}`)
 }
 
+export async function getImportTaskAcceptanceDetail(taskId: string): Promise<{ ok: boolean; task_id: string; detail: any }> {
+  return request(`/api/import/tasks/${taskId}/acceptance-detail`)
+}
+
 export async function cancelImportTask(taskId: string): Promise<{ ok: boolean }> {
   return request(`/api/import/tasks/${taskId}/cancel`, { method: 'POST' })
+}
+
+export async function unblockAutoImportTasks(reason?: string): Promise<{ ok: boolean; message?: string }> {
+  return request('/api/import/tasks/unblock-auto', json('POST', { reason: reason || '' }))
 }
 
 export async function getImportTaskLog(taskId: string, offset: number, limit = 2000): Promise<{ ok: boolean; lines: string[]; next_offset: number }> {
@@ -333,6 +447,16 @@ export async function runGraphQuery(payload: {
   return request('/api/graph/query', json('POST', payload))
 }
 
+export async function clearGraphDatabase(confirm = 'CLEAR_ALL'): Promise<{
+  ok: boolean
+  message?: string
+  before_nodes?: number
+  before_relationships?: number
+  after_nodes?: number
+}> {
+  return request('/api/graph/clear', json('POST', { confirm }))
+}
+
 export async function getGraphDiagnosticsSummary(): Promise<GraphDiagnosticsSummary> {
   return request('/api/graph/diagnostics/summary')
 }
@@ -355,6 +479,38 @@ export async function listGitCommits(repoUrl: string, branch?: string, q?: strin
   url.searchParams.set('repoUrl', repoUrl)
   if (branch) url.searchParams.set('branch', branch)
   if (q?.trim()) url.searchParams.set('q', q.trim())
+  return request(url.toString())
+}
+
+export async function getGitDiffSummary(payload: {
+  repo_url: string
+  from_ref: string
+  to_ref: string
+  max_files?: number
+}): Promise<GitDiffSummaryResult> {
+  const url = new URL('/api/git-diff/summary', window.location.origin)
+  url.searchParams.set('repoUrl', payload.repo_url)
+  url.searchParams.set('fromRef', payload.from_ref)
+  url.searchParams.set('toRef', payload.to_ref)
+  if (payload.max_files != null) url.searchParams.set('maxFiles', String(payload.max_files))
+  return request(url.toString())
+}
+
+export async function getGitDiffFile(payload: {
+  repo_url: string
+  from_ref: string
+  to_ref: string
+  file_path: string
+  context?: number
+  max_lines?: number
+}): Promise<GitDiffFileResult> {
+  const url = new URL('/api/git-diff/file', window.location.origin)
+  url.searchParams.set('repoUrl', payload.repo_url)
+  url.searchParams.set('fromRef', payload.from_ref)
+  url.searchParams.set('toRef', payload.to_ref)
+  url.searchParams.set('filePath', payload.file_path)
+  if (payload.context != null) url.searchParams.set('context', String(payload.context))
+  if (payload.max_lines != null) url.searchParams.set('maxLines', String(payload.max_lines))
   return request(url.toString())
 }
 
@@ -487,3 +643,7 @@ export async function runForwardProcessflowNpeFixTestSse(
     history: (params.history ?? []).map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content })),
   }, onEvent, opts?.signal)
 }
+
+// ─── 用户信息获取 ──────────────────────────────────────────────────────────────
+// 已迁移至 invoke.ts: invoke('forward', 'getUserInfo')
+// 请使用 import { getUserInfo } from './invoke'

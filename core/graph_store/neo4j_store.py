@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from core.import_context import ProjectImportContext
 from parser.utils.logger import get_logger
@@ -33,6 +33,19 @@ class Neo4jGraphStore(GraphStore):
         return int(
             self.connector.delete_nodes_by_file(file_path, ctx.project_name, project_key=ctx.project_key)
         )
+
+    def delete_file_subgraph_with_details(self, ctx: ProjectImportContext, file_path: str) -> Dict[str, Any]:
+        fn = getattr(self.connector, "delete_nodes_by_file_with_details", None)
+        if callable(fn):
+            try:
+                return fn(file_path, ctx.project_name, project_key=ctx.project_key, sample_limit=60)
+            except Exception:
+                pass
+        return {
+            "deleted_nodes": self.delete_file_subgraph(ctx, file_path),
+            "deleted_relationships": 0,
+            "sample_nodes": [],
+        }
 
     def export_ast(
         self,
@@ -92,6 +105,9 @@ class Neo4jGraphStore(GraphStore):
 
         attempted_nodes = 0
         created_nodes = 0
+        attempted_nodes_by_label: Dict[str, int] = {}
+        created_nodes_by_label: Dict[str, int] = {}
+        node_samples: List[Dict[str, Any]] = []
         node_labels = list((batch.nodes or {}).keys())
         for label_idx, (label, nodes) in enumerate((batch.nodes or {}).items(), 1):
             if not nodes:
@@ -106,6 +122,20 @@ class Neo4jGraphStore(GraphStore):
             logger.info(f"[写入] 节点 {label}: {len(nodes)} 个（{label_idx}/{len(node_labels)}，{num_batches} 批）")
 
             attempted_nodes += len(nodes)
+            attempted_nodes_by_label[label] = attempted_nodes_by_label.get(label, 0) + len(nodes)
+            if len(node_samples) < 120:
+                for n in nodes:
+                    if len(node_samples) >= 120:
+                        break
+                    if isinstance(n, dict):
+                        node_samples.append(
+                            {
+                                "label": label,
+                                "symbol_id": n.get("symbol_id"),
+                                "display": n.get("qualified_name") or n.get("name") or n.get("file_path") or n.get("symbol_id") or "",
+                                "file_path": n.get("file_path") or n.get("belong_file") or "",
+                            }
+                        )
             for i in range(0, len(nodes), batch_size):
                 chunk = nodes[i:i + batch_size]
                 # 统一注入 project_key（写入层兜底，避免上游漏传）
@@ -113,7 +143,9 @@ class Neo4jGraphStore(GraphStore):
                     if isinstance(n, dict) and "project_key" not in n:
                         n["project_key"] = ctx.project_key
                 result = self.connector.execute_write_query(query, {"nodes": chunk})
-                created_nodes += int(result[0].get("created", 0)) if result else 0
+                created_in_batch = int(result[0].get("created", 0)) if result else 0
+                created_nodes += created_in_batch
+                created_nodes_by_label[label] = created_nodes_by_label.get(label, 0) + created_in_batch
                 # 每 3 批或最后一批输出进度
                 batch_num = i // batch_size + 1
                 if batch_num % 3 == 0 or batch_num == num_batches:
@@ -121,6 +153,9 @@ class Neo4jGraphStore(GraphStore):
 
         attempted_relationships = 0
         created_relationships = 0
+        attempted_relationships_by_type: Dict[str, int] = {}
+        created_relationships_by_type: Dict[str, int] = {}
+        relationship_samples: List[Dict[str, Any]] = []
         rel_types = list((batch.relationships or {}).keys())
         for rel_idx, (rel_type, relationships) in enumerate((batch.relationships or {}).items(), 1):
             if not relationships:
@@ -134,6 +169,19 @@ class Neo4jGraphStore(GraphStore):
             logger.info(f"[写入] 关系 {rel_type}: {len(relationships)} 条（{rel_idx}/{len(rel_types)}，{num_batches} 批）")
 
             attempted_relationships += len(relationships)
+            attempted_relationships_by_type[rel_type] = attempted_relationships_by_type.get(rel_type, 0) + len(relationships)
+            if len(relationship_samples) < 120:
+                for r in relationships:
+                    if len(relationship_samples) >= 120:
+                        break
+                    if isinstance(r, dict):
+                        relationship_samples.append(
+                            {
+                                "type": rel_type,
+                                "source_id": r.get("source_id"),
+                                "target_id": r.get("target_id"),
+                            }
+                        )
             for i in range(0, len(relationships), batch_size):
                 chunk = [
                     {"source_id": r.get("source_id"), "target_id": r.get("target_id")}
@@ -145,7 +193,9 @@ class Neo4jGraphStore(GraphStore):
                 if num_batches > 1:
                     logger.info(f"  - {rel_type}: 执行第 {batch_num}/{num_batches} 批（本批 {len(chunk)} 条）")
                 result = self.connector.execute_write_query(query, {"relationships": chunk})
-                created_relationships += int(result[0].get("created", 0)) if result else 0
+                created_in_batch = int(result[0].get("created", 0)) if result else 0
+                created_relationships += created_in_batch
+                created_relationships_by_type[rel_type] = created_relationships_by_type.get(rel_type, 0) + created_in_batch
                 if num_batches > 1 and (batch_num % 3 == 0 or batch_num == num_batches):
                     logger.info(f"  - {rel_type}: 已写入 {min(i + batch_size, len(relationships))}/{len(relationships)}")
 
@@ -162,5 +212,14 @@ class Neo4jGraphStore(GraphStore):
             created_relationships=created_relationships,
         )
         # 对外接口仍按 dict 返回（兼容 GraphStore 协议签名）
-        return result.to_dict()
+        out = result.to_dict()
+        out["detail"] = {
+            "attempted_nodes_by_label": attempted_nodes_by_label,
+            "created_nodes_by_label": created_nodes_by_label,
+            "attempted_relationships_by_type": attempted_relationships_by_type,
+            "created_relationships_by_type": created_relationships_by_type,
+            "node_samples": node_samples,
+            "relationship_samples": relationship_samples,
+        }
+        return out
 
