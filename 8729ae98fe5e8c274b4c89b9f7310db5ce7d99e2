@@ -1,0 +1,35 @@
+storage/sqlite/business/migrations/003_bugfix_history.sql
+  1d7210d88ba83fee 1-20
+frontend/src/components/DiffViewer.vue
+  1d7210d88ba83fee 1-371
+storage/sqlite/business/migrations/005_unique_project_name.sql
+  1d7210d88ba83fee 1-6
+api/routes/bugfix_history.py
+  1d7210d88ba83fee 1-115
+storage/sqlite/business/bugfix_history_repo.py
+  1d7210d88ba83fee 1-191
+frontend/src/pages/ToolTestPage.vue
+  1d7210d88ba83fee 1-356
+storage/sqlite/business/migrations/004_bugfix_history_node_io.sql
+  1d7210d88ba83fee 1-5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.15",
+  "base_commit_sha": "8729ae98fe5e8c274b4c89b9f7310db5ce7d99e2",
+  "prompts": {
+    "1d7210d88ba83fee": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "720a2299-0707-4387-a692-081d5f3506ba",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "mayang <mayang@tsign.cn>",
+      "messages": [],
+      "total_additions": 1199,
+      "total_deletions": 29,
+      "accepted_lines": 5810,
+      "overriden_lines": 0
+    }
+  }
+}
