@@ -394,6 +394,59 @@ export async function syncDependencyLinksToNeo4j(): Promise<{ ok: boolean; synce
   return request('/api/cache/dependency-links/sync-to-neo4j', { method: 'POST' })
 }
 
+// ─── JAR 类索引 ────────────────────────────────────────────────────────────────
+
+export type JarIndexStats = {
+  ok: boolean
+  app_id: number
+  project_name?: string
+  total_classes: number
+  total_jars: number
+  last_scan_time: string | null
+  jar_path_prefix?: string
+}
+
+export type JarIndexRebuildResult = {
+  ok: boolean
+  project_name?: string
+  message?: string
+  cleared_classes?: number
+  jars_found?: number
+  jars_scanned?: number
+  jars_skipped?: number
+  total_classes?: number
+  errors?: string[]
+  duration_seconds?: number
+}
+
+export async function getJarIndexStats(appId: number): Promise<JarIndexStats> {
+  return request(`/api/cache/application-projects/${appId}/jar-index-stats`)
+}
+
+export async function rebuildJarIndex(appId: number): Promise<JarIndexRebuildResult> {
+  return request(`/api/cache/application-projects/${appId}/rebuild-jar-index`, { method: 'POST' })
+}
+
+export type JarIndexItem = {
+  fqn: string
+  simple_name: string
+  package_name: string
+  jar_name: string
+  coord: string
+}
+
+export async function searchJarIndex(params: {
+  q?: string
+  page?: number
+  page_size?: number
+}): Promise<{ ok: boolean; total: number; page: number; page_size: number; items: JarIndexItem[] }> {
+  const url = new URL('/api/cache/jar-index/search', window.location.origin)
+  if (params.q) url.searchParams.set('q', params.q)
+  if (params.page) url.searchParams.set('page', String(params.page))
+  if (params.page_size) url.searchParams.set('page_size', String(params.page_size))
+  return request(url.toString())
+}
+
 export async function createApplication(payload: {
   project_name: string
   app_type: string
@@ -544,11 +597,20 @@ export async function gitApplyAndCommit(payload: {
   commit_msg: string
   diff: string
   reviewer?: string
-}): Promise<{ ok: boolean; message: string; branch?: string; steps?: string[] }> {
+  pull_after_commit?: boolean
+}): Promise<{ ok: boolean; message: string; branch?: string; steps?: string[]; pull_result?: string }> {
   return request('/api/git-apply-and-commit', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
+  })
+}
+
+export async function gitPullCache(projectName: string): Promise<{ ok: boolean; message: string }> {
+  return request('/api/git-pull-cache', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ project_name: projectName }),
   })
 }
 

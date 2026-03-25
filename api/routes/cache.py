@@ -1557,3 +1557,178 @@ def delete_dependency_link(link_id: int) -> Dict[str, Any]:
             neo4j_message = str(e)
 
     return {"ok": True, "deleted_id": link_id, "neo4j_message": neo4j_message}
+
+
+# ─── JAR 类索引管理 ────────────────────────────────────────────────────────────
+
+@router.get("/cache/application-projects/{app_id}/jar-index-stats")
+def get_jar_index_stats(app_id: int) -> Dict[str, Any]:
+    """
+    查询某应用的 JAR 类索引统计：总类数、jar 包数、最后扫描时间。
+    通过 jar_path 前缀（.cache/maven_deps/<project_name>/）过滤。
+    """
+    from storage.sqlite.business import get_business_db
+    from storage.sqlite.business.application_projects_repo import ApplicationProjectsRepo
+    from storage.sqlite.jar_class_db import get_jar_class_db
+
+    bdb = get_business_db()
+    repo = ApplicationProjectsRepo(bdb)
+    apps = repo.list_all()
+    app = next((a for a in apps if a.id == app_id), None)
+    if not app:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="应用不存在")
+
+    project_name = str(app.project_name or app.repo_name or "").strip()
+    if not project_name:
+        return {"ok": True, "app_id": app_id, "total_classes": 0, "total_jars": 0, "last_scan_time": None, "jar_path_prefix": ""}
+
+    jar_path_prefix = str(CACHE_MAVEN_DEPS_PATH / project_name)
+
+    db = get_jar_class_db()
+    cur = db.conn.cursor()
+
+    row = cur.execute(
+        "SELECT COUNT(*) AS cnt FROM jar_classes WHERE jar_path LIKE ?",
+        (jar_path_prefix + "%",),
+    ).fetchone()
+    total_classes = int(row["cnt"] if row else 0)
+
+    row2 = cur.execute(
+        "SELECT COUNT(DISTINCT jar_path) AS cnt FROM jar_classes WHERE jar_path LIKE ?",
+        (jar_path_prefix + "%",),
+    ).fetchone()
+    total_jars = int(row2["cnt"] if row2 else 0)
+
+    row3 = cur.execute(
+        "SELECT MAX(insert_time) AS last_time FROM jar_classes WHERE jar_path LIKE ?",
+        (jar_path_prefix + "%",),
+    ).fetchone()
+    last_scan_time = str(row3["last_time"]) if row3 and row3["last_time"] else None
+
+    return {
+        "ok": True,
+        "app_id": app_id,
+        "project_name": project_name,
+        "total_classes": total_classes,
+        "total_jars": total_jars,
+        "last_scan_time": last_scan_time,
+        "jar_path_prefix": jar_path_prefix,
+    }
+
+
+@router.post("/cache/application-projects/{app_id}/rebuild-jar-index")
+def rebuild_jar_index(app_id: int) -> Dict[str, Any]:
+    """
+    重建某应用的 JAR 类索引：
+    1. 清空该应用旧的 jar_classes 记录
+    2. 对 .cache/maven_deps/<project_name>/ 目录重新扫描所有 jar
+    不重新执行 Maven（不拉取依赖），仅重建索引。
+    若 maven_deps 目录不存在，返回提示。
+    """
+    from storage.sqlite.business import get_business_db
+    from storage.sqlite.business.application_projects_repo import ApplicationProjectsRepo
+    from storage.sqlite.jar_class_db import get_jar_class_db
+    from storage.sqlite.jar_scanner import JARScanner
+
+    bdb = get_business_db()
+    repo = ApplicationProjectsRepo(bdb)
+    apps = repo.list_all()
+    app = next((a for a in apps if a.id == app_id), None)
+    if not app:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="应用不存在")
+
+    project_name = str(app.project_name or app.repo_name or "").strip()
+    if not project_name:
+        return {"ok": False, "message": "应用缺少 project_name，无法定位 maven_deps 目录"}
+
+    out_dir = CACHE_MAVEN_DEPS_PATH / project_name
+    if not out_dir.exists():
+        return {
+            "ok": False,
+            "message": f"maven_deps 目录不存在（{out_dir}），请先在「导入/重建」页触发一次完整导入以拉取 Maven 依赖",
+        }
+
+    db = get_jar_class_db()
+    db.initialize_schema()
+
+    # 清空旧记录
+    cleared = db.delete_by_jar_path_prefix(str(out_dir))
+
+    # 重新扫描
+    scanner = JARScanner(db)
+    result = scanner.scan_directory(str(out_dir), force_rescan=True, include_anonymous=False)
+
+    return {
+        "ok": True,
+        "project_name": project_name,
+        "cleared_classes": cleared,
+        "jars_found": result.total_jars_found,
+        "jars_scanned": result.jars_scanned,
+        "jars_skipped": result.jars_skipped,
+        "total_classes": result.total_classes,
+        "errors": result.errors[:10],  # 最多返回前10条错误
+        "duration_seconds": round(result.duration, 2),
+    }
+
+
+@router.get("/cache/jar-index/search")
+def search_jar_index(
+    q: str = "",
+    page: int = 1,
+    page_size: int = 50,
+) -> Dict[str, Any]:
+    """
+    全局搜索 jar_classes.db，支持按 fqn / simple_name / package_name 模糊查询。
+    返回分页结果。
+    """
+    from storage.sqlite.jar_class_db import get_jar_class_db
+
+    db = get_jar_class_db()
+    cur = db.conn.cursor()
+
+    offset = (max(1, page) - 1) * page_size
+    q = (q or "").strip()
+
+    if q:
+        like = f"%{q}%"
+        count_row = cur.execute(
+            "SELECT COUNT(*) AS cnt FROM jar_classes WHERE fqn LIKE ? OR simple_name LIKE ? OR package_name LIKE ?",
+            (like, like, like),
+        ).fetchone()
+        total = int(count_row["cnt"] if count_row else 0)
+        rows = cur.execute(
+            """SELECT fqn, simple_name, package_name, jar_name,
+                      artifact_group_id, artifact_id, artifact_version,
+                      parent_group_id, parent_artifact_id, parent_version
+               FROM jar_classes
+               WHERE fqn LIKE ? OR simple_name LIKE ? OR package_name LIKE ?
+               ORDER BY fqn LIMIT ? OFFSET ?""",
+            (like, like, like, page_size, offset),
+        ).fetchall()
+    else:
+        count_row = cur.execute("SELECT COUNT(*) AS cnt FROM jar_classes").fetchone()
+        total = int(count_row["cnt"] if count_row else 0)
+        rows = cur.execute(
+            """SELECT fqn, simple_name, package_name, jar_name,
+                      artifact_group_id, artifact_id, artifact_version,
+                      parent_group_id, parent_artifact_id, parent_version
+               FROM jar_classes ORDER BY fqn LIMIT ? OFFSET ?""",
+            (page_size, offset),
+        ).fetchall()
+
+    items = []
+    for r in rows:
+        g = r["artifact_group_id"] or r["parent_group_id"] or ""
+        a = r["artifact_id"] or r["parent_artifact_id"] or ""
+        v = r["artifact_version"] or r["parent_version"] or ""
+        items.append({
+            "fqn": r["fqn"],
+            "simple_name": r["simple_name"],
+            "package_name": r["package_name"],
+            "jar_name": r["jar_name"],
+            "coord": f"{g}:{a}:{v}" if g or a else r["jar_name"],
+        })
+
+    return {"ok": True, "total": total, "page": page, "page_size": page_size, "items": items}

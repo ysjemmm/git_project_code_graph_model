@@ -6,7 +6,7 @@ import { Modal } from 'ant-design-vue'
 import { marked } from 'marked'
 import hljs from 'highlight.js'
 import { runForwardProcessflowNpeFixSse, type BugfixSseEvent, type ToolStep, listBugfixHistory, createBugfixHistory, updateBugfixHistoryStatus, type BugfixHistoryItem } from '../api'
-import { gitApplyAndCommit } from '../api'
+import { gitApplyAndCommit, gitPullCache, createImportTask } from '../api'
 // import { runMockExecution } from '../api/mockExecution'  // 已废弃，使用真实接口
 import { listOnlineBugs, searchOnlineBugs, type ForwardBugItem } from '../api/invoke'
 import { parseModelChoice } from '../constants'
@@ -608,7 +608,52 @@ function selectFixSuggestion(id: number) {
 const fixBranch    = ref('fix/')
 const fixCommitMsg = ref('fix: ')
 const fixReviewer  = ref('')
+const pullAfterCommit = ref(false)
 const fixDone      = computed(() => fixBranch.value.trim().startsWith('aifix_') && fixCommitMsg.value.trim().length > 5)
+
+// git pull 缓存目录
+const gitPulling = ref(false)
+async function doGitPull() {
+  const projectName = selectedProjectName.value
+  if (!projectName) return
+  gitPulling.value = true
+  try {
+    const { message } = await import('ant-design-vue')
+    // 后端 Java 应用：提交 import task（自动 fetch + checkout + pull + 增量/全量更新图谱）
+    if (selectedAppType.value === 'backend' && selectedLanguage.value === 'java') {
+      const repoUrl = repo.value?.url || ''
+      const br = String(readonlyBranch.value || '').trim()
+      if (!repoUrl || !br) {
+        message.warning('缺少 repo_url 或 branch 信息，无法提交导入任务')
+        return
+      }
+      const data = await createImportTask({
+        project_name: projectName,
+        repo_url: repoUrl,
+        branch: br,
+        task_type: 'auto',
+      })
+      if (data.ok) {
+        message.success({ content: `已提交图谱更新任务（task_id: ${data.task_id}），可在「导入/重建」页查看进度`, duration: 6 })
+      } else {
+        message.error({ content: `提交任务失败：${data.message}`, duration: 6 })
+      }
+    } else {
+      // 非 Java 后端：单纯 git pull 更新本地缓存
+      const data = await gitPullCache(projectName)
+      if (data.ok) {
+        message.success({ content: `git pull 成功：${data.message}`, duration: 4 })
+      } else {
+        message.error({ content: `git pull 失败：${data.message}`, duration: 6 })
+      }
+    }
+  } catch (e: any) {
+    const { message } = await import('ant-design-vue')
+    message.error({ content: e?.message ?? String(e), duration: 6 })
+  } finally {
+    gitPulling.value = false
+  }
+}
 
 // 提交状态
 const fixSubmitting = ref(false)
@@ -634,6 +679,7 @@ function onSubmitFix() {
           commit_msg: fixCommitMsg.value,
           diff: plan?.diff ?? '',
           reviewer: fixReviewer.value || undefined,
+          pull_after_commit: pullAfterCommit.value,
         })
         fixSubmitResult.value = res
         if (res.ok) saveWorkflowState()
@@ -1439,6 +1485,20 @@ watch(
             <template #description><span style="font-size:12px;opacity:.7">{{ repo.url }}</span></template>
           </a-alert>
 
+          <div v-if="selectedProjectName" style="margin-top:10px">
+            <a-tooltip :title="selectedAppType === 'backend' && selectedLanguage === 'java' ? '提交图谱更新任务（fetch + pull + 增量重建图谱）' : '更新本地 Git 缓存'">
+              <a-button
+                size="small"
+                :loading="gitPulling"
+                :disabled="isExecuting || aiExecutedSuccessfully"
+                @click="doGitPull"
+              >
+                <template #icon><ReloadOutlined /></template>
+                {{ selectedAppType === 'backend' && selectedLanguage === 'java' ? '更新代码 & 图谱' : 'Git Pull' }}
+              </a-button>
+            </a-tooltip>
+          </div>
+
           <!-- 关联 Bug -->
           <a-divider style="margin:18px 0 14px" />
           <a-form layout="vertical" class="bp-form">
@@ -1684,6 +1744,9 @@ watch(
           </a-form-item>
           <a-form-item label="CR Reviewer（可选）">
             <a-input v-model:value="fixReviewer" placeholder="@username" allow-clear :disabled="!!fixSubmitResult?.ok" />
+          </a-form-item>
+          <a-form-item label="push 后更新图谱缓存主干" extra="开启后：push 成功时对图谱缓存目录的当前分支执行 git pull（通常是 main/master），与本次修复分支无关，仅用于保持主干代码最新">
+            <a-switch v-model:checked="pullAfterCommit" :disabled="!!fixSubmitResult?.ok" checked-children="开启" un-checked-children="关闭" />
           </a-form-item>
         </a-form>
 

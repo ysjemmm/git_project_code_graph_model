@@ -698,6 +698,64 @@ def cleanup_session(session_id: str) -> str:
         return f"[清理失败: {e}]"
 
 
+def _append_import_analysis(source_lines: List[str]) -> str:
+    """
+    从源码行中提取 import 语句，分析每个 import 的归属。
+    - 精确 import（import a.b.C）：直接按 FQN 查
+    - 通配符 import（import a.b.*）：扫描代码正文中出现的大写开头标识符，
+      按 simple_name 查 DB，再过滤包名匹配通配符前缀的结果，还原出 FQN
+    仅当存在二方包时才附加分析结果（避免三方包噪音）。
+    """
+    exact_fqns: List[str] = []
+    wildcard_prefixes: List[str] = []  # 通配符包前缀，如 com.timevale.forward.dal.dao
+    in_import_block = True
+
+    for line in source_lines:
+        stripped = line.strip()
+        if not in_import_block:
+            break
+        if stripped.startswith("import ") and stripped.endswith(";"):
+            fqn = stripped.removeprefix("import static ").removeprefix("import ").rstrip(";").strip()
+            if not fqn:
+                continue
+            if fqn.endswith(".*"):
+                wildcard_prefixes.append(fqn[:-2])  # 去掉 .*
+            else:
+                exact_fqns.append(fqn)
+        elif stripped and not stripped.startswith("//") and not stripped.startswith("package"):
+            if not stripped.startswith("import") and not stripped.startswith("@") \
+                    and not stripped.startswith("/*") and not stripped.startswith("*"):
+                in_import_block = False
+
+    # 通配符处理：从代码正文提取大写开头的标识符（潜在类名），反向查 DB
+    resolved_from_wildcard: List[str] = []
+    if wildcard_prefixes:
+        try:
+            from storage.sqlite.jar_class_db import get_jar_class_db
+            db = get_jar_class_db()
+            # 收集正文中所有大写开头的单词（类名候选）
+            body_text = "\n".join(source_lines)
+            candidates = set(re.findall(r'\b([A-Z][A-Za-z0-9_$]*)\b', body_text))
+            for simple_name in candidates:
+                matches = db.query_by_simple_name(simple_name, include_anonymous=False)
+                for m in matches:
+                    # 只保留包名匹配某个通配符前缀的结果
+                    if any(m.package_name == prefix or m.package_name.startswith(prefix + ".")
+                           for prefix in wildcard_prefixes):
+                        resolved_from_wildcard.append(m.fqn)
+        except Exception:
+            pass
+
+    all_fqns = exact_fqns + list(dict.fromkeys(resolved_from_wildcard))  # 去重保序
+    if not all_fqns:
+        return ""
+
+    analysis = resolve_imports(all_fqns)
+    if "【二方包】" not in analysis:
+        return ""
+    return "\n\n---\n" + analysis
+
+
 def read_source_file(
     project_name: str,
     file_path: str,
@@ -740,7 +798,8 @@ def read_source_file(
         chunk = lines[s:e_]
         numbered = [f"{s + i + 1:4d}: {l}" for i, l in enumerate(chunk)]
         header = f"{str(target_abs)}  (lines {s + 1}–{s + len(chunk)} / {total})\n"
-        return "```java\n" + header + "\n".join(numbered) + "\n```"
+        code_block = "```java\n" + header + "\n".join(numbered) + "\n```"
+        return code_block + _append_import_analysis(lines)
 
     repo = _repo_dir(project_name)
     if repo is None:
@@ -782,4 +841,143 @@ def read_source_file(
     chunk = lines[s:e_]
     numbered = [f"{s + i + 1:4d}: {l}" for i, l in enumerate(chunk)]
     header = f"{file_path}  (lines {s + 1}–{s + len(chunk)} / {total})\n"
-    return "```java\n" + header + "\n".join(numbered) + "\n```"
+    code_block = "```java\n" + header + "\n".join(numbered) + "\n```"
+    return code_block + _append_import_analysis(lines)
+
+
+def clone_git_repo(
+    project_name: str,
+    repo_url: str,
+    branch: Optional[str] = None,
+    commit_id: Optional[str] = None,
+    timeout: Optional[int] = None,
+) -> str:
+    """
+    根据 repo_url + branch/commit_id 拉取 Git 仓库到本地缓存目录（.cache/git_repos/<project_name>）。
+    若本地已存在有效 git 仓库则静默返回（前缀 [CACHED]），不做任何操作；
+    若不存在则执行 clone（前缀 [CLONED]）。
+    仅拉取仓库，不做任何代码图谱构建操作。
+    """
+    try:
+        from git.manager import GitManager
+        from tools.constants import CACHE_GIT_REPOS_PATH
+
+        repo_name = project_name.strip()
+        if not repo_name:
+            return "[错误：project_name 不能为空]"
+        if not repo_url or not repo_url.strip():
+            return "[错误：repo_url 不能为空]"
+
+        repo_cache_dir = str(CACHE_GIT_REPOS_PATH / repo_name)
+        git_manager = GitManager(repo_cache_dir)
+
+        # 本地已有有效仓库 → 静默返回，不拉取
+        if git_manager.is_repo_exists():
+            return f"[CACHED] 本地已存在仓库缓存，无需重新拉取（{repo_cache_dir}）"
+
+        # 本地不存在 → 执行 clone
+        git_config = {"core.safecrlf": "false", "core.autocrlf": "false"}
+        shallow = commit_id is None
+        clone_timeout = timeout or GitManager.calculate_dynamic_timeout(repo_url)
+        target_branch = branch or "master"
+        ok, msg = git_manager.clone(
+            repo_url, target_branch, shallow=shallow,
+            timeout=clone_timeout, git_config=git_config,
+        )
+        if not ok:
+            return f"[克隆失败：{msg}]"
+
+        if commit_id:
+            ok, msg = git_manager.checkout(commit_id)
+            if not ok:
+                return f"[CLONED] 克隆成功，但切换到 commit {commit_id} 失败：{msg}"
+            return f"[CLONED] 成功克隆仓库并切换到 commit {commit_id}，缓存目录：{repo_cache_dir}"
+
+        return f"[CLONED] 成功克隆仓库（branch={target_branch}），缓存目录：{repo_cache_dir}"
+
+    except Exception as e:
+        return f"[clone_git_repo 执行异常：{e}]"
+
+
+# --------------- Import 归属解析 ---------------
+
+def _load_second_party_rules() -> List[Dict[str, Any]]:
+    """加载二方包判断规则（group_id_regex + artifact_id_regex）。"""
+    try:
+        from storage.sqlite.business.business_db import get_business_db
+        from storage.sqlite.business.second_party_rules_repo import SecondPartyRulesRepo
+        db = get_business_db()
+        repo = SecondPartyRulesRepo(db)
+        return [r for r in repo.list_rules() if r.get("enabled")]
+    except Exception:
+        return []
+
+
+def _is_second_party(group_id: str, artifact_id: str, rules: List[Dict[str, Any]]) -> bool:
+    """按规则列表判断坐标是否属于二方包。"""
+    for rule in rules:
+        try:
+            if re.fullmatch(rule["group_id_regex"], group_id or "") and \
+               re.fullmatch(rule["artifact_id_regex"], artifact_id or ""):
+                return True
+        except re.error:
+            continue
+    return False
+
+
+def resolve_imports(fqns: List[str]) -> str:
+    """
+    给定一批 Java 类的全限定名，查询它们来自哪个 jar/坐标，
+    并标注是否为二方包（根据 second_party_rules 规则匹配）。
+    用于帮助 AI 判断某个 import 是本项目源码、二方包还是三方包，
+    从而决定是否需要跳转到对应项目的图谱或源码继续排查。
+    """
+    if not fqns:
+        return "[未提供任何 FQN]"
+
+    try:
+        from storage.sqlite.jar_class_db import get_jar_class_db
+    except ImportError:
+        return "[无法导入 JARClassDB，请确认项目依赖]"
+
+    db = get_jar_class_db()
+    rules = _load_second_party_rules()
+    lines: List[str] = ["## Import 归属分析\n"]
+
+    for fqn in fqns:
+        fqn = fqn.strip()
+        if not fqn:
+            continue
+        info = db.query_by_fqn(fqn)
+        if info is None:
+            lines.append(
+                f"- `{fqn}`\n"
+                f"  → 未在 jar_classes.db 中找到（可能是本项目源码或未扫描的依赖）\n"
+                f"  → 建议：直接用 query_code_graph 或 search_code 在当前项目中查找\n"
+            )
+            continue
+
+        g = info.artifact_group_id or info.parent_group_id or ""
+        a = info.artifact_id or info.parent_artifact_id or ""
+        v = info.artifact_version or info.parent_version or ""
+        coord = f"{g}:{a}:{v}" if g or a else info.jar_name
+
+        if _is_second_party(g, a, rules):
+            kind = "【二方包】"
+            hint = (
+                f"  → 建议：先用 get_project_dependencies 确认是否已导入该项目，\n"
+                f"    再用 query_code_graph(project_name=\"{a}\") 查图谱，\n"
+                f"    或 search_code / read_source_file 并传入 project_name=\"{a}\" 读取源码。"
+            )
+        else:
+            kind = "三方包（通常无需深入排查）"
+            hint = "  → 建议：三方包一般不需要查源码，关注调用方的使用姿势即可。"
+
+        lines.append(
+            f"- `{fqn}`\n"
+            f"  → 坐标: `{coord}`\n"
+            f"  → 类型: {kind}\n"
+            f"{hint}\n"
+        )
+
+    return "\n".join(lines)

@@ -19,6 +19,8 @@ from api.tools import (
     get_bug_attachments,
     cleanup_bug_attachments,
     cleanup_session,
+    clone_git_repo,
+    resolve_imports,
     _files_from_names,
 )
 
@@ -201,8 +203,29 @@ def _execute_tool(
                 return "[错误：缺少 session_id]"
             return cleanup_session(sid)
 
+        if name == "clone_git_repo":
+            pname = (arguments.get("project_name") or project_name or "").strip()
+            if not pname:
+                return "[错误：缺少 project_name]"
+            rurl = (arguments.get("repo_url") or "").strip()
+            if not rurl:
+                return "[错误：缺少 repo_url]"
+            return clone_git_repo(
+                project_name=pname,
+                repo_url=rurl,
+                branch=arguments.get("branch") or None,
+                commit_id=arguments.get("commit_id") or None,
+                timeout=int(arguments["timeout"]) if arguments.get("timeout") else None,
+            )
+
         if name == "output_analysis_chain":
             return "已记录分析链路，请继续给出你的分析结论。"
+
+        if name == "resolve_imports":
+            fqns = arguments.get("fqns") or []
+            if isinstance(fqns, str):
+                fqns = [f.strip() for f in fqns.split(",") if f.strip()]
+            return resolve_imports(fqns)
 
         return f"[未知工具: {name}]"
     except BugInfoUnavailableError:
@@ -375,6 +398,52 @@ CLAUDE_TOOLS = [
         },
     },
     {
+        "name": "clone_git_repo",
+        "description": "根据 repo_url + branch/commit_id 拉取 Git 仓库到本地缓存目录。若本地已存在则 fetch + checkout 更新；若不存在则 clone。仅拉取仓库，不做代码图谱构建。拉取完成后可用 search_code / read_source_file 读取源码。",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "project_name": {
+                    "type": "string",
+                    "description": "应用名称，用作本地缓存目录名，通常与应用的 project_name 一致",
+                },
+                "repo_url": {
+                    "type": "string",
+                    "description": "Git 仓库地址，如 https://github.com/xxx/yyy.git",
+                },
+                "branch": {
+                    "type": "string",
+                    "description": "分支名，如 main、release/2.0.5（与 commit_id 二选一）",
+                },
+                "commit_id": {
+                    "type": "string",
+                    "description": "指定 commit hash（优先级高于 branch）",
+                },
+            },
+            "required": ["project_name", "repo_url"],
+        },
+    },
+    {
+        "name": "resolve_imports",
+        "description": (
+            "给定一批 Java 类的全限定名（FQN），查询它们来自哪个 jar 坐标，并标注是否为二方包或三方包。"
+            "当你读取一个 Java 文件后，若不确定某些 import 来自哪里（是本项目源码、二方包还是三方包），"
+            "应调用本工具明确归属，再决定是否需要跳转到对应项目的图谱或源码继续排查。"
+            "注意：read_source_file 在检测到二方包 import 时会自动附加分析，无需重复调用。"
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "fqns": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Java 类全限定名列表，如 [\"com.timevale.forward.dal.dao.BizDemandMapper\", \"com.google.guava.collect.Lists\"]",
+                },
+            },
+            "required": ["fqns"],
+        },
+    },
+    {
         "description": "在给出最终分析结论之前，你必须调用本工具一次，提交本次分析的完整链路（从「拿到问题」到查图、查文件、读源码等每一步），便于用户看到流程图。steps 为数组，每项 {label: 步骤名称, detail: 本步具体说明, tool_kind: 本步对应的工具名（可选）}。detail 必填且要写清本步做了什么、查了什么或得到什么结论，例如：查图步写「在图谱中查询 ProjectServiceImpl.processFlow 方法的定义与调用关系」；查文件步写「读取用户上传的 bugfix-context.csv，确认第19行报错内容」；读源码步写「查看 BugfixController.java 第12-34行实现」；结论步写「定位到 NPE 来自 processFlow 入参未校验」。tool_kind 填本步实际调用的工具名，如 query_code_graph、read_uploaded_file、search_code、read_source_file，没有对应工具的步骤（如「拿到问题」「结论」）不填。",
         "input_schema": {
             "type": "object",
@@ -539,6 +608,58 @@ OPENAI_TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "clone_git_repo",
+            "description": "根据 repo_url + branch/commit_id 拉取 Git 仓库到本地缓存目录。若本地已存在则 fetch + checkout 更新；若不存在则 clone。仅拉取仓库，不做代码图谱构建。拉取完成后可用 search_code / read_source_file 读取源码。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "project_name": {
+                        "type": "string",
+                        "description": "应用名称，用作本地缓存目录名",
+                    },
+                    "repo_url": {
+                        "type": "string",
+                        "description": "Git 仓库地址，如 https://github.com/xxx/yyy.git",
+                    },
+                    "branch": {
+                        "type": "string",
+                        "description": "分支名（与 commit_id 二选一）",
+                    },
+                    "commit_id": {
+                        "type": "string",
+                        "description": "指定 commit hash（优先级高于 branch）",
+                    },
+                },
+                "required": ["project_name", "repo_url"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "resolve_imports",
+            "description": (
+                "给定一批 Java 类的全限定名（FQN），查询它们来自哪个 jar 坐标，并标注是否为二方包或三方包。"
+                "当你读取一个 Java 文件后，若不确定某些 import 来自哪里，应调用本工具明确归属，"
+                "再决定是否需要跳转到对应项目的图谱或源码继续排查。"
+                "注意：read_source_file 在检测到二方包 import 时会自动附加分析，无需重复调用。"
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "fqns": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Java 类全限定名列表",
+                    },
+                },
+                "required": ["fqns"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "output_analysis_chain",
             "description": "在给出最终分析结论之前，你必须调用本工具一次，提交本次分析的完整链路。每步的 detail 必填且写清本步具体做了什么、查了什么或得到什么结论。tool_kind 填本步实际调用的工具名（query_code_graph、read_uploaded_file、search_code、read_source_file），无工具的步骤不填。",
             "parameters": {
@@ -647,7 +768,7 @@ async def _run_claude_agent(
     client = AsyncAnthropic(api_key=key, base_url=base, timeout=timeout_sec)
     m = (model or os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-20250514")).strip()
 
-    system = (system_prompt or "").strip() + "\n\n【重要】你拥有上述工具。你必须先调用 list_uploaded_files 查看可用文件，再按需调用 read_uploaded_file 或 query_code_graph 获取内容与图谱，最后再给出分析结论。禁止只回复一句开场白而不调用任何工具。\n优先用 query_code_graph 从图谱获取信息；若图谱返回的数据已足够分析，则不必再调用 read_source_file，仅在图谱数据不足时再查源码。\n每次调用 query_code_graph 时，必须同时填写 cypher（具体的 Cypher 查询语句）和 query_summary（本次查询的目的说明），不得省略，否则用户无法看到你执行了哪些查询。调用 search_code 时请同时填写 search_summary（本次搜索的目的说明，如「查找 processFlow 的调用位置」），便于用户在思考过程中看到目的。\n【跨项目排查】若分析过程中怀疑问题根因在某个二方包项目，应先调用 get_project_dependencies 确认当前项目依赖了哪些已导入项目，再用 query_code_graph、search_code 或 read_source_file 并显式传入 project_name=<依赖项目名> 去查那个项目的图谱或源码。\n【Bug 附件】调用 get_bug_detail 后，若返回的附件列表中有文件（files 字段非空），必须立即调用 get_bug_attachments 下载附件（附件可能是日志、截图、配置文件等任意格式，统称附件），然后用返回结果中的「文件路径」调用 read_uploaded_file 读取内容。禁止直接用原始文件名（如 log.csv）调用 read_uploaded_file。\n在给出最终分析结论的那一轮，你必须先调用 output_analysis_chain 提交本次分析的完整链路（从「拿到问题」到查图、查文件等每一步的简要说明），再在回复中给出文字结论。"
+    system = (system_prompt or "").strip() + "\n\n【重要】你拥有上述工具。你必须先调用 list_uploaded_files 查看可用文件，再按需调用 read_uploaded_file 或 query_code_graph 获取内容与图谱，最后再给出分析结论。禁止只回复一句开场白而不调用任何工具。\n优先用 query_code_graph 从图谱获取信息；若图谱返回的数据已足够分析，则不必再调用 read_source_file，仅在图谱数据不足时再查源码。\n每次调用 query_code_graph 时，必须同时填写 cypher（具体的 Cypher 查询语句）和 query_summary（本次查询的目的说明），不得省略，否则用户无法看到你执行了哪些查询。调用 search_code 时请同时填写 search_summary（本次搜索的目的说明，如「查找 processFlow 的调用位置」），便于用户在思考过程中看到目的。\n【源码访问】调用 search_code 或 read_source_file 之前，必须先调用 clone_git_repo 确保本地有该项目的 git 仓库缓存（工具内部会自动判断：已有缓存则静默跳过，不存在才真正拉取）。project_name 填应用名称，repo_url 填该应用配置的 Git 地址，branch/commit_id 按当前分析上下文填写。\n【跨项目排查】若分析过程中怀疑问题根因在某个二方包项目，应先调用 get_project_dependencies 确认当前项目依赖了哪些已导入项目，再用 query_code_graph、search_code 或 read_source_file 并显式传入 project_name=<依赖项目名> 去查那个项目的图谱或源码。\n【Bug 附件】调用 get_bug_detail 后，若返回的附件列表中有文件（files 字段非空），必须立即调用 get_bug_attachments 下载附件（附件可能是日志、截图、配置文件等任意格式，统称附件），然后用返回结果中的「文件路径」调用 read_uploaded_file 读取内容。禁止直接用原始文件名（如 log.csv）调用 read_uploaded_file。\n在给出最终分析结论的那一轮，你必须先调用 output_analysis_chain 提交本次分析的完整链路（从「拿到问题」到查图、查文件等每一步的简要说明），再在回复中给出文字结论。"
     # 历史消息前置，Claude 要求 user/assistant 交替
     history_messages: List[Dict[str, Any]] = []
     for h in (history or []):
@@ -765,6 +886,12 @@ async def _run_claude_agent(
                 if steps:
                     yield ("analysis_chain", {"steps": steps})
                 continue
+            # clone_git_repo：已有缓存时静默，真正拉取时才发 SSE
+            if name == "clone_git_repo":
+                if result.startswith("[CACHED]"):
+                    continue
+                yield ("tool", {"kind": name, "title": f"拉取仓库：{args.get('project_name', '')}", "content": result})
+                continue
             # 给前端展示用的 title / summary
             title = name
             summary = None
@@ -823,7 +950,7 @@ async def _run_openai_agent(
             history_messages.append({"role": role, "content": content})
 
     messages: List[Dict[str, Any]] = [
-        {"role": "system", "content": (system_prompt or "").strip() + "\n\n【重要】你拥有上述工具。你必须先调用 list_uploaded_files 查看可用文件，再按需调用 read_uploaded_file 或 query_code_graph，最后再给出分析结论。禁止只回复一句开场白而不调用任何工具。\n优先用 query_code_graph 从图谱获取信息；若图谱返回的数据已足够分析，则不必再调用 read_source_file，仅在图谱数据不足时再查源码。\n每次调用 query_code_graph 时，必须同时填写 cypher（具体的 Cypher 查询语句）和 query_summary（本次查询的目的说明），不得省略，否则用户无法看到你执行了哪些查询。调用 search_code 时请同时填写 search_summary（本次搜索的目的说明），便于用户在思考过程中看到目的。\n【跨项目排查】若分析过程中怀疑问题根因在某个二方包项目，应先调用 get_project_dependencies 确认当前项目依赖了哪些已导入项目，再用 query_code_graph、search_code 或 read_source_file 并显式传入 project_name=<依赖项目名> 去查那个项目的图谱或源码。\n【Bug 附件】调用 get_bug_detail 后，若返回的附件列表中有文件（files 字段非空），必须立即调用 get_bug_attachments 下载附件（附件可能是日志、截图、配置文件等任意格式，统称附件），然后用返回结果中的「文件路径」调用 read_uploaded_file 读取内容。禁止直接用原始文件名（如 log.csv）调用 read_uploaded_file。\n在给出最终分析结论的那一轮，你必须先调用 output_analysis_chain 提交本次分析的完整链路（从「拿到问题」到查图、查文件等每一步），再在回复中给出文字结论。"},
+        {"role": "system", "content": (system_prompt or "").strip() + "\n\n【重要】你拥有上述工具。你必须先调用 list_uploaded_files 查看可用文件，再按需调用 read_uploaded_file 或 query_code_graph，最后再给出分析结论。禁止只回复一句开场白而不调用任何工具。\n优先用 query_code_graph 从图谱获取信息；若图谱返回的数据已足够分析，则不必再调用 read_source_file，仅在图谱数据不足时再查源码。\n每次调用 query_code_graph 时，必须同时填写 cypher（具体的 Cypher 查询语句）和 query_summary（本次查询的目的说明），不得省略，否则用户无法看到你执行了哪些查询。调用 search_code 时请同时填写 search_summary（本次搜索的目的说明），便于用户在思考过程中看到目的。\n【源码访问】调用 search_code 或 read_source_file 之前，必须先调用 clone_git_repo 确保本地有该项目的 git 仓库缓存（工具内部会自动判断：已有缓存则静默跳过，不存在才真正拉取）。project_name 填应用名称，repo_url 填该应用配置的 Git 地址，branch/commit_id 按当前分析上下文填写。\n【跨项目排查】若分析过程中怀疑问题根因在某个二方包项目，应先调用 get_project_dependencies 确认当前项目依赖了哪些已导入项目，再用 query_code_graph、search_code 或 read_source_file 并显式传入 project_name=<依赖项目名> 去查那个项目的图谱或源码。\n【Bug 附件】调用 get_bug_detail 后，若返回的附件列表中有文件（files 字段非空），必须立即调用 get_bug_attachments 下载附件（附件可能是日志、截图、配置文件等任意格式，统称附件），然后用返回结果中的「文件路径」调用 read_uploaded_file 读取内容。禁止直接用原始文件名（如 log.csv）调用 read_uploaded_file。\n在给出最终分析结论的那一轮，你必须先调用 output_analysis_chain 提交本次分析的完整链路（从「拿到问题」到查图、查文件等每一步），再在回复中给出文字结论。"},
         *history_messages,
         {"role": "user", "content": user_content},
     ]
@@ -885,6 +1012,12 @@ async def _run_openai_agent(
                 steps = _normalize_analysis_chain_steps(args.get("steps"))
                 if steps:
                     yield ("analysis_chain", {"steps": steps})
+                continue
+            # clone_git_repo：已有缓存时静默，真正拉取时才发 SSE
+            if name == "clone_git_repo":
+                if result.startswith("[CACHED]"):
+                    continue
+                yield ("tool", {"kind": name, "title": f"拉取仓库：{args.get('project_name', '')}", "content": result})
                 continue
             title = name
             summary = None

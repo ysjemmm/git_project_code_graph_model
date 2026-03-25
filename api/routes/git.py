@@ -374,11 +374,11 @@ def git_apply_and_commit(body: dict):
     if not diff_text:
         return {"ok": False, "message": "diff 不能为空"}
 
-    # 直接用 project_name 定位缓存目录
-    from tools.constants import CACHE_GIT_REPOS_PATH
-    repo_dir = CACHE_GIT_REPOS_PATH / project_name
+    # 直接用 project_name 定位缓存目录（专用 push 目录）
+    from tools.constants import CACHE_GIT_REPOS_FOR_PUSH_PATH, CACHE_GIT_REPOS_PATH
+    repo_dir = CACHE_GIT_REPOS_FOR_PUSH_PATH / project_name
     if not repo_dir.exists():
-        return {"ok": False, "message": f"本地未找到仓库缓存目录 '{project_name}'，请先完成图谱导入"}
+        return {"ok": False, "message": f"本地未找到 push 仓库缓存目录 '{project_name}'，请先完成图谱导入"}
 
     # ── 预检：验证 diff 里的文件路径在仓库中真实存在 ──
     # 解析 +++ b/path 行，提取目标文件路径
@@ -456,4 +456,46 @@ def git_apply_and_commit(body: dict):
         return {"ok": False, "message": f"git push 失败：{err.strip()}", "steps": steps}
     steps.append(f"git push origin {branch}")
 
-    return {"ok": True, "message": "已成功提交并推送", "branch": branch, "steps": steps}
+    # 8. 可选：push 成功后对图谱缓存目录执行 git pull
+    pull_after_commit = bool(body.get("pull_after_commit", False))
+    pull_result = None
+    if pull_after_commit:
+        graph_repo_dir = CACHE_GIT_REPOS_PATH / project_name
+        if graph_repo_dir.exists():
+            rc_pull, _, err_pull = _run_git_text(graph_repo_dir, ["pull"])
+            if rc_pull == 0:
+                steps.append(f"git pull (图谱缓存目录 {project_name})")
+                pull_result = "success"
+            else:
+                pull_result = f"失败：{err_pull.strip()}"
+                steps.append(f"git pull 失败（图谱缓存目录）：{err_pull.strip()}")
+        else:
+            pull_result = "skip（图谱缓存目录不存在）"
+
+    result = {"ok": True, "message": "已成功提交并推送", "branch": branch, "steps": steps}
+    if pull_result is not None:
+        result["pull_result"] = pull_result
+    return result
+
+
+@router.post("/git-pull-cache")
+def git_pull_cache(body: dict):
+    """
+    对图谱缓存目录（CACHE_GIT_REPOS_PATH / project_name）执行 git pull。
+    body: { project_name }
+    """
+    from tools.constants import CACHE_GIT_REPOS_PATH
+
+    project_name = (body.get("project_name") or "").strip()
+    if not project_name:
+        return {"ok": False, "message": "project_name 不能为空"}
+
+    repo_dir = CACHE_GIT_REPOS_PATH / project_name
+    if not repo_dir.exists():
+        return {"ok": False, "message": f"本地缓存目录不存在：{project_name}"}
+
+    rc, out, err = _run_git_text(repo_dir, ["pull"])
+    if rc != 0:
+        return {"ok": False, "message": f"git pull 失败：{err.strip() or out.strip()}"}
+
+    return {"ok": True, "message": out.strip() or "已完成 git pull"}

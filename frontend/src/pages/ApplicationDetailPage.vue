@@ -2,7 +2,7 @@
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { ArrowLeftOutlined, ReloadOutlined, SyncOutlined, LinkOutlined, DeleteOutlined, ApartmentOutlined, CloudDownloadOutlined } from '@ant-design/icons-vue'
+import { ArrowLeftOutlined, ReloadOutlined, SyncOutlined, LinkOutlined, DeleteOutlined, ApartmentOutlined, CloudDownloadOutlined, BranchesOutlined } from '@ant-design/icons-vue'
 import MavenGuideModal from '../components/MavenGuideModal.vue'
 import {
   listApplicationProjects,
@@ -17,6 +17,14 @@ import {
   upsertDependencyLinksByParent,
   deleteDependencyLink,
   syncDependencyLinksToNeo4j,
+  gitPullCache,
+  createImportTask,
+  getJarIndexStats,
+  rebuildJarIndex,
+  searchJarIndex,
+  type JarIndexStats,
+  type JarIndexRebuildResult,
+  type JarIndexItem,
   type CacheProjectItem,
   type AppDependency,
   type AppDependencyLink,
@@ -45,6 +53,48 @@ const isJavaBackendApp = computed(() => {
   return (app.app_type === 'backend' && app.language === 'java')
 })
 
+const gitPulling = ref(false)
+async function doGitPull() {
+  const projectName = item.value?.project_name || item.value?.repo_name
+  if (!projectName) return
+  gitPulling.value = true
+  try {
+    // 后端 Java 应用：提交 import task（自动 fetch + checkout + pull + 增量/全量更新图谱）
+    if (isJavaBackendApp.value) {
+      const repoUrl = item.value?.repo_url || ''
+      const branch = item.value?.branch || ''
+      if (!repoUrl || !branch) {
+        message.warning('缺少 repo_url 或 branch 信息，无法提交导入任务')
+        return
+      }
+      const data = await createImportTask({
+        project_name: projectName,
+        repo_url: repoUrl,
+        branch,
+        task_type: 'auto',
+      })
+      if (data.ok) {
+        message.success({ content: `已提交图谱更新任务（task_id: ${data.task_id}），可在「导入/重建」页查看进度`, duration: 6 })
+      } else {
+        message.error({ content: `提交任务失败：${data.message}`, duration: 6 })
+      }
+    } else {
+      // 非 Java 后端：单纯 git pull 更新本地缓存
+      const data = await gitPullCache(projectName)
+      if (data.ok) {
+        message.success({ content: `git pull 成功：${data.message}`, duration: 4 })
+        await fetchDetail({ refresh: true })
+      } else {
+        message.error({ content: `git pull 失败：${data.message}`, duration: 6 })
+      }
+    }
+  } catch (e: any) {
+    message.error({ content: e?.message ?? String(e), duration: 6 })
+  } finally {
+    gitPulling.value = false
+  }
+}
+
 const depsLoading = ref(false)
 const depsRefreshing = ref(false)
 const deps = ref<AppDependency[]>([])
@@ -59,6 +109,84 @@ const showOnlySecondParty = ref(false)
 const scopeFilter = ref<string>('all')  // all / compile / test / provided / runtime
 
 const depsCollapseKey = ref<string[]>([])  // 默认折叠；展开时为 ['deps']
+
+// ─── JAR 类索引 ───────────────────────────────────────────────────────────────
+const jarIndexCollapseKey = ref<string[]>([])
+const jarIndexStats = ref<JarIndexStats | null>(null)
+const jarIndexStatsLoading = ref(false)
+const jarIndexRebuilding = ref(false)
+const jarIndexRebuildResult = ref<JarIndexRebuildResult | null>(null)
+
+async function fetchJarIndexStats() {
+  if (!item.value?.id) return
+  jarIndexStatsLoading.value = true
+  try {
+    jarIndexStats.value = await getJarIndexStats(item.value.id as number)
+  } catch (e: any) {
+    jarIndexStats.value = null
+  } finally {
+    jarIndexStatsLoading.value = false
+  }
+}
+
+async function doRebuildJarIndex() {
+  if (!item.value?.id) return
+  jarIndexRebuilding.value = true
+  jarIndexRebuildResult.value = null
+  try {
+    const data = await rebuildJarIndex(item.value.id as number)
+    jarIndexRebuildResult.value = data
+    if (data.ok) {
+      message.success(`索引重建完成，共 ${data.total_classes} 个类，耗时 ${data.duration_seconds}s`)
+      await fetchJarIndexStats()
+    } else {
+      message.warning(data.message ?? '重建失败')
+    }
+  } catch (e: any) {
+    message.error(e?.message ?? String(e))
+  } finally {
+    jarIndexRebuilding.value = false
+  }
+}
+
+// ─── JAR 索引浏览弹窗 ─────────────────────────────────────────────────────────
+const jarBrowseVisible = ref(false)
+const jarBrowseQ = ref('')
+const jarBrowsePage = ref(1)
+const jarBrowseTotal = ref(0)
+const jarBrowseItems = ref<JarIndexItem[]>([])
+const jarBrowseLoading = ref(false)
+
+async function fetchJarBrowse() {
+  jarBrowseLoading.value = true
+  try {
+    const data = await searchJarIndex({ q: jarBrowseQ.value, page: jarBrowsePage.value, page_size: 50 })
+    jarBrowseItems.value = data.items
+    jarBrowseTotal.value = data.total
+  } catch (e: any) {
+    message.error(e?.message ?? String(e))
+  } finally {
+    jarBrowseLoading.value = false
+  }
+}
+
+function openJarBrowse() {
+  jarBrowseVisible.value = true
+  jarBrowsePage.value = 1
+  jarBrowseQ.value = ''
+  void fetchJarBrowse()
+}
+
+function onJarBrowseSearch() {
+  jarBrowsePage.value = 1
+  void fetchJarBrowse()
+}
+
+const jarBrowseColumns = [
+  { title: 'FQN', dataIndex: 'fqn', key: 'fqn', ellipsis: true },
+  { title: '坐标', dataIndex: 'coord', key: 'coord', width: 280, ellipsis: true },
+  { title: 'jar', dataIndex: 'jar_name', key: 'jar_name', width: 220, ellipsis: true },
+]
 
 const scopeOptions = [
   { label: '全部', value: 'all' },
@@ -80,6 +208,7 @@ async function reloadPageDataByRepo() {
   void fetchLinks()
   void fetchLinkedBy()
   void fetchAllProjects()
+  void fetchJarIndexStats()
 }
 
 onMounted(async () => {
@@ -541,6 +670,11 @@ const linkedByColumns = [
         <template #icon><ApartmentOutlined /></template>
         关联视图
       </a-button>
+
+      <a-button v-if="item?.repo_exists" :loading="gitPulling" @click="doGitPull">
+        <template #icon><BranchesOutlined /></template>
+        {{ isJavaBackendApp ? '更新代码 & 图谱' : 'Git Pull' }}
+      </a-button>
     </a-space>
 
     <a-empty v-if="!item && !loading" description="未找到该应用（可能已被删除或缓存尚未落库）" />
@@ -883,6 +1017,94 @@ const linkedByColumns = [
           </a-table>
         </a-collapse-panel>
       </a-collapse>
+
+      <!-- JAR 类索引 -->
+      <a-collapse v-if="isJavaBackendApp" v-model:activeKey="jarIndexCollapseKey" class="deps-collapse" @change="(keys: any) => { if (Array.isArray(keys) && keys.includes('jar-index')) fetchJarIndexStats() }">
+        <a-collapse-panel key="jar-index">
+          <template #header>
+            <div class="collapse-header">
+              <span style="font-weight: 600;">JAR 类索引</span>
+              <a-tag v-if="jarIndexStats && jarIndexStats.total_classes > 0" color="blue" style="margin-left: 8px;">
+                {{ jarIndexStats.total_classes.toLocaleString() }} 个类
+              </a-tag>
+              <a-tag v-if="jarIndexStats && jarIndexStats.total_jars > 0" color="default" style="margin-left: 4px;">
+                {{ jarIndexStats.total_jars }} 个 jar
+              </a-tag>
+              <span v-if="jarIndexStats?.last_scan_time" class="scanned-at">
+                上次扫描：{{ jarIndexStats.last_scan_time.slice(0, 19).replace('T', ' ') }}
+              </span>
+            </div>
+          </template>
+
+          <a-spin :spinning="jarIndexStatsLoading">
+            <a-alert
+              v-if="!jarIndexStats || jarIndexStats.total_classes === 0"
+              type="info"
+              show-icon
+              message="暂无索引数据"
+              description="点击「重建索引」按钮扫描该应用的 Maven 依赖 jar，建立类名 → 坐标的映射，供 AI 分析 import 归属使用。需先完成一次完整导入（拉取 Maven 依赖）。"
+              style="margin-bottom: 12px;"
+            />
+
+            <a-descriptions v-if="jarIndexStats && jarIndexStats.total_classes > 0" bordered size="small" :column="2" style="margin-bottom: 12px;">
+              <a-descriptions-item label="总类数">
+                <span class="mono">{{ jarIndexStats.total_classes.toLocaleString() }}</span>
+              </a-descriptions-item>
+              <a-descriptions-item label="jar 包数">
+                <span class="mono">{{ jarIndexStats.total_jars }}</span>
+              </a-descriptions-item>
+              <a-descriptions-item label="最后扫描时间" :span="2">
+                <span class="mono">{{ jarIndexStats.last_scan_time ?? '-' }}</span>
+              </a-descriptions-item>
+              <a-descriptions-item label="索引目录" :span="2">
+                <span class="mono" style="font-size: 12px; word-break: break-all;">{{ jarIndexStats.jar_path_prefix }}</span>
+              </a-descriptions-item>
+            </a-descriptions>
+
+            <!-- 重建结果 -->
+            <a-alert
+              v-if="jarIndexRebuildResult && !jarIndexRebuildResult.ok"
+              type="warning"
+              show-icon
+              :message="jarIndexRebuildResult.message ?? '重建失败'"
+              style="margin-bottom: 12px;"
+            />
+            <a-descriptions
+              v-if="jarIndexRebuildResult?.ok"
+              bordered size="small" :column="3"
+              style="margin-bottom: 12px;"
+            >
+              <a-descriptions-item label="扫描 jar">{{ jarIndexRebuildResult.jars_scanned }} / {{ jarIndexRebuildResult.jars_found }}</a-descriptions-item>
+              <a-descriptions-item label="跳过">{{ jarIndexRebuildResult.jars_skipped }}</a-descriptions-item>
+              <a-descriptions-item label="耗时">{{ jarIndexRebuildResult.duration_seconds }}s</a-descriptions-item>
+              <a-descriptions-item label="清除旧记录">{{ jarIndexRebuildResult.cleared_classes }}</a-descriptions-item>
+              <a-descriptions-item label="新增类数" :span="2">{{ jarIndexRebuildResult.total_classes?.toLocaleString() }}</a-descriptions-item>
+              <a-descriptions-item v-if="jarIndexRebuildResult.errors?.length" label="错误" :span="3">
+                <div v-for="(e, i) in jarIndexRebuildResult.errors" :key="i" style="color: #cf1322; font-size: 12px;">{{ e }}</div>
+              </a-descriptions-item>
+            </a-descriptions>
+
+            <a-button
+              type="primary"
+              size="small"
+              :loading="jarIndexRebuilding"
+              @click.stop="doRebuildJarIndex"
+            >
+              <template #icon><SyncOutlined /></template>
+              重建索引
+            </a-button>
+            <a-button
+              size="small"
+              style="margin-left: 8px;"
+              @click.stop="openJarBrowse"
+            >
+              查看索引
+            </a-button>
+            <span style="margin-left: 8px; color: #888; font-size: 12px;">仅重建索引，不重新拉取 Maven 依赖</span>
+          </a-spin>
+        </a-collapse-panel>
+      </a-collapse>
+
     </template>
   </div>
 
@@ -989,6 +1211,58 @@ const linkedByColumns = [
         style="margin-top: 8px;"
       />
     </template>
+  </a-modal>
+
+  <!-- JAR 索引浏览弹窗 -->
+  <a-modal
+    v-model:open="jarBrowseVisible"
+    title="JAR 类索引浏览"
+    :footer="null"
+    width="900px"
+    :body-style="{ padding: '12px 16px' }"
+  >
+    <a-input-search
+      v-model:value="jarBrowseQ"
+      placeholder="搜索 FQN / 类名 / 包名"
+      allow-clear
+      style="margin-bottom: 12px;"
+      @search="onJarBrowseSearch"
+      @change="onJarBrowseSearch"
+    />
+    <a-table
+      :columns="jarBrowseColumns as any"
+      :data-source="jarBrowseItems"
+      :loading="jarBrowseLoading"
+      :pagination="{
+        current: jarBrowsePage,
+        pageSize: 50,
+        total: jarBrowseTotal,
+        showTotal: (t: number) => `共 ${t.toLocaleString()} 条`,
+        onChange: (p: number) => { jarBrowsePage = p; fetchJarBrowse() },
+      }"
+      size="small"
+      bordered
+      row-key="fqn"
+      :scroll="{ y: 480 }"
+    >
+      <template #bodyCell="{ column, record }">
+        <template v-if="column.key === 'fqn'">
+          <a-tooltip :title="record.fqn" placement="topLeft">
+            <span class="mono" style="font-size: 12px;">{{ record.fqn }}</span>
+          </a-tooltip>
+        </template>
+        <template v-else-if="column.key === 'coord'">
+          <a-tooltip :title="record.coord" placement="topLeft">
+            <span class="mono" style="font-size: 12px;">{{ record.coord }}</span>
+          </a-tooltip>
+        </template>
+        <template v-else-if="column.key === 'jar_name'">
+          <a-tooltip :title="record.jar_name" placement="topLeft">
+            <span class="mono" style="font-size: 12px;">{{ record.jar_name }}</span>
+          </a-tooltip>
+        </template>
+      </template>
+    </a-table>
   </a-modal>
 </template>
 

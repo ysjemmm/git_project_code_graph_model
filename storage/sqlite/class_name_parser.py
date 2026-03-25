@@ -34,6 +34,13 @@ class ClassNameParser:
         # 移除 JMOD 文件的 classes/ 前缀（JDK 9+）
         if class_file_path.startswith('classes/') or class_file_path.startswith('classes\\'):
             class_file_path = class_file_path[8:]  # 移除 "classes/"
+
+        # 跳过 Multi-Release JAR 的版本化副本（META-INF/versions/N/...）
+        # 这些是同一个类针对不同 JDK 版本的重复实现，主版本已在根路径存在
+        import re as _re
+        _mrjar_match = _re.match(r'^META-INF[/\\]versions[/\\]\d+[/\\](.+)$', class_file_path)
+        if _mrjar_match:
+            class_file_path = _mrjar_match.group(1)
         
         # 移除 .class 后缀
         if class_file_path.endswith('.class'):

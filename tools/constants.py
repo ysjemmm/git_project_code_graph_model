@@ -33,6 +33,7 @@ PROJECT_ROOT_PATH = _detect_project_root()
 # 统一缓存目录（避免各模块散落硬编码 ".cache"）
 CACHE_ROOT_PATH = PROJECT_ROOT_PATH / ".cache"
 CACHE_GIT_REPOS_PATH = CACHE_ROOT_PATH / "git_repos"
+CACHE_GIT_REPOS_FOR_PUSH_PATH = CACHE_ROOT_PATH / "git_repos_for_push"
 CACHE_GIT_REFS_PATH = CACHE_ROOT_PATH / "git_refs"
 CACHE_TASK_LOGS_PATH = CACHE_ROOT_PATH / "task_logs"
 CACHE_INCREMENTAL_PATH = CACHE_ROOT_PATH / "incremental"
