@@ -1,0 +1,25 @@
+frontend/src/pages/BugfixWorkflowPage.vue
+  1d7210d88ba83fee 8,10,37-40,49-76,115,140-148,161,493,495,497-498,793-794,797-850,862,864-865,867,871,1051-1062,1064-1069,1071-1072,1465,1560-1562,1564,1566,1612,1615,1618,1648,1849,1884,1889-1891,1895-1898,1903-1906,1917,2006,2489-2492,2499-2516,2521,2526-2534,2556-2561,2566-2569,2571-2576,2579-2583,2589,2600-2609,2623-2624
+frontend/src/api/index.ts
+  1d7210d88ba83fee 409,554,560-561,567,661,672,698-709,711-716,718-754,757,759
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.15",
+  "base_commit_sha": "bfc23403853d94fa125a2f804c0bd518056b4d16",
+  "prompts": {
+    "1d7210d88ba83fee": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "720a2299-0707-4387-a692-081d5f3506ba",
+        "model": "premium"
+      },
+      "human_author": "mayang <mayang@tsign.cn>",
+      "messages": [],
+      "total_additions": 1014,
+      "total_deletions": 757,
+      "accepted_lines": 519,
+      "overriden_lines": 32
+    }
+  }
+}
