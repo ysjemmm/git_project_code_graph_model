@@ -58,11 +58,24 @@ def _ensure_full_remote_refspec(repo_dir) -> None:
         pass
 
 
+def _get_diff_repo_dir(project_name: Optional[str], repo_url: str) -> Optional[object]:
+    """
+    优先使用图谱导入缓存目录（CACHE_GIT_REPOS_PATH/{project_name}），
+    fallback 到轻量 refs 缓存（_ensure_repo_cached）。
+    """
+    from pathlib import Path
+    if project_name:
+        try:
+            from tools.constants import CACHE_GIT_REPOS_PATH
+            graph_dir = CACHE_GIT_REPOS_PATH / project_name
+            if graph_dir.exists():
+                return graph_dir
+        except Exception:
+            pass
+    return _ensure_repo_cached(repo_url)
+
+
 def _ensure_repo_cached(repoUrl: str) -> Optional[object]:
-    """
-    确保 repoUrl 对应的本地缓存仓库存在且 remote 正确。
-    返回 repo_dir(Path-like)，失败返回 None（接口再自行兜底）。
-    """
     from pathlib import Path
     import subprocess
 
@@ -214,8 +227,9 @@ def git_diff_summary(
     fromRef: str = Query(..., description="基线 ref（上次发布）"),
     toRef: str = Query(..., description="目标 ref（本次发布）"),
     maxFiles: int = Query(500, ge=1, le=2000),
+    projectName: Optional[str] = Query(None, description="项目名称，用于定位图谱缓存目录"),
 ) -> dict:
-    repo_dir = _ensure_repo_cached(repoUrl)
+    repo_dir = _get_diff_repo_dir(projectName, repoUrl)
     if repo_dir is None:
         return {"ok": False, "message": "仓库缓存失败，请检查 repoUrl"}
 
@@ -311,8 +325,9 @@ def git_diff_file(
     filePath: str = Query(..., description="文件路径"),
     context: int = Query(3, ge=0, le=20),
     maxLines: int = Query(1200, ge=50, le=4000),
+    projectName: Optional[str] = Query(None, description="项目名称，用于定位图谱缓存目录"),
 ) -> dict:
-    repo_dir = _ensure_repo_cached(repoUrl)
+    repo_dir = _get_diff_repo_dir(projectName, repoUrl)
     if repo_dir is None:
         return {"ok": False, "message": "仓库缓存失败，请检查 repoUrl"}
 

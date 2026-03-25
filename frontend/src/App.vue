@@ -9,6 +9,7 @@ import {
   MenuUnfoldOutlined,
   NodeIndexOutlined,
   ToolOutlined,
+  ExperimentOutlined,
   LogoutOutlined,
   UserOutlined,
 } from '@ant-design/icons-vue'
@@ -21,6 +22,7 @@ const route = useRoute()
 const selectedKeys = computed(() => {
   if (route.path.startsWith('/application-admin')) return ['application-admin']
   if (route.path.startsWith('/second-party-rules')) return ['second-party-rules']
+  if (route.path.startsWith('/tool-test')) return ['tool-test']
   if (route.path.startsWith('/graph')) return ['graph']
   if (route.path.startsWith('/bugfix-workflow')) return ['bugfix-workflow']
   if (route.path.startsWith('/bugfix')) return ['bugfix']
@@ -35,6 +37,7 @@ function go(key: string) {
     'graph': '/graph',
     'application-admin': '/application-admin',
     'second-party-rules': '/second-party-rules',
+    'tool-test': '/tool-test',
   }
   const target = map[k]
   if (target) void router.push(target)
@@ -104,6 +107,11 @@ function handleLogout() {
             <template #icon><ToolOutlined /></template>
             <span>二方包规则</span>
           </a-menu-item>
+
+          <a-menu-item key="tool-test">
+            <template #icon><ExperimentOutlined /></template>
+            <span>AI 工具单测</span>
+          </a-menu-item>
         </a-menu>
 
         <div class="sider-user" :title="collapsed ? `${userInfo.alias} (${userInfo.name})` : undefined">
@@ -151,7 +159,7 @@ function handleLogout() {
 .layout-sider {
   box-shadow: 0 0 0 1px rgba(255,255,255,.06) inset;
   position: relative;
-  z-index: 10000;
+  z-index: 100;
 }
 .layout-sider :deep(.ant-layout-sider-children) {
   position: relative;

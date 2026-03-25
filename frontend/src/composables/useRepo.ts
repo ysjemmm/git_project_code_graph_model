@@ -1,5 +1,6 @@
 import { computed, ref, watch } from 'vue'
-import { listApplicationProjects, listGitRepos, listGraphProjects, listGitBranches, listGitCommits } from '../api'
+import { listApplicationProjects, listGitRepos, listGraphProjects, listGraphProjectVersions, listGitBranches, listGitCommits } from '../api'
+import type { GraphProjectVersion } from '../api'
 
 // 项目元数据（来自图谱）
 interface ProjectMeta {
@@ -11,6 +12,7 @@ interface ProjectMeta {
   appType?: string    // 'frontend' | 'backend'
   language?: string   // 'java' | 'python' | 'go' | 'other' | 'vue' | 'react'
   hasGraph?: boolean  // 是否已有代码图谱（commit_hash 非空视为有）
+  graphVersion?: string  // 图谱版本号（从 project_key 解析）
 }
 
 type ProjectSource = 'graphProjects' | 'cacheApplicationProjects' | 'gitRepos'
@@ -32,6 +34,11 @@ export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: Project
   const loadingCommits = ref(false)
   const branchSearch = ref('')
   const commitSearch = ref('')
+
+  // 版本列表（仅 cacheApplicationProjects + 有图谱时使用）
+  const graphVersions = ref<GraphProjectVersion[]>([])
+  const loadingVersions = ref(false)
+  const selectedVersion = ref<string>('')
 
   let branchSearchTimer: number | undefined
   let commitSearchTimer: number | undefined
@@ -61,12 +68,24 @@ export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: Project
   const readonlyUrl = computed(() =>
     repoMode.value === 'select' ? (selectedMeta.value?.url ?? '') : '',
   )
-  const readonlyBranch = computed(() =>
-    repoMode.value === 'select' ? (selectedMeta.value?.branch ?? '') : '',
-  )
-  const readonlyCommit = computed(() =>
-    repoMode.value === 'select' ? (selectedMeta.value?.commitHash ?? '') : '',
-  )
+  const readonlyBranch = computed(() => {
+    if (repoMode.value !== 'select') return ''
+    // 有版本选择时，优先展示版本对应的 branch
+    if (selectedVersion.value && graphVersions.value.length > 0) {
+      const ver = graphVersions.value.find((v) => v.version === selectedVersion.value)
+      if (ver) return ver.branch || ''
+    }
+    return selectedMeta.value?.branch ?? ''
+  })
+  const readonlyCommit = computed(() => {
+    if (repoMode.value !== 'select') return ''
+    // 有版本选择时，优先展示版本对应的 commit_hash
+    if (selectedVersion.value && graphVersions.value.length > 0) {
+      const ver = graphVersions.value.find((v) => v.version === selectedVersion.value)
+      if (ver) return ver.commit_hash || ''
+    }
+    return selectedMeta.value?.commitHash ?? ''
+  })
 
   const repoOptions = computed(() =>
     repos.value.map((r) => ({
@@ -103,8 +122,18 @@ export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: Project
     try {
       if (projectSource === 'cacheApplicationProjects') {
         loadingRepos.value = true
-        const data = await listApplicationProjects()
-        const items = Array.isArray(data?.items) ? data.items : []
+        const [appData, graphData] = await Promise.all([
+          listApplicationProjects(),
+          listGraphProjects().catch(() => ({ ok: false, items: [] as any[] })),
+        ])
+        const items = Array.isArray(appData?.items) ? appData.items : []
+        // 建立 project_name -> version 的映射（从图谱数据）
+        const versionMap = new Map<string, string>()
+        for (const g of (Array.isArray(graphData?.items) ? graphData.items : [])) {
+          const name = String((g as any)?.project_name || '').trim()
+          const ver = String((g as any)?.version || '').trim()
+          if (name && ver) versionMap.set(name, ver)
+        }
         repos.value = items
           .filter((x) => x.project_name && String(x.project_name).trim() && x.project_name !== '(error)' && x.project_name !== '(unknown)')
           .map((x) => ({
@@ -116,6 +145,7 @@ export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: Project
             appType: x.app_type ?? 'backend',
             language: x.language ?? 'java',
             hasGraph: Boolean(x.commit_hash),
+            graphVersion: versionMap.get(String(x.project_name)) ?? '',
           }))
         return
       }
@@ -168,6 +198,17 @@ export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: Project
     await ensureReposLoaded()
   }
 
+  function _applyVersionRef(v: GraphProjectVersion) {
+    branch.value = v.branch || undefined
+    commitId.value = v.commit_hash || undefined
+  }
+
+  function selectVersion(version: string) {
+    selectedVersion.value = version
+    const found = graphVersions.value.find((v) => v.version === version)
+    if (found) _applyVersionRef(found)
+  }
+
   function switchRepoMode(mode: 'select' | 'custom') {
     repoMode.value = mode
     repoUrl.value = ''
@@ -176,6 +217,8 @@ export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: Project
     commitId.value = undefined
     branches.value = []
     commits.value = []
+    selectedVersion.value = ''
+    graphVersions.value = []
   }
 
   async function fetchBranches(q?: string) {
@@ -253,8 +296,31 @@ export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: Project
     commits.value = []
     branchSearch.value = ''
     commitSearch.value = ''
+    selectedVersion.value = ''
+    graphVersions.value = []
 
     if (!meta) return
+
+    // 有图谱的后端 Java 应用：加载版本列表
+    if (meta.hasGraph && meta.appType === 'backend' && meta.language === 'java' && projectSource === 'cacheApplicationProjects') {
+      loadingVersions.value = true
+      try {
+        const data = await listGraphProjectVersions(meta.name)
+        graphVersions.value = Array.isArray(data?.items) ? data.items : []
+        // 自动选中第一个版本（最新）
+        if (graphVersions.value.length > 0) {
+          const first = graphVersions.value[0]
+          selectedVersion.value = first.version
+          _applyVersionRef(first)
+        }
+      } catch {
+        graphVersions.value = []
+      } finally {
+        loadingVersions.value = false
+      }
+      return
+    }
+
     if (!autoFillRefFromMeta) return
 
     const commit = String(meta.commitHash ?? '').trim()
@@ -325,5 +391,11 @@ export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: Project
     selectedAppType: computed(() => selectedMeta.value?.appType ?? 'backend'),
     selectedLanguage: computed(() => selectedMeta.value?.language ?? 'java'),
     selectedHasGraph: computed(() => Boolean(selectedMeta.value?.hasGraph)),
+    selectedGraphVersion: computed(() => selectedMeta.value?.graphVersion ?? ''),
+    // 版本列表
+    graphVersions,
+    loadingVersions,
+    selectedVersion,
+    selectVersion,
   }
 }

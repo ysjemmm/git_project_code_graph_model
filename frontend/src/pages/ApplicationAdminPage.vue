@@ -96,6 +96,10 @@ const editForm = reactive({
 })
 
 async function openEditModal(record: any) {
+  if (record.app_type !== 'backend' || record.language !== 'java') {
+    message.warning({ content: '仅后端 Java 应用支持编辑导入配置', duration: 3 })
+    return
+  }
   editAppId.value = record.id ?? null
   editRepoName.value = record.repo_name
   editLoading.value = true
@@ -314,10 +318,16 @@ async function submitCreate() {
         </template>
         <template v-else-if="column.key === 'actions'">
           <a-space size="small">
-            <a-button type="link" size="small" style="padding: 0;" @click.stop="openEditModal(record)">
-              <template #icon><EditOutlined /></template>
-              编辑
-            </a-button>
+            <a-tooltip :title="record.app_type !== 'backend' || record.language !== 'java' ? '仅后端 Java 应用支持编辑导入配置' : ''">
+              <a-button
+                type="link" size="small" style="padding: 0;"
+                :disabled="record.app_type !== 'backend' || record.language !== 'java'"
+                @click.stop="openEditModal(record)"
+              >
+                <template #icon><EditOutlined /></template>
+                编辑
+              </a-button>
+            </a-tooltip>
             <a-button danger type="link" size="small" style="padding: 0;" @click.stop="openDeleteModal(record)">
               <template #icon><DeleteOutlined /></template>
               删除

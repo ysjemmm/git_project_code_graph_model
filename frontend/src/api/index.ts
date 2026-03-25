@@ -87,6 +87,7 @@ export type GraphProject = {
   repo_url?: string
   branch?: string
   commit_hash?: string
+  version?: string
 }
 
 export type GraphQueryResult = {
@@ -439,11 +440,13 @@ export async function searchJarIndex(params: {
   q?: string
   page?: number
   page_size?: number
+  app_id?: number
 }): Promise<{ ok: boolean; total: number; page: number; page_size: number; items: JarIndexItem[] }> {
   const url = new URL('/api/cache/jar-index/search', window.location.origin)
   if (params.q) url.searchParams.set('q', params.q)
   if (params.page) url.searchParams.set('page', String(params.page))
   if (params.page_size) url.searchParams.set('page_size', String(params.page_size))
+  if (params.app_id) url.searchParams.set('app_id', String(params.app_id))
   return request(url.toString())
 }
 
@@ -464,6 +467,8 @@ export async function createImportTask(payload: {
   project_name: string
   repo_url: string
   branch?: string
+  commit_id?: string
+  app_version?: string
   maven_scan_enabled?: boolean
   force_maven?: boolean
   clear_database?: boolean
@@ -505,10 +510,21 @@ export async function getImportTaskLog(taskId: string, offset: number, limit = 2
 
 // ─── Graph / Projects ──────────────────────────────────────────────────────────
 
+export type GraphProjectVersion = {
+  version: string
+  project_key: string
+  branch: string
+  commit_hash: string
+}
+
 export async function listGraphProjects(includeCounts = false): Promise<{ ok: boolean; items: GraphProject[] }> {
   const url = new URL('/api/graph/projects', window.location.origin)
   if (includeCounts) url.searchParams.set('include_counts', 'true')
   return request(url.toString())
+}
+
+export async function listGraphProjectVersions(projectName: string): Promise<{ ok: boolean; items: GraphProjectVersion[] }> {
+  return request(`/api/graph/projects/${encodeURIComponent(projectName)}/versions`)
 }
 
 export async function getSecondPartyDeps(projectName: string): Promise<{ ok: boolean; items: DepItem[] }> {
@@ -563,12 +579,14 @@ export async function getGitDiffSummary(payload: {
   from_ref: string
   to_ref: string
   max_files?: number
+  project_name?: string
 }): Promise<GitDiffSummaryResult> {
   const url = new URL('/api/git-diff/summary', window.location.origin)
   url.searchParams.set('repoUrl', payload.repo_url)
   url.searchParams.set('fromRef', payload.from_ref)
   url.searchParams.set('toRef', payload.to_ref)
   if (payload.max_files != null) url.searchParams.set('maxFiles', String(payload.max_files))
+  if (payload.project_name) url.searchParams.set('projectName', payload.project_name)
   return request(url.toString())
 }
 
@@ -579,6 +597,7 @@ export async function getGitDiffFile(payload: {
   file_path: string
   context?: number
   max_lines?: number
+  project_name?: string
 }): Promise<GitDiffFileResult> {
   const url = new URL('/api/git-diff/file', window.location.origin)
   url.searchParams.set('repoUrl', payload.repo_url)
@@ -587,6 +606,7 @@ export async function getGitDiffFile(payload: {
   url.searchParams.set('filePath', payload.file_path)
   if (payload.context != null) url.searchParams.set('context', String(payload.context))
   if (payload.max_lines != null) url.searchParams.set('maxLines', String(payload.max_lines))
+  if (payload.project_name) url.searchParams.set('projectName', payload.project_name)
   return request(url.toString())
 }
 

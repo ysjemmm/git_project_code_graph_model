@@ -160,7 +160,12 @@ const jarBrowseLoading = ref(false)
 async function fetchJarBrowse() {
   jarBrowseLoading.value = true
   try {
-    const data = await searchJarIndex({ q: jarBrowseQ.value, page: jarBrowsePage.value, page_size: 50 })
+    const data = await searchJarIndex({
+      q: jarBrowseQ.value,
+      page: jarBrowsePage.value,
+      page_size: 50,
+      app_id: item.value?.id as number | undefined,
+    })
     jarBrowseItems.value = data.items
     jarBrowseTotal.value = data.total
   } catch (e: any) {

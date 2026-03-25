@@ -1653,23 +1653,35 @@ def rebuild_jar_index(app_id: int) -> Dict[str, Any]:
     db = get_jar_class_db()
     db.initialize_schema()
 
-    # 清空旧记录
-    cleared = db.delete_by_jar_path_prefix(str(out_dir))
+    # 全局清理历史脏数据：删除所有 FQN 含 META-INF.versions. 的记录（一次性修复，幂等）
+    cur = db.conn.cursor()
+    cur.execute("DELETE FROM jar_classes WHERE fqn LIKE 'META-INF.versions.%'")
+    dirty_cleared = int(cur.rowcount or 0)
+    db.conn.commit()
 
-    # 重新扫描
+    # 清空该应用 maven_deps 旧记录，强制重扫（量可控，只属于当前应用）
+    cleared = db.delete_by_jar_path_prefix(str(out_dir))
     scanner = JARScanner(db)
     result = scanner.scan_directory(str(out_dir), force_rescan=True, include_anonymous=False)
+
+    # maven/ 全局共享目录：增量扫描，已扫过的 jar 直接跳过，不清不重扫
+    maven_result = None
+    if CACHE_MAVEN_PATH.exists():
+        maven_result = scanner.scan_directory(str(CACHE_MAVEN_PATH), force_rescan=False, include_anonymous=False)
+
+    total_classes = result.total_classes + (maven_result.total_classes if maven_result else 0)
 
     return {
         "ok": True,
         "project_name": project_name,
+        "dirty_cleared": dirty_cleared,
         "cleared_classes": cleared,
-        "jars_found": result.total_jars_found,
-        "jars_scanned": result.jars_scanned,
-        "jars_skipped": result.jars_skipped,
-        "total_classes": result.total_classes,
-        "errors": result.errors[:10],  # 最多返回前10条错误
-        "duration_seconds": round(result.duration, 2),
+        "jars_found": result.total_jars_found + (maven_result.total_jars_found if maven_result else 0),
+        "jars_scanned": result.jars_scanned + (maven_result.jars_scanned if maven_result else 0),
+        "jars_skipped": result.jars_skipped + (maven_result.jars_skipped if maven_result else 0),
+        "total_classes": total_classes,
+        "errors": (result.errors + (maven_result.errors if maven_result else []))[:10],
+        "duration_seconds": round(result.duration + (maven_result.duration if maven_result else 0), 2),
     }
 
 
@@ -1678,10 +1690,12 @@ def search_jar_index(
     q: str = "",
     page: int = 1,
     page_size: int = 50,
+    app_id: int = 0,
 ) -> Dict[str, Any]:
     """
-    全局搜索 jar_classes.db，支持按 fqn / simple_name / package_name 模糊查询。
-    返回分页结果。
+    搜索 jar_classes.db。
+    若传入 app_id，则只返回该应用 maven_deps 目录下的类（项目隔离）。
+    支持按 fqn / simple_name / package_name 模糊查询。
     """
     from storage.sqlite.jar_class_db import get_jar_class_db
 
@@ -1691,32 +1705,47 @@ def search_jar_index(
     offset = (max(1, page) - 1) * page_size
     q = (q or "").strip()
 
-    if q:
-        like = f"%{q}%"
-        count_row = cur.execute(
-            "SELECT COUNT(*) AS cnt FROM jar_classes WHERE fqn LIKE ? OR simple_name LIKE ? OR package_name LIKE ?",
-            (like, like, like),
-        ).fetchone()
-        total = int(count_row["cnt"] if count_row else 0)
-        rows = cur.execute(
-            """SELECT fqn, simple_name, package_name, jar_name,
-                      artifact_group_id, artifact_id, artifact_version,
-                      parent_group_id, parent_artifact_id, parent_version
-               FROM jar_classes
-               WHERE fqn LIKE ? OR simple_name LIKE ? OR package_name LIKE ?
-               ORDER BY fqn LIMIT ? OFFSET ?""",
-            (like, like, like, page_size, offset),
-        ).fetchall()
-    else:
-        count_row = cur.execute("SELECT COUNT(*) AS cnt FROM jar_classes").fetchone()
-        total = int(count_row["cnt"] if count_row else 0)
-        rows = cur.execute(
-            """SELECT fqn, simple_name, package_name, jar_name,
-                      artifact_group_id, artifact_id, artifact_version,
-                      parent_group_id, parent_artifact_id, parent_version
-               FROM jar_classes ORDER BY fqn LIMIT ? OFFSET ?""",
-            (page_size, offset),
-        ).fetchall()
+    # 确定 jar_path 前缀过滤条件
+    path_like: str | None = None
+    if app_id:
+        from storage.sqlite.business import get_business_db
+        from storage.sqlite.business.application_projects_repo import ApplicationProjectsRepo
+        bdb = get_business_db()
+        apps = ApplicationProjectsRepo(bdb).list_all()
+        app = next((a for a in apps if a.id == app_id), None)
+        if app:
+            project_name = str(app.project_name or app.repo_name or "").strip()
+            if project_name:
+                path_like = str(CACHE_MAVEN_DEPS_PATH / project_name) + "%"
+
+    def _build_where(extra_and: str = "") -> tuple[str, list]:
+        """构造 WHERE 子句和参数列表"""
+        conditions = []
+        params: list = []
+        if path_like:
+            conditions.append("jar_path LIKE ?")
+            params.append(path_like)
+        if q:
+            like = f"%{q}%"
+            conditions.append("(fqn LIKE ? OR simple_name LIKE ? OR package_name LIKE ?)")
+            params.extend([like, like, like])
+        if extra_and:
+            conditions.append(extra_and)
+        where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+        return where, params
+
+    where, params = _build_where()
+    count_row = cur.execute(f"SELECT COUNT(*) AS cnt FROM jar_classes {where}", params).fetchone()
+    total = int(count_row["cnt"] if count_row else 0)
+
+    rows = cur.execute(
+        f"""SELECT fqn, simple_name, package_name, jar_name,
+                   artifact_group_id, artifact_id, artifact_version,
+                   parent_group_id, parent_artifact_id, parent_version
+            FROM jar_classes {where}
+            ORDER BY fqn LIMIT ? OFFSET ?""",
+        params + [page_size, offset],
+    ).fetchall()
 
     items = []
     for r in rows:

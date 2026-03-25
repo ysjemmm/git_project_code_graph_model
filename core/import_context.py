@@ -25,4 +25,5 @@ class ProjectImportContext:
     clear_database: bool = False
     include_comment_nodes: bool = False  # 是否创建 Comment 节点（默认不创建，注释仅存于父节点 simple_comment）
     auto_link_external: bool = True      # 导入后是否自动执行 ExternalClassLinker（LIB_LINK + SAME_ARTIFACT）
+    app_version: str = ""                # 应用版本号，写入图谱 Project 节点
 

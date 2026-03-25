@@ -153,7 +153,11 @@ class JARScanner:
                         # 解析类路径
                         fqn, simple_name, package_name, is_anonymous = \
                             self.parser.parse_class_path(file_info)
-                        
+
+                        # MR-JAR 版本化副本：parse_class_path 返回 None 表示跳过
+                        if fqn is None:
+                            continue
+
                         # 根据参数决定是否包含匿名类
                         if not include_anonymous and is_anonymous:
                             continue

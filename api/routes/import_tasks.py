@@ -132,6 +132,7 @@ def submit_import_task(body: Dict[str, Any]) -> Dict[str, Any]:
     task_type = str(body.get("task_type") or "auto").strip().lower()
     app_type = (body.get("app_type") or "backend").strip()
     language = (body.get("language") or "java").strip()
+    app_version = (body.get("app_version") or "").strip()
     acceptance_enabled = bool(body.get("acceptance_enabled", True))
     acceptance_block_on_fail = bool(body.get("acceptance_block_on_fail", False))
     acceptance_max_drop_ratio = body.get("acceptance_max_drop_ratio", 0.3)
@@ -142,6 +143,8 @@ def submit_import_task(body: Dict[str, Any]) -> Dict[str, Any]:
         return {"ok": False, "message": "repo_url 不能为空"}
     if not project_name:
         return {"ok": False, "message": "应用名称（project_name）不能为空"}
+    if not app_version:
+        return {"ok": False, "message": "版本号（app_version）不能为空"}
     if not branch and not commit_id:
         return {"ok": False, "message": "branch 与 commit_id 至少填写一个"}
     if branch and commit_id:
@@ -174,6 +177,7 @@ def submit_import_task(body: Dict[str, Any]) -> Dict[str, Any]:
             maven_scan_enabled=maven_scan_enabled,
             force_maven=force_maven,
             auto_link_external=auto_link_external,
+            app_version=app_version,
             task_type=task_type,
             acceptance_enabled=acceptance_enabled,
             acceptance_block_on_fail=acceptance_block_on_fail,

@@ -21,6 +21,7 @@ from api.tools import (
     cleanup_session,
     clone_git_repo,
     resolve_imports,
+    decompile_class,
     _files_from_names,
 )
 
@@ -226,6 +227,12 @@ def _execute_tool(
             if isinstance(fqns, str):
                 fqns = [f.strip() for f in fqns.split(",") if f.strip()]
             return resolve_imports(fqns)
+
+        if name == "decompile_class":
+            fqn = (arguments.get("fqn") or "").strip()
+            if not fqn:
+                return "[错误：缺少参数 fqn]"
+            return decompile_class(fqn, session_id=session_id)
 
         return f"[未知工具: {name}]"
     except BugInfoUnavailableError:
@@ -444,6 +451,28 @@ CLAUDE_TOOLS = [
         },
     },
     {
+        "name": "decompile_class",
+        "description": (
+            "对指定 Java 类进行反编译，返回方法签名或完整源码。"
+            "适用场景：\n"
+            "1. 三方包（如 Spring、MyBatis）内部逻辑需要查看时\n"
+            "2. 二方包在图谱中不存在、也没有源码仓库时\n"
+            "3. 任何只有 jar 没有源码的依赖\n"
+            "优先使用 CFR 输出完整源码；若未配置 CFR，回退到 javap 输出方法签名。\n"
+            "调用前建议先用 resolve_imports 确认 FQN 归属，确保 FQN 正确。"
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "fqn": {
+                    "type": "string",
+                    "description": "Java 类全限定名，如 com.timevale.forward.dal.dao.BizDemandMapper",
+                },
+            },
+            "required": ["fqn"],
+        },
+    },
+    {
         "description": "在给出最终分析结论之前，你必须调用本工具一次，提交本次分析的完整链路（从「拿到问题」到查图、查文件、读源码等每一步），便于用户看到流程图。steps 为数组，每项 {label: 步骤名称, detail: 本步具体说明, tool_kind: 本步对应的工具名（可选）}。detail 必填且要写清本步做了什么、查了什么或得到什么结论，例如：查图步写「在图谱中查询 ProjectServiceImpl.processFlow 方法的定义与调用关系」；查文件步写「读取用户上传的 bugfix-context.csv，确认第19行报错内容」；读源码步写「查看 BugfixController.java 第12-34行实现」；结论步写「定位到 NPE 来自 processFlow 入参未校验」。tool_kind 填本步实际调用的工具名，如 query_code_graph、read_uploaded_file、search_code、read_source_file，没有对应工具的步骤（如「拿到问题」「结论」）不填。",
         "input_schema": {
             "type": "object",
@@ -654,6 +683,28 @@ OPENAI_TOOLS = [
                     },
                 },
                 "required": ["fqns"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "decompile_class",
+            "description": (
+                "对指定 Java 类进行反编译，返回方法签名或完整源码。"
+                "适用场景：三方包内部逻辑、图谱中不存在的二方包、任何只有 jar 没有源码的依赖。"
+                "优先使用 CFR 输出完整源码；若未配置 CFR，回退到 javap 输出方法签名。"
+                "调用前建议先用 resolve_imports 确认 FQN 正确。"
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "fqn": {
+                        "type": "string",
+                        "description": "Java 类全限定名，如 com.timevale.forward.dal.dao.BizDemandMapper",
+                    },
+                },
+                "required": ["fqn"],
             },
         },
     },
@@ -906,6 +957,16 @@ async def _run_claude_agent(
             elif name == "search_code":
                 title = "代码搜索"
                 summary = (args.get("search_summary") or "").strip() or None
+            elif name == "get_project_dependencies":
+                proj = (args.get("project_name") or project_name or "").strip()
+                title = f"查询项目依赖：{proj}"
+            elif name == "resolve_imports":
+                fqns = args.get("fqns") or []
+                title = f"解析 Import 归属（{len(fqns)} 个类）"
+            elif name == "decompile_class":
+                fqn = (args.get("fqn") or "").strip()
+                title = f"反编译：{fqn.rsplit('.', 1)[-1] if fqn else '?'}"
+                summary = fqn or None
             payload = {"kind": name, "title": title, "content": result[:4000] + ("..." if len(result) > 4000 else "")}
             if summary is not None:
                 payload["summary"] = summary
@@ -1032,6 +1093,16 @@ async def _run_openai_agent(
             elif name == "search_code":
                 title = "代码搜索"
                 summary = (args.get("search_summary") or "").strip() or None
+            elif name == "get_project_dependencies":
+                proj = (args.get("project_name") or project_name or "").strip()
+                title = f"查询项目依赖：{proj}"
+            elif name == "resolve_imports":
+                fqns = args.get("fqns") or []
+                title = f"解析 Import 归属（{len(fqns)} 个类）"
+            elif name == "decompile_class":
+                fqn = (args.get("fqn") or "").strip()
+                title = f"反编译：{fqn.rsplit('.', 1)[-1] if fqn else '?'}"
+                summary = fqn or None
             payload: Dict[str, Any] = {"kind": name, "title": title, "content": result[:4000] + ("..." if len(result) > 4000 else "")}
             if summary is not None:
                 payload["summary"] = summary

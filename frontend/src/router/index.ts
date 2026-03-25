@@ -60,6 +60,12 @@ export const routes = [
     component: () => import('../pages/SecondPartyRulesPage.vue'),
     meta: { title: '二方包规则' },
   },
+  {
+    path: '/tool-test',
+    name: 'tool-test',
+    component: () => import('../pages/ToolTestPage.vue'),
+    meta: { title: 'AI 工具单测' },
+  },
 ] as const
 
 const router = createRouter({

@@ -981,3 +981,124 @@ def resolve_imports(fqns: List[str]) -> str:
         )
 
     return "\n".join(lines)
+
+
+# --------------- Java 反编译 ---------------
+
+def decompile_class(fqn: str, session_id: Optional[str] = None) -> str:
+    """
+    根据 Java 类的全限定名（FQN），从 jar_classes.db 找到对应 jar，
+    提取 .class 文件并反编译，返回可读的类结构或源码。
+
+    优先使用 CFR（完整源码），若未配置则回退到 javap（方法签名）。
+    CFR jar 放置路径：.cache/cfr.jar（或通过环境变量 CFR_JAR 指定）。
+    提取的 .class 文件放在 static/sessions/<session_id>/decompile/ 下。
+
+    适用场景：
+    - 排查三方包行为（如 Spring、MyBatis 内部逻辑）
+    - 图谱中不存在的二方包类
+    - 任何只有 jar 没有源码的依赖
+    """
+    import zipfile
+    import subprocess
+    import shutil
+
+    fqn = (fqn or "").strip()
+    if not fqn:
+        return "[错误：FQN 不能为空]"
+
+    # 1. 从 jar_classes.db 查找 jar 路径和 class 文件路径
+    try:
+        from storage.sqlite.jar_class_db import get_jar_class_db
+    except ImportError:
+        return "[无法导入 JARClassDB]"
+
+    db = get_jar_class_db()
+    info = db.query_by_fqn(fqn)
+    if info is None:
+        simple = fqn.rsplit(".", 1)[-1]
+        candidates = db.query_by_simple_name(simple, include_anonymous=False)
+        if candidates:
+            hints = "\n".join(f"  - {c.fqn}  ({c.jar_name})" for c in candidates[:5])
+            return f"[未找到 FQN `{fqn}`，同名类候选：\n{hints}\n请确认 FQN 是否正确]"
+        return f"[未找到 FQN `{fqn}`，该类可能未被索引，请先重建 JAR 索引]"
+
+    jar_path = info.jar_path
+    class_entry = info.file_path
+    if not class_entry:
+        class_entry = fqn.replace(".", "/") + ".class"
+
+    if not Path(jar_path).exists():
+        return f"[jar 文件不存在：{jar_path}]"
+
+    # 2. 确定工作目录：session 目录下的 decompile/ 子目录
+    from api.config import STATIC_DIR
+    if session_id:
+        work_dir = STATIC_DIR / "sessions" / session_id / "decompile"
+    else:
+        work_dir = STATIC_DIR / "decompile"
+    work_dir.mkdir(parents=True, exist_ok=True)
+
+    # 3. 从 jar 中提取 .class 到工作目录
+    try:
+        with zipfile.ZipFile(jar_path, "r") as zf:
+            names = zf.namelist()
+            matched = class_entry if class_entry in names else next(
+                (n for n in names if n.endswith("/" + class_entry.split("/")[-1]) and
+                 fqn.replace(".", "/") in n), None
+            )
+            if not matched:
+                return f"[在 jar 中未找到 class 文件：{class_entry}（jar: {Path(jar_path).name}）]"
+            zf.extract(matched, work_dir)
+            class_file = str(work_dir / matched)
+    except zipfile.BadZipFile:
+        return f"[jar 文件损坏：{jar_path}]"
+
+    # 4. 优先尝试 CFR
+    from tools.constants import CACHE_ROOT_PATH
+    cfr_env = os.environ.get("CFR_JAR") or ""
+    cfr_path = next(
+        (p for p in [cfr_env, str(CACHE_ROOT_PATH / "cfr.jar")] if p and Path(p).exists()),
+        None,
+    )
+
+    coord = (
+        f"{info.artifact_group_id or info.parent_group_id or '?'}:"
+        f"{info.artifact_id or info.parent_artifact_id or '?'}:"
+        f"{info.artifact_version or info.parent_version or '?'}"
+    )
+
+    if cfr_path:
+        try:
+            r = subprocess.run(
+                ["java", "-jar", cfr_path, class_file, "--silent", "true"],
+                capture_output=True, text=True, timeout=30,
+                encoding="utf-8", errors="replace",
+            )
+            output = (r.stdout or "").strip()
+            if output and "Exception" not in output[:50]:
+                return f"// 反编译来源: {Path(jar_path).name}  坐标: {coord}\n// 工具: CFR\n\n{output}"
+        except Exception:
+            pass
+
+    # 5. 回退 javap
+    javap = shutil.which("javap") or "javap"
+    try:
+        r = subprocess.run(
+            [javap, "-p", "-c", class_file],
+            capture_output=True, text=True, timeout=15,
+            encoding="utf-8", errors="replace",
+        )
+        output = (r.stdout or r.stderr or "").strip()
+        if not output:
+            return f"[javap 无输出，class 文件可能损坏：{class_file}]"
+        note = (
+            "// ⚠️  当前使用 javap 输出方法签名（无方法体）。\n"
+            "// 如需完整源码，请将 CFR jar 放到 .cache/cfr.jar 或设置环境变量 CFR_JAR。\n"
+            "// 下载地址：https://github.com/leibnitz27/cfr/releases\n\n"
+        )
+        return f"// 反编译来源: {Path(jar_path).name}  坐标: {coord}\n// 工具: javap\n{note}{output}"
+    except FileNotFoundError:
+        return "[javap 未找到，请确认 JDK 已安装并加入 PATH]"
+    except subprocess.TimeoutExpired:
+        return "[反编译超时]"

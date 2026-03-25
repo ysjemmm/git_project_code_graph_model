@@ -206,6 +206,7 @@ class GitToNeo4jImporter:
                        maven_scan_enabled: bool = True,
                        force_maven: bool = False,
                        auto_link_external: bool = True,
+                       app_version: str = "",
                        task_type: str = "auto",
                        cancel_event: ThreadEvent | None = None) -> Dict:
         # 兼容：历史参数 java_source_dir 仍然保留；如果两者都传，以 source_dir 为准
@@ -258,6 +259,7 @@ class GitToNeo4jImporter:
                 maven_scan_enabled=maven_scan_enabled,
                 force_maven=force_maven,
                 auto_link_external=auto_link_external,
+                app_version=app_version,
                 task_type=task_type,
                 cancel_event=cancel_event,
             )
@@ -349,6 +351,7 @@ class GitToNeo4jImporter:
                     maven_scan_enabled: bool = True,
                     force_maven: bool = False,
                     auto_link_external: bool = True,
+                    app_version: str = "",
                     task_type: str = "auto",
                     cancel_event: ThreadEvent | None = None) -> Dict:
         if not self.connector:
@@ -485,7 +488,9 @@ class GitToNeo4jImporter:
                     source_dir = detected_source_dir
 
             # 项目根 symbol_id 只生成一次，用作 project_key（多仓库同名项目隔离）
-            root_project_symbol_id = generate_project_symbol_id(project_name, project_type="Application")
+            root_project_symbol_id = generate_project_symbol_id(
+                project_name, project_type="Application", version=str(app_version or "")
+            )
             
             # 如果没有变化,直接返回（不会提交任何写入到 Neo4j）
             if not git_result['has_changes']:
@@ -581,6 +586,7 @@ class GitToNeo4jImporter:
                 clear_database=bool(clear_database),
                 include_comment_nodes=include_comment_nodes,
                 auto_link_external=bool(auto_link_external),
+                app_version=str(app_version or ""),
             )
             store = Neo4jGraphStore(self.connector)
 

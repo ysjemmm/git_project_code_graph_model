@@ -36,11 +36,10 @@ class ClassNameParser:
             class_file_path = class_file_path[8:]  # 移除 "classes/"
 
         # 跳过 Multi-Release JAR 的版本化副本（META-INF/versions/N/...）
-        # 这些是同一个类针对不同 JDK 版本的重复实现，主版本已在根路径存在
+        # 主版本已在根路径存在，版本化副本只是运行时选择，FQN 完全相同，保留会产生歧义
         import re as _re
-        _mrjar_match = _re.match(r'^META-INF[/\\]versions[/\\]\d+[/\\](.+)$', class_file_path)
-        if _mrjar_match:
-            class_file_path = _mrjar_match.group(1)
+        if _re.match(r'^META-INF[/\\]versions[/\\]\d+[/\\]', class_file_path):
+            return None, None, None, None
         
         # 移除 .class 后缀
         if class_file_path.endswith('.class'):

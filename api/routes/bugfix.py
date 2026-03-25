@@ -235,3 +235,33 @@ def bugfix_test_analyze(body: BugfixRequest):
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+@router.post("/bugfix/tool-test")
+async def bugfix_tool_test(body: dict):
+    """
+    单工具直接调用测试接口。
+    body: { tool: str, arguments: dict, project_name?: str, session_id?: str }
+    """
+    from api.agent import _execute_tool, BugInfoUnavailableError
+
+    tool_name = str(body.get("tool") or "").strip()
+    arguments = body.get("arguments") or {}
+    project_name = str(body.get("project_name") or "").strip() or None
+    session_id = str(body.get("session_id") or "").strip() or None
+
+    if not tool_name:
+        return {"ok": False, "error": "缺少 tool 参数"}
+
+    try:
+        result = _execute_tool(
+            tool_name,
+            arguments,
+            project_name=project_name,
+            session_id=session_id,
+        )
+        return {"ok": True, "tool": tool_name, "result": result}
+    except BugInfoUnavailableError as e:
+        return {"ok": False, "tool": tool_name, "error": str(e)}
+    except Exception as e:
+        return {"ok": False, "tool": tool_name, "error": str(e)}

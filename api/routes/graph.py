@@ -253,6 +253,13 @@ def graph_projects(
             branch = (r.get("branch") or "").strip() or None
             commit_hash = (r.get("commit_hash") or "").strip() or None
 
+            # 从 project_key 解析版本号：格式 project#{name}@{type}@{version}
+            version: Optional[str] = None
+            if project_key:
+                parts = project_key.split("@")
+                if len(parts) >= 3:
+                    version = "@".join(parts[2:]) or None
+
             md = _load_meta(project_name)
             repo_url = (md or {}).get("repo_url") if md else None
             last_update_time = (md or {}).get("last_update_time") if md else None
@@ -271,6 +278,7 @@ def graph_projects(
                     last_update_time=last_update_time,
                     node_count=node_count,
                     relationship_count=rel_count,
+                    version=version,
                 )
             )
 
@@ -302,6 +310,46 @@ def graph_projects(
         resp = GraphProjectListResponse(items=items)
         _projects_cache[include_counts] = (now, resp)
         return resp
+    finally:
+        conn.disconnect()
+
+
+@router.get("/graph/projects/{project_name}/versions")
+def graph_project_versions(project_name: str) -> Dict[str, Any]:
+    """
+    返回某个项目在图谱中所有已导入的版本列表。
+    每个版本包含：version、project_key、branch、commit_hash。
+    """
+    conn, err = _neo4j_connector()
+    if conn is None:
+        return {"ok": False, "message": err, "items": []}
+    try:
+        q = """
+        MATCH (p:Project {name: $name, project_type: 'Application'})
+        RETURN
+          coalesce(p.version, '') AS version,
+          coalesce(p.symbol_id, '') AS project_key,
+          coalesce(p.branch, '') AS branch,
+          coalesce(p.commit_hash, '') AS commit_hash
+        ORDER BY p.version
+        """
+        rows = conn.execute_read_query(q, {"name": project_name}) or []
+        items = []
+        for r in rows:
+            version = (r.get("version") or "").strip()
+            project_key = (r.get("project_key") or "").strip()
+            # 兜底：从 project_key 解析 version
+            if not version and project_key:
+                parts = project_key.split("@")
+                if len(parts) >= 3:
+                    version = "@".join(parts[2:]).strip()
+            items.append({
+                "version": version,
+                "project_key": project_key,
+                "branch": (r.get("branch") or "").strip(),
+                "commit_hash": (r.get("commit_hash") or "").strip(),
+            })
+        return {"ok": True, "items": items}
     finally:
         conn.disconnect()
 

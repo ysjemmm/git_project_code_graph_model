@@ -63,6 +63,8 @@ class GitImportTask:
     force_maven: bool = False
     # 导入后是否自动执行 ExternalClassLinker（LIB_LINK + SAME_ARTIFACT）
     auto_link_external: bool = True
+    # 应用版本号（写入图谱 Project 节点 symbol_id 和 version 属性）
+    app_version: str = ""
     # 任务类型：auto | full | incremental
     # - auto: clear_database=true 时走 full，否则走 incremental
     # - full: 全量解析并导入
@@ -291,6 +293,7 @@ class TaskQueue:
                    maven_scan_enabled: bool = True,
                    force_maven: bool = False,
                    auto_link_external: bool = True,
+                   app_version: str = "",
                    task_type: str = "auto",
                    acceptance_enabled: bool = True,
                    acceptance_block_on_fail: bool = False,
@@ -329,6 +332,7 @@ class TaskQueue:
             maven_scan_enabled=bool(maven_scan_enabled),
             force_maven=bool(force_maven),
             auto_link_external=bool(auto_link_external),
+            app_version=str(app_version or ""),
             task_type=normalized_task_type,
             acceptance_enabled=bool(acceptance_enabled),
             acceptance_block_on_fail=bool(acceptance_block_on_fail),
@@ -405,11 +409,36 @@ class TaskQueue:
         取消任务：
         - PENDING：立即标记 CANCELLED，worker 取到时会跳过
         - RUNNING：设置 cancel_event，任务会在可中断点尽快退出并标记 CANCELLED
+        - 内存中找不到时：直接在 SQLite 里标记为 failed（兜底）
         """
         with self.tasks_lock:
             task = self.tasks.get(task_id)
             if not task:
-                return False
+                # 内存里没有，直接操作 SQLite 兜底，同时在内存里插入一条 failed 记录让前端感知
+                try:
+                    from datetime import datetime as _dt
+                    now = _dt.now().isoformat()
+                    self.task_repo.update_task_status(
+                        task_id,
+                        status="failed",
+                        error="cancelled by user (force)",
+                        completed_at=now,
+                    )
+                except Exception:
+                    pass
+                # 内存里补一条 failed 占位，避免前端刷新后从 SQLite 读到旧状态
+                try:
+                    placeholder = GitImportTask(
+                        task_id=task_id,
+                        repo_url="",
+                        status=TaskStatus.FAILED,
+                        error="cancelled by user (force)",
+                        completed_at=datetime.now().isoformat(),
+                    )
+                    self.tasks[task_id] = placeholder
+                except Exception:
+                    pass
+                return True
 
             ev = self.cancel_events.get(task_id)
             if ev is None:
@@ -826,6 +855,7 @@ class TaskQueue:
                     maven_scan_enabled=bool(getattr(task, "maven_scan_enabled", True)),
                     force_maven=bool(getattr(task, "force_maven", False)),
                     auto_link_external=bool(getattr(task, "auto_link_external", True)),
+                    app_version=str(getattr(task, "app_version", "") or ""),
                     task_type=str(getattr(task, "task_type", "auto") or "auto"),
                     cancel_event=cancel_event,
                 )

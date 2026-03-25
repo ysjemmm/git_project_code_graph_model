@@ -67,6 +67,7 @@ class GraphProjectItem(BaseModel):
     last_update_time: Optional[str] = None
     node_count: Optional[int] = None
     relationship_count: Optional[int] = None
+    version: Optional[str] = None  # 图谱版本号，从 project_key 解析
 
 
 class GraphProjectListResponse(BaseModel):

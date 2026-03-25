@@ -614,25 +614,20 @@ function getLatestSuccessfulTaskForProject(projectName: string): any | null {
   return hit || (rows.length ? rows[0] : null)
 }
 
-const selectedProjectPublishBaseTask = computed(() => {
-  return getLatestSuccessfulTaskForProject(String(selectedProjectName.value || ''))
-})
-
+// 发布差异预览：始终对比本地仓库 vs 用户选择的 ref
 const selectedProjectBaseRef = computed(() => {
-  const t = selectedProjectPublishBaseTask.value
-  if (!t) return ''
-  return String(t?.commit_id || t?.branch || '').trim()
+  // 上次发布：固定使用本地仓库的默认分支（main/master）
+  return 'HEAD'
 })
 
 const selectedProjectBaseRefLabel = computed(() => {
-  const t = selectedProjectPublishBaseTask.value
-  if (!t) return '-'
-  const ref = String(t?.commit_id || t?.branch || '').trim() || '-'
-  const k = t?.commit_id ? 'CommitId' : 'Branch'
-  return `${k}: ${ref}`
+  // 显示为"本地仓库最新"
+  const repoName = String(selectedProjectName.value || '').trim()
+  return repoName ? `本地仓库最新 (${repoName})` : '本地仓库最新'
 })
 
 const selectedProjectTargetRef = computed(() => {
+  // 本次发布：用户选择的 branch 或 commitId
   const v = refType.value === 'commit' ? commitId.value : branch.value
   return String(v || '').trim()
 })
@@ -641,7 +636,8 @@ const canLoadImportDiff = computed(() => {
   const repo = String(readonlyUrl.value || '').trim()
   const fromRef = selectedProjectBaseRef.value
   const toRef = selectedProjectTargetRef.value
-  return Boolean(repo && fromRef && toRef && fromRef !== toRef)
+  // 只需要本地仓库和本次发布的 ref 即可对比
+  return Boolean(repo && toRef)
 })
 
 function selectPublishHistoryTask(record: any) {
@@ -678,14 +674,10 @@ async function loadImportDiffPreview() {
   const toRef = selectedProjectTargetRef.value
   diffSummaryModalOpen.value = true
   if (!repoUrl || !fromRef || !toRef) {
-    diffError.value = '请先确保已选应用，且有“上次发布 Ref”和“本次 Ref”'
+    diffError.value = '请先确保已选应用，且有"上次发布 Ref"和"本次 Ref"'
     return
   }
-  if (fromRef === toRef) {
-    diffError.value = '上次发布 Ref 与本次 Ref 相同，无需对比'
-    diffSummary.value = null
-    return
-  }
+  // 注意：即使分支名相同（如都是 release/2.0.5），远程 commit 也可能已更新，所以仍需对比
   diffLoading.value = true
   diffError.value = null
   diffSummary.value = null
@@ -695,6 +687,7 @@ async function loadImportDiffPreview() {
       from_ref: fromRef,
       to_ref: toRef,
       max_files: 1200,
+      project_name: String(selectedProjectName.value || '').trim() || undefined,
     })
     if (!data?.ok) {
       diffError.value = data?.message || '加载差异失败'
@@ -726,6 +719,7 @@ async function openDiffFilePatch(fileRecord: any) {
       file_path: filePath,
       context: 3,
       max_lines: 2000,
+      project_name: String(selectedProjectName.value || '').trim() || undefined,
     })
     if (!data?.ok) {
       diffFilePatch.value = `读取文件差异失败：${data?.message || '-'}`
@@ -816,12 +810,14 @@ function isPublishRecordJavaApp(task: any): boolean {
 }
 
 const refType = ref<'branch' | 'commit'>('branch')
+const appVersion = ref<string>('')  // 版本号，如 2.0.5、release/2.0.5
 
 watch(
   () => selectedProjectName.value,
   () => {
     // 导入/重建默认走 Branch，不根据历史缓存自动切到 Commit
     refType.value = 'branch'
+    appVersion.value = ''
     resetDiffPreview()
   },
 )
@@ -835,6 +831,7 @@ watch(
 
 const importSubmitEnabled = computed(() => {
   if (!canRun.value) return false
+  if (!String(appVersion.value || '').trim()) return false
   if (refType.value === 'commit') return Boolean(String(commitId.value || '').trim())
   return Boolean(String(branch.value || '').trim())
 })
@@ -921,6 +918,7 @@ async function submitImport() {
   try {
     const payload: any = {
       repo_url,
+      project_name: String(selectedProjectName.value || '').trim(),
       maven_scan_enabled: Boolean(importForm.value.maven_scan_enabled),
       force_maven: Boolean(importForm.value.force_maven),
       clear_database: Boolean(importForm.value.clear_database),
@@ -933,6 +931,13 @@ async function submitImport() {
 
     if (refType.value === 'commit') payload.commit_id = String(commitId.value || '').trim()
     else payload.branch = String(branch.value || '').trim()
+
+    const v = String(appVersion.value || '').trim()
+    if (!v) {
+      message.error({ content: '版本号不能为空', duration: 4 })
+      return
+    }
+    payload.app_version = v
 
     const data = await createImportTask(payload)
     if (!data?.ok) throw new Error(String((data as any)?.message || '提交失败'))
@@ -1169,20 +1174,39 @@ watch(includeCounts, () => {
   void fetchProjects()
 })
 
-const tableData = computed(() =>
-  items.value.map((x) => ({
-    key: getProjectRowKey(x),
-    ...x,
-  })),
-)
+const tableData = computed(() => {
+  // 按 project_name 分组，每个版本一行，公共列（项目/类型/上次发布）做 rowspan
+  const grouped = new Map<string, GraphProjectItem[]>()
+  for (const x of items.value) {
+    const key = `${x.project_name}||${x.project_type || ''}`
+    if (!grouped.has(key)) grouped.set(key, [])
+    grouped.get(key)!.push(x)
+  }
+  const rows: any[] = []
+  for (const [, group] of grouped) {
+    group.forEach((x, idx) => {
+      rows.push({
+        key: getProjectRowKey(x),
+        ...x,
+        _groupSize: group.length,
+        _groupIdx: idx,
+      })
+    })
+  }
+  return rows
+})
 
 const columns = [
-  { title: '项目', dataIndex: 'project_name', key: 'project_name', width: 220, ellipsis: true },
-  { title: '类型', dataIndex: 'project_type', key: 'project_type', width: 110 },
-  { title: '节点数', dataIndex: 'node_count', key: 'node_count', width: 110 },
-  { title: '关系数', dataIndex: 'relationship_count', key: 'relationship_count', width: 110 },
-  { title: '更新时间', dataIndex: 'last_update_time', key: 'last_update_time', width: 210, ellipsis: true },
-  { title: '上次发布记录', key: 'release_record', width: 140 },
+  { title: '项目', dataIndex: 'project_name', key: 'project_name', width: 200, ellipsis: true,
+    customCell: (record: any) => ({ rowSpan: record._groupIdx === 0 ? record._groupSize : 0 }) },
+  { title: '类型', dataIndex: 'project_type', key: 'project_type', width: 100,
+    customCell: (record: any) => ({ rowSpan: record._groupIdx === 0 ? record._groupSize : 0 }) },
+  { title: '版本', dataIndex: 'version', key: 'version', width: 120, ellipsis: true },
+  { title: '节点数', dataIndex: 'node_count', key: 'node_count', width: 100 },
+  { title: '关系数', dataIndex: 'relationship_count', key: 'relationship_count', width: 100 },
+  { title: '更新时间', dataIndex: 'last_update_time', key: 'last_update_time', width: 190, ellipsis: true },
+  { title: '上次发布记录', key: 'release_record', width: 130,
+    customCell: (record: any) => ({ rowSpan: record._groupIdx === 0 ? record._groupSize : 0 }) },
 ] as const
 </script>
 
@@ -1397,6 +1421,14 @@ const columns = [
                         <span v-else>暂无数据</span>
                       </template>
                     </a-select>
+                  </a-form-item>
+
+                  <a-form-item label="版本号" required>
+                    <a-input
+                      v-model:value="appVersion"
+                      placeholder="如 2.0.5 或 release/2.0.5，用于图谱版本标记"
+                      allow-clear
+                    />
                   </a-form-item>
 
                   <div class="import-diff-card">
@@ -2167,6 +2199,7 @@ const columns = [
         show-icon
         style="margin-bottom: 12px;"
         :message="`上次发布：${selectedProjectBaseRefLabel}；本次发布：${refType === 'commit' ? `CommitId: ${selectedProjectTargetRef || '-'}` : `Branch: ${selectedProjectTargetRef || '-'}`}`"
+        :description="diffSummary?.same_commit ? '两个 ref 指向相同的 commit，无代码差异' : undefined"
       />
       <a-alert
         v-if="diffError"

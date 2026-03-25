@@ -414,6 +414,7 @@ const {
   onProjectDropdown, switchRepoMode,
   onBranchSearch, onCommitSearch, onBranchDropdown, onCommitDropdown,
   selectedAppType, selectedLanguage, selectedHasGraph,
+  graphVersions, loadingVersions, selectedVersion, selectVersion,
 } = repoState
 
 // 是否需要手动选 branch/commit：非后端Java 或 没有代码图谱
@@ -1434,8 +1435,28 @@ watch(
                 <a-input :value="readonlyUrl" disabled />
               </a-form-item>
 
-              <!-- 后端Java且有图谱：只读展示 branch/commit -->
+              <!-- 后端Java且有图谱：版本下拉 + 只读展示 branch/commit -->
               <template v-if="!needManualRef">
+                <a-form-item label="图谱版本" required>
+                  <a-select
+                    :value="selectedVersion"
+                    :loading="loadingVersions"
+                    placeholder="选择版本"
+                    :disabled="isExecuting || aiExecutedSuccessfully"
+                    :get-popup-container="getPopupContainer"
+                    style="width: 100%"
+                    @change="(v: string) => selectVersion(v)"
+                  >
+                    <a-select-option
+                      v-for="ver in graphVersions"
+                      :key="ver.version"
+                      :value="ver.version"
+                    >
+                      {{ ver.version }}
+                      <span v-if="ver.branch" style="color: rgba(0,0,0,.4); font-size: 12px; margin-left: 6px;">{{ ver.branch }}</span>
+                    </a-select-option>
+                  </a-select>
+                </a-form-item>
                 <a-form-item v-if="readonlyBranch" label="Branch">
                   <a-input :value="readonlyBranch" disabled />
                 </a-form-item>
