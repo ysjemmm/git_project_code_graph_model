@@ -49,6 +49,39 @@ function toolSteps(seg: any): ToolStep[] {
   return Array.isArray(steps) ? (steps as ToolStep[]) : []
 }
 
+// 把连续的 read_source_file steps 合并成一个，content 拼接，tags 聚合
+function mergeReadSourceSteps(steps: ToolStep[]): ToolStep[] {
+  const result: ToolStep[] = []
+  let i = 0
+  while (i < steps.length) {
+    const step = steps[i]
+    if (step.kind === 'read_source_file') {
+      // 收集连续的 read_source_file
+      const group: ToolStep[] = [step]
+      while (i + 1 < steps.length && steps[i + 1].kind === 'read_source_file') {
+        i++
+        group.push(steps[i])
+      }
+      if (group.length === 1) {
+        result.push(step)
+      } else {
+        // 合并：content 拼接，title 用第一个
+        result.push({
+          kind: 'read_source_file',
+          title: `读取源代码文件（${group.length} 个）`,
+          content: group.map(s => s.content).join('\n\n'),
+          summary: group.map(s => s.summary).filter(Boolean).join(', '),
+          _mergedSteps: group,
+        } as any)
+      }
+    } else {
+      result.push(step)
+    }
+    i++
+  }
+  return result
+}
+
 function setMsgRef(idx: number, el: Element | null) {
   if (el) msgRefs.value[idx] = el as HTMLElement
 }
@@ -84,8 +117,16 @@ function onChatScroll() {
     const el = chatLogRef.value
     if (el) {
       const dist = el.scrollHeight - (el.scrollTop + el.clientHeight)
-      // 用户向上滚超过 80px 就认为主动离开底部
-      userScrolledAway = dist > 80
+      const currentTop = el.scrollTop
+
+      if (dist <= 2) {
+        // 触底：恢复自动跟随
+        userScrolledAway = false
+      } else if (currentTop < lastScrollTop) {
+        // 向上滚：停止自动跟随
+        userScrolledAway = true
+      }
+      lastScrollTop = currentTop
     }
     computeStickyQuestion()
   })
@@ -98,6 +139,8 @@ let programmaticScroll = false
 let streamingActive = false
 // 用户主动向上滚时设为 true，阻止自动触底
 let userScrolledAway = false
+// 上一次记录的 scrollTop，用于判断滚动方向
+let lastScrollTop = 0
 
 // 监听 loading prop 变化：开始时激活自动触底，结束时关闭
 watch(() => props.loading, (val) => {
@@ -112,7 +155,6 @@ onMounted(() => {
 
   resizeObserver = new ResizeObserver(() => {
     if (!streamingActive || userScrolledAway) return
-    if (!isNearBottom(150)) return
     scrollToBottomNow()
   })
 
@@ -129,7 +171,7 @@ onMounted(() => {
         if (node instanceof Element) resizeObserver!.observe(node)
       })
     }
-    if (streamingActive && !userScrolledAway && isNearBottom(150)) scrollToBottomNow()
+    if (streamingActive && !userScrolledAway) scrollToBottomNow()
   })
   mutationObserver.observe(el, { childList: true, subtree: false })
 })
@@ -185,6 +227,10 @@ function parseReadTagFromTitle(step: ToolStep): ReadTag[] {
 
 function getReadTags(step: ToolStep): ReadTag[] {
   if (!step) return []
+  // 合并后的 read_source_file：从每个子 step 提取 tag
+  if ((step as any)._mergedSteps) {
+    return (step as any)._mergedSteps.flatMap((s: ToolStep) => getReadTags(s))
+  }
   if (step.kind === 'read_source_file') {
     if (!step.content) return []
     return parseReadSourceFileTags(step.content)
@@ -398,9 +444,9 @@ defineExpose({ scrollToBottom, forceScrollToBottom, maybeScrollToBottom, isNearB
                   <!-- 展示思考详情：可折叠 -->
                   <a-collapse v-if="showThinkingDetail !== false" :default-active-key="[]" ghost>
                     <a-collapse-panel
-                      v-for="(step, si) in toolSteps(seg)"
+                      v-for="(step, si) in mergeReadSourceSteps(toolSteps(seg))"
                       :key="'step-' + idx + '-' + segIdx + '-' + si"
-                      :class="{ 'tool-running': loading && idx === chatMessages.length - 1 && segIdx === m.segments.length - 1 && si === toolSteps(seg).length - 1 }"
+                      :class="{ 'tool-running': loading && idx === chatMessages.length - 1 && segIdx === m.segments.length - 1 && si === mergeReadSourceSteps(toolSteps(seg)).length - 1 }"
                     >
                       <template #header>
                         <div class="tool-header">
@@ -444,10 +490,10 @@ defineExpose({ scrollToBottom, forceScrollToBottom, maybeScrollToBottom, isNearB
                   <!-- 不展示思考详情：仅展示 header，不可折叠，无箭头 -->
                   <div
                     v-else
-                    v-for="(step, si) in toolSteps(seg)"
+                    v-for="(step, si) in mergeReadSourceSteps(toolSteps(seg))"
                     :key="'step-plain-' + idx + '-' + segIdx + '-' + si"
                     class="ant-collapse-item"
-                    :class="{ 'tool-running': loading && idx === chatMessages.length - 1 && segIdx === m.segments.length - 1 && si === toolSteps(seg).length - 1 }"
+                    :class="{ 'tool-running': loading && idx === chatMessages.length - 1 && segIdx === m.segments.length - 1 && si === mergeReadSourceSteps(toolSteps(seg)).length - 1 }"
                   >
                     <div class="ant-collapse-header" style="padding: 8px 12px;min-height: 35px;">
                       <div class="tool-header">

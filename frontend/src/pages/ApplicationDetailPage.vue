@@ -38,6 +38,13 @@ const repoName = computed(() => String(route.params.repoName || '').trim())
 const loading = ref(false)
 const item = ref<CacheProjectItem | null>(null)
 
+// 判断当前应用是否为 Java 后端应用
+const isJavaBackendApp = computed(() => {
+  const app = item.value
+  if (!app) return false
+  return (app.app_type === 'backend' && app.language === 'java')
+})
+
 const depsLoading = ref(false)
 const depsRefreshing = ref(false)
 const deps = ref<AppDependency[]>([])
@@ -530,7 +537,7 @@ const linkedByColumns = [
         刷新详情
       </a-button>
 
-      <a-button @click="goLinkOverview">
+      <a-button @click="goLinkOverview" v-if="isJavaBackendApp">
         <template #icon><ApartmentOutlined /></template>
         关联视图
       </a-button>
@@ -544,6 +551,12 @@ const linkedByColumns = [
       <a-descriptions bordered size="small" :column="2" class="desc">
         <a-descriptions-item label="project_key" :span="2">
           <span class="mono">{{ item.project_key || '-' }}</span>
+        </a-descriptions-item>
+        <a-descriptions-item label="应用类型">
+          <span class="mono">{{ item.app_type || '-' }}</span>
+        </a-descriptions-item>
+        <a-descriptions-item label="语言类型">
+          <span class="mono">{{ item.language || '-' }}</span>
         </a-descriptions-item>
         <a-descriptions-item label="Git 地址">
           <span class="mono">{{ item.repo_url || '-' }}</span>
@@ -559,7 +572,7 @@ const linkedByColumns = [
         </a-descriptions-item>
       </a-descriptions>
 
-      <div class="section-title">
+      <div v-if="isJavaBackendApp" class="section-title">
         Maven 信息
         <a-tooltip title="重新拉取 pom 信息" placement="top">
           <CloudDownloadOutlined
@@ -568,7 +581,7 @@ const linkedByColumns = [
           />
         </a-tooltip>
       </div>
-      <a-card size="small" style="margin-bottom: 12px;">
+      <a-card v-if="isJavaBackendApp" size="small" style="margin-bottom: 12px;">
         <a-spin :spinning="mavenInfoLoading">
           <a-descriptions bordered size="small" :column="2">
             <a-descriptions-item label="groupId">
@@ -596,8 +609,9 @@ const linkedByColumns = [
         </a-spin>
       </a-card>
 
-      <div class="section-title">被哪些项目关联</div>
+      <div v-if="isJavaBackendApp" class="section-title">被哪些项目关联</div>
       <a-table
+        v-if="isJavaBackendApp"
         :columns="linkedByColumns as any"
         :data-source="linkedByItems as any"
         :loading="linkedByLoading"
@@ -632,7 +646,7 @@ const linkedByColumns = [
       </a-table>
 
       <!-- Maven 依赖（可折叠） -->
-      <a-collapse v-model:activeKey="depsCollapseKey" class="deps-collapse">
+      <a-collapse v-if="isJavaBackendApp" v-model:activeKey="depsCollapseKey" class="deps-collapse">
         <a-collapse-panel key="deps">
           <template #header>
             <div class="collapse-header">

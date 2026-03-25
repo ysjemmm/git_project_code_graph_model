@@ -24,7 +24,11 @@ class ApplicationProjectsRepo:
             cols = [row[1] for row in cur.execute("PRAGMA table_info(application_projects_cache)").fetchall()]
             if "auto_link_external" not in cols:
                 cur.execute("ALTER TABLE application_projects_cache ADD COLUMN auto_link_external INTEGER NOT NULL DEFAULT 1")
-                self.db.conn.commit()
+            if "app_type" not in cols:
+                cur.execute("ALTER TABLE application_projects_cache ADD COLUMN app_type TEXT NOT NULL DEFAULT 'backend'")
+            if "language" not in cols:
+                cur.execute("ALTER TABLE application_projects_cache ADD COLUMN language TEXT NOT NULL DEFAULT 'java'")
+            self.db.conn.commit()
         except Exception:
             pass
 
@@ -63,6 +67,8 @@ class ApplicationProjectsRepo:
                     "dirty": self._to_int_bool(it.dirty),
                     "cache_size_mb": it.cache_size_mb,
                     "merkle_branches": self._to_merkle_json(getattr(it, "merkle_branches", None)),
+                    "app_type": getattr(it, "app_type", None) or "backend",
+                    "language": getattr(it, "language", None) or "java",
                 }
             )
 
@@ -71,12 +77,12 @@ class ApplicationProjectsRepo:
           repo_name, project_name, project_key, project_type, repo_url,
           branch, commit_hash, last_update_time, cache_dir,
           repo_exists, remote_url, head_branch, head_commit, dirty,
-          cache_size_mb, merkle_branches
+          cache_size_mb, merkle_branches, app_type, language
         ) VALUES (
           :repo_name, :project_name, :project_key, :project_type, :repo_url,
           :branch, :commit_hash, :last_update_time, :cache_dir,
           :repo_exists, :remote_url, :head_branch, :head_commit, :dirty,
-          :cache_size_mb, :merkle_branches
+          :cache_size_mb, :merkle_branches, :app_type, :language
         )
         ON CONFLICT(repo_name) DO UPDATE SET
           project_name=excluded.project_name,
@@ -99,17 +105,25 @@ class ApplicationProjectsRepo:
         with self.db.transaction() as conn:
             conn.executemany(sql, [{**r, "updated_at": _now()} for r in rows])
 
-    def list_all(self, *, include_libs: bool = False) -> List[CacheProjectItem]:
-        where = ""
+    def list_all(self, *, include_libs: bool = False, java_only: bool = False) -> List[CacheProjectItem]:
+        conditions = []
         if not include_libs:
-            where = "WHERE lower(coalesce(project_type,'')) = 'application'"
+            conditions.append("lower(coalesce(project_type,'')) = 'application'")
+        if java_only:
+            conditions.append("coalesce(app_type, 'backend') = 'backend' AND coalesce(language, 'java') = 'java'")
+        
+        where = ""
+        if conditions:
+            where = "WHERE " + " AND ".join(conditions)
 
         sql = f"""
         SELECT
           id, repo_name, project_name, project_key, project_type, repo_url,
           branch, commit_hash, last_update_time, cache_dir,
           repo_exists, remote_url, head_branch, head_commit, dirty,
-          cache_size_mb, merkle_branches
+          cache_size_mb, merkle_branches,
+          coalesce(app_type, 'backend') AS app_type,
+          coalesce(language, 'java') AS language
         FROM application_projects_cache
         {where}
         ORDER BY last_update_time DESC, repo_name ASC
@@ -148,6 +162,8 @@ class ApplicationProjectsRepo:
                     ),
                     cache_size_mb=r["cache_size_mb"],
                     merkle_branches=merkle_branches if isinstance(merkle_branches, list) else [],
+                    app_type=r["app_type"] if "app_type" in r.keys() else "backend",
+                    language=r["language"] if "language" in r.keys() else "java",
                 )
             )
         return out

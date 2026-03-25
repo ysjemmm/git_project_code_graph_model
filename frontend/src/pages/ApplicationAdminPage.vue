@@ -8,8 +8,7 @@ import {
   getImportSettings,
   updateImportSettings,
   deleteApplicationProject,
-  createImportTask,
-  getImportTask,
+  createApplication,
   type CacheProjectItem,
 } from '../api'
 
@@ -22,12 +21,33 @@ const createModalOpen = ref(false)
 const createLoading = ref(false)
 const createForm = reactive({
   project_name: '',
+  app_type: 'backend' as 'frontend' | 'backend',
+  language: 'java',
   repo_url: '',
   maven_scan_enabled: true,
   force_maven: false,
   clear_database: false,
   auto_link_external: false,
 })
+
+const backendLanguages = [
+  { label: 'Java', value: 'java' },
+  { label: 'Python', value: 'python' },
+  { label: 'Go', value: 'go' },
+  { label: '其他', value: 'other' },
+]
+const frontendLanguages = [
+  { label: 'Vue', value: 'vue' },
+  { label: 'React', value: 'react' },
+  { label: '其他', value: 'other' },
+]
+const languageOptions = computed(() =>
+  createForm.app_type === 'frontend' ? frontendLanguages : backendLanguages
+)
+
+function onAppTypeChange() {
+  createForm.language = createForm.app_type === 'frontend' ? 'vue' : 'java'
+}
 
 async function fetchProjects({ refresh = false }: { refresh?: boolean } = {}) {
   loading.value = true
@@ -185,6 +205,8 @@ function goDetail(repoName: string) {
 
 function openCreateModal() {
   createForm.project_name = ''
+  createForm.app_type = 'backend'
+  createForm.language = 'java'
   createForm.repo_url = ''
   createForm.maven_scan_enabled = true
   createForm.force_maven = false
@@ -193,38 +215,20 @@ function openCreateModal() {
   createModalOpen.value = true
 }
 
-async function waitTaskAndRefresh(taskId: string, timeoutMs = 60000, intervalMs = 2000) {
-  const start = Date.now()
-  while (Date.now() - start < timeoutMs) {
-    try {
-      const data = await getImportTask(taskId)
-      if (!data?.ok) break
-      const status = String(data?.item?.status || '').toLowerCase()
-      if (status === 'success') {
-        await fetchProjects({ refresh: true })
-        message.success({ content: '导入完成，已刷新应用列表', duration: 3 })
-        return
-      }
-      if (status === 'failed') {
-        message.error({
-          content: `导入失败：${data?.item?.error || data?.item?.message || '未知错误'}`,
-          duration: 6,
-        })
-        return
-      }
-    } catch {
-      // 忽略一次轮询失败，继续等下一轮
-    }
-    await new Promise((res) => setTimeout(res, intervalMs))
-  }
-  message.info({ content: '导入可能仍在进行，请手动刷新列表查看结果', duration: 4 })
-}
 
 async function submitCreate() {
   const project_name = String(createForm.project_name || '').trim()
   const repo_url = String(createForm.repo_url || '').trim()
   if (!project_name) {
     message.error({ content: '应用名称不能为空', duration: 4 })
+    return
+  }
+  // 前端查重：直接对比已有列表
+  const duplicate = tableData.value.find(
+    (r: any) => String(r.project_name || r.repo_name || '').toLowerCase() === project_name.toLowerCase()
+  )
+  if (duplicate) {
+    message.error({ content: `应用名称 "${project_name}" 已存在，请使用其他名称`, duration: 4 })
     return
   }
   if (!repo_url) {
@@ -234,20 +238,19 @@ async function submitCreate() {
 
   createLoading.value = true
   try {
-    const data = await createImportTask({
+    const data = await createApplication({
       project_name,
+      app_type: createForm.app_type,
+      language: createForm.language,
       repo_url,
-      branch: 'main',
-      maven_scan_enabled: Boolean(createForm.maven_scan_enabled),
-      force_maven: Boolean(createForm.force_maven),
-      clear_database: Boolean(createForm.clear_database),
-      auto_link_external: Boolean(createForm.auto_link_external),
+      maven_scan_enabled: createForm.maven_scan_enabled,
+      force_maven: createForm.force_maven,
+      clear_database: createForm.clear_database,
+      auto_link_external: createForm.auto_link_external,
     })
-    if (!data?.ok) throw new Error(data?.task_id ? '' : '提交失败')
-    const taskId = String(data?.task_id || '')
-    message.success({ content: taskId ? `提交成功，task_id=${taskId}` : '提交成功', duration: 4 })
+    if (!data?.ok) throw new Error(data?.message || '创建失败')
+    message.success({ content: '应用创建成功', duration: 3 })
     await fetchProjects({ refresh: true })
-    if (taskId) void waitTaskAndRefresh(taskId)
     createModalOpen.value = false
   } catch (e: any) {
     message.error({ content: e?.message ?? String(e), duration: 6 })
@@ -327,7 +330,7 @@ async function submitCreate() {
 
   <a-modal
     v-model:open="createModalOpen"
-    title="新增应用（提交导入任务）"
+    title="新增应用"
     :footer="null"
     width="720px"
     @cancel="createModalOpen = false"
@@ -337,33 +340,43 @@ async function submitCreate() {
         <a-input v-model:value="createForm.project_name" placeholder="例如 epaas-gateway" />
       </a-form-item>
 
+      <a-form-item label="应用类型" required>
+        <a-radio-group v-model:value="createForm.app_type" button-style="solid" @change="onAppTypeChange">
+          <a-radio-button value="backend">后端</a-radio-button>
+          <a-radio-button value="frontend">前端</a-radio-button>
+        </a-radio-group>
+      </a-form-item>
+
+      <a-form-item label="语言类型" required>
+        <a-select v-model:value="createForm.language" :options="languageOptions" style="width:200px" />
+      </a-form-item>
+
       <a-form-item label="Git 仓库地址" required>
         <a-input v-model:value="createForm.repo_url" placeholder="例如 https://github.com/xxx/yyy.git" />
       </a-form-item>
 
+      <template v-if="createForm.app_type === 'backend' && createForm.language === 'java'">
+        <a-form-item label="解析 pom 外部依赖（Maven 扫描）">
+          <a-switch v-model:checked="createForm.maven_scan_enabled" checked-children="启用" un-checked-children="关闭" />
+        </a-form-item>
+        <a-form-item label="强制重新解析 Maven（可能较慢）">
+          <a-switch v-model:checked="createForm.force_maven" checked-children="强制" un-checked-children="关闭" />
+        </a-form-item>
+        <a-form-item label="导入前清理旧图谱（clear_database，重建）">
+          <a-switch v-model:checked="createForm.clear_database" checked-children="清理" un-checked-children="不清理" />
+        </a-form-item>
+        <a-form-item label="自动关联外部类（ExternalClassLinker）">
+          <a-switch v-model:checked="createForm.auto_link_external" checked-children="启用" un-checked-children="关闭" />
+        </a-form-item>
+      </template>
+
       <div class="hint">
-        本次新增只需填应用名称和 Git 地址。（必要时可后续在图谱管理页选择分支/Commit）。
+        只有后端 Java 应用才支持构建代码图谱，可在应用详情页发起导入。
       </div>
-
-      <a-form-item label="解析 pom 外部依赖（Maven 扫描）">
-        <a-switch v-model:checked="createForm.maven_scan_enabled" checked-children="启用" un-checked-children="关闭" />
-      </a-form-item>
-
-      <a-form-item label="强制重新解析 Maven（可能较慢）">
-        <a-switch v-model:checked="createForm.force_maven" checked-children="强制" un-checked-children="关闭" />
-      </a-form-item>
-
-      <a-form-item label="导入前清理旧图谱（clear_database，重建）">
-        <a-switch v-model:checked="createForm.clear_database" checked-children="清理" un-checked-children="不清理" />
-      </a-form-item>
-
-      <a-form-item label="自动关联外部类（ExternalClassLinker）">
-        <a-switch v-model:checked="createForm.auto_link_external" checked-children="启用" un-checked-children="关闭" />
-      </a-form-item>
 
       <a-space style="margin-top: 12px">
         <a-button :disabled="createLoading" @click="createModalOpen = false">取消</a-button>
-        <a-button type="primary" :loading="createLoading" @click="submitCreate">提交</a-button>
+        <a-button type="primary" :loading="createLoading" @click="submitCreate">添加</a-button>
       </a-space>
     </a-form>
   </a-modal>

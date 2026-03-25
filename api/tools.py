@@ -17,46 +17,85 @@ def _safe_ref_for_filter(ref: Optional[str]) -> str:
 
 
 def list_uploaded_files(
+    session_id: Optional[str] = None,
     project_name: Optional[str] = None,
     ref: Optional[str] = None,
     limit: int = 50,
 ) -> List[Dict[str, Any]]:
     """
-    列出 static 下用户上传的文件。按项目名、ref 过滤（ref 会做与上传时一致的安全化再匹配）。
+    列出指定会话目录下的文件。如果不指定 session_id，则列出 static 根目录下的文件。
+    按项目名、ref 过滤（ref 会做与上传时一致的安全化再匹配）。
     返回 [{"name": "xxx", "path": "static/xxx", "size": 123}, ...]
     """
-    if not STATIC_DIR.exists():
+    # 确定搜索目录
+    if session_id:
+        search_dir = STATIC_DIR / "sessions" / session_id
+    else:
+        search_dir = STATIC_DIR
+    
+    if not search_dir.exists():
         return []
+    
     ref_safe = _safe_ref_for_filter(ref)
     out: List[Dict[str, Any]] = []
-    for f in STATIC_DIR.iterdir():
+    
+    # 递归遍历目录
+    for f in search_dir.rglob("*"):
         if not f.is_file():
             continue
-        name = f.name
+            
+        # 获取相对于搜索目录的路径
+        relative_path = f.relative_to(search_dir)
+        name = str(relative_path).replace("\\", "/")  # 统一使用正斜杠
+        
         if project_name and not name.startswith(project_name + "-"):
             continue
         if ref_safe and ref_safe not in name:
             continue
+            
         try:
             size = f.stat().st_size
         except OSError:
             size = 0
-        out.append({"name": name, "path": f"static/{name}", "size": size})
+            
+        # 构造返回的路径（相对于 static 目录）
+        if session_id:
+            full_path = f"static/sessions/{session_id}/{name}"
+        else:
+            full_path = f"static/{name}"
+            
+        out.append({"name": name, "path": full_path, "size": size})
         if len(out) >= limit:
             break
+            
     return sorted(out, key=lambda x: x["name"])
 
 
-def read_uploaded_file(filename: str, max_bytes: int = 512 * 1024) -> Optional[str]:
+def read_uploaded_file(
+    filename: str, 
+    session_id: Optional[str] = None,
+    max_bytes: int = 512 * 1024
+) -> Optional[str]:
     """
-    读取上传文件内容（仅文本，限制大小）。文件名需在 static 内，禁止路径穿越。
+    读取上传文件内容（仅文本，限制大小）。
+    如果指定 session_id，则只在该会话目录下查找文件；否则在 static 根目录查找。
+    文件名需在指定目录内，禁止路径穿越。
     任何异常都捕获并返回 None，避免调用方报错。
     """
     try:
-        if not filename or ".." in filename or "/" in filename or "\\" in filename:
+        if not filename or ".." in filename:
             return None
-        root = STATIC_DIR.resolve()
-        path = (root / filename).resolve()
+            
+        # 确定根目录
+        if session_id:
+            root = (STATIC_DIR / "sessions" / session_id).resolve()
+        else:
+            root = STATIC_DIR.resolve()
+            
+        # 处理文件名中的路径分隔符
+        clean_filename = filename.replace("/", os.sep).replace("\\", os.sep)
+        path = (root / clean_filename).resolve()
+        
         # 安全校验：path 必须在 root 下（Windows 兼容）
         try:
             root_str = str(root)
@@ -65,8 +104,10 @@ def read_uploaded_file(filename: str, max_bytes: int = 512 * 1024) -> Optional[s
                 return None
         except Exception:
             return None
+            
         if not path.is_file():
             return None
+            
         raw = path.read_bytes()
         if len(raw) > max_bytes:
             raw = raw[:max_bytes]
@@ -75,15 +116,22 @@ def read_uploaded_file(filename: str, max_bytes: int = 512 * 1024) -> Optional[s
         return None
 
 
-def read_uploaded_file_for_llm(filename: str, max_bytes: int = 512 * 1024) -> str:
+def read_uploaded_file_for_llm(
+    filename: str, 
+    session_id: Optional[str] = None,
+    max_bytes: int = 512 * 1024
+) -> str:
     """
-    供 LLM/Agent 调用的读文件：在 static 内、禁止路径穿越。
+    供 LLM/Agent 调用的读文件：在指定会话目录内、禁止路径穿越。
     直接返回原始文本（任意格式：log、csv、json 等由模型自行理解），截断到 max_bytes。
     失败返回错误说明字符串（不抛异常）。
     """
-    raw = read_uploaded_file(filename, max_bytes=max_bytes)
+    raw = read_uploaded_file(filename, session_id=session_id, max_bytes=max_bytes)
     if raw is None:
-        return f"[读取失败：文件不存在或不可读：{filename}]"
+        if session_id:
+            return f"[读取失败：会话 {session_id} 中文件不存在或不可读：{filename}]"
+        else:
+            return f"[读取失败：文件不存在或不可读：{filename}]"
     return raw
 
 
@@ -410,7 +458,8 @@ def get_bug_detail(bug_id: int) -> str:
     status      = raw.get("status")
     status_name = raw.get("statusName") or ""
     describe    = raw.get("describe") or "无描述信息"
-    attaches    = raw.get("attaches") or []
+    # 附件字段：接口返回 "files" 列表（非 "attaches"）
+    attaches    = raw.get("files") or raw.get("attaches") or []
 
     # 检查是否处于无需修复的终态
     if status in _BUG_TERMINAL_STATUSES:
@@ -456,6 +505,197 @@ def get_bug_detail(bug_id: int) -> str:
         result += skipped_hint
 
     return result
+
+
+def get_bug_attachments(
+    bug_id: int, 
+    attachment_urls: List[Dict[str, str]], 
+    session_id: Optional[str] = None,
+    max_file_size: int = 2 * 1024 * 1024
+) -> str:
+    """
+    下载 Bug 的附件到指定会话目录，供 AI 分析使用。
+    
+    参数:
+        bug_id: Bug ID
+        attachment_urls: 附件信息列表，每个元素包含 {"fileName": "文件名", "downloadUrl": "下载地址"}
+        session_id: 会话ID，如果指定则下载到 sessions/{session_id}/ 目录下
+        max_file_size: 单个文件最大大小（字节），默认 2MB
+    
+    返回:
+        下载成功的文件列表信息，格式化文本供 LLM 使用
+        如果下载失败会返回错误信息
+    """
+    import os as _os
+    from pathlib import Path as _Path
+    import urllib.request as _request
+    from urllib.parse import urlparse as _urlparse
+    
+    if not isinstance(attachment_urls, list) or not attachment_urls:
+        return "[无附件需要下载]"
+    
+    # 确定下载目录
+    if session_id:
+        temp_dir = STATIC_DIR / "sessions" / session_id / f"bug_{bug_id}_attachments"
+    else:
+        temp_dir = STATIC_DIR / f"bug_{bug_id}_attachments"
+        
+    temp_dir.mkdir(parents=True, exist_ok=True)
+    
+    downloaded_files = []
+    failed_files = []
+    
+    for i, attachment in enumerate(attachment_urls):
+        if not isinstance(attachment, dict):
+            continue
+            
+        file_name = attachment.get("fileName") or f"attachment_{i}"
+        download_url = (attachment.get("downloadUrl") or "").strip()
+        
+        if not download_url:
+            failed_files.append(f"{file_name} (无下载链接)")
+            continue
+        
+        try:
+            # 解析文件扩展名
+            parsed_url = _urlparse(download_url)
+            url_path = parsed_url.path
+            ext = _Path(url_path).suffix or ".bin"
+            
+            # 生成安全的本地文件名
+            safe_name = f"bug_{bug_id}_{i:03d}_{file_name}"
+            if not safe_name.endswith(ext):
+                safe_name += ext
+                
+            local_path = temp_dir / safe_name
+            
+            # 下载文件
+            req = _request.Request(
+                download_url,
+                headers={
+                    'User-Agent': 'Bugfix-Agent/1.0',
+                    # 如果需要认证头部，可以从环境变量获取
+                }
+            )
+            
+            with _request.urlopen(req, timeout=30) as response:
+                # 检查文件大小
+                content_length = response.headers.get('content-length')
+                if content_length:
+                    size = int(content_length)
+                    if size > max_file_size:
+                        failed_files.append(f"{file_name} (文件过大: {size//1024}KB)")
+                        continue
+                
+                # 读取并保存文件
+                content = response.read(max_file_size + 1)
+                if len(content) > max_file_size:
+                    failed_files.append(f"{file_name} (文件过大)")
+                    continue
+                    
+                local_path.write_bytes(content)
+                
+                # 计算相对于会话目录的路径
+                if session_id:
+                    relative_path = local_path.relative_to(STATIC_DIR / "sessions" / session_id)
+                    file_path_for_llm = str(relative_path).replace("\\", "/")
+                else:
+                    file_path_for_llm = str(local_path.relative_to(STATIC_DIR)).replace("\\", "/")
+                    
+                downloaded_files.append({
+                    "name": file_name,
+                    "local_path": file_path_for_llm,
+                    "size": len(content),
+                    "url": download_url
+                })
+                
+        except Exception as e:
+            failed_files.append(f"{file_name} ({str(e)})")
+    
+    # 生成返回结果
+    lines = [f"## Bug #{bug_id} 附件下载结果"]
+    
+    if downloaded_files:
+        lines.append(f"**成功下载 {len(downloaded_files)} 个文件**:")
+        for f in downloaded_files:
+            size_kb = f['size'] // 1024
+            lines.append(f"  - {f['name']} ({size_kb}KB)")
+            lines.append(f"    文件路径: {f['local_path']}")
+    
+    if failed_files:
+        lines.append(f"**下载失败 {len(failed_files)} 个文件**:")
+        for fail in failed_files:
+            lines.append(f"  - {fail}")
+    
+    # 提示 AI 可以使用 read_uploaded_file 工具读取这些文件
+    if downloaded_files:
+        file_names = [f["local_path"] for f in downloaded_files]
+        lines.append("")
+        lines.append("> 💡 提示：可以使用 read_uploaded_file 工具读取这些文件进行分析")
+        if session_id:
+            lines.append(f"> 会话ID: {session_id}")
+        lines.append(f"> 可读取的文件名: {', '.join(file_names)}")
+    
+    return "\n".join(lines)
+
+
+def cleanup_bug_attachments(bug_id: int, session_id: Optional[str] = None) -> str:
+    """
+    清理指定 Bug 的下载附件。
+    
+    参数:
+        bug_id: Bug ID
+        session_id: 会话ID，如果指定则清理 sessions/{session_id}/ 目录下的附件
+    
+    返回:
+        清理结果信息
+    """
+    import shutil as _shutil
+    
+    # 确定清理目录
+    if session_id:
+        temp_dir = STATIC_DIR / "sessions" / session_id / f"bug_{bug_id}_attachments"
+    else:
+        temp_dir = STATIC_DIR / f"bug_{bug_id}_attachments"
+    
+    if not temp_dir.exists():
+        if session_id:
+            return f"[无需清理：会话 {session_id} 中 Bug #{bug_id} 的附件目录不存在]"
+        else:
+            return f"[无需清理：Bug #{bug_id} 的附件目录不存在]"
+    
+    try:
+        _shutil.rmtree(temp_dir)
+        if session_id:
+            return f"[已清理会话 {session_id} 中 Bug #{bug_id} 的附件目录]"
+        else:
+            return f"[已清理 Bug #{bug_id} 的附件目录]"
+    except Exception as e:
+        return f"[清理失败: {e}]"
+
+
+def cleanup_session(session_id: str) -> str:
+    """
+    清理指定会话的所有文件（包括上传文件和下载的附件）。
+    
+    参数:
+        session_id: 会话ID
+    
+    返回:
+        清理结果信息
+    """
+    import shutil as _shutil
+    
+    session_dir = STATIC_DIR / "sessions" / session_id
+    
+    if not session_dir.exists():
+        return f"[无需清理：会话 {session_id} 不存在]"
+    
+    try:
+        _shutil.rmtree(session_dir)
+        return f"[已清理会话 {session_id} 的所有文件]"
+    except Exception as e:
+        return f"[清理失败: {e}]"
 
 
 def read_source_file(

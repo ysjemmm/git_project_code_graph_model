@@ -17,6 +17,8 @@ export type CacheProjectItem = {
   linked_by_count?: number
   linked_to_count?: number
   linked_by_preview?: string[]
+  app_type?: string | null    // 'frontend' | 'backend'
+  language?: string | null    // 'java' | 'python' | 'go' | 'other' | 'vue' | 'react'
 }
 
 export type ImportSettings = {
@@ -193,6 +195,7 @@ export type BugfixSseEvent =
   | { type: 'tool'; kind: string; title: string; content: string; summary?: string }
   | { type: 'analysis_chain'; steps: AnalysisChainStep[] }
   | { type: 'error'; content: string }
+  | { type: 'structured_result'; data: { bug_cause: string; bug_location: Array<{ file: string; line_range: string; description: string }>; fix_plans: Array<{ id: number; title: string; description: string; diff: string }> } }
   | { type: 'done'; ok: boolean; message?: string; target_file?: string; applied?: boolean }
 
 export type BugfixResponse = {
@@ -220,6 +223,13 @@ function json(method: string, body: unknown): RequestInit {
 
 export async function listApplicationProjects(refresh = false): Promise<{ ok: boolean; items: CacheProjectItem[] }> {
   const url = new URL('/api/cache/application-projects', window.location.origin)
+  if (refresh) url.searchParams.set('refresh', '1')
+  return request(url.toString())
+}
+
+export async function listApplicationProjectsForGraph(refresh = false): Promise<{ ok: boolean; items: CacheProjectItem[] }> {
+  const url = new URL('/api/cache/application-projects', window.location.origin)
+  url.searchParams.set('java_only', '1')
   if (refresh) url.searchParams.set('refresh', '1')
   return request(url.toString())
 }
@@ -384,6 +394,19 @@ export async function syncDependencyLinksToNeo4j(): Promise<{ ok: boolean; synce
   return request('/api/cache/dependency-links/sync-to-neo4j', { method: 'POST' })
 }
 
+export async function createApplication(payload: {
+  project_name: string
+  app_type: string
+  language: string
+  repo_url: string
+  maven_scan_enabled?: boolean
+  force_maven?: boolean
+  clear_database?: boolean
+  auto_link_external?: boolean
+}): Promise<{ ok: boolean; id?: number; message?: string }> {
+  return request('/api/cache/application-projects', json('POST', payload))
+}
+
 export async function createImportTask(payload: {
   project_name: string
   repo_url: string
@@ -514,13 +537,34 @@ export async function getGitDiffFile(payload: {
   return request(url.toString())
 }
 
+export async function gitApplyAndCommit(payload: {
+  git_url: string
+  project_name?: string
+  branch: string
+  commit_msg: string
+  diff: string
+  reviewer?: string
+}): Promise<{ ok: boolean; message: string; branch?: string; steps?: string[] }> {
+  return request('/api/git-apply-and-commit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
 // ─── Upload ────────────────────────────────────────────────────────────────────
 
-export async function uploadFiles(projectName: string, ref: string, file: File): Promise<{ ok: boolean; saved: Array<{ filename: string }> }> {
+export async function uploadFiles(
+  projectName: string,
+  ref: string,
+  file: File,
+  sessionId?: string,
+): Promise<{ ok: boolean; saved: Array<{ filename: string }> }> {
   const form = new FormData()
   form.append('project_name', projectName)
   form.append('ref', ref)
   form.append('files', file)
+  if (sessionId) form.append('session_id', sessionId)
   const r = await fetch('/api/upload', { method: 'POST', body: form })
   const data = await r.json()
   if (!r.ok || !data?.ok) throw new Error(data?.message ?? '上传失败')
@@ -598,6 +642,8 @@ async function runBugfixSse(
         onEvent({ type: 'status', content: String(payload.content ?? '') })
       } else if (type === 'error') {
         onEvent({ type: 'error', content: String(payload.content ?? '') })
+      } else if (type === 'structured_result') {
+        onEvent({ type: 'structured_result', data: payload.data })
       } else if (type === 'done') {
         done = { ok: Boolean(payload.ok), message: payload.message, target_file: payload.target_file, applied: payload.applied }
         onEvent({ type: 'done', ...done })
@@ -612,6 +658,7 @@ export async function runForwardProcessflowNpeFixSse(
   params: {
     apply: boolean; gitUrl: string; gitBranch?: string; gitCommit?: string
     message: string; provider?: string; model?: string; uploadedFileNames?: string[]
+    sessionId?: string
     history?: Array<{ role: 'user' | 'ai'; content: string }>
   },
   onEvent: (ev: BugfixSseEvent) => void,
@@ -622,6 +669,7 @@ export async function runForwardProcessflowNpeFixSse(
     git_commit: params.gitCommit ?? '', message: params.message,
     provider: params.provider ?? 'deepseek', model: params.model ?? '',
     uploaded_file_names: params.uploadedFileNames ?? [],
+    session_id: params.sessionId ?? null,
     history: (params.history ?? []).map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content })),
   }, onEvent, opts?.signal)
 }
@@ -647,3 +695,65 @@ export async function runForwardProcessflowNpeFixTestSse(
 // ─── 用户信息获取 ──────────────────────────────────────────────────────────────
 // 已迁移至 invoke.ts: invoke('forward', 'getUserInfo')
 // 请使用 import { getUserInfo } from './invoke'
+
+// ─── Bugfix 历史记录 ───────────────────────────────────────────────────────────
+
+export type BugfixHistoryItem = {
+  id: string
+  time: string
+  project: string
+  bugId: string
+  bugTitle: string
+  model: string
+  depth?: string
+  status: 'running' | 'success' | 'failed'
+  outcome?: string   // success | error_end | failed
+  duration?: string
+  sessionId?: string
+  prompt?: string
+  gitUrl?: string
+  gitBranch?: string
+  gitCommit?: string
+  nodeIo?: Record<string, any>  // 完整链路快照
+}
+
+export async function listBugfixHistory(params?: {
+  page?: number
+  page_size?: number
+  project?: string
+  bug_id?: string
+}): Promise<{ ok: boolean; total: number; page: number; page_size: number; items: BugfixHistoryItem[] }> {
+  const url = new URL('/api/bugfix-history', window.location.origin)
+  if (params?.page)      url.searchParams.set('page', String(params.page))
+  if (params?.page_size) url.searchParams.set('page_size', String(params.page_size))
+  if (params?.project)   url.searchParams.set('project', params.project)
+  if (params?.bug_id)    url.searchParams.set('bug_id', params.bug_id)
+  return request(url.toString())
+}
+
+export async function createBugfixHistory(payload: {
+  project: string
+  bug_id: string
+  bug_title: string
+  model: string
+  depth?: string
+  status?: string
+  duration_ms?: number
+  session_id?: string
+  prompt?: string
+  git_url?: string
+  git_branch?: string
+  git_commit?: string
+}): Promise<{ ok: boolean; id: number; item?: BugfixHistoryItem }> {
+  return request('/api/bugfix-history', json('POST', payload))
+}
+
+export async function updateBugfixHistoryStatus(
+  recordId: number,
+  status: string,
+  duration_ms?: number,
+  node_io_json?: string,
+  outcome?: string,
+): Promise<{ ok: boolean; item?: BugfixHistoryItem }> {
+  return request(`/api/bugfix-history/${recordId}/status`, json('PATCH', { status, duration_ms, node_io_json, outcome }))
+}

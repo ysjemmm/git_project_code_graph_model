@@ -16,10 +16,18 @@ from api.tools import (
     read_source_file,
     get_project_dependencies,
     get_bug_detail,
+    get_bug_attachments,
+    cleanup_bug_attachments,
+    cleanup_session,
     _files_from_names,
 )
 
 logger = logging.getLogger("api.agent")
+
+
+class BugInfoUnavailableError(Exception):
+    """Bug 信息无法获取时抛出，触发流程终止。"""
+    pass
 
 
 def _block_type(block: Any) -> Optional[str]:
@@ -91,26 +99,25 @@ def _execute_tool(
     project_name: Optional[str] = None,
     ref: Optional[str] = None,
     allowed_file_names: AllowedFiles = None,
+    session_id: Optional[str] = None,
 ) -> str:
     """执行单个工具，返回给模型看的字符串。"""
     try:
         if name == "list_uploaded_files":
-            if allowed_file_names is not None:
-                files = _files_from_names(allowed_file_names)
-            else:
-                files = list_uploaded_files(project_name=project_name, ref=ref)
+            # 直接列出 session 目录下所有文件，不再用 allowed_file_names 白名单过滤
+            files = list_uploaded_files(project_name=project_name, ref=ref, session_id=session_id)
             if not files:
-                return "（当前无可用上传文件；若用户已上传，请确认本次会话是否携带了上传文件列表。）"
+                return "（当前会话目录无可用文件；若用户已上传，请确认本次会话 session_id 是否正确。）"
             lines = [f"  - {f['name']} （{f.get('size', 0)} bytes）" for f in files]
-            return "用户上传文件列表（可直接用 read_uploaded_file 读取以下文件名）：\n" + "\n".join(lines)
+            return "当前会话可读取的文件列表（可直接用 read_uploaded_file 读取以下文件名）：\n" + "\n".join(lines)
 
         if name == "read_uploaded_file":
             filename = (arguments.get("filename") or "").strip()
             if not filename:
                 return "[错误：缺少参数 filename]"
-            if allowed_file_names is not None and filename not in allowed_file_names:
-                return f"[错误：仅允许读取本次上传的文件，不在列表中：{filename}]"
-            return read_uploaded_file_for_llm(filename)
+            # 只依赖 session_id 目录隔离，不再做白名单校验
+            # read_uploaded_file_for_llm 内部已有路径穿越保护
+            return read_uploaded_file_for_llm(filename, session_id=session_id)
 
         if name == "query_code_graph":
             proj = (arguments.get("project_name") or project_name or "").strip()
@@ -166,12 +173,40 @@ def _execute_tool(
                 return "[错误：bug_id 必须为整数]"
             if not bid:
                 return "[错误：缺少参数 bug_id]"
-            return get_bug_detail(bid)
+            result = get_bug_detail(bid)
+            # 获取失败时终止整个流程
+            if result.startswith("[获取 Bug 详情失败") or result.startswith(f"[Bug #{bid} 不存在"):
+                raise BugInfoUnavailableError(f"无法获取 Bug #{bid} 的详情：{result}")
+            return result
+
+        if name == "get_bug_attachments":
+            try:
+                bid = int(arguments.get("bug_id", 0))
+            except (TypeError, ValueError):
+                return "[错误：bug_id 必须为整数]"
+            attachment_urls = arguments.get("attachment_urls", [])
+            max_size = int(arguments.get("max_file_size", 2 * 1024 * 1024))
+            return get_bug_attachments(bid, attachment_urls, session_id=session_id, max_file_size=max_size)
+
+        if name == "cleanup_bug_attachments":
+            try:
+                bid = int(arguments.get("bug_id", 0))
+            except (TypeError, ValueError):
+                return "[错误：bug_id 必须为整数]"
+            return cleanup_bug_attachments(bid, session_id=session_id)
+
+        if name == "cleanup_session":
+            sid = (arguments.get("session_id") or session_id or "").strip()
+            if not sid:
+                return "[错误：缺少 session_id]"
+            return cleanup_session(sid)
 
         if name == "output_analysis_chain":
             return "已记录分析链路，请继续给出你的分析结论。"
 
         return f"[未知工具: {name}]"
+    except BugInfoUnavailableError:
+        raise  # 透传，让上层终止流程
     except Exception as e:
         logger.exception("tool %s failed", name)
         return f"[执行失败: {e}]"
@@ -315,7 +350,31 @@ CLAUDE_TOOLS = [
         },
     },
     {
-        "name": "output_analysis_chain",
+        "name": "get_bug_attachments",
+        "description": "下载 Bug 附件到当前会话目录，供后续用 read_uploaded_file 读取分析。当 get_bug_detail 返回的附件列表中有文件且有 downloadUrl 时，必须调用本工具下载附件，然后用返回的「文件路径」调用 read_uploaded_file 读取内容。不要直接用原始文件名调用 read_uploaded_file。",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "bug_id": {
+                    "type": "integer",
+                    "description": "Bug ID",
+                },
+                "attachment_urls": {
+                    "type": "array",
+                    "description": "附件信息列表，每项包含 fileName 和 downloadUrl，直接从 get_bug_detail 返回的附件列表传入",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "fileName": {"type": "string"},
+                            "downloadUrl": {"type": "string"},
+                        },
+                    },
+                },
+            },
+            "required": ["bug_id", "attachment_urls"],
+        },
+    },
+    {
         "description": "在给出最终分析结论之前，你必须调用本工具一次，提交本次分析的完整链路（从「拿到问题」到查图、查文件、读源码等每一步），便于用户看到流程图。steps 为数组，每项 {label: 步骤名称, detail: 本步具体说明, tool_kind: 本步对应的工具名（可选）}。detail 必填且要写清本步做了什么、查了什么或得到什么结论，例如：查图步写「在图谱中查询 ProjectServiceImpl.processFlow 方法的定义与调用关系」；查文件步写「读取用户上传的 bugfix-context.csv，确认第19行报错内容」；读源码步写「查看 BugfixController.java 第12-34行实现」；结论步写「定位到 NPE 来自 processFlow 入参未校验」。tool_kind 填本步实际调用的工具名，如 query_code_graph、read_uploaded_file、search_code、read_source_file，没有对应工具的步骤（如「拿到问题」「结论」）不填。",
         "input_schema": {
             "type": "object",
@@ -452,6 +511,34 @@ OPENAI_TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "get_bug_attachments",
+            "description": "下载 Bug 附件到当前会话目录，供后续用 read_uploaded_file 读取分析。当 get_bug_detail 返回的附件列表中有文件且有 downloadUrl 时，必须调用本工具下载，然后用返回的「文件路径」调用 read_uploaded_file 读取内容。不要直接用原始文件名调用 read_uploaded_file。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "bug_id": {
+                        "type": "integer",
+                        "description": "Bug ID",
+                    },
+                    "attachment_urls": {
+                        "type": "array",
+                        "description": "附件信息列表，每项包含 fileName 和 downloadUrl，直接从 get_bug_detail 返回的附件列表传入",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "fileName": {"type": "string"},
+                                "downloadUrl": {"type": "string"},
+                            },
+                        },
+                    },
+                },
+                "required": ["bug_id", "attachment_urls"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "output_analysis_chain",
             "description": "在给出最终分析结论之前，你必须调用本工具一次，提交本次分析的完整链路。每步的 detail 必填且写清本步具体做了什么、查了什么或得到什么结论。tool_kind 填本步实际调用的工具名（query_code_graph、read_uploaded_file、search_code、read_source_file），无工具的步骤不填。",
             "parameters": {
@@ -485,6 +572,7 @@ async def run_bugfix_agent(
     project_name: Optional[str] = None,
     ref: Optional[str] = None,
     allowed_file_names: AllowedFiles = None,
+    session_id: Optional[str] = None,
     provider: str = "claude",
     model: Optional[str] = None,
     max_turns: int = 12,
@@ -501,6 +589,7 @@ async def run_bugfix_agent(
             project_name=project_name,
             ref=ref,
             allowed_file_names=allowed_file_names,
+            session_id=session_id,
             model=model,
             max_turns=max_turns,
             history=history or [],
@@ -513,6 +602,7 @@ async def run_bugfix_agent(
             project_name=project_name,
             ref=ref,
             allowed_file_names=allowed_file_names,
+            session_id=session_id,
             model=model,
             max_turns=max_turns,
             history=history or [],
@@ -527,6 +617,7 @@ async def _run_claude_agent(
     project_name: Optional[str] = None,
     ref: Optional[str] = None,
     allowed_file_names: AllowedFiles = None,
+    session_id: Optional[str] = None,
     model: Optional[str] = None,
     max_turns: int = 12,
     history: Optional[List[Dict[str, Any]]] = None,
@@ -556,7 +647,7 @@ async def _run_claude_agent(
     client = AsyncAnthropic(api_key=key, base_url=base, timeout=timeout_sec)
     m = (model or os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-20250514")).strip()
 
-    system = (system_prompt or "").strip() + "\n\n【重要】你拥有上述工具。你必须先调用 list_uploaded_files 查看可用文件，再按需调用 read_uploaded_file 或 query_code_graph 获取内容与图谱，最后再给出分析结论。禁止只回复一句开场白而不调用任何工具。\n优先用 query_code_graph 从图谱获取信息；若图谱返回的数据已足够分析，则不必再调用 read_source_file，仅在图谱数据不足时再查源码。\n每次调用 query_code_graph 时，必须同时填写 cypher（具体的 Cypher 查询语句）和 query_summary（本次查询的目的说明），不得省略，否则用户无法看到你执行了哪些查询。调用 search_code 时请同时填写 search_summary（本次搜索的目的说明，如「查找 processFlow 的调用位置」），便于用户在思考过程中看到目的。\n【跨项目排查】若分析过程中怀疑问题根因在某个二方包项目，应先调用 get_project_dependencies 确认当前项目依赖了哪些已导入项目，再用 query_code_graph、search_code 或 read_source_file 并显式传入 project_name=<依赖项目名> 去查那个项目的图谱或源码。\n在给出最终分析结论的那一轮，你必须先调用 output_analysis_chain 提交本次分析的完整链路（从「拿到问题」到查图、查文件等每一步的简要说明），再在回复中给出文字结论。"
+    system = (system_prompt or "").strip() + "\n\n【重要】你拥有上述工具。你必须先调用 list_uploaded_files 查看可用文件，再按需调用 read_uploaded_file 或 query_code_graph 获取内容与图谱，最后再给出分析结论。禁止只回复一句开场白而不调用任何工具。\n优先用 query_code_graph 从图谱获取信息；若图谱返回的数据已足够分析，则不必再调用 read_source_file，仅在图谱数据不足时再查源码。\n每次调用 query_code_graph 时，必须同时填写 cypher（具体的 Cypher 查询语句）和 query_summary（本次查询的目的说明），不得省略，否则用户无法看到你执行了哪些查询。调用 search_code 时请同时填写 search_summary（本次搜索的目的说明，如「查找 processFlow 的调用位置」），便于用户在思考过程中看到目的。\n【跨项目排查】若分析过程中怀疑问题根因在某个二方包项目，应先调用 get_project_dependencies 确认当前项目依赖了哪些已导入项目，再用 query_code_graph、search_code 或 read_source_file 并显式传入 project_name=<依赖项目名> 去查那个项目的图谱或源码。\n【Bug 附件】调用 get_bug_detail 后，若返回的附件列表中有文件（files 字段非空），必须立即调用 get_bug_attachments 下载附件（附件可能是日志、截图、配置文件等任意格式，统称附件），然后用返回结果中的「文件路径」调用 read_uploaded_file 读取内容。禁止直接用原始文件名（如 log.csv）调用 read_uploaded_file。\n在给出最终分析结论的那一轮，你必须先调用 output_analysis_chain 提交本次分析的完整链路（从「拿到问题」到查图、查文件等每一步的简要说明），再在回复中给出文字结论。"
     # 历史消息前置，Claude 要求 user/assistant 交替
     history_messages: List[Dict[str, Any]] = []
     for h in (history or []):
@@ -665,6 +756,7 @@ async def _run_claude_agent(
                 project_name=project_name,
                 ref=ref,
                 allowed_file_names=allowed_file_names,
+                session_id=session_id,
             )
             tool_results.append({"type": "tool_result", "tool_use_id": tid, "content": result})
             # AI 通过 output_analysis_chain 提交的分析链路：只发 SSE，不展示为「工具步骤」
@@ -680,6 +772,10 @@ async def _run_claude_agent(
                 fn = (args.get("filename") or "").strip()
                 if fn:
                     title = f"读取文件：{fn}"
+            elif name == "get_bug_attachments":
+                title = "下载附件再分析"
+            elif name == "get_bug_detail":
+                title = f"获取 Bug 详情：{args.get('bug_id', '')}"
             elif name == "search_code":
                 title = "代码搜索"
                 summary = (args.get("search_summary") or "").strip() or None
@@ -701,6 +797,7 @@ async def _run_openai_agent(
     project_name: Optional[str] = None,
     ref: Optional[str] = None,
     allowed_file_names: AllowedFiles = None,
+    session_id: Optional[str] = None,
     model: Optional[str] = None,
     max_turns: int = 12,
     history: Optional[List[Dict[str, Any]]] = None,
@@ -726,7 +823,7 @@ async def _run_openai_agent(
             history_messages.append({"role": role, "content": content})
 
     messages: List[Dict[str, Any]] = [
-        {"role": "system", "content": (system_prompt or "").strip() + "\n\n【重要】你拥有上述工具。你必须先调用 list_uploaded_files 查看可用文件，再按需调用 read_uploaded_file 或 query_code_graph，最后再给出分析结论。禁止只回复一句开场白而不调用任何工具。\n优先用 query_code_graph 从图谱获取信息；若图谱返回的数据已足够分析，则不必再调用 read_source_file，仅在图谱数据不足时再查源码。\n每次调用 query_code_graph 时，必须同时填写 cypher（具体的 Cypher 查询语句）和 query_summary（本次查询的目的说明），不得省略，否则用户无法看到你执行了哪些查询。调用 search_code 时请同时填写 search_summary（本次搜索的目的说明），便于用户在思考过程中看到目的。\n【跨项目排查】若分析过程中怀疑问题根因在某个二方包项目，应先调用 get_project_dependencies 确认当前项目依赖了哪些已导入项目，再用 query_code_graph、search_code 或 read_source_file 并显式传入 project_name=<依赖项目名> 去查那个项目的图谱或源码。\n在给出最终分析结论的那一轮，你必须先调用 output_analysis_chain 提交本次分析的完整链路（从「拿到问题」到查图、查文件等每一步），再在回复中给出文字结论。"},
+        {"role": "system", "content": (system_prompt or "").strip() + "\n\n【重要】你拥有上述工具。你必须先调用 list_uploaded_files 查看可用文件，再按需调用 read_uploaded_file 或 query_code_graph，最后再给出分析结论。禁止只回复一句开场白而不调用任何工具。\n优先用 query_code_graph 从图谱获取信息；若图谱返回的数据已足够分析，则不必再调用 read_source_file，仅在图谱数据不足时再查源码。\n每次调用 query_code_graph 时，必须同时填写 cypher（具体的 Cypher 查询语句）和 query_summary（本次查询的目的说明），不得省略，否则用户无法看到你执行了哪些查询。调用 search_code 时请同时填写 search_summary（本次搜索的目的说明），便于用户在思考过程中看到目的。\n【跨项目排查】若分析过程中怀疑问题根因在某个二方包项目，应先调用 get_project_dependencies 确认当前项目依赖了哪些已导入项目，再用 query_code_graph、search_code 或 read_source_file 并显式传入 project_name=<依赖项目名> 去查那个项目的图谱或源码。\n【Bug 附件】调用 get_bug_detail 后，若返回的附件列表中有文件（files 字段非空），必须立即调用 get_bug_attachments 下载附件（附件可能是日志、截图、配置文件等任意格式，统称附件），然后用返回结果中的「文件路径」调用 read_uploaded_file 读取内容。禁止直接用原始文件名（如 log.csv）调用 read_uploaded_file。\n在给出最终分析结论的那一轮，你必须先调用 output_analysis_chain 提交本次分析的完整链路（从「拿到问题」到查图、查文件等每一步），再在回复中给出文字结论。"},
         *history_messages,
         {"role": "user", "content": user_content},
     ]
@@ -781,6 +878,7 @@ async def _run_openai_agent(
                 project_name=project_name,
                 ref=ref,
                 allowed_file_names=allowed_file_names,
+                session_id=session_id,
             )
             messages.append({"role": "tool", "tool_call_id": tc.id, "content": result})
             if name == "output_analysis_chain":
@@ -794,6 +892,10 @@ async def _run_openai_agent(
                 fn = (args.get("filename") or "").strip()
                 if fn:
                     title = f"读取文件：{fn}"
+            elif name == "get_bug_attachments":
+                title = "下载附件再分析"
+            elif name == "get_bug_detail":
+                title = f"获取 Bug 详情：{args.get('bug_id', '')}"
             elif name == "search_code":
                 title = "代码搜索"
                 summary = (args.get("search_summary") or "").strip() or None

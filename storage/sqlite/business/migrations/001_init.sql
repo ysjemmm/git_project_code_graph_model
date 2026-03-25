@@ -60,6 +60,8 @@ CREATE TABLE IF NOT EXISTS application_projects_cache (
   force_maven INTEGER NOT NULL DEFAULT 0,
   clear_database INTEGER NOT NULL DEFAULT 0,
   auto_link_external INTEGER NOT NULL DEFAULT 1,
+  app_type TEXT NOT NULL DEFAULT 'backend',
+  language TEXT NOT NULL DEFAULT 'java',
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );

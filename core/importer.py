@@ -286,20 +286,16 @@ class GitToNeo4jImporter:
             # Git URL 动态解析仓库名
             extracted_repo_name = repo_url.split('/')[-1].replace('.git', '')
             
-            # 如果指定repo_name,使用指定的;否则使用解析出来的
-            if repo_name is None:
-                repo_name = extracted_repo_name
-            
-            # 如果指定project_name,使用指定的;否则使repo_name
+            # 如果指定project_name，优先用它作为 repo_name（文件夹名），保证应用管理名称与缓存目录一致
+            # 如果没有 project_name，再看 repo_name，最后 fallback 到 URL 解析
             if project_name is None:
-                project_name = repo_name
+                project_name = repo_name or extracted_repo_name
+            if repo_name is None:
+                repo_name = project_name
             
             queue = get_task_queue(
                 cache_base_dir=self.cache_base_dir
             )
-            
-            if not queue.running:
-                queue.start()
             
             task_id = queue.submit_task(
                 repo_url=repo_url,
@@ -373,13 +369,12 @@ class GitToNeo4jImporter:
             # 支持格式: https://github.com/user/repo.git http://git.example.com/path/repo.git
             extracted_repo_name = repo_url.split('/')[-1].replace('.git', '')
             
-            # 如果指定repo_name,使用指定的;否则使用解析出来的
-            if repo_name is None:
-                repo_name = extracted_repo_name
-            
-            # 如果指定project_name,使用指定的;否则使repo_name
+            # 如果指定project_name，优先用它作为 repo_name（文件夹名），保证应用管理名称与缓存目录一致
+            # 如果没有 project_name，再看 repo_name，最后 fallback 到 URL 解析
             if project_name is None:
-                project_name = repo_name
+                project_name = repo_name or extracted_repo_name
+            if repo_name is None:
+                repo_name = project_name
             
             logger.info(f"\n仓库信息:")
             logger.info(f"  URL: {repo_url}")

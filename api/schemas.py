@@ -22,6 +22,7 @@ class BugfixRequest(BaseModel):
     provider: Optional[str] = "deepseek"
     model: Optional[str] = None
     uploaded_file_names: Optional[List[str]] = None
+    session_id: Optional[str] = None
     history: Optional[List[HistoryMessage]] = None
 
 
@@ -101,6 +102,10 @@ class CacheProjectItem(BaseModel):
     linked_by_count: Optional[int] = 0   # 多少项目“关联到我”（入向）
     linked_to_count: Optional[int] = 0   # 我“关联到”多少项目（出向）
     linked_by_preview: List[str] = []    # 入向关联预览（来源项目(次数)）
+
+    # 应用类型与语言
+    app_type: Optional[str] = 'backend'   # 'frontend' | 'backend'
+    language: Optional[str] = 'java'      # 'java'|'python'|'go'|'other'|'vue'|'react'
 
 
 class CacheProjectListResponse(BaseModel):

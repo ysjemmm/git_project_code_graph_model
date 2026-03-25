@@ -8,6 +8,9 @@ interface ProjectMeta {
   branch?: string
   commitHash?: string
   id?: number | null
+  appType?: string    // 'frontend' | 'backend'
+  language?: string   // 'java' | 'python' | 'go' | 'other' | 'vue' | 'react'
+  hasGraph?: boolean  // 是否已有代码图谱（commit_hash 非空视为有）
 }
 
 type ProjectSource = 'graphProjects' | 'cacheApplicationProjects' | 'gitRepos'
@@ -110,6 +113,9 @@ export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: Project
             branch: x.branch ? String(x.branch) : '',
             commitHash: x.commit_hash ? String(x.commit_hash) : '',
             id: x.id ?? null,
+            appType: x.app_type ?? 'backend',
+            language: x.language ?? 'java',
+            hasGraph: Boolean(x.commit_hash),
           }))
         return
       }
@@ -315,5 +321,9 @@ export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: Project
     onCommitSearch,
     onBranchDropdown,
     onCommitDropdown,
+    // 所选应用的类型信息
+    selectedAppType: computed(() => selectedMeta.value?.appType ?? 'backend'),
+    selectedLanguage: computed(() => selectedMeta.value?.language ?? 'java'),
+    selectedHasGraph: computed(() => Boolean(selectedMeta.value?.hasGraph)),
   }
 }

@@ -346,3 +346,114 @@ def git_diff_file(
         "truncated": truncated,
         "patch": patch,
     }
+
+
+@router.post("/git-apply-and-commit")
+def git_apply_and_commit(body: dict):
+    """
+    将 unified diff 应用到本地缓存仓库，建分支、commit、push。
+    body: { git_url, project_name?, branch, commit_msg, diff, reviewer? }
+    project_name 优先用于定位本地缓存目录，没有则 fallback 到 git_url 解析。
+    """
+    import tempfile, os, re
+
+    git_url    = (body.get("git_url") or "").strip()
+    project_name = (body.get("project_name") or "").strip()
+    branch     = (body.get("branch") or "").strip()
+    commit_msg = (body.get("commit_msg") or "").strip()
+    diff_text  = (body.get("diff") or "").strip()
+
+    if not git_url:
+        return {"ok": False, "message": "git_url 不能为空"}
+    if not project_name:
+        return {"ok": False, "message": "project_name 不能为空，请确保已选择应用"}
+    if not branch:
+        return {"ok": False, "message": "branch 不能为空"}
+    if not commit_msg:
+        return {"ok": False, "message": "commit_msg 不能为空"}
+    if not diff_text:
+        return {"ok": False, "message": "diff 不能为空"}
+
+    # 直接用 project_name 定位缓存目录
+    from tools.constants import CACHE_GIT_REPOS_PATH
+    repo_dir = CACHE_GIT_REPOS_PATH / project_name
+    if not repo_dir.exists():
+        return {"ok": False, "message": f"本地未找到仓库缓存目录 '{project_name}'，请先完成图谱导入"}
+
+    # ── 预检：验证 diff 里的文件路径在仓库中真实存在 ──
+    # 解析 +++ b/path 行，提取目标文件路径
+    target_paths = re.findall(r'^\+\+\+ b/(.+)$', diff_text, re.MULTILINE)
+    # 过滤掉 /dev/null（新增文件不需要预检）
+    missing = []
+    for p in target_paths:
+        p = p.strip()
+        if p == '/dev/null':
+            continue
+        full = repo_dir / p
+        if not full.exists():
+            missing.append(p)
+    if missing:
+        return {
+            "ok": False,
+            "message": (
+                f"diff 中以下文件路径在仓库目录 '{repo_dir.name}' 下不存在，"
+                f"请检查 AI 生成的 diff 路径是否正确：\n" +
+                "\n".join(f"  • {p}" for p in missing)
+            ),
+            "missing_paths": missing,
+        }
+
+    steps = []
+
+    # 1. fetch 最新
+    rc, _, err = _run_git_text(repo_dir, ["fetch", "--all", "--prune"])
+    if rc != 0:
+        return {"ok": False, "message": f"git fetch 失败：{err.strip()}", "steps": steps}
+    steps.append("git fetch --all")
+
+    # 2. 切到默认分支（main/master）再建新分支
+    for base in ("main", "master", "origin/main", "origin/master"):
+        rc, _, _ = _run_git_text(repo_dir, ["checkout", base])
+        if rc == 0:
+            steps.append(f"git checkout {base}")
+            break
+    else:
+        return {"ok": False, "message": "无法切换到 main/master 分支", "steps": steps}
+
+    # 3. 建新分支
+    rc, _, err = _run_git_text(repo_dir, ["checkout", "-b", branch])
+    if rc != 0:
+        return {"ok": False, "message": f"git checkout -b {branch} 失败：{err.strip()}", "steps": steps}
+    steps.append(f"git checkout -b {branch}")
+
+    # 4. 写 patch 文件并 apply
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".patch", delete=False, encoding="utf-8") as f:
+        f.write(diff_text)
+        patch_path = f.name
+    try:
+        rc, out, err = _run_git_text(repo_dir, ["apply", "--whitespace=fix", patch_path])
+        if rc != 0:
+            return {"ok": False, "message": f"git apply 失败：{err.strip()}", "steps": steps}
+        steps.append("git apply patch")
+    finally:
+        os.unlink(patch_path)
+
+    # 5. git add -A
+    rc, _, err = _run_git_text(repo_dir, ["add", "-A"])
+    if rc != 0:
+        return {"ok": False, "message": f"git add 失败：{err.strip()}", "steps": steps}
+    steps.append("git add -A")
+
+    # 6. commit
+    rc, _, err = _run_git_text(repo_dir, ["commit", "-m", commit_msg])
+    if rc != 0:
+        return {"ok": False, "message": f"git commit 失败：{err.strip()}", "steps": steps}
+    steps.append(f"git commit -m '{commit_msg}'")
+
+    # 7. push
+    rc, _, err = _run_git_text(repo_dir, ["push", "-u", "origin", branch])
+    if rc != 0:
+        return {"ok": False, "message": f"git push 失败：{err.strip()}", "steps": steps}
+    steps.append(f"git push origin {branch}")
+
+    return {"ok": True, "message": "已成功提交并推送", "branch": branch, "steps": steps}

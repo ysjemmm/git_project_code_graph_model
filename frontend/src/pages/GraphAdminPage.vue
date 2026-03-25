@@ -807,6 +807,14 @@ const {
 
 const selectedMeta = repoState.selectedMeta
 
+// 判断发布记录对应的应用是否为 Java 后端应用
+function isPublishRecordJavaApp(task: any): boolean {
+  const projectName = String(task?.project_name || '')
+  const meta = repoState.repos.value.find((r: any) => r.name === projectName)
+  if (!meta) return false
+  return meta.appType === 'backend' && meta.language === 'java'
+}
+
 const refType = ref<'branch' | 'commit'>('branch')
 
 watch(
@@ -2125,10 +2133,10 @@ const columns = [
           <a-descriptions-item label="Ref">
             <span class="mono">{{ publishRecordTask.commit_id || publishRecordTask.branch || '-' }}</span>
           </a-descriptions-item>
-          <a-descriptions-item label="Maven 扫描">
+          <a-descriptions-item v-if="isPublishRecordJavaApp(publishRecordTask)" label="Maven 扫描">
             <span class="mono">{{ boolLabel(publishRecordTask.maven_scan_enabled) }}</span>
           </a-descriptions-item>
-          <a-descriptions-item label="强制 Maven">
+          <a-descriptions-item v-if="isPublishRecordJavaApp(publishRecordTask)" label="强制 Maven">
             <span class="mono">{{ boolLabel(publishRecordTask.force_maven) }}</span>
           </a-descriptions-item>
           <a-descriptions-item label="清理旧图谱">

@@ -130,6 +130,8 @@ def submit_import_task(body: Dict[str, Any]) -> Dict[str, Any]:
     clear_database = bool(body.get("clear_database", False))
     auto_link_external = bool(body.get("auto_link_external", False))
     task_type = str(body.get("task_type") or "auto").strip().lower()
+    app_type = (body.get("app_type") or "backend").strip()
+    language = (body.get("language") or "java").strip()
     acceptance_enabled = bool(body.get("acceptance_enabled", True))
     acceptance_block_on_fail = bool(body.get("acceptance_block_on_fail", False))
     acceptance_max_drop_ratio = body.get("acceptance_max_drop_ratio", 0.3)
@@ -138,19 +140,34 @@ def submit_import_task(body: Dict[str, Any]) -> Dict[str, Any]:
 
     if not repo_url:
         return {"ok": False, "message": "repo_url 不能为空"}
+    if not project_name:
+        return {"ok": False, "message": "应用名称（project_name）不能为空"}
     if not branch and not commit_id:
         return {"ok": False, "message": "branch 与 commit_id 至少填写一个"}
     if branch and commit_id:
         return {"ok": False, "message": "branch 与 commit_id 二选一"}
 
-    # repo_name 默认从 url 推断（与 importer 一致）
-    repo_name = repo_url.split("/")[-1].replace(".git", "")
+    # repo_name 统一使用 project_name，保证缓存目录与应用名称一致
+    repo_name = project_name
+
+    # 查重：project_name 必须唯一
+    try:
+        from api.main import get_business_db
+        bdb = get_business_db()
+        dup = bdb.conn.execute(
+            "SELECT id FROM application_projects_cache WHERE project_name = ?", (project_name,)
+        ).fetchone()
+        if dup:
+            return {"ok": False, "message": f"应用名称 '{project_name}' 已存在，请使用其他名称"}
+    except Exception:
+        pass  # 查重失败不阻断，数据库唯一索引兜底
+
     try:
         task_id = q.submit_task(
             repo_url=repo_url,
             branch=branch or "main",
             repo_name=repo_name,
-            project_name=project_name or repo_name,
+            project_name=project_name,
             java_source_dir=java_source_dir,
             commit_id=commit_id or None,
             clear_database=clear_database,
@@ -165,6 +182,26 @@ def submit_import_task(body: Dict[str, Any]) -> Dict[str, Any]:
         )
     except Exception as e:
         return {"ok": False, "message": str(e)}
+
+    # 写入 app_type / language 到应用缓存表
+    try:
+        from api.main import get_business_db
+        bdb = get_business_db()
+        bdb.conn.execute(
+            """INSERT INTO application_projects_cache (repo_name, project_name, project_type, repo_url, app_type, language, created_at, updated_at)
+               VALUES (?, ?, 'Application', ?, ?, ?, datetime('now'), datetime('now'))
+               ON CONFLICT(repo_name) DO UPDATE SET
+                 project_name=excluded.project_name,
+                 project_type='Application',
+                 repo_url=excluded.repo_url,
+                 app_type=excluded.app_type,
+                 language=excluded.language,
+                 updated_at=excluded.updated_at""",
+            (repo_name, project_name, repo_url, app_type, language),
+        )
+        bdb.conn.commit()
+    except Exception:
+        pass  # 不影响主流程
 
     return {"ok": True, "task_id": task_id}
 

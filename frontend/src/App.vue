@@ -194,6 +194,7 @@ function handleLogout() {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin-bottom: 4px;
 }
 .sider-user-id {
   color: rgba(255,255,255,.65);

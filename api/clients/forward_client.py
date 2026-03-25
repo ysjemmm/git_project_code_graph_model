@@ -137,8 +137,10 @@ def _unwrap(resp: dict, context: str = "") -> Any:
         return resp
 
     def _is_success_code(code: Any) -> bool:
-        """判断 code 是否表示成功：0、None、'OK'、'ok'、'SUCCESS'、'success' 均视为成功。"""
+        """判断 code 是否表示成功：0、None、'OK'、'ok'、'SUCCESS'、'success'、10000000 均视为成功。"""
         if code is None or code == 0:
+            return True
+        if isinstance(code, int) and code == 10000000:
             return True
         if isinstance(code, str) and code.upper() in ("OK", "SUCCESS"):
             return True

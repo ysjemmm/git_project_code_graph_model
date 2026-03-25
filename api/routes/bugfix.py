@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 from pathlib import Path
 from typing import AsyncIterator, List, Optional
@@ -12,13 +13,14 @@ from typing import AsyncIterator, List, Optional
 from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 
-from api.agent import run_bugfix_agent
-from api.prompts import BUG_EXPERT_SYSTEM_PROMPT
+from api.agent import run_bugfix_agent, BugInfoUnavailableError
+from api.prompts import BUG_EXPERT_SYSTEM_PROMPT, STRUCTURED_RESULT_PROMPT
 from api.schemas import BugfixRequest
 from api.runtime_state import bugfix_repo_enter, bugfix_repo_exit
 from api.utils import repo_dir_from_url, repo_name_from_url, git_checkout
 
 router = APIRouter(prefix="/api", tags=["bugfix"])
+logger = logging.getLogger("api.bugfix")
 
 
 def _sse_event(data: dict) -> str:
@@ -35,6 +37,7 @@ async def _stream_bugfix_async(
     provider: str = "deepseek",
     model: Optional[str] = None,
     uploaded_file_names: Optional[List[str]] = None,
+    session_id: Optional[str] = None,
     history: Optional[List[dict]] = None,
 ) -> AsyncIterator[str]:
     """流式 Bugfix：拉取工具上下文 + 调用大模型 SSE 流式输出。仅将 uploaded_file_names 中的文件纳入可读上下文。"""
@@ -66,9 +69,10 @@ async def _stream_bugfix_async(
         user_parts.append(f"目标版本：{ref_display}")
     user_content = "\n".join(user_parts)
 
-    # 兜底：防止模型/工具链长时间无响应导致前端一直卡在最后一个 tool
-    # 可通过环境变量 BUGFIX_STREAM_TIMEOUT_SEC 调整（默认 480s，长分析建议 600+）
     timeout_sec = int(os.environ.get("BUGFIX_STREAM_TIMEOUT_SEC", "480") or "480")
+
+    # 收集完整 AI 文本，用于结构化提取
+    full_ai_text: List[str] = []
 
     bugfix_repo_enter(repo_name)
     try:
@@ -79,15 +83,14 @@ async def _stream_bugfix_async(
                 project_name=project_name or None,
                 ref=ref_display or None,
                 allowed_file_names=names_for_ctx,
+                session_id=session_id or None,
                 provider=provider if provider in ("deepseek", "claude") else "deepseek",
                 model=model or None,
                 history=history or [],
             ):
-                # 客户端已断开（前端点了“结束”或网络断开）→ 尽快退出，释放模型/工具链资源
                 if await request.is_disconnected():
                     return
                 if ev_type == "tool":
-                    # 真实发送时不展示“读取文件列表”工具步骤（避免噪音/重复），但保留其它工具与思考过程
                     kind = payload.get("kind", "")
                     if kind in ("list_uploaded_files", "file_list"):
                         continue
@@ -100,13 +103,18 @@ async def _stream_bugfix_async(
                 elif ev_type == "text_chunk":
                     content = payload.get("content") or ""
                     if content:
+                        full_ai_text.append(content)
                         yield _sse_event({"type": "text_chunk", "content": content})
                 elif ev_type == "text":
                     content = (payload.get("content") or "").strip()
                     if content:
+                        full_ai_text.append(content)
                         yield _sse_event({"type": "text", "content": content})
     except asyncio.CancelledError:
-        # StreamingResponse 在客户端断开时会取消任务，这里吞掉即可，避免噪音堆栈
+        return
+    except BugInfoUnavailableError as e:
+        yield _sse_event({"type": "error", "content": str(e)})
+        yield _sse_event({"type": "done", "ok": False, "message": "bug_info_unavailable"})
         return
     except TimeoutError:
         yield _sse_event({"type": "error", "content": f"请求超时：超过 {timeout_sec}s 未完成（已中止）。"})
@@ -119,6 +127,40 @@ async def _stream_bugfix_async(
     finally:
         bugfix_repo_exit(repo_name)
 
+    # ── 结构化提取：把 AI 完整输出整理成 bug_cause / bug_location / fix_plans ──
+    if full_ai_text:
+        try:
+            from api.llm import stream_chat
+            combined = "".join(full_ai_text)
+            extract_messages = [
+                {"role": "system", "content": STRUCTURED_RESULT_PROMPT},
+                {"role": "user", "content": f"以下是 AI Bug 分析的完整内容：\n\n{combined}"},
+            ]
+            json_buf: List[str] = []
+            async for chunk in stream_chat(
+                extract_messages,
+                provider=provider if provider in ("deepseek", "claude") else "deepseek",
+                model=model or None,
+            ):
+                json_buf.append(chunk)
+            raw_json = "".join(json_buf).strip()
+            # 去掉可能的 markdown 代码块包裹
+            if raw_json.startswith("```"):
+                raw_json = raw_json.split("```", 2)[1]
+                if raw_json.startswith("json"):
+                    raw_json = raw_json[4:]
+                raw_json = raw_json.rsplit("```", 1)[0].strip()
+            structured = json.loads(raw_json)
+            # 过滤掉没有 diff 的修复方案
+            if isinstance(structured.get("fix_plans"), list):
+                structured["fix_plans"] = [
+                    p for p in structured["fix_plans"]
+                    if isinstance(p, dict) and str(p.get("diff", "")).strip()
+                ]
+            yield _sse_event({"type": "structured_result", "data": structured})
+        except Exception as e:
+            logger.warning("结构化提取失败（不影响主流程）: %s", e)
+
     yield _sse_event({"type": "done", "ok": True, "message": "分析完成"})
 
 
@@ -128,99 +170,39 @@ async def _stream_bugfix_test_async(
     git_branch: Optional[str],
     git_commit: Optional[str],
 ) -> AsyncIterator[str]:
-    """
-    测试用 SSE：不调用大模型，直接模拟一段 tool + 流式文本 + done 事件，
-    用于验证前端流式渲染与 loading 状态机。
-    """
-    import asyncio
-
+    """测试用 SSE：不调用大模型，直接模拟事件流。"""
     ref_display = (git_branch or "").strip() or ((git_commit or "")[:8] if (git_commit or "").strip() else "")
 
-    # 1) 读取上传文件
-    yield _sse_event(
-        {
-            "type": "tool",
-            "kind": "file_read",
-            "title": "读取文件：bugfix-context-Example-1.csv",
-            "content": "colA,colB\nfoo,bar\nbaz,qux\n...",
-        }
-    )
+    yield _sse_event({"type": "tool", "kind": "file_read", "title": "读取文件：bugfix-context-Example-1.csv", "content": "colA,colB\nfoo,bar\nbaz,qux\n..."})
     await asyncio.sleep(0.4)
-
-    # 3) 合并两个源码文件到同一个 tool step
-    yield _sse_event(
-        {
-            "type": "tool",
-            "kind": "read_source_file",
-            "title": "读取源代码文件",
-            "content": (
-                "```java\n"
-                "src/main/java/com/timevale/forward/service/controller/BugfixController.java  (lines 12-34 / 120)\n"
-                "  12: @RestController\n"
-                "  13: public class BugfixController {\n"
-                "  14:   // ...\n"
-                "  33: }\n"
-                "```\n"
-                "```typescript\n"
-                "frontend/src/pages/BugfixChatPage.vue  (lines 200-245 / 450)\n"
-                "  200: async function runBugfix(userMessage?: string) {\n"
-                "  201:   // ...\n"
-                "  245: }\n"
-                "```\n"
-            ),
-        }
-    )
+    yield _sse_event({"type": "tool", "kind": "read_source_file", "title": "读取源代码文件", "content": "```java\nsrc/main/java/com/timevale/forward/service/controller/BugfixController.java\n```"})
     await asyncio.sleep(0.4)
-
-    # 4) reasoning
-    yield _sse_event(
-        {
-            "type": "tool",
-            "kind": "reasoning",
-            "title": "测试：生成模拟回复",
-            "content": f"收到问题：{message or '-'}\n\n"
-            f"{'目标仓库：' + git_url if git_url else '未提供仓库'}\n"
-            f"{'目标版本：' + ref_display if ref_display else '未提供版本'}",
-        }
-    )
+    yield _sse_event({"type": "tool", "kind": "reasoning", "title": "测试：生成模拟回复", "content": f"收到问题：{message or '-'}"})
     await asyncio.sleep(0.6)
-
-    # 4.5) 分析链路（测试用，便于验证前端展示）
-    yield _sse_event(
-        {
-            "type": "analysis_chain",
-            "steps": [
-                {"type": "problem", "label": "拿到问题", "detail": "用户描述的现象或报错信息，需要定位根因并给出修复建议"},
-                {"type": "query_code_graph", "label": "查图", "detail": "在图谱中查询 ProjectServiceImpl.processFlow 方法的定义与调用关系，定位实现位置"},
-                {"type": "read_uploaded_file", "label": "查文件", "detail": "读取用户上传的 bugfix-context-Example-1.csv，确认第 19 行报错内容与上下文"},
-                {"type": "read_source_file", "label": "读源码", "detail": "查看 BugfixController.java 第 12-34 行与 BugfixChatPage.vue 第 200-245 行实现"},
-                {"type": "step", "label": "结论", "detail": "综合图谱与源码，给出 NPE 根因与修改建议（含文件与行号）"},
-            ],
-        }
-    )
+    yield _sse_event({"type": "analysis_chain", "steps": [
+        {"type": "problem", "label": "拿到问题", "detail": "用户描述的现象或报错信息"},
+        {"type": "query_code_graph", "label": "查图", "detail": "查询 ProjectServiceImpl.processFlow 方法"},
+        {"type": "step", "label": "结论", "detail": "定位到 NPE 根因"},
+    ]})
     await asyncio.sleep(0.2)
 
-    # 5) 流式文本块，每块之间加延迟模拟打字效果
-    chunks = [
-        "好的，我进入「测试回复」模式。\n",
-        "下面我展示一组模拟的工具调用事件：包括读取上传文件、读取源码文件（带行号范围），以及折叠面板里的标签渲染效果。\n",
-        "我会模拟后端的 SSE 输出，看看你前端的流式渲染和动画是否正常。\n",
-        "如果看到这里连续出现文本块，说明 `text_chunk`/`done` 流程工作正常。\n",
-        "测试完成！你可以继续发送真实请求。",
-    ]
+    chunks = ["好的，我进入「测试回复」模式。\n", "流式渲染测试正常。\n", "测试完成！"]
     for c in chunks:
         yield _sse_event({"type": "text_chunk", "content": c})
         await asyncio.sleep(0.15)
 
+    # 测试结构化结果
+    yield _sse_event({"type": "structured_result", "data": {
+        "bug_cause": "processFlow 入参未做 null 校验，导致 NPE",
+        "bug_location": [{"file": "src/main/java/com/example/ProjectServiceImpl.java", "line_range": "142", "description": "入参未校验"}],
+        "fix_plans": [{"id": 1, "title": "增加 null 校验", "description": "在调用前判断入参是否为 null", "diff": "--- a/src/main/java/com/example/ProjectServiceImpl.java\n+++ b/src/main/java/com/example/ProjectServiceImpl.java\n@@ -140,6 +140,9 @@\n     public void processFlow(ProjectModifyReq req) {\n+        if (req == null) {\n+            return;\n+        }\n         req.setProjectName(convert(req));\n     }"}],
+    }})
     yield _sse_event({"type": "done", "ok": True, "message": "测试完成"})
-
 
 
 @router.post("/bugfix/analyze")
 def bugfix_analyze(body: BugfixRequest, request: Request):
-    """
-    AI Bug 专家流式分析：调用大模型（DeepSeek/Claude）+ 图库与上传文件上下文，以 SSE 流式返回回答。
-    """
+    """AI Bug 专家流式分析。"""
     return StreamingResponse(
         _stream_bugfix_async(
             request=request,
@@ -232,6 +214,7 @@ def bugfix_analyze(body: BugfixRequest, request: Request):
             provider=body.provider or "deepseek",
             model=body.model,
             uploaded_file_names=body.uploaded_file_names,
+            session_id=body.session_id,
             history=[{"role": m.role, "content": m.content} for m in (body.history or [])],
         ),
         media_type="text/event-stream",
@@ -241,9 +224,7 @@ def bugfix_analyze(body: BugfixRequest, request: Request):
 
 @router.post("/bugfix/test-analyze")
 def bugfix_test_analyze(body: BugfixRequest):
-    """
-    测试用 AI 回复：返回固定的 SSE 事件流，不依赖 git 缓存、不调用大模型。
-    """
+    """测试用 AI 回复。"""
     return StreamingResponse(
         _stream_bugfix_test_async(
             message=body.message,

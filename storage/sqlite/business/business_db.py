@@ -114,6 +114,7 @@ class BusinessSqliteDB:
         repair_plan = {
             "git_import_tasks": migrations_dir / "001_init.sql",
             "import_task_delta_details": migrations_dir / "002_import_task_delta_details.sql",
+            "bugfix_history": migrations_dir / "003_bugfix_history.sql",
         }
 
         for table_name, sql_path in repair_plan.items():

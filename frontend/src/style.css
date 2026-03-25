@@ -113,6 +113,21 @@ html, body {
   overflow: hidden !important;
 }
 
+/* 锁死配置抽屉宽度，防止关闭动画时内容撑宽 */
+.bp-drawer .ant-drawer-content-wrapper {
+  width: 560px !important;
+  max-width: 560px !important;
+  overflow: hidden !important;
+}
+.bp-drawer .ant-drawer-content {
+  overflow: hidden !important;
+  width: 560px !important;
+}
+.bp-drawer .ant-drawer-body {
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+}
+
 /* ─── scrollbar-gutter：防止滚动条出现时挤压内容 ─── */
 .chat-log,
 .tool-content,

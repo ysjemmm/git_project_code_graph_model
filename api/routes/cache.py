@@ -107,6 +107,8 @@ def _scan_application_projects_from_filesystem(*, include_libs: bool) -> List[Ca
                 cache_dir=(md.get("cache_dir") if isinstance(md, dict) else None) or str(repo_dir),
                 cache_size_mb=size_mb,
                 merkle_branches=_list_merkle_branches(repo_name),
+                app_type=(md.get("app_type") if isinstance(md, dict) else None) or "backend",
+                language=(md.get("language") if isinstance(md, dict) else None) or "java",
                 **git_info,
             )
         )
@@ -272,10 +274,11 @@ def _git_repo_info(repo_dir: Path) -> Dict[str, Any]:
     }
 
 
-@router.get("/cache/application-projects", response_model=CacheProjectListResponse)
+@router.get("/cache/application-projects")
 def cache_application_projects(
     include_libs: bool = Query(False, description="是否包含 Lib 项目（默认只返回 Application）"),
     refresh: bool = Query(False, description="是否强制从本地缓存重新扫描并写入数据库（再返回）"),
+    java_only: bool = Query(False, description="只返回后端 Java 应用（用于图谱导入场景）"),
 ) -> CacheProjectListResponse:
     # 应用信息必须落盘数据库：DB 优先，只有当 DB 空或 refresh=true 时才扫描本地。
     try:
@@ -287,16 +290,16 @@ def cache_application_projects(
 
         if not refresh and db_count > 0:
             return CacheProjectListResponse(
-                items=attach_link_stats_to_projects(db, repo.list_all(include_libs=include_libs))
+                items=attach_link_stats_to_projects(db, repo.list_all(include_libs=include_libs, java_only=java_only))
             )
 
         scanned = _scan_application_projects_from_filesystem(include_libs=include_libs)
         repo.upsert_many(scanned)
         return CacheProjectListResponse(
-            items=attach_link_stats_to_projects(db, repo.list_all(include_libs=include_libs))
+            items=attach_link_stats_to_projects(db, repo.list_all(include_libs=include_libs, java_only=java_only))
         )
     except Exception as e:
-        # 尽量仍尝试把扫描结果落盘；若也失败，直接让接口报错，避免“看到了但其实没落盘”
+        # 尽量仍尝试把扫描结果落盘；若也失败，直接让接口报错，避免"看到了但其实没落盘"
         scanned = _scan_application_projects_from_filesystem(include_libs=include_libs)
         try:
             from storage.sqlite.business import get_business_db, ApplicationProjectsRepo
@@ -304,11 +307,12 @@ def cache_application_projects(
             db = get_business_db()
             repo = ApplicationProjectsRepo(db=db)
             repo.upsert_many(scanned)
-            items = attach_link_stats_to_projects(db, repo.list_all(include_libs=include_libs))
+            items = attach_link_stats_to_projects(db, repo.list_all(include_libs=include_libs, java_only=java_only))
             return CacheProjectListResponse(items=items)
         except Exception:
             # 兜底失败：抛出原错误 + 扫描结果无法落盘
             raise RuntimeError(f"应用信息落盘数据库失败：{e}")
+
 
 
 @router.get("/cache/application-projects/{app_id}/linked-by")
@@ -379,6 +383,57 @@ def _truncate_merkle(node: Dict[str, Any], *, max_depth: int, max_children: int,
     return out
 
 
+
+
+@router.post("/cache/application-projects")
+def create_application(body: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    新建应用（仅登记信息，不发起导入任务）。
+    body: { project_name, app_type, language, repo_url, maven_scan_enabled, force_maven, clear_database, auto_link_external }
+    """
+    from storage.sqlite.business import get_business_db, ApplicationProjectsRepo
+
+    project_name       = (body.get("project_name") or "").strip()
+    app_type           = (body.get("app_type") or "backend").strip()
+    language           = (body.get("language") or "java").strip()
+    repo_url           = (body.get("repo_url") or "").strip()
+    maven_scan_enabled = 1 if body.get("maven_scan_enabled", True) else 0
+    force_maven        = 1 if body.get("force_maven", False) else 0
+    clear_database     = 1 if body.get("clear_database", False) else 0
+    auto_link_external = 1 if body.get("auto_link_external", False) else 0
+
+    if not project_name:
+        return {"ok": False, "message": "应用名称不能为空"}
+    if not repo_url:
+        return {"ok": False, "message": "Git 仓库地址不能为空"}
+
+    db = get_business_db()
+
+    # 查重
+    dup = db.conn.execute(
+        "SELECT id FROM application_projects_cache WHERE project_name = ?", (project_name,)
+    ).fetchone()
+    if dup:
+        return {"ok": False, "message": f"应用名称 '{project_name}' 已存在"}
+
+    try:
+        db.conn.execute(
+            """INSERT INTO application_projects_cache
+               (repo_name, project_name, project_type, repo_url, app_type, language,
+                maven_scan_enabled, force_maven, clear_database, auto_link_external,
+                created_at, updated_at)
+               VALUES (?, ?, 'Application', ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))""",
+            (project_name, project_name, repo_url, app_type, language,
+             maven_scan_enabled, force_maven, clear_database, auto_link_external),
+        )
+        db.conn.commit()
+    except Exception as e:
+        return {"ok": False, "message": f"写入失败：{e}"}
+
+    row = db.conn.execute(
+        "SELECT id FROM application_projects_cache WHERE project_name = ?", (project_name,)
+    ).fetchone()
+    return {"ok": True, "id": row["id"] if row else None}
 
 
 @router.patch("/cache/application-projects/{app_id}/import-settings")

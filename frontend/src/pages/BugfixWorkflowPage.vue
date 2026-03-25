@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { BugOutlined, QuestionCircleOutlined, LoadingOutlined, MessageOutlined, ReloadOutlined } from '@ant-design/icons-vue'
+import { BugOutlined, LoadingOutlined, MessageOutlined, ReloadOutlined, FullscreenOutlined } from '@ant-design/icons-vue'
 import { Modal } from 'ant-design-vue'
 import { marked } from 'marked'
 import hljs from 'highlight.js'
-import { runForwardProcessflowNpeFixSse, type BugfixSseEvent, type ToolStep } from '../api'
-import { runMockExecution } from '../api/mockExecution'
+import { runForwardProcessflowNpeFixSse, type BugfixSseEvent, type ToolStep, listBugfixHistory, createBugfixHistory, updateBugfixHistoryStatus, type BugfixHistoryItem } from '../api'
+import { gitApplyAndCommit } from '../api'
+// import { runMockExecution } from '../api/mockExecution'  // 已废弃，使用真实接口
 import { listOnlineBugs, searchOnlineBugs, type ForwardBugItem } from '../api/invoke'
 import { parseModelChoice } from '../constants'
 import type { ChatMsg } from '../types'
 import ChatPanel from '../components/ChatPanel.vue'
+import DiffViewer from '../components/DiffViewer.vue'
 import { useRepo } from '../composables/useRepo'
 import { useUpload } from '../composables/useUpload'
 import { modelOptions } from '../constants'
@@ -32,6 +34,118 @@ function renderMarkdown(text: string): string {
   try { return marked.parse(text) as string } catch { return text }
 }
 
+// ── 从 AI 回复中提取分析摘要 ──
+function extractAnalysisSummary(messages: ChatMsg[]): {
+  rootCause: string
+  involvedFiles: string[]
+  fixSuggestions: Array<{
+    id: number
+    file: string
+    lineRange: string
+    problem: string
+    solution: string
+    selected: boolean
+  }>
+} {
+  const fullText = messages
+    .filter(m => m.role === 'ai')
+    .map(m => m.content)
+    .join('\n')
+  
+  // 提取根本原因（查找"根本原因"、"root cause"、"原因"等关键词后的内容）
+  let rootCause = '未识别到根本原因'
+  const causePatterns = [
+    /根本原因[：:]?\s*([^\n。.]+)/i,
+    /root\s*cause[：:]?\s*([^\n。.]+)/i,
+    /[原因因][：:]?\s*([^\n。.]+)/i,
+    /问题在于[：:]?\s*([^\n。.]+)/i,
+  ]
+  for (const pattern of causePatterns) {
+    const match = fullText.match(pattern)
+    if (match?.[1]?.trim()) {
+      rootCause = match[1].trim()
+      break
+    }
+  }
+  
+  // 提取涉及文件（查找文件名模式 .java/.js/.py 等）
+  const filePattern = /(?:\b|^)([\w/\\\-]+?\.(?:java|js|ts|py|go|cpp|c|h|xml|yaml|yml|json|sql))(?:\b|$)/gi
+  const files = Array.from(new Set(
+    Array.from(fullText.matchAll(filePattern)).map(m => m[1])
+  )).slice(0, 5) // 最多取前5个
+  
+  // 提取修复建议（解析结构化格式：编号 | 文件 | 行号 | 问题 → 解决方案）
+  const fixSuggestions: Array<{
+    id: number
+    file: string
+    lineRange: string
+    problem: string
+    solution: string
+    selected: boolean
+  }> = []
+  
+  // 匹配格式：数字 | 文件名 | 行号 | 问题描述 → 解决方案
+  const suggestionPattern = /(\d+)\s*\|\s*'([^']+?)'\s*\|\s*([\d\-–]+)\s*\|\s*([^→]+?)\s*→\s*(.+?)(?=\n\d+\s*\||$)/gs
+  let match
+  while ((match = suggestionPattern.exec(fullText)) !== null) {
+    fixSuggestions.push({
+      id: parseInt(match[1]),
+      file: match[2].trim(),
+      lineRange: match[3].trim(),
+      problem: match[4].trim(),
+      solution: match[5].trim(),
+      selected: false  // 默认都不选中
+    })
+  }
+  
+  // 如果没匹配到结构化格式，尝试其他方式提取
+  if (fixSuggestions.length === 0) {
+    const fallbackPatterns = [
+      /修复建议[：:]?\s*((?:(?!##|\n\s*\n).)*)/is,
+      /解决方案[：:]?\s*((?:(?!##|\n\s*\n).)*)/is,
+      /suggestions?[：:]?\s*((?:(?!##|\n\s*\n).)*)/is,
+      /fix.*?[：:]?\s*((?:(?!##|\n\s*\n).)*)/is,
+    ]
+    const suggestionSections: string[] = []
+    for (const pattern of fallbackPatterns) {
+      const match = fullText.match(pattern)
+      if (match?.[1]?.trim()) {
+        suggestionSections.push(match[1].trim())
+      }
+    }
+    
+    // 转换为统一格式
+    suggestionSections.slice(0, 3).forEach((text, idx) => {
+      fixSuggestions.push({
+        id: idx + 1,
+        file: '未知文件',
+        lineRange: '未知行号',
+        problem: '未识别问题',
+        solution: text,
+        selected: false
+      })
+    })
+  }
+  
+  // 如果还是空的，提供默认项
+  if (fixSuggestions.length === 0) {
+    fixSuggestions.push({
+      id: 1,
+      file: '未识别到相关文件',
+      lineRange: '',
+      problem: '未识别具体问题',
+      solution: '未识别到具体修复建议',
+      selected: false
+    })
+  }
+  
+  return {
+    rootCause,
+    involvedFiles: files.length > 0 ? files : ['未识别到相关文件'],
+    fixSuggestions,
+  }
+}
+
 // ─── 节点定义（响应式，支持拖拽改位置）───────────────────────────────────────
 interface NodeDef {
   id: string
@@ -43,10 +157,11 @@ interface NodeDef {
 }
 
 const nodes = ref<NodeDef[]>([
-  { id: 'project',  title: '项目配置',      desc: '选择仓库 · 关联 Bug · 上传附件', color: '#4a9eff', x: 60,   y: 180 },
-  { id: 'ai',       title: 'AI 分析',      desc: '配置模型与分析深度',               color: '#722ed1', x: 380,  y: 200 },
-  { id: 'confirm',  title: '分析确认',      desc: '人工审查结果',                    color: '#fa8c16', x: 700,  y: 150 },
-  { id: 'fix',      title: '修复执行',      desc: '建分支 · 提交 · CR',             color: '#f5222d', x: 1020, y: 190 },
+  { id: 'project',  title: '项目配置',  desc: '选择仓库 · 关联 Bug · 上传附件', color: '#4a9eff', x: 60,   y: 200 },
+  { id: 'ai',       title: 'AI 分析',  desc: '配置模型与问题描述',               color: '#722ed1', x: 380,  y: 200 },
+  { id: 'confirm',  title: '分析确认',  desc: '人工审查结果',                    color: '#fa8c16', x: 700,  y: 80  },
+  { id: 'fix',      title: '修复执行',  desc: '建分支 · 提交 · CR',             color: '#f5222d', x: 1020, y: 80  },
+  { id: 'error',    title: '异常结束',  desc: '分析失败或无法获取 Bug 信息',      color: '#8c8c8c', x: 700,  y: 340 },
 ])
 
 const NODE_W = 220
@@ -55,6 +170,7 @@ const PIN_R  = 7
 
 // ─── 画布变换：平移 + 缩放 ────────────────────────────────────────────────────
 const canvasRef = ref<HTMLElement | null>(null)
+const pageRef   = ref<HTMLElement | null>(null)
 const panX  = ref(0)
 const panY  = ref(0)
 const scale = ref(1)
@@ -153,22 +269,61 @@ function onPointerUp() {
 function outPin(n: NodeDef) { return { x: n.x + NODE_W, y: n.y + NODE_H / 2 } }
 function inPin(n: NodeDef)  { return { x: n.x,           y: n.y + NODE_H / 2 } }
 
+// 手动定义边：{ from, to, isError? }
+// isError 边只在 AI 失败/无结构化数据时激活
+interface EdgeDef { from: string; to: string; isError?: boolean }
+const EDGES: EdgeDef[] = [
+  { from: 'project', to: 'ai' },
+  { from: 'ai',      to: 'confirm' },               // 正常路径
+  { from: 'ai',      to: 'error',  isError: true },  // 异常路径
+  { from: 'confirm', to: 'fix' },
+]
+
+// AI 完成后才显示后续节点/边，且只显示对应路径
+const visibleNodeIds = computed(() => {
+  const aiDone   = aiExecutedSuccessfully.value
+  const aiFailed = execFailed.value
+  const hasStructured = !!nodeIO.value.ai.output.structuredResult
+  const base = ['project', 'ai']
+  if (!aiDone && !aiFailed) return base
+  // 异常路径
+  if (aiFailed || !hasStructured) return [...base, 'error']
+  // 正常路径
+  return [...base, 'confirm', 'fix']
+})
+
+const visibleEdgeIndices = computed(() => {
+  const ids = visibleNodeIds.value
+  return EDGES.map((e, i) => ids.includes(e.from) && ids.includes(e.to) ? i : -1).filter(i => i >= 0)
+})
+
 const connections = computed(() =>
-  nodes.value.slice(0, -1).map((n, i) => {
-    const out = outPin(n)
-    const inp = inPin(nodes.value[i + 1])
+  EDGES.map(({ from, to }, i) => {
+    if (!visibleEdgeIndices.value.includes(i)) return null
+    const src = nodes.value.find(n => n.id === from)!
+    const tgt = nodes.value.find(n => n.id === to)!
+    const out = outPin(src)
+    const inp = inPin(tgt)
     const dx  = Math.abs(inp.x - out.x) * 0.5
     return `M${out.x},${out.y} C${out.x+dx},${out.y} ${inp.x-dx},${inp.y} ${inp.x},${inp.y}`
   })
 )
 
 function wireColor(i: number) {
-  if (activeWireIdx.value === i) return nodes.value[i].color
-  const src = nodeState(nodes.value[i].id)
-  const tgt = nodeState(nodes.value[i + 1].id)
-  if (src === 'done') return nodes.value[i].color   // 已连通：节点自身颜色
-  if (tgt === 'pending') return '#e2e8f4'            // 目标未就绪：极淡
-  return '#c4cfe6'                                   // 源节点待配置：中等灰
+  const edge = EDGES[i]
+  if (!edge) return '#c4cfe6'
+  const src = nodes.value.find(n => n.id === edge.from)!
+  const tgt = nodes.value.find(n => n.id === edge.to)!
+  if (activeWireIdx.value === i) return src.color
+  const srcState = nodeState(src.id)
+  const tgtState = nodeState(tgt.id)
+  if (edge.isError) {
+    // 异常边：AI 失败时高亮红色，否则灰色
+    return nodeState('error') === 'active' ? '#ff4d4f' : '#e2e8f4'
+  }
+  if (srcState === 'done') return src.color
+  if (tgtState === 'pending') return '#e2e8f4'
+  return '#c4cfe6'
 }
 
 // ─── 连线点击 ───────────────────────────────────────────────────────────────
@@ -182,29 +337,56 @@ function onWireClick(i: number) {
 function nodeState(id: string): 'done' | 'active' | 'pending' {
   const projDone = canRun.value && !!selectedBug.value
   const aiDone   = aiExecutedSuccessfully.value
+  const aiFailed = execFailed.value
+  const hasStructured = !!nodeIO.value.ai.output.structuredResult
   const confDone = aiDone && confirmDone.value
-  if (id === 'project') return projDone    ? 'done' : 'active'
-  if (id === 'ai')      return aiDone      ? 'done' : (projDone    ? 'active' : 'pending')
-  if (id === 'confirm') return confDone    ? 'done' : (aiDone      ? 'active' : 'pending')
-  if (id === 'fix')     return fixDone.value ? 'done' : (confDone  ? 'active' : 'pending')
+
+  if (id === 'project') return projDone ? 'done' : 'active'
+  if (id === 'ai')      return aiDone   ? 'done' : (projDone ? 'active' : 'pending')
+  // 正常路径：AI 完成且有结构化数据
+  if (id === 'confirm') return confDone ? 'done' : (aiDone && hasStructured ? 'active' : 'pending')
+  if (id === 'fix')     return fixDone.value ? 'done' : (confDone ? 'active' : 'pending')
+  // 异常路径：AI 执行失败 或 AI 完成但无结构化数据（执行中时不触发）
+  if (id === 'error')   return (!isExecuting.value && (aiFailed || (aiDone && !hasStructured))) ? 'active' : 'pending'
   return 'pending'
 }
 function nodeStatusText(id: string) {
   const s = nodeState(id)
-  // AI 分析节点特殊状态文字
   if (id === 'ai') {
     if (s === 'done') return '✓ 已完成'
     if (isExecuting.value) return '执行中…'
     if (s === 'active') return '待执行'
     return '未就绪'
   }
+  if (id === 'error') {
+    if (s === 'active') return execFailed.value ? '⚠ 执行失败' : '⚠ 无结构化数据'
+    return '未触发'
+  }
   return s === 'done' ? '✓ 已完成' : s === 'active' ? '待配置' : '未就绪'
 }
 
 // ─── 配置面板 ────────────────────────────────────────────────────────────────
 const selectedNodeId = ref<string | null>(null)
+const activeNodeId   = ref<string | null>(null)
 const drawerOpen     = ref(false)
-function selectNode(id: string) { selectedNodeId.value = id; drawerOpen.value = true }
+
+// 顶部路径图辅助
+function stepTagClass(id: string) {
+  return [
+    'bp-step-tag--' + nodeState(id),
+    {
+      'bp-step-tag--selected': selectedNodeId.value === id && drawerOpen.value,
+      // spin 动画只给非 error 节点，且 AI 执行中时 error 不能 active
+      'bp-step-tag--spin': id !== 'error' && nodeState(id) === 'active' && drawerOpen.value && selectedNodeId.value !== id,
+    },
+  ]
+}
+function stepDotStyle(id: string) {
+  const n = nodes.value.find(n => n.id === id)!
+  const s = nodeState(id)
+  return { background: s === 'done' ? n.color : s === 'active' ? n.color : '#d9d9d9' }
+}
+function selectNode(id: string) { selectedNodeId.value = id; activeNodeId.value = id; drawerOpen.value = true }
 
 function goToAiNode() {
   if (!projNextDisabled.value) {
@@ -231,7 +413,17 @@ const {
   selectedProjectName, readonlyUrl, readonlyBranch, readonlyCommit, loadingRepos,
   onProjectDropdown, switchRepoMode,
   onBranchSearch, onCommitSearch, onBranchDropdown, onCommitDropdown,
+  selectedAppType, selectedLanguage, selectedHasGraph,
 } = repoState
+
+// 是否需要手动选 branch/commit：非后端Java 或 没有代码图谱
+const needManualRef = computed(() =>
+  !!selectedProjectName.value && (
+    selectedAppType.value !== 'backend' ||
+    selectedLanguage.value !== 'java' ||
+    !selectedHasGraph.value
+  )
+)
 
 function getPopupContainer() { return document.body }
 
@@ -298,20 +490,16 @@ function openBugModal() {
 }
 function onSelectBug(bug: BugItem) { selectedBug.value = bug; bugModalVisible.value = false }
 
-// ─── Step 1: 文件上传 ──────────────────────────────────────────────────────
+// ─── Step 1: 文件上传（只在前端收集，点"开始AI对话"时才真正上传） ────────────
 const uploadState = useUpload(() => repo.value, () => uploadRef.value)
-const { uploadFileList, uploading, customUpload } = uploadState
-async function handleCustomUpload(opt: any) { try { await customUpload(opt) } catch {} }
+const { uploadFileList, uploading, batchUploadForSession } = uploadState
+
+// before-upload 返回 false：阻止 Ant Design 自动上传，只收集文件到 uploadFileList
+function beforeUpload() { return false }
 
 // ─── Step 2: AI 分析 ────────────────────────────────────────────────────────
 const aiModel  = ref<string | undefined>('claude::claude-sonnet-4-6')
-const aiDepth  = ref('standard')
 const aiPrompt = ref('')
-const aiDepthOptions = [
-  { value: 'quick',    label: '快速' },
-  { value: 'standard', label: '标准' },
-  { value: 'deep',     label: '深度' },
-]
 const aiModelOptions = modelOptions
 const aiConfigDone = computed(() => !!aiModel.value && aiPrompt.value.trim().length > 0)
 // AI 真正执行完成（配置成功 + 执行成功）
@@ -322,18 +510,149 @@ const confirmResult = ref<'pass' | 'rework' | null>(null)
 const confirmNote   = ref('')
 const confirmDone   = computed(() => confirmResult.value === 'pass')
 
+function onConfirmPass() {
+  confirmResult.value = 'pass'
+
+  // 自动生成分支名和 commit 信息
+  const plan = nodeIO.value.ai.output.structuredResult?.fix_plans?.find(
+    (p: any) => p.id === selectedFixId.value
+  )
+  const bugId = selectedBug.value?.id ?? ''
+  const now = new Date()
+  const datePart = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
+  const timePart = `${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`
+
+  // 从方案标题提取语义片段：去掉标点、取前20字、转小写、空格换连字符
+  const titleSlug = (plan?.title ?? '')
+    .replace(/[^\u4e00-\u9fa5a-zA-Z0-9\s]/g, '')
+    .trim()
+    .slice(0, 20)
+    .replace(/\s+/g, '-')
+    .toLowerCase()
+
+  const branchSuffix = [bugId && `bug${bugId}`, titleSlug, datePart, timePart]
+    .filter(Boolean)
+    .join('_')
+  fixBranch.value = `aifix_${branchSuffix}`
+
+  // commit 信息：fix(#bugId): 方案标题
+  const commitTitle = plan?.title ?? '修复 Bug'
+  fixCommitMsg.value = bugId
+    ? `fix(#${bugId}): ${commitTitle}`
+    : `fix: ${commitTitle}`
+
+  saveWorkflowState()
+  selectNode('fix')
+}
+
+function onConfirmRework() {
+  Modal.confirm({
+    title: '确认打回重改？',
+    content: '将清空本次 AI 分析结果，返回 AI 分析节点重新执行。',
+    okText: '确认打回',
+    okType: 'danger',
+    cancelText: '取消',
+    onOk: () => {
+      confirmResult.value = 'rework'
+      // 清空 AI 执行结果，回到 AI 分析节点
+      execChatMsgs.value = []
+      execFailed.value = false
+      nodeIO.value.ai.output = {}
+      selectedFixId.value = null
+      confirmNote.value = ''
+      saveWorkflowState()
+      selectNode('ai')
+    },
+  })
+}
+
+// 选中的修复建议ID
+const selectedFixId = ref<number | null>(null)
+
+// diff 放大预览 Modal
+const diffModalVisible = ref(false)
+const diffModalPlan = ref<any>(null)
+
+function openDiffModal(e: MouseEvent, plan: any) {
+  e.stopPropagation()
+  diffModalPlan.value = plan
+  diffModalVisible.value = true
+}
+
+// bug 定位代码预览 Modal
+const locModalVisible = ref(false)
+const locModalActiveIdx = ref(0)
+
+function openLocModal() {
+  locModalActiveIdx.value = 0
+  locModalVisible.value = true
+}
+
+const locationsWithSnippet = computed(() =>
+  (nodeIO.value.ai.output.structuredResult?.bug_location ?? []).filter((l: any) => l.code_snippet?.trim())
+)
+
+// 选择修复建议的函数
+function selectFixSuggestion(id: number) {
+  selectedFixId.value = id
+  // 更新 nodeIO 中的选中状态
+  if (nodeIO.value.ai.output.analysisSummary?.fixSuggestions) {
+    nodeIO.value.ai.output.analysisSummary.fixSuggestions.forEach((s: any) => {
+      s.selected = s.id === id
+    })
+    saveWorkflowState()
+  }
+}
+
 // ─── Step 4: 修复执行 ──────────────────────────────────────────────────────
 const fixBranch    = ref('fix/')
 const fixCommitMsg = ref('fix: ')
 const fixReviewer  = ref('')
-const fixDone      = computed(() => fixBranch.value.trim().length > 4 && fixCommitMsg.value.trim().length > 5)
+const fixDone      = computed(() => fixBranch.value.trim().startsWith('aifix_') && fixCommitMsg.value.trim().length > 5)
+
+// 提交状态
+const fixSubmitting = ref(false)
+const fixSubmitResult = ref<{ ok: boolean; message: string; steps?: string[] } | null>(null)
+
+function onSubmitFix() {
+  const plan = nodeIO.value.ai.output.structuredResult?.fix_plans?.find(
+    (p: any) => p.id === selectedFixId.value
+  )
+  Modal.confirm({
+    title: '确认提交修复到 Git？',
+    content: `将在仓库新建分支 "${fixBranch.value}"，应用 diff 并推送。此操作不可撤销，请确认 diff 内容无误。`,
+    okText: '确认提交',
+    cancelText: '取消',
+    onOk: async () => {
+      fixSubmitting.value = true
+      fixSubmitResult.value = null
+      try {
+        const res = await gitApplyAndCommit({
+          git_url: repo.value?.url ?? '',
+          project_name: selectedProjectName.value || undefined,
+          branch: fixBranch.value,
+          commit_msg: fixCommitMsg.value,
+          diff: plan?.diff ?? '',
+          reviewer: fixReviewer.value || undefined,
+        })
+        fixSubmitResult.value = res
+        if (res.ok) saveWorkflowState()
+      } catch (e: any) {
+        fixSubmitResult.value = { ok: false, message: e?.message ?? String(e) }
+      } finally {
+        fixSubmitting.value = false
+      }
+    },
+  })
+}
 
 // 节点输入输出数据（供后续节点参考）
-const nodeIO = ref<Record<string, NodeIO>>({
+const nodeIO = ref<Record<string, any>>({
   project: { input: {}, output: {} },
   ai:      { input: {}, output: {} },
   confirm: { input: {}, output: {} },
   fix:     { input: {}, output: {} },
+  error:   null,
 })
 
 // ─── AI 执行进度对话面板 ─────────────────────────────────────────────────────
@@ -444,25 +763,92 @@ async function startExecution() {
         const msg = execChatMsgs.value[execStreamingIdx]
         if (msg) msg.streaming = false
       }
+      // ok: false 表示后端明确报错，标记失败
+      if (ev.ok === false) {
+        execFailed.value = true
+      }
       isExecuting.value = false
       execScrollBottom()
-      // AI 分析执行完成，保存输出（供确认节点参考）
+      // 只有成功时才保存分析输出
+      if (!execFailed.value) {
+        nodeIO.value.ai.output = {
+          ...nodeIO.value.ai.output,
+          model: aiModel.value,
+          prompt: aiPrompt.value,
+          analysis: execChatMsgs.value.map(m => ({ role: m.role, content: m.content })),
+        }
+      }
+      saveWorkflowState()
+    }
+
+    if (ev.type === 'structured_result') {
       nodeIO.value.ai.output = {
-        model: aiModel.value,
-        depth: aiDepth.value,
-        prompt: aiPrompt.value,
-        analysis: execChatMsgs.value.map(m => ({ role: m.role, content: m.content })),
+        ...nodeIO.value.ai.output,
+        structuredResult: ev.data,
       }
       saveWorkflowState()
     }
   }
 
+  const startTime = Date.now()
+  let historyRecordId: number | null = null
+
   try {
-    await runMockExecution(onEvent, {
-      bugId:    selectedBug.value?.id,
-      bugTitle: selectedBug.value?.title,
-      projName: repo.value?.name,
-    })
+    // 生成本次会话 ID
+    const sessionId = `sess_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+
+    // 在调 SSE 前，把项目配置中准备的文件批量上传到该会话目录
+    let uploadedFileNames: string[] = []
+    if (uploadFileList.value.length > 0) {
+      uploadedFileNames = await batchUploadForSession(sessionId)
+    }
+
+    // 把 Bug ID 和 Bug 标题拼入消息，确保大模型知道需要分析哪个 Bug
+    const bugPrefix = selectedBug.value
+      ? `Bug ID：${selectedBug.value.id}\nBug 标题：${selectedBug.value.title}\n\n`
+      : ''
+    const fullMessage = `${bugPrefix}${aiPrompt.value}`
+
+    // 使用真实接口调用 AI 分析
+    const { provider, model } = parseModelChoice(aiModel.value ?? '')
+    const ac = new AbortController()
+    execAbort = ac
+
+    // ── 执行开始前，插入 running 状态的历史记录 ──
+    try {
+      const res = await createBugfixHistory({
+        project:    repo.value?.name ?? '',
+        bug_id:     selectedBug.value?.id ?? '',
+        bug_title:  selectedBug.value?.title ?? '',
+        model:      aiModelOptions.find(m => m.value === aiModel.value)?.label ?? aiModel.value ?? '',
+        status:     'running',
+        session_id: sessionId,
+        prompt:     aiPrompt.value,
+        git_url:    repo.value?.url ?? undefined,
+        git_branch: branch.value || undefined,
+        git_commit: commitId.value || undefined,
+      })
+      if (res.ok) historyRecordId = res.id
+    } catch (e) {
+      console.warn('写入历史记录失败（不影响主流程）:', e)
+    }
+
+    await runForwardProcessflowNpeFixSse(
+      {
+        apply: false, // 不实际修改文件
+        gitUrl: repo.value?.url ?? '',
+        gitBranch: branch.value,
+        gitCommit: commitId.value,
+        message: fullMessage,
+        provider,
+        model: model || undefined,  // 转换为 string | undefined
+        uploadedFileNames: uploadedFileNames.length > 0 ? uploadedFileNames : undefined,
+        sessionId,
+        history: execChatMsgs.value.map(m => ({ role: m.role, content: m.content })),
+      },
+      onEvent,
+      { signal: ac.signal },
+    )
   } catch (e: any) {
     if (e?.name !== 'AbortError') {
       execChatMsgs.value.push({ role: 'ai', content: `[错误] ${e?.message ?? String(e)}` })
@@ -473,6 +859,16 @@ async function startExecution() {
     execAbort = null
     execChatMsgs.value.forEach(m => { if (m.streaming) m.streaming = false })
     execStreamingIdx = null
+
+    // ── 执行结束后，更新历史记录状态（含完整链路快照） ──
+    if (historyRecordId !== null) {
+      const durationMs = Date.now() - startTime
+      const hasStructured = !!nodeIO.value.ai.output.structuredResult
+      const finalStatus = execFailed.value ? 'failed' : 'success'
+      const outcome = execFailed.value ? 'failed' : (hasStructured ? 'success' : 'error_end')
+      const nodeIoJson = JSON.stringify(nodeIO.value)
+      updateBugfixHistoryStatus(historyRecordId, finalStatus, durationMs, nodeIoJson, outcome).catch(() => {})
+    }
   }
 }
 
@@ -481,26 +877,17 @@ const canStart = computed(() =>
 )
 
 const projNextDisabled = computed(() => {
-  // 刷新页面后 repo 可能还在加载中，需要同时检查 selectedProjectName
   const hasRepo = canRun.value || !!selectedProjectName.value
-  return !hasRepo || !selectedBug.value
+  if (!hasRepo || !selectedBug.value) return true
+  // 非后端Java或无图谱时，必须手动选 branch 或 commit
+  if (needManualRef.value && !branch.value && !commitId.value) return true
+  return false
 })
 
 // ─── 顶部操作栏 ────────────────────────────────────────────────────────────
 const router = useRouter()
 const historyVisible = ref(false)
 type HistoryStatus = 'success' | 'failed' | 'running'
-interface HistoryRecord {
-  id: string
-  time: string
-  project: string
-  bugId: string
-  bugTitle: string
-  model: string
-  depth: string
-  status: HistoryStatus
-  duration?: string
-}
 
 // 重置链路：清空所有状态，回到初始状态
 function resetWorkflow() {
@@ -528,7 +915,6 @@ function resetWorkflow() {
 
       // 清空 AI 配置
       aiModel.value = 'claude::claude-sonnet-4-6'
-      aiDepth.value = 'standard'
       aiPrompt.value = ''
 
       // 清空上传文件
@@ -555,11 +941,13 @@ function resetWorkflow() {
         ai:      { input: {}, output: {} },
         confirm: { input: {}, output: {} },
         fix:     { input: {}, output: {} },
+        error:   null,
       }
 
       // 关闭抽屉
       drawerOpen.value = false
       selectedNodeId.value = null
+      activeNodeId.value = null
 
       // 清除 localStorage
       clearWorkflowState()
@@ -588,7 +976,6 @@ function saveWorkflowState() {
     uploadFileList: uploadFileList.value.map(f => ({ name: f.name, size: f.size })),
     // AI 分析
     aiModel: aiModel.value,
-    aiDepth: aiDepth.value,
     aiPrompt: aiPrompt.value,
     execChatMsgs: execChatMsgs.value,
     // 分析确认
@@ -624,7 +1011,6 @@ function loadWorkflowState() {
     if (state.commitId) commitId.value = state.commitId
     if (state.selectedBug) selectedBug.value = state.selectedBug
     if (state.aiModel) aiModel.value = state.aiModel
-    if (state.aiDepth) aiDepth.value = state.aiDepth
     if (state.aiPrompt) aiPrompt.value = state.aiPrompt
     if (state.execChatMsgs && Array.isArray(state.execChatMsgs)) execChatMsgs.value = state.execChatMsgs
     if (state.confirmResult) confirmResult.value = state.confirmResult
@@ -655,31 +1041,35 @@ function loadWorkflowState() {
 function clearWorkflowState() {
   localStorage.removeItem(STORAGE_KEY)
 }
-const mockHistory: HistoryRecord[] = [
-  { id: 'H001', time: '2026-03-24 14:32', project: 'epaas-gateway',   bugId: 'BUG-1001', bugTitle: 'ProjectServiceImpl.processFlow 空指针异常导致 500',  model: 'DeepSeek',      depth: '标准', status: 'success', duration: '2m 14s' },
-  { id: 'H002', time: '2026-03-24 11:05', project: 'order-service',   bugId: 'BUG-1003', bugTitle: '订单状态流转异常：已支付订单未触发发货流程',              model: 'Claude-Haiku',  depth: '深度', status: 'success', duration: '4m 07s' },
-  { id: 'H003', time: '2026-03-23 17:48', project: 'epaas-gateway',   bugId: 'BUG-1006', bugTitle: '用户登录接口返回 403 但权限配置正确',                    model: 'Claude-Sonnet', depth: '标准', status: 'failed',  duration: '1m 52s' },
-  { id: 'H004', time: '2026-03-23 10:20', project: 'user-center',     bugId: 'BUG-1007', bugTitle: '定时任务在多节点部署时重复执行导致数据重复',              model: 'DeepSeek',      depth: '标准', status: 'success', duration: '3m 31s' },
-  { id: 'H005', time: '2026-03-22 16:09', project: 'file-service',    bugId: 'BUG-1005', bugTitle: '文件上传并发场景偶现文件内容覆盖',                       model: 'Claude-Haiku',  depth: '快速', status: 'running' },
-  { id: 'H006', time: '2026-03-22 10:10', project: 'payment-service', bugId: 'BUG-1008', bugTitle: '支付回调重试导致金额多次扣',                             model: 'DeepSeek',      depth: '深度', status: 'success', duration: '5m 03s' },
-  { id: 'H007', time: '2026-03-21 15:30', project: 'order-service',   bugId: 'BUG-1009', bugTitle: 'Redis 分布式锁超时导致并发请求堆积',                     model: 'Claude-Sonnet', depth: '标准', status: 'success', duration: '3m 45s' },
-  { id: 'H008', time: '2026-03-21 09:15', project: 'user-center',     bugId: 'BUG-1010', bugTitle: '用户头像上传后默认头像未刷新',                           model: 'Claude-Haiku',  depth: '快速', status: 'failed',  duration: '0m 58s' },
-  { id: 'H009', time: '2026-03-20 17:22', project: 'epaas-gateway',   bugId: 'BUG-1011', bugTitle: 'Feign 调用超时未进行降级导致联调失败',                   model: 'DeepSeek',      depth: '深度', status: 'success', duration: '4m 22s' },
-  { id: 'H010', time: '2026-03-20 11:08', project: 'file-service',    bugId: 'BUG-1012', bugTitle: 'OSS 大文件分片上传顺序错乱导致内容损坏',                 model: 'Claude-Sonnet', depth: '标准', status: 'success', duration: '2m 50s' },
-  { id: 'H011', time: '2026-03-19 16:00', project: 'epaas-gateway',   bugId: 'BUG-1013', bugTitle: '网关路由规则匹配失败导致接口 404',                       model: 'DeepSeek',      depth: '快速', status: 'success', duration: '1m 38s' },
-  { id: 'H012', time: '2026-03-19 10:45', project: 'user-center',     bugId: 'BUG-1014', bugTitle: 'JWT token 过期未刷新导致用户频繁登出',                   model: 'Claude-Haiku',  depth: '标准', status: 'failed',  duration: '2m 11s' },
-]
 const historyStatusMap: Record<HistoryStatus, { color: string; text: string }> = {
   success: { color: 'success', text: '成功' },
   failed:  { color: 'error',   text: '失败' },
   running: { color: 'processing', text: '进行中' },
 }
-const historyPageSize = 10
-const historyPage     = ref(1)
-const pagedHistory = computed(() => {
-  const start = (historyPage.value - 1) * historyPageSize
-  return mockHistory.slice(start, start + historyPageSize)
-})
+const historyPageSize  = 10
+const historyPage      = ref(1)
+const historyTotal     = ref(0)
+const historyList      = ref<BugfixHistoryItem[]>([])
+const historyLoading   = ref(false)
+
+async function fetchHistory(page = historyPage.value) {
+  historyLoading.value = true
+  try {
+    const res = await listBugfixHistory({ page, page_size: historyPageSize })
+    if (res.ok) {
+      historyList.value  = res.items
+      historyTotal.value = res.total
+      historyPage.value  = page
+    }
+  } catch (e) {
+    console.error('加载历史记录失败:', e)
+  } finally {
+    historyLoading.value = false
+  }
+}
+
+// 打开历史弹窗时加载第一页
+watch(historyVisible, (v) => { if (v) fetchHistory(1) })
 
 // ─── 画布初始居中 ────────────────────────────────────────────────────────────
 onMounted(() => {
@@ -687,8 +1077,10 @@ onMounted(() => {
     if (!canvasRef.value) return
     const cw = canvasRef.value.clientWidth
     const ch = canvasRef.value.clientHeight
-    const allX = nodes.value.map(n => [n.x, n.x + NODE_W]).flat()
-    const allY = nodes.value.map(n => [n.y, n.y + NODE_H]).flat()
+    // 只用初始可见节点（project + ai）居中，避免隐藏节点撑大画布
+    const initNodes = nodes.value.filter(n => ['project', 'ai'].includes(n.id))
+    const allX = initNodes.map(n => [n.x, n.x + NODE_W]).flat()
+    const allY = initNodes.map(n => [n.y, n.y + NODE_H]).flat()
     const minX = Math.min(...allX) - 80
     const minY = Math.min(...allY) - 80
     const maxX = Math.max(...allX) + 80
@@ -711,7 +1103,6 @@ watch(
     commitId,
     selectedBug,
     aiModel,
-    aiDepth,
     aiPrompt,
     execChatMsgs,
     confirmResult,
@@ -724,37 +1115,86 @@ watch(
   () => { saveWorkflowState() },
   { deep: true }
 )
+
+// 监听异常结束节点激活，自动保存链路快照到 nodeIO
+watch(
+  () => nodeState('error'),
+  (state) => {
+    if (state !== 'active') return
+    nodeIO.value.error = {
+      triggeredAt: new Date().toISOString(),
+      reason: execFailed.value ? 'ai_failed' : 'no_structured_result',
+      snapshot: {
+        project:    repo.value ? { name: repo.value.name, url: repo.value.url } : null,
+        bug:        selectedBug.value,
+        model:      aiModel.value,
+        prompt:     aiPrompt.value,
+        branch:     branch.value,
+        commitId:   commitId.value,
+        aiMessages: execChatMsgs.value.map(m => ({ role: m.role, content: m.content })),
+        structuredResult: nodeIO.value.ai.output.structuredResult ?? null,
+      },
+    }
+    saveWorkflowState()
+  }
+)
 </script>
 
 <template>
-  <div class="bp-page">
+  <div ref="pageRef" class="bp-page">
     <!-- 顶部工具栏 -->
     <div class="bp-toolbar">
       <div class="bp-toolbar-left">
         <span class="bp-toolbar-title">Bugfix 流程编排</span>
         <a-divider type="vertical" style="height:20px;margin:0 12px" />
-        <template v-for="(n, idx) in nodes" :key="n.id">
-          <!-- 节点间箭头分隔符 -->
-          <span
-            v-if="idx > 0"
-            class="bp-step-arrow"
-            :class="nodeState(n.id) === 'pending' ? 'bp-step-arrow--pending' : 'bp-step-arrow--active'"
-          >-></span>
-          <span
-            class="bp-step-tag"
-            :class="[
-              'bp-step-tag--' + nodeState(n.id),
-              {
-                'bp-step-tag--selected': selectedNodeId === n.id && drawerOpen,
-                'bp-step-tag--spin':     nodeState(n.id) === 'active' && drawerOpen && selectedNodeId !== n.id,
-              },
-            ]"
-            @click="nodeState(n.id) !== 'pending' && selectNode(n.id)"
-          >
-            <span class="bp-step-dot" :style="{ background: nodeState(n.id)==='done' ? n.color : nodeState(n.id)==='active' ? n.color : '#d9d9d9' }" />
-            {{ n.title }}
-          </span>
-        </template>
+
+        <!-- 路径图：AI 完成前只显示前两节点，完成后展示完整分叉 -->
+        <div class="bp-path-view">
+          <div class="bp-path-main">
+            <!-- 项目配置 -->
+            <span class="bp-step-tag" :class="stepTagClass('project')" @click="nodeState('project') !== 'pending' && selectNode('project')">
+              <span class="bp-step-dot" :style="stepDotStyle('project')" />项目配置
+            </span>
+            <span class="bp-step-arrow bp-step-arrow--active">-></span>
+            <!-- AI 分析 -->
+            <span class="bp-step-tag" :class="stepTagClass('ai')" @click="nodeState('ai') !== 'pending' && selectNode('ai')">
+              <span class="bp-step-dot" :style="stepDotStyle('ai')" />
+              <LoadingOutlined v-if="isExecuting" spin style="margin-right:4px;font-size:11px" />
+              AI 分析
+            </span>
+
+            <!-- AI 完成后展示完整分叉 -->
+            <template v-if="aiExecutedSuccessfully || execFailed">
+              <span class="bp-fork-arrow">-></span>
+              <!-- 分叉盒子：两条路径水平排列，竖线分隔 -->
+              <div class="bp-path-fork">
+                <!-- 正常路径 -->
+                <div class="bp-path-branch" :class="{ 'bp-path-branch--dim': nodeState('error') === 'active' }">
+                  <span class="bp-step-tag" :class="stepTagClass('confirm')" @click="nodeState('confirm') !== 'pending' && selectNode('confirm')">
+                    <span class="bp-step-dot" :style="stepDotStyle('confirm')" />分析确认
+                  </span>
+                  <span class="bp-fork-arrow">-></span>
+                  <span class="bp-step-tag" :class="stepTagClass('fix')" @click="nodeState('fix') !== 'pending' && selectNode('fix')">
+                    <span class="bp-step-dot" :style="stepDotStyle('fix')" />修复执行
+                  </span>
+                </div>
+                <!-- 分隔线 -->
+                <span class="bp-fork-divider">|</span>
+                <!-- 异常路径 -->
+                <div class="bp-path-branch" :class="{ 'bp-path-branch--dim': nodeState('error') !== 'active' }">
+                  <span
+                    class="bp-step-tag"
+                    :class="nodeState('error') === 'active' ? 'bp-step-tag--error-active' : 'bp-step-tag--pending'"
+                    style="cursor:pointer"
+                    @click="nodeState('error') === 'active' && selectNode('error')"
+                  >
+                    <span class="bp-step-dot" :style="{ background: nodeState('error') === 'active' ? '#ff4d4f' : '#d9d9d9' }" />异常结束
+                  </span>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
       </div>
       <div class="bp-toolbar-right">
         <a-button size="small" @click="historyVisible = true">历史记录</a-button>
@@ -795,8 +1235,8 @@ watch(
               <feGaussianBlur stdDeviation="4" result="g"/>
               <feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge>
             </filter>
-            <!-- 箭头 marker：每种颜色单独定义，用 color 变量驱动 -->
-            <marker v-for="(n, i) in nodes.slice(0,-1)" :key="'mk'+i"
+            <!-- 箭头 marker：每条边单独定义 -->
+            <marker v-for="(_, i) in EDGES" :key="'mk'+i"
               :id="'arrow-' + i"
               markerWidth="10" markerHeight="7"
               refX="8" refY="3.5"
@@ -804,20 +1244,14 @@ watch(
             >
               <polygon points="0 0, 10 3.5, 0 7" :fill="wireColor(i)" />
             </marker>
-            <!-- 待配置节点专用动画箭头（灰色） -->
-            <marker id="arrow-pending"
-              markerWidth="10" markerHeight="7"
-              refX="8" refY="3.5"
-              orient="auto"
-            >
-              <polygon points="0 0, 10 3.5, 0 7" fill="#c4cfe6" /></marker>
           </defs>
 
-          <!-- 透明加粗命中区，方便点击细线 -->
+          <!-- 透明加粗命中区 -->
           <path
             v-for="(d, i) in connections"
             :key="'hit'+i"
-            :d="d"
+            :d="d ?? ''"
+            v-show="d !== null"
             fill="none"
             stroke="transparent"
             stroke-width="14"
@@ -825,29 +1259,31 @@ watch(
             @click.stop="onWireClick(i)"
           />
 
-          <!-- 可见连线（底层实线 + 箭头） -->
+          <!-- 可见连线 -->
           <path
             v-for="(d, i) in connections"
             :key="'w'+i"
-            :d="d"
+            :d="d ?? ''"
+            v-show="d !== null"
             fill="none"
             :stroke="wireColor(i)"
             :stroke-width="activeWireIdx === i ? 4 : 2.5"
             :marker-end="`url(#arrow-${i})`"
             :class="{
               'wire-active': activeWireIdx === i,
-              'wire-pending-anim': nodeState(nodes[i+1].id) === 'pending',
+              'wire-error-anim': EDGES[i].isError && nodeState('error') === 'active',
+              'wire-pending-anim': !EDGES[i].isError && nodeState(EDGES[i].to) === 'pending',
             }"
             style="pointer-events:none"
           />
 
-          <!-- 已连通线流动光点叠加层（仅 done 节点呈现） -->
+          <!-- 已连通线流动光点（正常路径） -->
           <template v-for="(d, i) in connections" :key="'flow'+i">
             <path
-              v-if="nodeState(nodes[i].id) === 'done'"
+              v-if="d !== null && !EDGES[i].isError && nodeState(EDGES[i].from) === 'done'"
               :d="d"
               fill="none"
-              :stroke="nodes[i].color"
+              :stroke="nodes.find(n => n.id === EDGES[i].from)!.color"
               stroke-width="3"
               stroke-linecap="round"
               class="wire-flow-done"
@@ -856,16 +1292,18 @@ watch(
             />
           </template>
 
-          <!-- 引脚圆点 -->
-          <template v-for="(n, i) in nodes" :key="'p'+n.id">
-            <circle v-if="i>0"
+          <!-- 引脚圆点：只渲染可见节点的 -->
+          <template v-for="n in nodes.filter(n => visibleNodeIds.includes(n.id))" :key="'p'+n.id">
+            <circle
+              v-if="EDGES.some(e => e.to === n.id && visibleEdgeIndices.includes(EDGES.indexOf(e)))"
               :cx="inPin(n).x" :cy="inPin(n).y" :r="PIN_R"
-              :fill="nodeState(nodes[i-1].id)==='done' ? nodes[i-1].color : '#c0cce0'"
+              :fill="EDGES.filter(e => e.to === n.id).some(e => nodeState(e.from) === 'done') ? nodes.find(nn => nn.id === EDGES.find(e => e.to === n.id)!.from)!.color : '#c0cce0'"
               stroke="#e8ecf2" stroke-width="2"
             />
-            <circle v-if="i<nodes.length-1"
+            <circle
+              v-if="EDGES.some(e => e.from === n.id && visibleEdgeIndices.includes(EDGES.indexOf(e)))"
               :cx="outPin(n).x" :cy="outPin(n).y" :r="PIN_R"
-              :fill="nodeState(n.id)==='done' ? n.color : '#c0cce0'"
+              :fill="nodeState(n.id) === 'done' ? n.color : '#c0cce0'"
               stroke="#e8ecf2" stroke-width="2"
             />
           </template>
@@ -873,12 +1311,13 @@ watch(
 
         <!-- 节点卡片 -->
         <div
-          v-for="n in nodes"
+          v-for="n in nodes.filter(n => visibleNodeIds.includes(n.id))"
           :key="n.id"
           class="bp-node"
           :class="[
             'bp-node--' + nodeState(n.id),
             { 'bp-node--selected': selectedNodeId === n.id && drawerOpen },
+            { 'bp-node--error-active': n.id === 'error' && nodeState('error') === 'active' },
           ]"
           :style="{ left: n.x+'px', top: n.y+'px', width: NODE_W+'px', height: NODE_H+'px' }"
           @pointerdown.stop="onNodePointerDown($event, n.id)"
@@ -890,11 +1329,14 @@ watch(
           <div class="bp-node-body">
             <div class="bp-node-desc">{{ n.desc }}</div>
             <div v-if="n.id==='project' && repo"         class="bp-node-info">{{ repo.name }}{{ selectedBug ? ' · #' + selectedBug.id : '' }}</div>
-            <div v-if="n.id==='ai'      && aiModel"      class="bp-node-info">{{ aiModelOptions.find(m=>m.value===aiModel)?.label }} · {{ aiDepthOptions.find(d=>d.value===aiDepth)?.label }}</div>
+            <div v-if="n.id==='ai'      && aiModel"      class="bp-node-info">{{ aiModelOptions.find(m=>m.value===aiModel)?.label }}</div>
             <div v-if="n.id==='confirm' && confirmResult" class="bp-node-info" :style="{color: confirmResult==='pass'?'#52c41a':'#f5222d'}">
               {{ confirmResult === 'pass' ? '✓ 审查通过' : '↩ 打回重改' }}
             </div>
             <div v-if="n.id==='fix' && fixDone"          class="bp-node-info">{{ fixBranch }}</div>
+            <div v-if="n.id==='error' && nodeState('error')==='active'" class="bp-node-info" style="color:#ff4d4f">
+              {{ execFailed ? '执行失败' : '无结构化数据' }}
+            </div>
           </div>
         </div>
       </div>
@@ -908,89 +1350,87 @@ watch(
     <!-- 右侧配置抽屉 -->
     <a-drawer
       :open="drawerOpen"
-      :title="nodes.find(n => n.id === selectedNodeId)?.title ?? '节点配置'"
+      :title="nodes.find(n => n.id === activeNodeId)?.title ?? '节点配置'"
       placement="right"
-      :width="420"
+      :width="560"
       :mask="false"
+      :destroy-on-close="true"
+      :get-container="() => pageRef!"
       :header-style="{ background:'#fff', borderBottom:'1px solid #f0f0f0' }"
-      :body-style="{ background:'#fafafa', padding:'20px' }"
+      :body-style="{ background:'#fafafa', padding:'20px', overflowX:'hidden' }"
       class="bp-drawer"
       @close="drawerOpen = false"
+      @after-open-change="(open: boolean) => { if (!open) activeNodeId = null }"
     >
       <!-- 项目配置 -->
-      <template v-if="selectedNodeId === 'project'">
+      <template v-if="activeNodeId === 'project'">
         <!-- 可滚动内容区 -->
         <div class="project-scroll-content">
-          <a-radio-group
-            :value="repoMode" button-style="solid" size="small"
-            style="margin-bottom:18px"
-            @change="(e: any) => switchRepoMode(e.target.value)"
-            :disabled="isExecuting || aiExecutedSuccessfully"
-          >
-            <a-radio-button value="select">选择项目</a-radio-button>
-            <a-radio-button value="custom">自定义 URL</a-radio-button>
-          </a-radio-group>
-
           <a-form layout="vertical" class="bp-form">
-            <template v-if="repoMode === 'select'">
-              <a-form-item label="项目名称">
-                <a-select
-                  v-model:value="selectedProjectName"
-                  placeholder="搜索或选择项目" :loading="loadingRepos"
-                  show-search allow-clear :list-height="228"
-                  :get-popup-container="getPopupContainer"
-                  :filter-option="(input: string, opt: any) => (opt?.label ?? '').toLowerCase().includes((input||'').toLowerCase())"
-                  @dropdownVisibleChange="(open: boolean) => onProjectDropdown(open)"
-                  :disabled="isExecuting || aiExecutedSuccessfully"
-                >
-                  <a-select-option v-for="opt in repoOptions" :key="opt.value" :value="opt.value" :label="opt.label">
-                    {{ opt.label }}
-                  </a-select-option>
-                </a-select>
+            <a-form-item label="项目名称">
+              <a-select
+                v-model:value="selectedProjectName"
+                placeholder="搜索或选择项目" :loading="loadingRepos"
+                show-search allow-clear :list-height="228"
+                :get-popup-container="getPopupContainer"
+                :filter-option="(input: string, opt: any) => (opt?.label ?? '').toLowerCase().includes((input||'').toLowerCase())"
+                @dropdownVisibleChange="(open: boolean) => onProjectDropdown(open)"
+                :disabled="isExecuting || aiExecutedSuccessfully"
+              >
+                <a-select-option v-for="opt in repoOptions" :key="opt.value" :value="opt.value" :label="opt.label">
+                  {{ opt.label }}
+                </a-select-option>
+              </a-select>
+            </a-form-item>
+
+            <template v-if="selectedProjectName">
+              <a-form-item v-if="readonlyUrl" label="Git URL">
+                <a-input :value="readonlyUrl" disabled />
               </a-form-item>
-              <template v-if="selectedProjectName">
-                <a-form-item v-if="readonlyUrl"    label="Git URL"><a-input :value="readonlyUrl"    disabled /></a-form-item>
-                <a-form-item v-if="readonlyBranch" label="Branch"> <a-input :value="readonlyBranch" disabled /></a-form-item>
-                <a-form-item v-if="readonlyCommit" label="Commit"> <a-input :value="readonlyCommit" disabled /></a-form-item>
+
+              <!-- 后端Java且有图谱：只读展示 branch/commit -->
+              <template v-if="!needManualRef">
+                <a-form-item v-if="readonlyBranch" label="Branch">
+                  <a-input :value="readonlyBranch" disabled />
+                </a-form-item>
+                <a-form-item v-if="readonlyCommit" label="Commit">
+                  <a-input :value="readonlyCommit" disabled />
+                </a-form-item>
               </template>
-            </template>
-            <template v-else>
-              <a-form-item label="Git URL">
-                <a-input
-                  v-model:value="repoUrl"
-                  placeholder="https://xxx.git"
-                  allow-clear
-                  :disabled="isExecuting || aiExecutedSuccessfully"
+
+              <!-- 非后端Java 或 无图谱：需手动选 branch/commit -->
+              <template v-else>
+                <a-alert
+                  type="info" show-icon style="margin-bottom:12px"
+                  :message="selectedHasGraph ? '该应用不是后端 Java，无代码图谱，请手动选择分支' : '该应用尚未构建代码图谱，请手动选择分支'"
                 />
-              </a-form-item>
-              <a-form-item label="Branch">
-                <a-select
-                  v-model:value="branch"
-                  placeholder="选择分支"
-                  allow-clear
-                  show-search
-                  :loading="loadingBranches"
-                  :disabled="branchDisabled || isExecuting || aiExecutedSuccessfully"
-                  :options="branchOptions"
-                  :get-popup-container="getPopupContainer"
-                  @search="onBranchSearch"
-                  @dropdownVisibleChange="(open: boolean) => onBranchDropdown(open)"
-                />
-              </a-form-item>
-              <a-form-item label="Commit">
-                <a-select
-                  v-model:value="commitId"
-                  placeholder="选择 Commit"
-                  allow-clear
-                  show-search
-                  :loading="loadingCommits"
-                  :disabled="commitDisabled || isExecuting || aiExecutedSuccessfully"
-                  :options="commitOptions"
-                  :get-popup-container="getPopupContainer"
-                  @search="onCommitSearch"
-                  @dropdownVisibleChange="(open: boolean) => onCommitDropdown(open)"
-                />
-              </a-form-item>
+                <a-form-item label="Branch">
+                  <a-select
+                    v-model:value="branch"
+                    placeholder="选择分支"
+                    allow-clear show-search
+                    :loading="loadingBranches"
+                    :disabled="branchDisabled || isExecuting || aiExecutedSuccessfully"
+                    :options="branchOptions"
+                    :get-popup-container="getPopupContainer"
+                    @search="onBranchSearch"
+                    @dropdownVisibleChange="(open: boolean) => onBranchDropdown(open)"
+                  />
+                </a-form-item>
+                <a-form-item label="Commit（可选）">
+                  <a-select
+                    v-model:value="commitId"
+                    placeholder="选择 Commit"
+                    allow-clear show-search
+                    :loading="loadingCommits"
+                    :disabled="commitDisabled || isExecuting || aiExecutedSuccessfully"
+                    :options="commitOptions"
+                    :get-popup-container="getPopupContainer"
+                    @search="onCommitSearch"
+                    @dropdownVisibleChange="(open: boolean) => onCommitDropdown(open)"
+                  />
+                </a-form-item>
+              </template>
             </template>
           </a-form>
 
@@ -1022,7 +1462,7 @@ watch(
             <a-form-item label="上传附件">
               <a-upload
                 v-model:file-list="uploadFileList"
-                :custom-request="(opt: any) => handleCustomUpload(opt)"
+                :before-upload="beforeUpload"
                 :disabled="!canUpload || isExecuting || aiExecutedSuccessfully"
                 :max-count="5"
                 :show-upload-list="{ showRemoveIcon: !isExecuting && !aiExecutedSuccessfully }"
@@ -1045,7 +1485,7 @@ watch(
       </template>
 
       <!-- AI 分析 -->
-      <template v-else-if="selectedNodeId === 'ai'">
+      <template v-else-if="activeNodeId === 'ai'">
         <a-form layout="vertical" class="bp-form">
           <a-form-item label="AI 模型">
             <a-select
@@ -1054,29 +1494,6 @@ watch(
               :options="modelOptions"
               :get-popup-container="getPopupContainer"
               allow-clear
-              :disabled="isExecuting || aiExecutedSuccessfully"
-            />
-          </a-form-item>
-
-          <a-form-item>
-            <template #label>
-              <span>
-                分析深度
-                <a-tooltip placement="right">
-                  <template #title>
-                    影响代码图谱遍历范围：<br/>
-                    《快速》——仅分析直接出错的函数；<br/>
-                    《标准》——包含一层调用者；<br/>
-                    《深度》——扫描全量调用链（耗时较长）
-                  </template>
-                  <QuestionCircleOutlined style="margin-left:4px;color:#999;cursor:help" />
-                </a-tooltip>
-              </span>
-            </template>
-            <a-segmented
-              v-model:value="aiDepth"
-              :options="aiDepthOptions"
-              block
               :disabled="isExecuting || aiExecutedSuccessfully"
             />
           </a-form-item>
@@ -1122,48 +1539,226 @@ watch(
       </template>
 
       <!-- 分析确认 -->
-      <template v-else-if="selectedNodeId === 'confirm'">
-        <template v-if="aiConfigDone">
-          <!-- AI 分析结果占位（后续接入右侧真实返回） -->
+      <template v-else-if="activeNodeId === 'confirm'">
+        <template v-if="nodeIO.ai.output.structuredResult">
+          <!-- 结构化结果展示 -->
           <div class="bp-result-box">
-            <div class="bp-result-box-title">🔍 AI 分析摘要</div>
+            <div class="bp-result-box-title">🔍 Bug 根因</div>
             <div class="bp-result-box-body">
-              <div class="bp-result-line">根本原因：<em>PayServiceImpl.execute:142 订单获取 null 返回导致 NPE</em></div>
-              <div class="bp-result-line">涉及文件：<em>PayServiceImpl.java、OrderController.java</em></div>
-              <div class="bp-result-line">修复建议：<em>在 execute() 函数入口添加非空校验，或将返回类型改为 Optional</em></div>
+              <div class="bp-result-line">{{ nodeIO.ai.output.structuredResult.bug_cause }}</div>
             </div>
           </div>
-          <a-form layout="vertical" class="bp-form" style="margin-top:16px">
-            <a-form-item label="审查结果">
-              <a-radio-group v-model:value="confirmResult" button-style="solid">
-                <a-radio-button value="pass"  >✓ 审查通过</a-radio-button>
-                <a-radio-button value="rework">↩ 打回重改</a-radio-button>
-              </a-radio-group>
-            </a-form-item>
-            <a-form-item label="备注（可选）">
-              <a-textarea v-model:value="confirmNote" :rows="3" placeholder="补充说明..." />
-            </a-form-item>
-          </a-form>
+
+          <div class="bp-result-box" style="margin-top:12px">
+            <div class="bp-result-box-title">
+              📍 Bug 定位
+              <a-tooltip v-if="locationsWithSnippet.length" title="查看涉及代码">
+                <span class="bp-fix-expand-btn" style="opacity:1;margin-left:6px" @click="openLocModal()">
+                  <FullscreenOutlined />
+                </span>
+              </a-tooltip>
+            </div>
+            <div class="bp-result-box-body">
+              <div
+                v-for="(loc, idx) in nodeIO.ai.output.structuredResult.bug_location"
+                :key="idx"
+                class="bp-location-item"
+              >
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                  <span class="bp-fix-file">{{ loc.file }}</span>
+                  <span v-if="loc.line_range" class="bp-fix-lines">行 {{ loc.line_range }}</span>
+                </div>
+                <div class="bp-result-line" style="margin-top:4px">{{ loc.description }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bp-result-box" style="margin-top:12px">
+            <div class="bp-result-box-title">🛠 修复方案</div>
+            <div class="bp-result-box-body" style="padding:0">
+              <div
+                v-for="plan in nodeIO.ai.output.structuredResult.fix_plans"
+                :key="plan.id"
+                class="bp-fix-item"
+                :class="{
+                  'bp-fix-item--selected': selectedFixId === plan.id,
+                  'bp-fix-item--no-diff': !plan.diff,
+                }"
+                @click="!confirmDone && plan.diff ? (selectedFixId = plan.id) : undefined"
+              >
+                <a-radio :checked="selectedFixId === plan.id" :disabled="!plan.diff || confirmDone" @click.stop />
+                <div class="bp-fix-content">
+                  <div class="bp-fix-header">
+                    <span style="font-weight:600;font-size:13px;flex:1">方案 {{ plan.id }}：{{ plan.title }}</span>
+                    <a-tooltip v-if="!plan.diff" title="该方案缺少 diff，无法选择">
+                      <span style="font-size:11px;color:#faad14;flex-shrink:0">⚠ 无 diff</span>
+                    </a-tooltip>
+                    <a-tooltip v-else title="查看 Diff 详情">
+                      <span class="bp-fix-expand-btn" @click.stop="openDiffModal($event, plan)">
+                        <FullscreenOutlined />
+                      </span>
+                    </a-tooltip>
+                  </div>
+                  <div class="bp-fix-problem">{{ plan.description }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 已审查通过：只读展示 -->
+          <template v-if="confirmDone">
+            <a-alert
+              type="success"
+              show-icon
+              style="margin-top:16px"
+              message="已审查通过，流程已进入修复执行阶段"
+            >
+              <template #description>
+                <span v-if="confirmNote" style="font-size:12px;color:rgba(0,0,0,.55)">备注：{{ confirmNote }}</span>
+              </template>
+            </a-alert>
+            <a-button style="margin-top:10px;width:100%" @click="selectNode('fix')">前往修复执行节点 →</a-button>
+          </template>
+
+          <!-- 待审查：展示操作区 -->
+          <template v-else>
+            <a-form layout="vertical" class="bp-form" style="margin-top:16px">
+              <a-form-item label="审查结果">
+                <div style="display:flex;gap:8px">
+                  <a-button
+                    type="primary"
+                    :disabled="selectedFixId === null"
+                    @click="onConfirmPass"
+                  >✓ 审查通过，进入修复执行</a-button>
+                  <a-button danger @click="onConfirmRework">↩ 打回重改</a-button>
+                </div>
+                <div v-if="selectedFixId === null" class="bp-tip">请先选择一个修复方案</div>
+              </a-form-item>
+              <a-form-item label="备注（可选）">
+                <a-textarea v-model:value="confirmNote" :rows="3" placeholder="补充说明..." />
+              </a-form-item>
+            </a-form>
+          </template>
+        </template>
+        <template v-else-if="aiConfigDone && execChatMsgs.length > 0">
+          <!-- 结构化提取中或失败，显示等待提示 -->
+          <a-alert v-if="isExecuting" type="info" show-icon message="AI 分析中，结构化结果将在完成后自动生成…" />
+          <a-alert v-else type="warning" show-icon message="结构化提取未完成，请重新执行 AI 分析" />
+        </template>
+        <template v-else-if="aiConfigDone">
+          <a-alert type="info" show-icon message="请先执行 AI 分析" />
         </template>
       </template>
 
       <!-- 修复执行 -->
-      <template v-else-if="selectedNodeId === 'fix'">
+      <template v-else-if="activeNodeId === 'fix'">
+        <!-- 选中的修复方案摘要 -->
+        <template v-if="nodeIO.ai.output.structuredResult && selectedFixId !== null">
+          <div class="bp-result-box" style="margin-bottom:16px">
+            <div class="bp-result-box-title">
+              ✅ 已选方案：{{ nodeIO.ai.output.structuredResult.fix_plans.find((p: any) => p.id === selectedFixId)?.title }}
+              <a-tooltip v-if="nodeIO.ai.output.structuredResult.fix_plans.find((p: any) => p.id === selectedFixId)?.diff" title="查看 Diff 详情">
+                <span class="bp-fix-expand-btn" style="opacity:1;margin-left:6px" @click="openDiffModal($event, nodeIO.ai.output.structuredResult.fix_plans.find((p: any) => p.id === selectedFixId))">
+                  <FullscreenOutlined />
+                </span>
+              </a-tooltip>
+            </div>
+            <div class="bp-result-box-body">
+              <template v-for="plan in nodeIO.ai.output.structuredResult.fix_plans" :key="plan.id">
+                <template v-if="plan.id === selectedFixId">
+                  <div class="bp-result-line">{{ plan.description }}</div>
+                  <div v-if="!plan.diff" style="font-size:12px;color:#faad14;margin-top:4px">⚠ 该方案暂无 diff，请参考 AI 对话中的修复说明</div>
+                </template>
+              </template>
+            </div>
+          </div>
+        </template>
         <a-form layout="vertical" class="bp-form">
           <a-form-item label="分支名">
-            <a-input v-model:value="fixBranch" placeholder="fix/BUG-1001-pay-npe" allow-clear>
+            <a-input v-model:value="fixBranch" placeholder="aifix_bug1001_xxx" allow-clear :disabled="!!fixSubmitResult?.ok">
               <template #prefix><span style="color:#bbb;font-size:12px">git checkout -b</span></template>
             </a-input>
           </a-form-item>
           <a-form-item label="Commit 信息">
-            <a-input v-model:value="fixCommitMsg" placeholder="fix: 修复支付接口 NPE 问题" allow-clear />
+            <a-input v-model:value="fixCommitMsg" placeholder="fix(#1001): 修复 NPE" allow-clear :disabled="!!fixSubmitResult?.ok" />
           </a-form-item>
           <a-form-item label="CR Reviewer（可选）">
-            <a-input v-model:value="fixReviewer" placeholder="@username" allow-clear />
+            <a-input v-model:value="fixReviewer" placeholder="@username" allow-clear :disabled="!!fixSubmitResult?.ok" />
           </a-form-item>
         </a-form>
-        <a-alert v-if="fixDone" type="success" show-icon message="已就绪，点击《开始执行》自动提交修复" />
+
+        <!-- 提交结果 -->
+        <template v-if="fixSubmitResult">
+          <a-alert
+            :type="fixSubmitResult.ok ? 'success' : 'error'"
+            show-icon
+            :message="fixSubmitResult.ok ? '已成功提交并推送' : '提交失败'"
+            style="margin-top:12px"
+          >
+            <template #description>
+              <div style="white-space:pre-wrap;font-size:12px">{{ fixSubmitResult.message }}</div>
+              <div v-if="(fixSubmitResult as any).missing_paths?.length" style="margin-top:8px">
+                <div style="font-size:12px;color:rgba(0,0,0,.55);margin-bottom:4px">路径不存在（请检查 AI 生成的 diff 路径）：</div>
+                <div
+                  v-for="p in (fixSubmitResult as any).missing_paths"
+                  :key="p"
+                  style="font-family:monospace;font-size:11px;color:#cf1322"
+                >{{ p }}</div>
+              </div>
+            </template>
+          </a-alert>
+          <div v-if="fixSubmitResult.steps?.length" style="margin-top:8px;font-size:12px;color:rgba(0,0,0,.45)">
+            <div v-for="(s, i) in fixSubmitResult.steps" :key="i" style="font-family:monospace">$ {{ s }}</div>
+          </div>
+        </template>
+
+        <!-- 提交按钮 -->
+        <div v-if="!fixSubmitResult?.ok" style="margin-top:16px">
+          <a-button
+            type="primary"
+            block
+            :disabled="!fixDone"
+            :loading="fixSubmitting"
+            @click="onSubmitFix"
+          >
+            🚀 提交修复到 Git
+          </a-button>
+          <div v-if="!fixDone" style="font-size:12px;color:rgba(0,0,0,.35);margin-top:6px;text-align:center">
+            请确保分支名以 aifix_ 开头且 commit 信息已填写
+          </div>
+        </div>
       </template>
+      <!-- 异常结束 -->
+      <template v-else-if="activeNodeId === 'error'">
+        <a-result
+          status="error"
+          :title="execFailed ? 'AI 分析执行失败' : '未获取到结构化分析数据'"
+          :sub-title="execFailed ? '请查看 AI 对话框中的错误信息，确认 Bug 信息是否可获取，然后重新执行分析。' : 'AI 分析已完成，但未能提取结构化结果。请重新执行 AI 分析，或检查 Bug 描述是否足够详细。'"
+          style="padding:20px 0"
+        >
+          <template #extra>
+            <a-button type="primary" @click="selectNode('ai')">返回 AI 分析节点</a-button>
+          </template>
+        </a-result>
+        <div v-if="execChatMsgs.length > 0" style="margin-top:8px">
+          <a-button block @click="chatDrawerOpen = true">
+            <template #icon><MessageOutlined /></template>
+            查看 AI 对话详情
+          </a-button>
+        </div>
+        <!-- 链路快照 -->
+        <div v-if="nodeIO.error?.triggeredAt" class="bp-result-box" style="margin-top:16px">
+          <div class="bp-result-box-title">📋 链路快照</div>
+          <div class="bp-result-box-body" style="gap:6px">
+            <div class="bp-result-line">触发时间：<em>{{ new Date(nodeIO.error.triggeredAt).toLocaleString() }}</em></div>
+            <div class="bp-result-line">失败原因：<em>{{ nodeIO.error.reason === 'ai_failed' ? 'AI 执行失败' : '无结构化数据' }}</em></div>
+            <div v-if="nodeIO.error.snapshot?.bug" class="bp-result-line">关联 Bug：<em>#{{ nodeIO.error.snapshot.bug.id }} {{ nodeIO.error.snapshot.bug.title }}</em></div>
+            <div v-if="nodeIO.error.snapshot?.project" class="bp-result-line">项目：<em>{{ nodeIO.error.snapshot.project.name }}</em></div>
+            <div v-if="nodeIO.error.snapshot?.model" class="bp-result-line">模型：<em>{{ nodeIO.error.snapshot.model }}</em></div>
+          </div>
+        </div>
+      </template>
+
       <template v-else>
         <div style="text-align:center;padding:60px 0;color:rgba(0,0,0,.25)">
           <div style="font-size:40px;margin-bottom:12px">🔧</div>
@@ -1179,6 +1774,7 @@ watch(
       :width="900"
       :mask="true"
       :mask-closable="true"
+      :get-container="() => pageRef!"
       :header-style="{ background:'#fff', borderBottom:'1px solid #f0f0f0', flexShrink: 0, display:'flex', alignItems:'center', justifyContent:'space-between' }"
       :body-style="{ padding:'0', height:'100%', display:'flex', flexDirection:'column', overflow:'hidden' }"
       @close="chatDrawerOpen = false"
@@ -1226,10 +1822,6 @@ watch(
             <div class="exec-info-value">{{ aiModelOptions.find(m => m.value === aiModel)?.label ?? '未选择' }}</div>
           </div>
           <div class="exec-info-block">
-            <div class="exec-info-label">分析深度</div>
-            <div class="exec-info-value">{{ aiDepthOptions.find(d => d.value === aiDepth)?.label }}</div>
-          </div>
-          <div class="exec-info-block">
             <div class="exec-info-label">问题描述</div>
             <div class="exec-info-desc">{{ aiPrompt || '未填写' }}</div>
           </div>
@@ -1247,12 +1839,18 @@ watch(
           <div class="exec-info-block" style="margin-top:auto;padding-top:12px;border-top:1px solid #f0f0f0">
             <div class="exec-info-label">执行状态</div>
             <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
-              <a-badge :status="isExecuting ? 'processing' : (execChatMsgs.length ? 'success' : 'default')" />
+              <a-badge
+                :status="isExecuting ? 'processing' : execFailed ? 'error' : (execChatMsgs.length ? 'success' : 'default')"
+              />
               <span style="font-size:12px;color:rgba(0,0,0,.55)">
-                {{ isExecuting ? 'AI 正在分析中…' : (execChatMsgs.length ? '分析完成' : '等待执行') }}
+                {{ isExecuting ? 'AI 正在分析中…' : execFailed ? '执行失败' : (execChatMsgs.length ? '分析完成' : '等待执行') }}
               </span>
             </div>
-            <a-button v-if="isExecuting" danger style="margin-top:8px;width:100%" @click="execAbort?.abort();isExecuting=false">终止</a-button>
+            <a-button v-if="isExecuting" danger style="margin-top:8px;width:100%" @click="(execAbort as AbortController | null)?.abort();isExecuting=false">终止</a-button>
+            <a-button v-else-if="execFailed" type="primary" style="margin-top:8px;width:100%" @click="startExecution">
+              <template #icon><ReloadOutlined /></template>
+              重新执行
+            </a-button>
           </div>
         </div>
     
@@ -1283,30 +1881,29 @@ watch(
     >
       <!-- 固定内容区域，防止分页跳变高度 -->
       <div class="hist-body">
-        <a-list :data-source="pagedHistory" :split="true">
+        <a-list :data-source="historyList" :split="true">
           <template #renderItem="{ item }">
             <a-list-item class="hist-item">
               <!-- 左：状态 + 时间 -->
               <div class="hist-col hist-col-status">
-                <a-badge :status="historyStatusMap[item.status].color" />
-                <span class="hist-status-text">{{ historyStatusMap[item.status].text }}</span>
-                <span class="hist-time">{{ item.time }}</span>
+                <a-badge :status="historyStatusMap[(item as BugfixHistoryItem).status].color" />
+                <span class="hist-status-text">{{ historyStatusMap[(item as BugfixHistoryItem).status].text }}</span>
+                <span class="hist-time">{{ (item as BugfixHistoryItem).time }}</span>
               </div>
               <!-- 中：项目 / BugId / 标题 -->
               <div class="hist-col hist-col-main">
-                <span class="hist-project">{{ item.project }}</span>
-                <a-tag color="blue" class="hist-tag-bugid">{{ item.bugId }}</a-tag>
-                <a-tooltip :title="item.bugTitle" placement="topLeft">
-                  <span class="hist-bug-title">{{ item.bugTitle }}</span>
+                <span class="hist-project">{{ (item as BugfixHistoryItem).project }}</span>
+                <a-tag color="blue" class="hist-tag-bugid">{{ (item as BugfixHistoryItem).bugId }}</a-tag>
+                <a-tooltip :title="(item as BugfixHistoryItem).bugTitle" placement="topLeft">
+                  <span class="hist-bug-title">{{ (item as BugfixHistoryItem).bugTitle }}</span>
                 </a-tooltip>
               </div>
-              <!-- 右：模型 / 深度 / 耗时 / 操作 -->
+              <!-- 右：模型 / 耗时 / 操作 -->
               <div class="hist-col hist-col-right">
-                <a-tag class="hist-tag-sm">{{ item.model }}</a-tag>
-                <a-tag class="hist-tag-sm">深度：{{ item.depth }}</a-tag>
-                <span class="hist-duration">{{ item.duration ?? '—' }}</span>
-                <a-button size="small" type="link" class="hist-btn" @click="() => { historyVisible = false; router.push(`/bugfix-workflow/bugfix-details/${item.id}`) }">详情</a-button>
-                <a-button size="small" type="link" :disabled="item.status === 'running'" class="hist-btn">重运行</a-button>
+                <a-tag class="hist-tag-sm">{{ (item as BugfixHistoryItem).model }}</a-tag>
+                <span class="hist-duration">{{ (item as BugfixHistoryItem).duration ?? '—' }}</span>
+                <a-button size="small" type="link" class="hist-btn" @click="() => { historyVisible = false; router.push(`/bugfix-workflow/bugfix-details/${(item as BugfixHistoryItem).id}`) }">详情</a-button>
+                <a-button size="small" type="link" :disabled="(item as BugfixHistoryItem).status === 'running'" class="hist-btn">重运行</a-button>
               </div>
             </a-list-item>
           </template>
@@ -1317,11 +1914,66 @@ watch(
         <a-pagination
           v-model:current="historyPage"
           :page-size="historyPageSize"
-          :total="mockHistory.length"
+          :total="historyTotal"
           :show-size-changer="false"
           size="small"
         />
       </div>
+    </a-modal>
+
+    <!-- Diff 放大预览 Modal -->
+    <a-modal
+      v-model:open="diffModalVisible"
+      :title="diffModalPlan ? `方案 ${diffModalPlan.id}：${diffModalPlan.title}` : 'Diff 详情'"
+      :footer="null"
+      :width="860"
+      destroy-on-close
+      :body-style="{ padding: '16px 20px', maxHeight: '70vh', overflowY: 'auto' }"
+    >
+      <template v-if="diffModalPlan">
+        <div style="font-size:13px;color:#555;margin-bottom:12px;line-height:1.6">{{ diffModalPlan.description }}</div>
+        <DiffViewer v-if="diffModalPlan.diff" :diff="diffModalPlan.diff" />
+        <a-empty v-else description="该方案暂无 diff 内容" />
+      </template>
+    </a-modal>
+
+    <!-- Bug 定位代码预览 Modal -->
+    <a-modal
+      v-model:open="locModalVisible"
+      title="涉及代码"
+      :footer="null"
+      :width="860"
+      destroy-on-close
+      :body-style="{ padding: '0', maxHeight: '70vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }"
+    >
+      <template v-if="locationsWithSnippet.length">
+        <!-- 文件标签页 -->
+        <div class="loc-modal-tabs">
+          <div
+            v-for="(loc, i) in locationsWithSnippet"
+            :key="i"
+            class="loc-modal-tab"
+            :class="{ 'loc-modal-tab--active': locModalActiveIdx === i }"
+            @click="locModalActiveIdx = Number(i)"
+          >
+            <span class="loc-modal-tab-name" :title="loc.file">{{ loc.file.split('/').pop() }}</span>
+            <span v-if="loc.line_range" class="loc-modal-tab-line">:{{ loc.line_range }}</span>
+          </div>
+        </div>
+        <!-- 当前文件内容 -->
+        <div class="loc-modal-body">
+          <template v-for="(loc, i) in locationsWithSnippet" :key="i">
+            <template v-if="locModalActiveIdx === i">
+              <div class="loc-modal-meta">
+                <span class="bp-fix-file" style="font-size:12px">{{ loc.file }}</span>
+                <span v-if="loc.line_range" class="bp-fix-lines">行 {{ loc.line_range }}</span>
+              </div>
+              <div class="loc-modal-desc">{{ loc.description }}</div>
+              <div class="bp-fix-diff" v-html="renderMarkdown('```java\n' + loc.code_snippet + '\n```')" style="margin:0" />
+            </template>
+          </template>
+        </div>
+      </template>
     </a-modal>
 
     <!-- Bug 选择模态框 -->
@@ -1351,7 +2003,7 @@ watch(
 </template>
 
 <style scoped>
-.bp-page { height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+.bp-page { height: 100%; display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
 /* ── 顶部工具栏 ── */
 .bp-toolbar {
@@ -1367,6 +2019,48 @@ watch(
   z-index: 10;
 }
 .bp-toolbar-left  { display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0; overflow: hidden; }
+
+/* 路径图容器 */
+.bp-path-view { display: flex; align-items: center; min-width: 0; overflow: hidden; }
+.bp-path-main { display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; }
+
+/* 分叉盒子：水平排列，带边框，视觉上是一个整体 */
+.bp-path-fork {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 1px solid #e2e8f4;
+  border-radius: 20px;
+  background: #f8faff;
+}
+.bp-path-branch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: opacity 0.25s;
+}
+.bp-path-branch--dim { opacity: 0.3; }
+
+/* 分叉内的箭头 */
+.bp-fork-arrow {
+  font-size: 13px;
+  color: #1677ff;
+  opacity: 0.5;
+  flex-shrink: 0;
+  user-select: none;
+}
+.bp-fork-arrow--error { color: #ff4d4f; opacity: 0.8; }
+
+/* 分叉分隔线 */
+.bp-fork-divider {
+  color: #d0d7e6;
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+  user-select: none;
+  margin: 0 2px;
+}
 .bp-toolbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .bp-toolbar-title { font-size: 14px; font-weight: 700; color: #1a1a2e; white-space: nowrap; }
 
@@ -1432,6 +2126,13 @@ watch(
   margin-bottom: 3px;
 }
 .bp-step-arrow--active  { color: #1677ff; opacity: 0.5; }
+.bp-step-arrow--error   { color: #ff4d4f; opacity: 0.8; font-size: 12px; }
+.bp-step-tag--error-active {
+  color: #ff4d4f !important;
+  border-color: #ff4d4f !important;
+  background: #fff1f0 !important;
+  cursor: pointer;
+}
 .bp-step-arrow--pending {
   color: #bfbfbf;
   animation: arrow-pulse 1.2s ease-in-out infinite;
@@ -1498,6 +2199,11 @@ watch(
   border-color: rgba(0,0,0,0.08) !important;
   box-shadow: 0 2px 12px rgba(0,0,0,0.12) !important;
 }
+/* error 节点 active 时红色边框 */
+.bp-node--error-active {
+  border-color: #ff4d4f !important;
+  box-shadow: 0 0 0 3px rgba(255,77,79,0.12), 0 4px 16px rgba(0,0,0,0.1) !important;
+}
 
 .bp-node-header {
   padding: 8px 14px;
@@ -1561,6 +2267,17 @@ watch(
   stroke-dasharray: 7 9;
   animation: wire-pending-flow 0.9s linear infinite;
   opacity: 0.7;
+}
+
+/* 异常路径连线：红色虚线闪烁 */
+@keyframes wire-error-flow {
+  from { stroke-dashoffset: 20; }
+  to   { stroke-dashoffset: 0; }
+}
+.wire-error-anim {
+  stroke-dasharray: 6 6;
+  animation: wire-error-flow 0.6s linear infinite;
+  opacity: 0.85;
 }
 
 /* ── Bug 行 ── */
@@ -1731,10 +2448,179 @@ watch(
 .bp-result-box-title {
   padding: 8px 14px; font-size: 13px; font-weight: 600;
   background: #fafafa; border-bottom: 1px solid #f0f0f0; color: #333;
+  display: flex; align-items: center;
 }
-.bp-result-box-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
-.bp-result-line { font-size: 13px; color: rgba(0,0,0,.65); line-height: 1.6; }
+
+/* Bug 定位代码 Modal */
+.loc-modal-tabs {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid #e8e8e8;
+  background: #f5f5f5;
+  flex-shrink: 0;
+}
+.loc-modal-tabs::-webkit-scrollbar { display: none; }
+.loc-modal-tab {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: 12px;
+  color: rgba(0,0,0,.55);
+  border-bottom: 2px solid transparent;
+  transition: all 0.12s;
+  font-family: ui-monospace, monospace;
+}
+.loc-modal-tab:hover { background: #ebebeb; color: rgba(0,0,0,.85); }
+.loc-modal-tab--active { background: #fff; border-bottom-color: #1677ff; color: #1677ff; font-weight: 600; }
+.loc-modal-tab-name { max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+.loc-modal-tab-line { color: rgba(0,0,0,.35); font-size: 11px; }
+.loc-modal-tab--active .loc-modal-tab-line { color: #91caff; }
+.loc-modal-body { flex: 1; overflow-y: auto; padding: 12px 16px; }
+.loc-modal-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+.loc-modal-desc { font-size: 13px; color: rgba(0,0,0,.55); margin-bottom: 10px; line-height: 1.5; }
+.bp-result-box-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+.bp-result-line { font-size: 13px; color: rgba(0,0,0,.65); line-height: 1.6; word-break: break-all; }
 .bp-result-line em { font-style: normal; color: #1677ff; font-weight: 500; }
+
+/* 修复建议列表样式 */
+.bp-fix-suggestions {
+  margin-top: 12px;
+}
+.bp-location-item {
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 13px;
+}
+.bp-location-item:last-child { border-bottom: none; }
+.bp-fix-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  margin-top: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.bp-fix-item:hover {
+  border-color: #1677ff;
+  background-color: #f0f5ff;
+}
+.bp-fix-item--selected {
+  border-color: #1677ff;
+  background-color: #e6f4ff;
+  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
+}
+.bp-fix-item--no-diff {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.bp-fix-item--no-diff:hover {
+  border-color: #e8e8e8 !important;
+  background-color: transparent !important;
+}
+.bp-fix-content {
+  flex: 1;
+  min-width: 0;
+}
+.bp-fix-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.bp-fix-expand-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  color: rgba(0,0,0,.35);
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s, color 0.15s;
+  cursor: pointer;
+}
+.bp-fix-expand-btn:hover {
+  background: rgba(22,119,255,0.1);
+  color: #1677ff;
+}
+.bp-fix-item:hover .bp-fix-expand-btn,
+.bp-fix-item--selected .bp-fix-expand-btn {
+  opacity: 1;
+}
+.bp-fix-file {
+  font-family: monospace;
+  font-size: 13px;
+  color: #1677ff;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+}
+.bp-fix-lines {
+  font-size: 12px;
+  color: #888;
+  flex-shrink: 0;
+}
+.bp-fix-problem {
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 4px;
+  line-height: 1.5;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+.bp-fix-solution {
+  font-size: 13px;
+  color: #333;
+  line-height: 1.5;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  max-width: 100%;
+  overflow: hidden;
+}
+.bp-fix-diff {
+  margin-top: 8px;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.bp-fix-diff :deep(.hljs-block) {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.bp-tip {
+  font-size: 12px;
+  color: #faad14;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.bp-tip::before {
+  content: "⚠";
+}
+
+/* 右侧配置抽屉 */
+.bp-drawer {
+  position: fixed !important;
+  z-index: 1000;
+}
+
+:deep(.bp-drawer .ant-drawer-body) {
+  overflow-x: hidden !important;
+  width: 560px !important;
+  max-width: 560px !important;
+  box-sizing: border-box !important;
+}
 
 /* ── Bug 模态框 ── */
 .bug-list { border:1px solid #f0f0f0; border-radius:6px; min-height:368px; }
