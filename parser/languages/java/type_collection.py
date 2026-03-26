@@ -27,6 +27,7 @@ class JavaTopLevelTypeCollectionMixin:
         java_object_node.name = class_data.class_name
         java_object_node.qualified_name = java_file_node.package_name + "." + class_data.class_name
         java_object_node.belong_project = java_file_node.belong_project
+        java_object_node.project_key = java_file_node.project_key
         java_object_node.belong_file = java_file_node.file_path
         java_object_node.symbol_id = class_data.symbol_id
         java_object_node.parent_symbol_id = class_data.parent_symbol_id
@@ -94,6 +95,7 @@ class JavaTopLevelTypeCollectionMixin:
         java_object_node.qualified_name = java_file_node.package_name + "." + interface_data.interface_name
         java_object_node.belong_project = java_file_node.belong_project
         java_object_node.belong_file = java_file_node.file_path
+        java_object_node.project_key = java_file_node.project_key
         java_object_node.symbol_id = interface_data.symbol_id
         java_object_node.parent_symbol_id = interface_data.parent_symbol_id
         java_object_node.start_line = interface_data.location.start_line
@@ -137,6 +139,7 @@ class JavaTopLevelTypeCollectionMixin:
         java_object_node.name = enum_data.enum_name
         java_object_node.qualified_name = java_file_node.package_name + "." + enum_data.enum_name
         java_object_node.belong_project = java_file_node.belong_project
+        java_object_node.project_key = java_file_node.project_key
         java_object_node.belong_file = java_file_node.file_path
         java_object_node.symbol_id = enum_data.symbol_id
         java_object_node.parent_symbol_id = enum_data.parent_symbol_id
@@ -191,6 +194,7 @@ class JavaTopLevelTypeCollectionMixin:
         java_object_node.qualified_name = java_file_node.package_name + "." + annotation_data.annotation_name
         java_object_node.belong_project = java_file_node.belong_project
         java_object_node.belong_file = java_file_node.file_path
+        java_object_node.project_key = java_file_node.project_key
         java_object_node.symbol_id = annotation_data.symbol_id
         java_object_node.parent_symbol_id = annotation_data.parent_symbol_id
         java_object_node.start_line = annotation_data.location.start_line
@@ -227,7 +231,9 @@ class JavaTopLevelTypeCollectionMixin:
         java_object_node.name = record_data.record_name
         java_object_node.qualified_name = java_file_node.package_name + "." + record_data.record_name
         java_object_node.belong_project = java_file_node.belong_project
+        java_object_node.project_key = java_file_node.project_key
         java_object_node.belong_file = java_file_node.file_path
+        java_object_node.project_key = java_file_node.project_key
         java_object_node.symbol_id = record_data.symbol_id
         java_object_node.parent_symbol_id = record_data.parent_symbol_id
         java_object_node.type_parameters = record_data.type_parameters

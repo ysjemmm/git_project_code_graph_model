@@ -18,11 +18,11 @@ class JavaGraphBatchExportMixin:
     """
 
     def prepare_from_ast_data(self, ast_data_list: list, auto_link_external: bool = True) -> GraphBatch:
-        self._prepare_project_node()
+        project_node = self._prepare_project_node()
 
         for ast_data in ast_data_list:
             if ast_data:
-                self._collect_ast_file_nodes(ast_data)
+                self._collect_ast_file_nodes(ast_data, project_node)
 
         self._parse_extend_impl_relationships(ast_data_list)
 
@@ -49,7 +49,7 @@ class JavaGraphBatchExportMixin:
                     continue
 
                 if isinstance(node_dict, dict) and "project_key" not in node_dict:
-                    node_dict["project_key"] = self.project_id
+                    node_dict["project_key"] = getattr(self, "project_id", None)
 
                 bucket.append(node_dict)
             if bucket:

@@ -23,7 +23,7 @@ class JavaProjectAndFileCollectionMixin:
       - self._collect_* 子方法（class/interface/enum/annotation/record 等）
     """
 
-    def _prepare_project_node(self):
+    def _prepare_project_node(self) -> ProjectGraphNode:
         project_node = ProjectGraphNode()
         project_node.name = self.project_name
         project_node.symbol_id = self.project_id
@@ -32,8 +32,9 @@ class JavaProjectAndFileCollectionMixin:
 
         self.nodes_to_create[JavaNeo4jNodeType.Project].append(project_node)
         self.created_nodes.add(self.project_id)
+        return project_node
 
-    def _collect_ast_file_nodes(self, ast_data: JavaFileStructure | None):
+    def _collect_ast_file_nodes(self, ast_data: JavaFileStructure | None, parent_node: JavaFileNodeGraphNode) -> None:
         if ast_data is None:
             return
 
@@ -56,6 +57,7 @@ class JavaProjectAndFileCollectionMixin:
         java_file_node.end_column = ast_data.location.end_column
         java_file_node.imports = [imp.import_path for imp in ast_data.import_details]
         java_file_node.belong_project = self.project_name
+        java_file_node.project_key = parent_node.project_key
         java_file_node.file_type = "Java"
         java_file_node.full_path = ast_data.file_path
         java_file_node.symbol_id = ast_data.symbol_id

@@ -4,7 +4,7 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
 from tools.constants import CACHE_MAVEN_DEPS_PATH, CACHE_GIT_REPOS_PATH
 
@@ -368,13 +368,12 @@ class GitToNeo4jImporter:
             logger.info("Git 仓库导入工具 [IMPORTER_VERSION=20260318b]")
             logger.info("=" * 70)
             
-            # Git URL 动态解析仓库名
-            # 支持格式: https://github.com/user/repo.git http://git.example.com/path/repo.git
-            extracted_repo_name = repo_url.split('/')[-1].replace('.git', '')
-            
             # 如果指定project_name，优先用它作为 repo_name（文件夹名），保证应用管理名称与缓存目录一致
             # 如果没有 project_name，再看 repo_name，最后 fallback 到 URL 解析
             if project_name is None:
+                # Git URL 动态解析仓库名
+                # 支持格式: https://github.com/user/repo.git http://git.example.com/path/repo.git
+                extracted_repo_name = repo_url.split('/')[-1].replace('.git', '')
                 project_name = repo_name or extracted_repo_name
             if repo_name is None:
                 repo_name = project_name
@@ -525,9 +524,10 @@ class GitToNeo4jImporter:
                                 {"p": project_name},
                             ) or []
                             existing = int((rows2[0] or {}).get("c", 0) or 0) if rows2 else 0
-                    except Exception:
+                    except Exception as e:
                         has_project = False
                         existing = 0
+                        logger.warning("判断项目节点是否在图谱中存在异常: {}", e)
 
                     # 只要 Project(Application) 不存在，就必须执行一次全量导入初始化
                     if has_project and existing > 0:
@@ -556,8 +556,8 @@ class GitToNeo4jImporter:
                     default_path = Path(repo_cache_dir) / "src" / "main" / "java"
                     if not default_path.exists():
                         source_dir = None
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning("解析 java 元路径异常: {}", e)
 
             # Maven 扫描（可选）：解析 pom 外部依赖并构建 jar 类索引
             try:

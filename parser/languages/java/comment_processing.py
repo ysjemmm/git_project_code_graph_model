@@ -179,6 +179,7 @@ class JavaCommentProcessingMixin:
             comment_node.content = comment.raw_comment
             comment_node.comment_type = CommentType.JAVADOC.value
             comment_node.belong_project = parent_belong_project
+            comment_node.project_key = getattr(parent_belong_project, "project_key")
             comment_node.char_count = len(comment.raw_comment)
             comment_node.line_count = comment.raw_comment.count("\n") + 1
 
@@ -226,6 +227,7 @@ class JavaCommentProcessingMixin:
         comment_node.content = all_text
         comment_node.comment_type = CommentType.LONG_COMMENT.value
         comment_node.belong_project = parent_belong_project
+        comment_node.project_key = getattr(parent_belong_project, "project_key")
         comment_node.char_count = len(all_text)
         comment_node.line_count = all_text.count("\n") + 1
 

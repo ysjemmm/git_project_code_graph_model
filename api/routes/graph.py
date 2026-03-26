@@ -173,7 +173,7 @@ def graph_projects(
             # 目前仍以 belong_project 作为聚合键（兼容旧数据不含 project_key 的情况）。
             q = """
             MATCH (p:Project)
-            WHERE p.name IS NOT NULL AND p.name <> ""
+            WHERE p.name IS NOT NULL AND p.name <> "" AND p.project_type = "Application"
             WITH p,
                  p.name AS project_name,
                  coalesce(p.symbol_id, '') AS project_key,

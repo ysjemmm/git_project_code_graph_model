@@ -24,6 +24,7 @@ class JavaMemberCollectionMixin:
         java_method_node.is_constructor = False
         java_method_node.name = method_data.method_name
         java_method_node.belong_project = java_object_node.belong_project
+        java_method_node.project_key = java_object_node.project_key
 
         if method_data.is_static:
             java_method_node.is_static = True
@@ -90,6 +91,7 @@ class JavaMemberCollectionMixin:
         java_cb_node.name = "__CodeBlock__"
         java_cb_node.is_static = code_block_data.is_static
         java_cb_node.belong_project = java_object_node.belong_project
+        java_cb_node.project_key = java_object_node.project_key
 
         java_cb_node.symbol_id = symbol_id
         java_cb_node.parent_symbol_id = parent_symbol_id
@@ -113,6 +115,7 @@ class JavaMemberCollectionMixin:
         java_method_node.name = constructor_data.constructor_name
         java_method_node.is_constructor = True
         java_method_node.belong_project = java_object_node.belong_project
+        java_method_node.project_key = java_object_node.project_key
 
         java_method_node.symbol_id = constructor_data.symbol_id
         java_method_node.parent_symbol_id = constructor_data.parent_symbol_id
@@ -144,6 +147,7 @@ class JavaMemberCollectionMixin:
         java_field_node.has_default_value = field_data.has_initial_value
         java_field_node.default_value = field_data.initial_value
         java_field_node.belong_project = java_object_node.belong_project
+        java_field_node.project_key = java_object_node.project_key
 
         java_field_node.parent_symbol_id = field_data.parent_symbol_id
         java_field_node.symbol_id = field_data.symbol_id
@@ -198,6 +202,7 @@ class JavaMemberCollectionMixin:
         java_enum_constant_node = JavaEnumConstantNodeGraphNode()
         java_enum_constant_node.name = constant_data.constant_name
         java_enum_constant_node.belong_project = java_object_node.belong_project
+        java_enum_constant_node.project_key = java_object_node.project_key
         java_enum_constant_node.parent_symbol_id = constant_data.parent_symbol_id
         java_enum_constant_node.symbol_id = constant_data.symbol_id
 
@@ -224,6 +229,7 @@ class JavaMemberCollectionMixin:
         java_param_node.name = param_data.parameter_name
         java_param_node.type_name = param_data.parameter_type
         java_param_node.belong_project = record_node.belong_project
+        java_param_node.project_key = record_node.project_key
         java_param_node.symbol_id = param_data.symbol_id
         java_param_node.parent_symbol_id = param_data.symbol_id
         java_param_node.start_line = param_data.location.start_line

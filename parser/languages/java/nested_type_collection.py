@@ -24,6 +24,7 @@ class JavaNestedTypeCollectionMixin:
         java_object_node.name = nested_class_data.class_name
         java_object_node.qualified_name = parent_object_node.qualified_name + "." + nested_class_data.class_name
         java_object_node.belong_project = parent_object_node.belong_project
+        java_object_node.project_key = parent_object_node.project_key
         java_object_node.symbol_id = nested_class_data.symbol_id
         java_object_node.parent_symbol_id = nested_class_data.parent_symbol_id
         java_object_node.type_parameters = nested_class_data.type_parameters
@@ -78,6 +79,7 @@ class JavaNestedTypeCollectionMixin:
         java_object_node.name = nested_interface_data.interface_name
         java_object_node.qualified_name = parent_object_node.qualified_name + "." + nested_interface_data.interface_name
         java_object_node.belong_project = parent_object_node.belong_project
+        java_object_node.project_key = parent_object_node.project_key
         java_object_node.symbol_id = nested_interface_data.symbol_id
         java_object_node.parent_symbol_id = nested_interface_data.parent_symbol_id
         java_object_node.start_line = nested_interface_data.location.start_line
@@ -122,6 +124,7 @@ class JavaNestedTypeCollectionMixin:
         java_object_node.name = nested_enum_data.enum_name
         java_object_node.qualified_name = parent_object_node.qualified_name + "." + nested_enum_data.enum_name
         java_object_node.belong_project = parent_object_node.belong_project
+        java_object_node.project_key = parent_object_node.project_key
         java_object_node.symbol_id = nested_enum_data.symbol_id
         java_object_node.parent_symbol_id = nested_enum_data.parent_symbol_id
         java_object_node.start_line = nested_enum_data.location.start_line
@@ -170,6 +173,7 @@ class JavaNestedTypeCollectionMixin:
         java_object_node.name = nested_annotation_data.annotation_name
         java_object_node.qualified_name = parent_object_node.qualified_name + "." + nested_annotation_data.annotation_name
         java_object_node.belong_project = parent_object_node.belong_project
+        java_object_node.project_key = parent_object_node.project_key
         java_object_node.symbol_id = nested_annotation_data.symbol_id
         java_object_node.parent_symbol_id = nested_annotation_data.parent_symbol_id
         java_object_node.start_line = nested_annotation_data.location.start_line
@@ -207,6 +211,7 @@ class JavaNestedTypeCollectionMixin:
         java_object_node.name = nested_record_data.record_name
         java_object_node.qualified_name = parent_object_node.qualified_name + "." + nested_record_data.record_name
         java_object_node.belong_project = parent_object_node.belong_project
+        java_object_node.project_key = parent_object_node.project_key
         java_object_node.symbol_id = nested_record_data.symbol_id
         java_object_node.parent_symbol_id = nested_record_data.parent_symbol_id
         java_object_node.type_parameters = nested_record_data.type_parameters
