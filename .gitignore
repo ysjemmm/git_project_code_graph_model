@@ -5,6 +5,8 @@
 .classpath
 .project
 .factorypath
+.cache
+/static
 .metals
 *.iml
 *.ipr
@@ -17,13 +19,12 @@ bin
 
 # Logs 使用目录不使用*.log是为了方便IDE排除搜索目录
 /logs
-/deploy/logs
 
 # Framework
-/config/*
 /deploy/config/*
 /metadata/*
 /deploy/metadata/*
 mandarin
 mq_backup_db
 allure-results
+**/__pycache__

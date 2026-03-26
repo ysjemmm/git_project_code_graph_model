@@ -173,41 +173,33 @@ def graph_projects(
             # 目前仍以 belong_project 作为聚合键（兼容旧数据不含 project_key 的情况）。
             q = """
             MATCH (p:Project)
-            __ACTIVE_WHERE__
-            WITH
-              coalesce(p.name, p.belong_project, '') AS project_name,
-              coalesce(p.symbol_id, '') AS project_key,
-              coalesce(p.project_type, '') AS project_type,
-              coalesce(p.branch, '') AS branch,
-              coalesce(p.commit_hash, '') AS commit_hash
-            WHERE project_name <> ""
-            WITH DISTINCT project_name, project_key, project_type, branch, commit_hash
-            CALL (project_name) {
-              MATCH (n)
-              WHERE coalesce(n.belong_project, '') = project_name
-              RETURN count(n) AS node_count
-            }
-            CALL (project_name) {
-              MATCH (n)-[r]-()
-              WHERE coalesce(n.belong_project, '') = project_name
-              RETURN count(DISTINCT r) AS relationship_count
-            }
+            WHERE p.name IS NOT NULL AND p.name <> ""
+            WITH p,
+                 p.name AS project_name,
+                 coalesce(p.symbol_id, '') AS project_key,
+                 coalesce(p.project_type, '') AS project_type,
+                 coalesce(p.branch, '') AS branch,
+                 coalesce(p.commit_hash, '') AS commit_hash
+            
             RETURN project_name, project_key, project_type, branch, commit_hash,
-                   coalesce(node_count, 0) AS node_count,
-                   coalesce(relationship_count, 0) AS relationship_count
+                   count { MATCH (n) WHERE n.belong_project = project_name } AS node_count,
+                   count { MATCH (n)-[r]-() WHERE n.belong_project = project_name } AS relationship_count
+            ORDER BY project_name
             """
             q = q.replace("__ACTIVE_WHERE__", active_where)
             rows: List[Dict[str, Any]] = conn.execute_read_query(q) or []
         else:
             q = """
             MATCH (p:Project)
-            WHERE coalesce(p.is_active,false) = true OR p.is_active IS NULL
+            WHERE (p.is_active = true OR p.is_active IS NULL) 
+              AND p.name IS NOT NULL 
+              AND p.name <> ""
             RETURN
-              coalesce(p.name, p.belong_project, '') AS project_name,
-              coalesce(p.symbol_id, '') AS project_key,
-              coalesce(p.project_type, '') AS project_type,
-              coalesce(p.branch, '') AS branch,
-              coalesce(p.commit_hash, '') AS commit_hash
+              p.name AS project_name,
+              CASE WHEN p.symbol_id IS NOT NULL THEN p.symbol_id ELSE '' END AS project_key,
+              CASE WHEN p.project_type IS NOT NULL THEN p.project_type ELSE '' END AS project_type,
+              CASE WHEN p.branch IS NOT NULL THEN p.branch ELSE '' END AS branch,
+              CASE WHEN p.commit_hash IS NOT NULL THEN p.commit_hash ELSE '' END AS commit_hash
             """
             rows = conn.execute_read_query(q) or []
 
