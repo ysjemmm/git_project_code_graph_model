@@ -1,5 +1,5 @@
 import { computed, ref, watch } from 'vue'
-import { listApplicationProjects, listGitRepos, listGraphProjects, listGraphProjectVersions, listGitBranches, listGitCommits } from '../api'
+import { listProjectsForImport, listGitRepos, listGraphProjects, listGraphProjectVersions, listGitBranches, listGitCommits } from '../api'
 import type { GraphProjectVersion } from '../api'
 
 // 项目元数据（来自图谱）
@@ -122,18 +122,9 @@ export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: Project
     try {
       if (projectSource === 'cacheApplicationProjects') {
         loadingRepos.value = true
-        const [appData, graphData] = await Promise.all([
-          listApplicationProjects(),
-          listGraphProjects().catch(() => ({ ok: false, items: [] as any[] })),
-        ])
+        const appData = await listProjectsForImport()
+        
         const items = Array.isArray(appData?.items) ? appData.items : []
-        // 建立 project_name -> version 的映射（从图谱数据）
-        const versionMap = new Map<string, string>()
-        for (const g of (Array.isArray(graphData?.items) ? graphData.items : [])) {
-          const name = String((g as any)?.project_name || '').trim()
-          const ver = String((g as any)?.version || '').trim()
-          if (name && ver) versionMap.set(name, ver)
-        }
         repos.value = items
           .filter((x) => x.project_name && String(x.project_name).trim() && x.project_name !== '(error)' && x.project_name !== '(unknown)')
           .map((x) => ({
@@ -145,8 +136,9 @@ export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: Project
             appType: x.app_type ?? 'backend',
             language: x.language ?? 'java',
             hasGraph: Boolean(x.commit_hash),
-            graphVersion: versionMap.get(String(x.project_name)) ?? '',
+            graphVersion: ''
           }))
+        console.log('[fetchRepos] final repos:', repos.value)
         return
       }
 
@@ -195,7 +187,12 @@ export function useRepo(opts?: { lazyRefFetch?: boolean; projectSource?: Project
   async function onProjectDropdown(open: boolean) {
     if (!open) return
     if (repoMode.value !== 'select') return
-    await ensureReposLoaded()
+    
+    // 检查是否需要加载（空列表且未在加载中）
+    if (repos.value.length === 0 && !loadingRepos.value) {
+      await fetchRepos()
+    }
+    console.log(repos.value)
   }
 
   function _applyVersionRef(v: GraphProjectVersion) {

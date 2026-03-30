@@ -71,7 +71,8 @@ class GitIncrementalAnalyzer:
                          clone_timeout: Optional[int] = None,
                          git_config: Optional[Dict[str, str]] = None,
                          commit_id: Optional[str] = None,
-                         maven_scan_enabled: bool = True) -> Dict:
+                         maven_scan_enabled: bool = True,
+                         version: str = "") -> Dict:
         # 兼容：历史参数 java_source_dir 仍然保留；如果两者都传，以 source_dir 为准
         if source_dir is None:
             source_dir = java_source_dir
@@ -83,7 +84,7 @@ class GitIncrementalAnalyzer:
             _ = bool(maven_scan_enabled)
             
             # 获取仓库缓存目录
-            repo_cache_dir = self.cache_manager.get_repo_cache_dir(repo_name)
+            repo_cache_dir = self.cache_manager.get_repo_cache_dir(repo_name, version)
             
             # 初始化Git 管理
             git_manager = GitManager(repo_cache_dir)
@@ -205,7 +206,7 @@ class GitIncrementalAnalyzer:
             # 第三步:检查是否有代码变化
             # 如果指定了 commit_id，使用 commit_id 作为缓存键；否则使用 branch
             cache_key = commit_id if commit_id else branch
-            has_changes, reason = self.cache_manager.has_changes(repo_name, cache_key, current_commit)
+            has_changes, reason = self.cache_manager.has_changes(repo_name, cache_key, current_commit, version)
             logger.info(f"[INFO] {reason}")
             
             # 规范 source_dir 路径
@@ -239,10 +240,10 @@ class GitIncrementalAnalyzer:
             cache_key = commit_id if commit_id else branch
             if source_branch and source_branch != branch and not commit_id:
                 # 切换了分支,加载源分支的 Merkle 
-                old_tree = self.cache_manager.load_merkle_tree(repo_name, source_branch)
+                old_tree = self.cache_manager.load_merkle_tree(repo_name, source_branch, version)
             else:
                 # 没切换分支或首次克隆或使用 commit_id,加载对应的旧版本
-                old_tree = self.cache_manager.load_merkle_tree(repo_name, cache_key)
+                old_tree = self.cache_manager.load_merkle_tree(repo_name, cache_key, version)
             
             # 对比 Merkle 树,找出变化的文
             changed_files = []
@@ -396,8 +397,8 @@ class GitIncrementalAnalyzer:
                 }
             
             # 第五步:保存 Merkle 树和元数
-            self.cache_manager.save_merkle_tree(repo_name, cache_key, new_tree)
-            self.cache_manager.update_metadata(repo_name, repo_url, cache_key, current_commit)
+            self.cache_manager.save_merkle_tree(repo_name, cache_key, new_tree, version)
+            self.cache_manager.update_metadata(repo_name, repo_url, cache_key, current_commit, version)
             
             # 第六步:组装增量分析结果（避免重复 walk/hash）
             # 说明：本方法已通过 Merkle 树对比得到 changed/added/deleted 文件列表，
@@ -480,13 +481,11 @@ class GitIncrementalAnalyzer:
         )
         return ok, files
     
-    def cleanup_repo(self, repo_name: str) -> bool:
-        
-        return self.cache_manager.cleanup_repo(repo_name)
-    
-    def get_cache_info(self, repo_name: str) -> Dict:
-        
-        return self.cache_manager.get_cache_info(repo_name)
+    def cleanup_repo(self, repo_name: str, version: str = "") -> bool:
+        return self.cache_manager.cleanup_repo(repo_name, version)
+
+    def get_cache_info(self, repo_name: str, version: str = "") -> Dict:
+        return self.cache_manager.get_cache_info(repo_name, version)
     
     @staticmethod
     def _collect_all_source_files(directory: str, extensions: Optional[List[str]] = None) -> List[str]:

@@ -3,7 +3,9 @@ from __future__ import annotations
 import json
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+from warnings import deprecated
 
+from api.request import PageRequest
 from api.schemas import CacheProjectItem
 from storage.sqlite.business.business_db import BusinessSqliteDB
 
@@ -105,6 +107,62 @@ class ApplicationProjectsRepo:
         with self.db.transaction() as conn:
             conn.executemany(sql, [{**r, "updated_at": _now()} for r in rows])
 
+    def list_by_conditions(self, project_name: Optional[str] = None,
+                           page_request: Optional[PageRequest] = None) -> List[CacheProjectItem]:
+        conditions = []
+        limit_conditions = ""
+        if project_name:
+            conditions.append("project_name = ?")
+        if page_request:
+            if page_request.page_size:
+                if page_request.is_cursor_pagination():
+                    conditions.append("id > ?")
+                    limit_conditions = "limit ?"
+                else:
+                    limit_conditions = "limit ?, ?"
+        where = ""
+        if conditions:
+            where = "WHERE " + " AND ".join(conditions)
+
+        sql = f"""
+        SELECT
+          id, 
+          project_name, 
+          project_type, 
+          repo_url,
+          last_update_time, 
+          cache_dir,
+          repo_exists, 
+          head_branch, 
+          head_commit,
+          coalesce(app_type, 'backend') AS app_type,
+          coalesce(language, 'java') AS language
+        FROM application_projects_cache
+        {where}
+        """
+        cur = self.db.conn.cursor()
+        rows = cur.execute(sql).fetchall() or []
+
+        out: List[CacheProjectItem] = []
+        for r in rows:
+            out.append(
+                CacheProjectItem(
+                    id=r["id"],
+                    project_name=r["project_name"],
+                    project_type=r["project_type"],
+                    repo_url=r["repo_url"],
+                    last_update_time=r["last_update_time"],
+                    cache_dir=r["cache_dir"],
+                    repo_exists=bool(r["repo_exists"]),
+                    head_branch=r["head_branch"],
+                    head_commit=r["head_commit"],
+                    app_type=r["app_type"] if "app_type" in r.keys() else "backend",
+                    language=r["language"] if "language" in r.keys() else "java"
+                )
+            )
+        return out
+
+    # TODO 废弃函数，替换为 list_by_conditions
     def list_all(self, *, include_libs: bool = False, java_only: bool = False) -> List[CacheProjectItem]:
         conditions = []
         if not include_libs:

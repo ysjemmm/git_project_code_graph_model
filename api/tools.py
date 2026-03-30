@@ -145,48 +145,33 @@ def query_code_graph(
     查询代码图谱（Neo4j）。若提供 cypher 则执行（只读）；否则用 project_name 查 Project 及周边节点摘要。
     返回可读文本，供 LLM 上下文使用。
     """
-    uri = os.environ.get("NEO4J_URI", "")
-    user = os.environ.get("NEO4J_USER", "neo4j")
-    password = os.environ.get("NEO4J_PASSWORD", "")
-    database = os.environ.get("NEO4J_DATABASE", "neo4j")
-    if not uri or not password:
-        return "[图数据库未配置：缺少 NEO4J_URI / NEO4J_PASSWORD]"
-
     try:
-        from storage.neo4j import Neo4jConnector
-    except ImportError:
-        return "[无法导入 Neo4j 连接器，请确认项目依赖]"
-
-    conn = Neo4jConnector(uri=uri, username=user, password=password, database=database)
-    if not conn.connect():
-        return "[图数据库连接失败]"
-
-    try:
+        from storage.neo4j.session_builder import get_project_neo_dao
+        dao = get_project_neo_dao()
         if cypher:
-            rows = conn.execute_query(cypher, {"limit": limit})
+            from neomodel import db as neo4j_db
+            results, meta = neo4j_db.cypher_query(cypher, {"limit": limit})
+            cols = list(meta)
+            rows = [dict(zip(cols, row)) for row in results]
         else:
-            from storage.neo4j.queries import Neo4jQueries
-            rows = conn.execute_query(Neo4jQueries.project_summary(), {"project_name": project_name})
+            row = dao.get_project_summary(project_name)
+            rows = [row] if row else []
         if not rows:
             return f"[项目 {project_name} 在图库中无匹配节点或无权限]"
-        # 转成格式化 JSON，每行一个结果
         import json as _json
         formatted = []
         for r in rows:
             try:
                 row_dict = dict(r)
-                # raw_metadata 里的 \n 是真实换行，还原它
                 for k, v in row_dict.items():
                     if isinstance(v, str):
                         row_dict[k] = v.replace("\\n", "\n").replace("\\t", "\t")
                 formatted.append(_json.dumps(row_dict, ensure_ascii=False, indent=2))
             except Exception:
-                formatted.append(str(dict(r)))
+                formatted.append(str(r))
         return "\n---\n".join(formatted[:30])
     except Exception as e:
         return f"[图库查询异常: {e}]"
-    finally:
-        conn.disconnect()
 
 
 def gather_tool_context(
@@ -324,42 +309,24 @@ def get_project_dependencies(project_name: str) -> str:
     查询某项目依赖了哪些其他已导入项目（通过手动关联的 DEPENDS_ON 边）。
     返回可读文本，供 AI 决定下一步去哪个项目查源码。
     """
-    uri = os.environ.get("NEO4J_URI", "")
-    user = os.environ.get("NEO4J_USER", "neo4j")
-    password = os.environ.get("NEO4J_PASSWORD", "")
-    database = os.environ.get("NEO4J_DATABASE", "neo4j")
-    if not uri or not password:
-        return "[图数据库未配置：缺少 NEO4J_URI / NEO4J_PASSWORD]"
-
     try:
-        from storage.neo4j import Neo4jConnector
-    except ImportError:
-        return "[无法导入 Neo4j 连接器]"
-
-    conn = Neo4jConnector(uri=uri, username=user, password=password, database=database)
-    if not conn.connect():
-        return "[图数据库连接失败]"
-
-    try:
-        from storage.neo4j.queries import Neo4jQueries
-        rows = conn.execute_query(Neo4jQueries.get_project_depends_on(), {"name": project_name})
-        if not rows:
-            return f"[项目 {project_name!r} 在图谱中没有 DEPENDS_ON 关系，请先在「应用详情」页手动关联二方包依赖]"
-        lines = [f"项目 {project_name!r} 依赖以下已导入项目：\n"]
-        for r in rows:
-            d = dict(r)
-            lines.append(
-                f"  - {d.get('dep_project')}  "
-                f"({d.get('group_id')}:{d.get('artifact_id')})  "
-                f"[{d.get('project_type', 'Application')}]"
-            )
-        lines.append("\n可用 query_code_graph(project_name=<dep_project>) 查询对应项目的图谱，")
-        lines.append("或用 search_code / read_source_file 并传入 project_name=<dep_project> 读取其源码。")
-        return "\n".join(lines)
+        from storage.neo4j.session_builder import get_project_neo_dao
+        rows = get_project_neo_dao().get_depends_on(project_name)
     except Exception as e:
         return f"[查询依赖关系失败: {e}]"
-    finally:
-        conn.disconnect()
+
+    if not rows:
+        return f"[项目 {project_name!r} 在图谱中没有 DEPENDS_ON 关系，请先在「应用详情」页手动关联二方包依赖]"
+    lines = [f"项目 {project_name!r} 依赖以下已导入项目：\n"]
+    for d in rows:
+        lines.append(
+            f"  - {d.get('dep_project')}  "
+            f"({d.get('group_id')}:{d.get('artifact_id')})  "
+            f"[{d.get('project_type', 'Application')}]"
+        )
+    lines.append("\n可用 query_code_graph(project_name=<dep_project>) 查询对应项目的图谱，")
+    lines.append("或用 search_code / read_source_file 并传入 project_name=<dep_project> 读取其源码。")
+    return "\n".join(lines)
 
 
 def search_code(

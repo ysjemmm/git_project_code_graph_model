@@ -5,7 +5,7 @@ Neo4j Cypher 查询管理模块
 """
 from typing import Dict, List
 
-from storage.neo4j.java_modules import (
+from storage.neo4j.graph_schema import (
     REL_ENDPOINT_LABELS,
     MEMBER_OF_SOURCE_LABELS,
     MEMBER_OF_TARGET_LABELS,

@@ -13,7 +13,7 @@ from parser.languages.java.project_file_collection import JavaProjectAndFileColl
 from parser.languages.java.type_collection import JavaTopLevelTypeCollectionMixin
 from parser.languages.java.type_relationships import JavaTypeRelationshipCollectionMixin
 from parser.languages.java.symbol.symbol_manager import SymbolManager
-from storage.neo4j.java_modules import JavaNeo4jNodeType
+from storage.neo4j.graph_schema import JavaNeo4jNodeType
 
 
 class JavaAstGraphBuilder(

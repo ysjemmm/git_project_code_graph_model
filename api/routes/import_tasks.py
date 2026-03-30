@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 import os
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -41,25 +42,35 @@ def _task_log_path(task_id: str) -> Path:
 
 class _TaskLogHandler(logging.Handler):
     def __init__(self, path: Path):
-        super().__init__(level=logging.INFO)
+        super().__init__(level=logging.DEBUG)
         self.path = path
         self.path.parent.mkdir(parents=True, exist_ok=True)
+        self._file = self.path.open("a", encoding="utf-8", errors="ignore", buffering=1)
 
     def emit(self, record: logging.LogRecord) -> None:
         try:
             msg = self.format(record)
-            self.path.open("a", encoding="utf-8", errors="ignore").write(msg + "\n")
+            self._file.write(msg + "\n")
+            self._file.flush()
         except Exception:
             pass
 
+    def close(self) -> None:
+        try:
+            self._file.flush()
+            self._file.close()
+        except Exception:
+            pass
+        super().close()
+
 
 def _install_task_logger(task_id: str) -> _TaskLogHandler:
-    """
-    在单并发约束下，将 root logger 绑定到该 task 的日志文件。
-    """
     handler = _TaskLogHandler(_task_log_path(task_id))
     handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s - %(message)s"))
     root = logging.getLogger()
+    # 确保 root logger level 不会过滤掉 INFO
+    if root.level == logging.NOTSET or root.level > logging.INFO:
+        root.setLevel(logging.INFO)
     root.addHandler(handler)
     return handler
 
@@ -89,10 +100,10 @@ def _ensure_patched() -> None:
         _PATCHED = True
         return
 
-    def wrapped(self: Any, task: Any):  # type: ignore
+    async def wrapped(self: Any, task: Any):  # type: ignore
         handler = _install_task_logger(getattr(task, "task_id", "unknown"))
         try:
-            return orig(self, task)
+            return await orig(self, task)
         finally:
             _uninstall_task_logger(handler)
 
@@ -153,50 +164,42 @@ def submit_import_task(body: Dict[str, Any]) -> Dict[str, Any]:
     # repo_name 统一使用 project_name，保证缓存目录与应用名称一致
     repo_name = project_name
 
-    # 查重：project_name 必须唯一
+    # 使用 TaskSubmitContext 封装参数，使调用更清晰
+    from core.task_queue import TaskSubmitContext, TaskPriority
+    
+    ctx = TaskSubmitContext(
+        repo_url=repo_url,
+        branch=branch or "main",
+        repo_name=repo_name,
+        project_name=project_name,
+        java_source_dir=java_source_dir,
+        commit_id=commit_id or None,
+        clear_database=clear_database,
+        maven_scan_enabled=maven_scan_enabled,
+        force_maven=force_maven,
+        auto_link_external=auto_link_external,
+        app_version=app_version,
+        task_type=task_type,
+        acceptance_enabled=acceptance_enabled,
+        acceptance_block_on_fail=acceptance_block_on_fail,
+        acceptance_max_drop_ratio=acceptance_max_drop_ratio,
+        priority=TaskPriority.NORMAL,
+    )
+    
     try:
-        from api.main import get_business_db
-        bdb = get_business_db()
-        dup = bdb.conn.execute(
-            "SELECT id FROM application_projects_cache WHERE project_name = ?", (project_name,)
-        ).fetchone()
-        if dup:
-            return {"ok": False, "message": f"应用名称 '{project_name}' 已存在，请使用其他名称"}
-    except Exception:
-        pass  # 查重失败不阻断，数据库唯一索引兜底
-
-    try:
-        task_id = q.submit_task(
-            repo_url=repo_url,
-            branch=branch or "main",
-            repo_name=repo_name,
-            project_name=project_name,
-            java_source_dir=java_source_dir,
-            commit_id=commit_id or None,
-            clear_database=clear_database,
-            maven_scan_enabled=maven_scan_enabled,
-            force_maven=force_maven,
-            auto_link_external=auto_link_external,
-            app_version=app_version,
-            task_type=task_type,
-            acceptance_enabled=acceptance_enabled,
-            acceptance_block_on_fail=acceptance_block_on_fail,
-            acceptance_max_drop_ratio=acceptance_max_drop_ratio,
-            priority=getattr(__import__("core.task_queue", fromlist=["TaskPriority"]), "TaskPriority").NORMAL,
-        )
+        task_id = q.submit_task(ctx)
     except Exception as e:
         return {"ok": False, "message": str(e)}
 
-    # 写入 app_type / language 到应用缓存表
+    # 确保应用在 SQLite 缓存表中存在（按 project_name 做 upsert，与版本无关）
     try:
         from api.main import get_business_db
         bdb = get_business_db()
         bdb.conn.execute(
-            """INSERT INTO application_projects_cache (repo_name, project_name, project_type, repo_url, app_type, language, created_at, updated_at)
+            """INSERT INTO application_projects_cache
+                 (repo_name, project_name, project_type, repo_url, app_type, language, created_at, updated_at)
                VALUES (?, ?, 'Application', ?, ?, ?, datetime('now'), datetime('now'))
                ON CONFLICT(repo_name) DO UPDATE SET
-                 project_name=excluded.project_name,
-                 project_type='Application',
                  repo_url=excluded.repo_url,
                  app_type=excluded.app_type,
                  language=excluded.language,
@@ -210,8 +213,116 @@ def submit_import_task(body: Dict[str, Any]) -> Dict[str, Any]:
     return {"ok": True, "task_id": task_id}
 
 
+@router.post("/import/tasks/test-schedule")
+async def create_test_import_task(
+    project_name: str = Query(..., description="项目名称，用于测试调度"),
+    wait_seconds: int = Query(10, ge=1, le=60, description="模拟等待秒数"),
+) -> Dict[str, Any]:
+    """
+    创建测试导入任务：
+    - 不执行真实的 Git 克隆和图谱导入
+    - 仅模拟任务流程：pending → running → success/failed
+    - 会产生日志并写入 SQLite
+    - 用于验证任务调度框架的完整流程
+    """
+    import asyncio, time, uuid
+    from core.task_queue import TaskStatus as _TaskStatus, GitImportTask, TaskPriority as _TaskPriority
+
+    _ensure_patched()
+    q = _task_queue()
+    q._lazy_init()
+
+    task_id = str(uuid.uuid4())
+    task = GitImportTask(
+        task_id=task_id,
+        repo_url='https://example.com/test/repo.git',
+        branch='test-branch',
+        project_name=project_name,
+        task_type='test',
+        app_version='test-' + str(int(time.time())),
+        priority=_TaskPriority.NORMAL,
+        maven_scan_enabled=False,
+        clear_database=False,
+        acceptance_enabled=True,
+    )
+    q.tasks[task_id] = task
+    try:
+        q.task_repo.save(task.to_dict())
+    except Exception:
+        pass
+
+    async def run_test_task():
+        task = q.tasks.get(task_id)
+        if not task:
+            return
+
+        log_handler = _install_task_logger(task_id)
+        task.status = _TaskStatus.RUNNING
+        task.started_at = datetime.now().isoformat()
+
+        logger = logging.getLogger(f"test_task.{task_id}")
+        logger.info(f"[TEST_TASK] 测试任务启动 task_id={task_id}")
+        logger.info(f"[TEST_TASK] project={project_name}  wait={wait_seconds}s")
+        logger.info(f"[TEST_TASK] 这是一个模拟任务，不执行真实导入")
+
+        try:
+            for i in range(wait_seconds):
+                await asyncio.sleep(1)
+                logger.info(f"[TEST_TASK] 进度 {i + 1}/{wait_seconds}s ...")
+
+            task.status = _TaskStatus.SUCCESS
+            task.result = {
+                "extra": {
+                    "is_test": True,
+                    "wait_seconds": wait_seconds,
+                    "acceptance": {"enabled": True, "status": "passed", "summary": "Test passed"},
+                }
+            }
+            logger.info(f"[TEST_TASK] 任务完成 ✓")
+
+        except asyncio.CancelledError:
+            task.status = _TaskStatus.CANCELLED
+            task.error = "cancelled"
+            logger.warning(f"[TEST_TASK] 任务被取消")
+
+        except Exception as e:
+            task.status = _TaskStatus.FAILED
+            task.error = str(e)
+            logger.error(f"[TEST_TASK] 任务失败: {e}")
+
+        finally:
+            logger.info(f"[TEST_TASK] status={task.status.value}")
+            _uninstall_task_logger(log_handler)
+            task.completed_at = datetime.now().isoformat()
+            try:
+                q.task_repo.upsert_task(
+                    task_id=task_id,
+                    status=task.status.value,
+                    priority=str(task.priority.name),
+                    created_at=task.created_at,
+                    started_at=task.started_at,
+                    completed_at=task.completed_at,
+                    retry_count=task.retry_count,
+                    max_retries=task.max_retries,
+                    task_obj=task.to_dict(),
+                    updated_at=datetime.now().isoformat(),
+                )
+            except Exception as ex:
+                logger.error(f"[TEST_TASK] save_state_failed: {ex}")
+    
+    # 在后台运行测试任务
+    asyncio.create_task(run_test_task())
+    
+    return {"ok": True, "task_id": task_id, "message": f"Test task created, will wait for {wait_seconds}s"}
+
+
 @router.get("/import/tasks")
-def list_import_tasks(limit: int = Query(50, ge=1, le=500)) -> Dict[str, Any]:
+def list_import_tasks(
+    limit: int = Query(50, ge=1, le=500),
+    project_name: Optional[str] = Query(None, description="按项目名称筛选"),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(6, ge=1, le=100, description="每页数量"),
+) -> Dict[str, Any]:
     q = _task_queue()
     # 1) 运行态任务（内存）
     mem_tasks = q.get_all_tasks()
@@ -233,11 +344,26 @@ def list_import_tasks(limit: int = Query(50, ge=1, le=500)) -> Dict[str, Any]:
             merged[tid] = t
 
     tasks = list(merged.values())
+    
+    # 按项目名筛选
+    if project_name:
+        tasks = [
+            t for t in tasks
+            if str(t.get("project_name") or "") == project_name
+        ]
+    
     # 最新优先
     tasks = sorted(tasks, key=lambda x: (x.get("created_at") or ""), reverse=True)
+    
+    # 分页
+    total = len(tasks)
+    start_idx = (page - 1) * page_size
+    end_idx = start_idx + page_size
+    paginated_tasks = tasks[start_idx:end_idx]
+    
     stats = q.get_queue_stats()
-    stats["history_total"] = len(tasks)
-    return {"ok": True, "items": tasks[: int(limit)], "stats": stats}
+    stats["history_total"] = total
+    return {"ok": True, "items": paginated_tasks[: int(limit)], "total": total, "stats": stats}
 
 
 @router.get("/import/tasks/{task_id}")

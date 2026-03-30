@@ -1,1 +1,10 @@
 fastapi==0.135.2
+uvicorn[standard]
+python-multipart==0.0.22
+neo4j==6.1.0
+loraxmod==0.1.0
+jedi==0.19.2
+httpx[http2]
+
+sqlalchemy==2.0.48
+neomodel==6.1.0

@@ -25,34 +25,43 @@ class GitCacheManager:
         os.makedirs(self.merkle_cache_dir, exist_ok=True)
         os.makedirs(self.metadata_dir, exist_ok=True)
     
-    def get_repo_cache_dir(self, repo_name: str) -> str:
-        
+    def get_repo_cache_dir(self, repo_name: str, version: str = "") -> str:
+        """
+        返回 git clone 目录。
+        有 version 时：.cache/git_repos/{repo_name}/{safe_version}/
+        无 version 时：.cache/git_repos/{repo_name}/（向后兼容）
+        """
+        if version:
+            safe_version = version.replace("/", "_").replace("\\", "_")
+            return os.path.join(self.cache_base_dir, repo_name, safe_version)
         return os.path.join(self.cache_base_dir, repo_name)
-    
-    def get_metadata_file(self, repo_name: str) -> str:
-        
+
+    def get_metadata_file(self, repo_name: str, version: str = "") -> str:
+        if version:
+            safe_version = version.replace("/", "_").replace("\\", "_")
+            return os.path.join(self.metadata_dir, f"{repo_name}__{safe_version}.json")
         return os.path.join(self.metadata_dir, f"{repo_name}.json")
-    
-    def get_merkle_tree_file(self, repo_name: str, branch: str) -> str:
-        
+
+    def get_merkle_tree_file(self, repo_name: str, branch: str, version: str = "") -> str:
         safe_branch = branch.replace('/', '_')
+        if version:
+            safe_version = version.replace("/", "_").replace("\\", "_")
+            return os.path.join(self.merkle_cache_dir, f"{repo_name}__{safe_version}_{safe_branch}.json")
         return os.path.join(self.merkle_cache_dir, f"{repo_name}_{safe_branch}.json")
     
-    def save_metadata(self, repo_name: str, metadata: Dict) -> bool:
-        
+    def save_metadata(self, repo_name: str, metadata: Dict, version: str = "") -> bool:
         try:
-            metadata_file = self.get_metadata_file(repo_name)
+            metadata_file = self.get_metadata_file(repo_name, version)
             with open(metadata_file, 'w', encoding='utf-8') as f:
                 json.dump(metadata, f, indent=2, ensure_ascii=False)
             return True
         except Exception as e:
             print(f"[ERROR] 保存元数据失败: {e}")
             return False
-    
-    def load_metadata(self, repo_name: str) -> Optional[Dict]:
-        
+
+    def load_metadata(self, repo_name: str, version: str = "") -> Optional[Dict]:
         try:
-            metadata_file = self.get_metadata_file(repo_name)
+            metadata_file = self.get_metadata_file(repo_name, version)
             if os.path.isfile(metadata_file):
                 with open(metadata_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
@@ -60,24 +69,21 @@ class GitCacheManager:
         except Exception as e:
             print(f"[ERROR] 加载元数据失败: {e}")
             return None
-    
-    def save_merkle_tree(self, repo_name: str, branch: str, tree: MerkleNode) -> bool:
-        
+
+    def save_merkle_tree(self, repo_name: str, branch: str, tree: MerkleNode, version: str = "") -> bool:
         try:
-            merkle_file = self.get_merkle_tree_file(repo_name, branch)
+            merkle_file = self.get_merkle_tree_file(repo_name, branch, version)
             tree_dict = self._node_to_dict(tree)
-            
             with open(merkle_file, 'w', encoding='utf-8') as f:
                 json.dump(tree_dict, f, indent=2, ensure_ascii=False)
             return True
         except Exception as e:
             print(f"[ERROR] 保存 Merkle 树失败: {e}")
             return False
-    
-    def load_merkle_tree(self, repo_name: str, branch: str) -> Optional[MerkleNode]:
-        
+
+    def load_merkle_tree(self, repo_name: str, branch: str, version: str = "") -> Optional[MerkleNode]:
         try:
-            merkle_file = self.get_merkle_tree_file(repo_name, branch)
+            merkle_file = self.get_merkle_tree_file(repo_name, branch, version)
             if os.path.isfile(merkle_file):
                 with open(merkle_file, 'r', encoding='utf-8') as f:
                     tree_dict = json.load(f)
@@ -86,81 +92,72 @@ class GitCacheManager:
         except Exception as e:
             print(f"[ERROR] 加载 Merkle 树失败: {e}")
             return None
-    
-    def update_metadata(self, repo_name: str, repo_url: str, branch: str, commit_hash: str) -> bool:
-        
+
+    def update_metadata(self, repo_name: str, repo_url: str, branch: str, commit_hash: str, version: str = "") -> bool:
         metadata = {
             'repo_name': repo_name,
             'repo_url': repo_url,
             'branch': branch,
             'commit_hash': commit_hash,
             'last_update_time': datetime.now().isoformat(),
-            'cache_dir': self.get_repo_cache_dir(repo_name)
+            'cache_dir': self.get_repo_cache_dir(repo_name, version),
+            'version': version,
         }
-        return self.save_metadata(repo_name, metadata)
-    
-    def get_cached_commit(self, repo_name: str) -> Optional[str]:
-        
-        metadata = self.load_metadata(repo_name)
+        return self.save_metadata(repo_name, metadata, version)
+
+    def get_cached_commit(self, repo_name: str, version: str = "") -> Optional[str]:
+        metadata = self.load_metadata(repo_name, version)
         if metadata:
             return metadata.get('commit_hash')
         return None
-    
-    def has_changes(self, repo_name: str, branch: str, current_commit: str) -> Tuple[bool, str]:
-        
-        cached_commit = self.get_cached_commit(repo_name)
-        
+
+    def has_changes(self, repo_name: str, branch: str, current_commit: str, version: str = "") -> Tuple[bool, str]:
+        cached_commit = self.get_cached_commit(repo_name, version)
         if cached_commit is None:
             return True, "首次分析,无缓存"
-        
         if cached_commit != current_commit:
             return True, f"commit 已更新: {cached_commit[:8]} → {current_commit[:8]}"
-        
         return False, "commit 未变化,无需重新分析"
-    
-    def cleanup_repo(self, repo_name: str) -> bool:
-        
+
+    def cleanup_repo(self, repo_name: str, version: str = "") -> bool:
         try:
             import shutil
-            
-            # 清理仓库目录
-            repo_cache_dir = self.get_repo_cache_dir(repo_name)
+            repo_cache_dir = self.get_repo_cache_dir(repo_name, version)
             if os.path.isdir(repo_cache_dir):
                 shutil.rmtree(repo_cache_dir)
-            
-            # 清理元数据
-            metadata_file = self.get_metadata_file(repo_name)
+            metadata_file = self.get_metadata_file(repo_name, version)
             if os.path.isfile(metadata_file):
                 os.remove(metadata_file)
-            
-            # 清理 Merkle 树缓存
+            # 清理对应版本的 Merkle 树缓存
             merkle_dir = self.merkle_cache_dir
+            if version:
+                safe_version = version.replace("/", "_").replace("\\", "_")
+                prefix = f"{repo_name}__{safe_version}_"
+            else:
+                prefix = f"{repo_name}_"
             for file in os.listdir(merkle_dir):
-                if file.startswith(f"{repo_name}_"):
+                if file.startswith(prefix):
                     os.remove(os.path.join(merkle_dir, file))
-            
             return True
         except Exception as e:
             print(f"[ERROR] 清理缓存失败: {e}")
             return False
-    
-    def get_cache_info(self, repo_name: str) -> Dict:
-        
-        metadata = self.load_metadata(repo_name)
-        repo_cache_dir = self.get_repo_cache_dir(repo_name)
-        
+
+    def get_cache_info(self, repo_name: str, version: str = "") -> Dict:
+        metadata = self.load_metadata(repo_name, version)
+        repo_cache_dir = self.get_repo_cache_dir(repo_name, version)
         cache_size = 0
         if os.path.isdir(repo_cache_dir):
             for root, dirs, files in os.walk(repo_cache_dir):
                 for file in files:
                     cache_size += os.path.getsize(os.path.join(root, file))
-        
         return {
             'repo_name': repo_name,
+            'version': version,
             'metadata': metadata,
             'cache_dir': repo_cache_dir,
             'cache_size': cache_size,
-            'cache_size_mb': cache_size / (1024 * 1024)
+            'cache_size_mb': cache_size / (1024 * 1024),
         }
     
     @staticmethod

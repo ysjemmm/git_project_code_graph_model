@@ -1,17 +1,26 @@
 #!/usr/bin/env python3
+"""
+异步任务队列 - 完全重写版
+基于 asyncio + ThreadPoolExecutor 的混合架构
+- 保持同步 API 兼容
+- 内部异步调度
+- 按项目隔离的单并发（同一项目只能有一个任务运行）
+- 多项目并行执行（默认最多 10 个项目同时运行）
+- SQLite 持久化
+"""
 
+import asyncio
 import json
 import os
 import sqlite3
 import sys
-import threading
 import time
-from dataclasses import dataclass, asdict
+import uuid
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass, asdict, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from queue import PriorityQueue
-from threading import Lock, Event
 from typing import Any, Dict, List, Optional
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -24,13 +33,15 @@ from tools.constants import CACHE_BUSINESS_DB_PATH, CACHE_GIT_REPOS_PATH, CACHE_
 # 配置日志
 logger = get_logger("git_task_queue")
 
+
 class TaskStatus(Enum):
     """任务状态"""
-    PENDING = "pending"          # 待处
-    RUNNING = "running"          # 运行
-    SUCCESS = "success"          # 成功
-    FAILED = "failed"            # 失败
-    CANCELLED = "cancelled"      # 已取
+    PENDING = "pending"
+    RUNNING = "running"
+    SUCCESS = "success"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
 
 class TaskPriority(Enum):
     """任务优先"""
@@ -39,83 +50,109 @@ class TaskPriority(Enum):
     HIGH = 1
     CRITICAL = 0
 
+
 @dataclass
-class GitImportTask:
-    
-    task_id: str
+class TaskBase:
+    """任务基础类"""
     repo_url: str
     branch: str = "main"
-    repo_name: Optional[str] = None
-    # 未显式指定时为 None，由语言适配器自动发现多模块源码目录
-    java_source_dir: Optional[str] = None
-    project_name: Optional[str] = None
-    language: Optional[str] = None
-    languages: Optional[List[str]] = None
-    clear_database: bool = False
     commit_id: Optional[str] = None
     clone_timeout: Optional[int] = None
     git_config: Optional[Dict[str, str]] = None
+    repo_name: Optional[str] = None
+    project_name: Optional[str] = None
+    java_source_dir: Optional[str] = None
+    language: Optional[str] = None
+    languages: Optional[List[str]] = None
+    clear_database: bool = False
     include_unchanged_total: bool = False
     include_comment_nodes: bool = False
-    # 是否执行 Maven 扫描/解析 pom 外部依赖（用于 jar_classes.db 更新）
     maven_scan_enabled: bool = True
-    # 强制重新解析 Maven（忽略 marker，并对依赖目录 force_rescan）
     force_maven: bool = False
-    # 导入后是否自动执行 ExternalClassLinker（LIB_LINK + SAME_ARTIFACT）
     auto_link_external: bool = True
-    # 应用版本号（写入图谱 Project 节点 symbol_id 和 version 属性）
-    app_version: str = ""
-    # 任务类型：auto | full | incremental
-    # - auto: clear_database=true 时走 full，否则走 incremental
-    # - full: 全量解析并导入
-    # - incremental: 仅解析增量文件（新增/修改），并处理删除文件子图
     task_type: str = "auto"
-    # 生产级最小验收闭环：
-    # - 导入前后采集项目子图快照
-    # - 自动对比 delta 并给出验收结论
-    acceptance_enabled: bool = True
-    # 验收失败时是否阻断后续自动任务提交
-    acceptance_block_on_fail: bool = False
-    # 非 clear_database 场景下，允许的最大降幅（例如 0.3 = 30%）
-    acceptance_max_drop_ratio: float = 0.3
+    app_version: str = ""
     priority: TaskPriority = TaskPriority.NORMAL
+    acceptance_enabled: bool = True
+    acceptance_block_on_fail: bool = False
+    acceptance_max_drop_ratio: float = 0.3
+
+
+@dataclass
+class TaskSubmitContext(TaskBase):
+    """任务提交上下文"""
     
-    # 任务状
+    def to_task_dict(self) -> Dict[str, Any]:
+        return {
+            'repo_url': self.repo_url,
+            'branch': self.branch,
+            'repo_name': self.repo_name,
+            'java_source_dir': self.java_source_dir,
+            'project_name': self.project_name,
+            'language': self.language,
+            'languages': self.languages,
+            'clear_database': self.clear_database,
+            'commit_id': self.commit_id,
+            'clone_timeout': self.clone_timeout,
+            'git_config': self.git_config,
+            'include_unchanged_total': self.include_unchanged_total,
+            'include_comment_nodes': self.include_comment_nodes,
+            'maven_scan_enabled': self.maven_scan_enabled,
+            'force_maven': self.force_maven,
+            'auto_link_external': self.auto_link_external,
+            'app_version': self.app_version,
+            'task_type': self.task_type,
+            'acceptance_enabled': self.acceptance_enabled,
+            'acceptance_block_on_fail': self.acceptance_block_on_fail,
+            'acceptance_max_drop_ratio': self.acceptance_max_drop_ratio,
+            'priority': self.priority,
+        }
+
+
+@dataclass
+class GitImportTask(TaskBase):
+    """Git 导入任务实体"""
+    task_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     status: TaskStatus = TaskStatus.PENDING
-    created_at: str = None
+    created_at: str = field(default_factory=lambda: datetime.now().isoformat())
     started_at: Optional[str] = None
     completed_at: Optional[str] = None
-    
-    # 结果
     result: Optional[Dict] = None
     error: Optional[str] = None
-    
-    # 重试
     retry_count: int = 0
     max_retries: int = 3
     
-    def __post_init__(self):
-        if self.created_at is None:
-            self.created_at = datetime.now().isoformat()
-    
     def to_dict(self) -> Dict:
-        """转换为字典"""
         data = asdict(self)
         data['status'] = self.status.value
         data['priority'] = self.priority.value
         return data
     
+    @staticmethod
+    def from_dict(data: Dict) -> 'GitImportTask':
+        if 'status' in data and isinstance(data['status'], str):
+            data['status'] = TaskStatus(data['status'])
+        if 'priority' in data and isinstance(data['priority'], int):
+            data['priority'] = TaskPriority(data['priority'])
+        return GitImportTask(**data)
+    
     def __lt__(self, other):
-        """用于优先级队列排序"""
         if self.priority.value != other.priority.value:
             return self.priority.value < other.priority.value
         return self.created_at < other.created_at
 
-class TaskQueue:
-    """任务队列管理"""
+
+class AsyncTaskQueue:
+    """
+    异步任务队列管理器
+    基于 asyncio.PriorityQueue + 按项目隔离的调度策略
+    - 同一个 project_name 只能有一个任务运行
+    - 不同项目可以并行执行
+    - SQLite 持久化
+    """
     
     def __init__(self,
-                 max_workers: int = 2,
+                 max_workers: int = 10,  # 最大并发项目数
                  cache_base_dir: str = str(CACHE_GIT_REPOS_PATH),
                  task_db_file: str = str(CACHE_ROOT_PATH / "git_tasks.json"),
                  task_db_sqlite_file: str = str(CACHE_BUSINESS_DB_PATH),
@@ -127,30 +164,733 @@ class TaskQueue:
         self.task_db_sqlite_file = task_db_sqlite_file
         self.max_memory_mb = max_memory_mb
         
-        # 创建缓存目录
         os.makedirs(os.path.dirname(task_db_file), exist_ok=True)
         
-        # 任务队列
-        self.task_queue: PriorityQueue = PriorityQueue()
+        # 按项目隔离的队列 {project_name: asyncio.PriorityQueue}
+        self.project_queues: Dict[str, asyncio.PriorityQueue] = {}
+        self.global_queue: Optional[asyncio.PriorityQueue] = None  # 未指定 project_name 的任务
+        
         self.tasks: Dict[str, GitImportTask] = {}
-        self.tasks_lock = Lock()
-        self.cancel_events: Dict[str, Event] = {}
-        self.auto_submission_blocked: bool = False
-        self.auto_submission_block_reason: str = ""
+        self.cancel_events: Dict[str, asyncio.Event] = {}
+        self.auto_submission_blocked = False
+        self.auto_submission_block_reason = ""
         
-        # 工作线程
-        self.workers: List[threading.Thread] = []
+        # 项目运行状态追踪 {project_name: current_running_task_id}
+        self.running_tasks: Dict[str, str] = {}
+        self.running_tasks_lock = asyncio.Lock()
+        
+        # 异步基础设施
+        self.loop: Optional[asyncio.AbstractEventLoop] = None
+        self.executor: Optional[ThreadPoolExecutor] = None
+        self.worker_tasks: List[asyncio.Task] = []
         self.running = False
-        self.stop_event = Event()
+        self._shutdown_event: Optional[asyncio.Event] = None
+        self.queue: Optional[asyncio.PriorityQueue] = None
         
-        # 加载已保存的任务
-        # 用 sqlite 作为业务持久化（替代/增强 JSON 文件），确保重启后任务可恢复
+        # SQLite
         self.task_repo = get_git_import_tasks_repo(self.task_db_sqlite_file)
+        
+        # 延迟初始化
+        self._initialized = False
+    
+    def _lazy_init(self):
+        """延迟初始化（在第一次使用时）"""
+        if self._initialized:
+            return
+        
+        self._initialized = True
         self._migrate_legacy_task_db_if_needed()
         self._log_task_db_diagnostics(stage="init")
         self._load_tasks()
+    
+    async def _ensure_initialized_async(self):
+        """异步延迟初始化"""
+        self._lazy_init()
+        
+        if self.queue is None:
+            self.queue = asyncio.PriorityQueue()
+        
+        if self.loop is None:
+            self.loop = asyncio.get_running_loop()
+        
+        if self.executor is None:
+            self.executor = ThreadPoolExecutor(max_workers=self.max_workers)
+        
+        if self._shutdown_event is None:
+            self._shutdown_event = asyncio.Event()
+    
+    def _generate_task_id(self) -> str:
+        return str(uuid.uuid4())
+    
+    def submit_task(self, ctx: TaskSubmitContext) -> str:
+        """同步提交接口（向后兼容）"""
+        self._lazy_init()
 
-    def _log_task_db_diagnostics(self, stage: str) -> None:
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+        if loop.is_running():
+            # 主 loop 正在运行（FastAPI/uvicorn 场景）：
+            # 用 run_coroutine_threadsafe 把协程提交到主 loop，
+            # 确保 asyncio.PriorityQueue 在主 loop 里创建和使用，不跨 loop。
+            import concurrent.futures
+            future = asyncio.run_coroutine_threadsafe(self._submit_task_async(ctx), loop)
+            return future.result(timeout=30)
+        else:
+            return loop.run_until_complete(self._submit_task_async(ctx))
+    
+    async def _submit_task_async(self, ctx: TaskSubmitContext) -> str:
+        """异步提交任务"""
+        await self._ensure_initialized_async()
+        
+        task_id = self._generate_task_id()
+        params = ctx.to_task_dict()
+        
+        # 参数规范化
+        normalized_task_type = str(params['task_type'] or "auto").strip().lower()
+        if normalized_task_type not in {"auto", "full", "incremental"}:
+            normalized_task_type = "auto"
+        
+        if self.auto_submission_blocked and normalized_task_type == "auto":
+            raise RuntimeError(self.auto_submission_block_reason or "当前已阻断后续自动任务")
+        
+        try:
+            normalized_drop_ratio = float(params['acceptance_max_drop_ratio'])
+        except Exception:
+            normalized_drop_ratio = 0.3
+        normalized_drop_ratio = max(0.0, min(normalized_drop_ratio, 0.95))
+        
+        # 创建任务
+        task = GitImportTask(
+            task_id=task_id,
+            repo_url=params['repo_url'],
+            branch=params['branch'],
+            repo_name=params['repo_name'],
+            java_source_dir=(params['java_source_dir'] or None),
+            project_name=params['project_name'],
+            language=params['language'],
+            languages=params['languages'],
+            clear_database=params['clear_database'],
+            commit_id=params['commit_id'],
+            clone_timeout=params['clone_timeout'],
+            git_config=params['git_config'],
+            include_unchanged_total=params['include_unchanged_total'],
+            include_comment_nodes=params['include_comment_nodes'],
+            maven_scan_enabled=bool(params['maven_scan_enabled']),
+            force_maven=bool(params['force_maven']),
+            auto_link_external=bool(params['auto_link_external']),
+            app_version=str(params['app_version'] or ""),
+            task_type=normalized_task_type,
+            acceptance_enabled=bool(params.get('acceptance_enabled', True)),
+            acceptance_block_on_fail=bool(params.get('acceptance_block_on_fail', False)),
+            acceptance_max_drop_ratio=normalized_drop_ratio,
+            priority=params['priority'],
+        )
+        
+        # 保存
+        try:
+            self.task_repo.save(task.to_dict())
+            logger.info(f"[TASK_SUBMIT] task_id={task.task_id} saved to sqlite")
+        except Exception as e:
+            logger.error(f"[TASK_SUBMIT] save_failed: {e}")
+        
+        # 存储
+        self.tasks[task.task_id] = task
+        self.cancel_events[task.task_id] = asyncio.Event()
+        
+        # 按项目名分发到对应队列
+        project_name = task.project_name or "__global__"
+        
+        if project_name not in self.project_queues:
+            self.project_queues[project_name] = asyncio.PriorityQueue()
+        
+        await self.project_queues[project_name].put((task.priority.value, task))
+        
+        logger.info(f"[TASK_SUBMIT] task_id={task.task_id} project={project_name} priority={task.priority.name} queued")
+        return task.task_id
+    
+    async def _worker(self):
+        """
+        工作线程 - 按项目隔离的调度器
+        每个项目一个队列，不同项目可以并行执行
+        """
+        logger.info(f"[WORKER] started with max_workers={self.max_workers}")
+        
+        # 为每个项目创建独立的 worker coroutine
+        project_workers = []
+        
+        while self.running:
+            try:
+                # 检查是否有新的项目队列
+                for project_name in list(self.project_queues.keys()):
+                    if project_name not in [w.get_name() for w in project_workers if hasattr(w, 'get_name')]:
+                        # 创建新的项目 worker
+                        worker = asyncio.create_task(
+                            self._project_worker(project_name),
+                            name=f"worker-{project_name}"
+                        )
+                        project_workers.append(worker)
+                
+                # 限制并发数
+                if len(project_workers) > self.max_workers:
+                    # 等待一些 worker 完成
+                    done, pending = await asyncio.wait(
+                        project_workers,
+                        timeout=0.1,
+                        return_when=asyncio.FIRST_COMPLETED
+                    )
+                    project_workers = list(pending)
+                
+                await asyncio.sleep(0.1)
+                
+            except asyncio.CancelledError:
+                logger.info("[WORKER] main loop cancelled")
+                break
+            except Exception as e:
+                logger.error(f"[WORKER] error: {e}")
+                await asyncio.sleep(1)
+        
+        # 等待所有项目 worker 完成
+        if project_workers:
+            logger.info(f"[WORKER] waiting for {len(project_workers)} project workers to finish")
+            await asyncio.gather(*project_workers, return_exceptions=True)
+        
+        logger.info("[WORKER] stopped")
+    
+    async def _project_worker(self, project_name: str):
+        """
+        单个项目的任务处理器
+        确保同一个项目只有一个任务在运行
+        """
+        logger.info(f"[PROJECT_WORKER] {project_name} started")
+        
+        queue = self.project_queues.get(project_name)
+        if not queue:
+            logger.warning(f"[PROJECT_WORKER] {project_name} queue not found")
+            return
+        
+        while self.running:
+            try:
+                # 检查该项目是否有任务在运行
+                async with self.running_tasks_lock:
+                    if project_name in self.running_tasks:
+                        # 已有任务在运行，等待
+                        await asyncio.sleep(0.5)
+                        continue
+                
+                # 从队列获取任务
+                try:
+                    priority, task = await asyncio.wait_for(
+                        queue.get(),
+                        timeout=1.0
+                    )
+                except asyncio.TimeoutError:
+                    continue
+                
+                # 标记为运行中
+                async with self.running_tasks_lock:
+                    self.running_tasks[project_name] = task.task_id
+                
+                logger.info(f"[PROJECT_WORKER] {project_name} executing task_id={task.task_id} priority={priority}")
+                
+                # 执行任务
+                await self._execute_task(task)
+                
+                # 标记完成
+                queue.task_done()
+                
+                async with self.running_tasks_lock:
+                    if project_name in self.running_tasks:
+                        del self.running_tasks[project_name]
+                
+            except asyncio.CancelledError:
+                logger.info(f"[PROJECT_WORKER] {project_name} cancelled")
+                break
+            except Exception as e:
+                logger.error(f"[PROJECT_WORKER] {project_name} error: {e}")
+                await asyncio.sleep(1)
+        
+        logger.info(f"[PROJECT_WORKER] {project_name} stopped")
+    
+    async def _execute_task(self, task: GitImportTask):
+        """执行任务（在后台线程）"""
+        task.status = TaskStatus.RUNNING
+        task.started_at = datetime.now().isoformat()
+        
+        try:
+            # 在线程池中执行同步代码
+            await self.loop.run_in_executor(
+                self.executor,
+                self._execute_task_sync,
+                task
+            )
+            
+            task.status = TaskStatus.SUCCESS
+            
+        except ImportCancelled:
+            task.status = TaskStatus.CANCELLED
+            logger.info(f"[EXECUTE] task_id={task.task_id} cancelled")
+            
+        except Exception as e:
+            task.status = TaskStatus.FAILED
+            task.error = str(e)
+            logger.error(f"[EXECUTE] task_id={task.task_id} failed: {e}")
+            
+        finally:
+            task.completed_at = datetime.now().isoformat()
+            
+            try:
+                self.task_repo.save(task.to_dict())
+            except Exception as e:
+                logger.error(f"[EXECUTE] save_state_failed: {e}")
+    
+    def _execute_task_sync(self, task: GitImportTask):
+        """同步执行任务（在线程池中运行）"""
+        from core.importer import GitToNeo4jImporter, ImportCancelled as _ImportCancelled
+        from typing import Optional as _Opt, Dict as _Dict, Any as _Any
+
+        logger.info(f"[EXECUTE] 开始执行任务 {task.task_id}")
+
+        importer = GitToNeo4jImporter(cache_base_dir=self.cache_base_dir)
+        if not importer.connect():
+            raise Exception("无法连接 Neo4j")
+
+        try:
+            project_for_snapshot = (task.project_name or task.repo_name or "").strip()
+            snapshot_before = self._capture_project_snapshot(None, project_for_snapshot)
+            logger.info(
+                f"[SNAPSHOT][BEFORE] project={project_for_snapshot} "
+                f"nodes={snapshot_before.get('node_count', 0)} rels={snapshot_before.get('relationship_count', 0)}"
+            )
+
+            cancel_event = self.cancel_events.get(task.task_id)
+            result = importer.import_from_git(
+                repo_url=task.repo_url,
+                branch=task.branch,
+                repo_name=task.repo_name,
+                java_source_dir=task.java_source_dir,
+                project_name=task.project_name,
+                language=task.language,
+                languages=task.languages,
+                clear_database=task.clear_database,
+                include_unchanged_total=task.include_unchanged_total,
+                include_comment_nodes=task.include_comment_nodes,
+                clone_timeout=task.clone_timeout,
+                git_config=task.git_config,
+                commit_id=task.commit_id,
+                maven_scan_enabled=bool(getattr(task, "maven_scan_enabled", True)),
+                force_maven=bool(getattr(task, "force_maven", False)),
+                auto_link_external=bool(getattr(task, "auto_link_external", True)),
+                app_version=str(getattr(task, "app_version", "") or ""),
+                task_type=str(getattr(task, "task_type", "auto") or "auto"),
+                cancel_event=cancel_event,
+            )
+
+            snapshot_after = self._capture_project_snapshot(None, project_for_snapshot)
+            logger.info(
+                f"[SNAPSHOT][AFTER] project={project_for_snapshot} "
+                f"nodes={snapshot_after.get('node_count', 0)} rels={snapshot_after.get('relationship_count', 0)}"
+            )
+
+            acceptance = self._build_acceptance_report(
+                task=task,
+                import_success=bool(result.get("success")),
+                snapshot_before=snapshot_before,
+                snapshot_after=snapshot_after,
+            )
+            extra = result.get("extra")
+            if not isinstance(extra, dict):
+                extra = {}
+            extra["snapshot_before"] = snapshot_before
+            extra["snapshot_after"] = snapshot_after
+            extra["snapshot_delta"] = acceptance.get("delta", {})
+            extra["acceptance"] = acceptance
+            result["extra"] = extra
+
+            logger.info(
+                f"[ACCEPTANCE] task={task.task_id} status={acceptance.get('status')} "
+                f"summary={acceptance.get('summary')}"
+            )
+
+            if task.status == TaskStatus.CANCELLED:
+                task.completed_at = datetime.now().isoformat()
+                return
+
+            if result.get("success"):
+                task.result = result
+                logger.info(f"[EXECUTE] 任务成功: {task.task_id}")
+            else:
+                task.error = result.get("error", "未知错误")
+                logger.error(f"[EXECUTE] 任务失败: {task.task_id} - {task.error}")
+                self._cleanup_if_no_graph_project(task)
+
+            task.completed_at = datetime.now().isoformat()
+            self._persist_task_delta_detail(task.task_id, result)
+
+        except _ImportCancelled as e:
+            logger.info(f"[EXECUTE] 任务取消: {task.task_id} - {e}")
+            task.status = TaskStatus.CANCELLED
+            task.error = str(e)
+            task.completed_at = datetime.now().isoformat()
+            raise
+
+        except Exception as e:
+            logger.error(f"[EXECUTE] 任务异常: {task.task_id} - {e}", exc_info=True)
+            # 重试逻辑
+            if task.retry_count < task.max_retries:
+                task.retry_count += 1
+                task.status = TaskStatus.PENDING
+                logger.info(f"[EXECUTE] 任务重试 ({task.retry_count}/{task.max_retries}): {task.task_id}")
+                project_name = task.project_name or "__global__"
+                if project_name in self.project_queues:
+                    import asyncio as _asyncio
+                    try:
+                        loop = _asyncio.get_event_loop()
+                        if loop.is_running():
+                            loop.call_soon_threadsafe(
+                                lambda: _asyncio.ensure_future(
+                                    self.project_queues[project_name].put((task.priority.value, task))
+                                )
+                            )
+                    except Exception:
+                        pass
+            else:
+                task.status = TaskStatus.FAILED
+                task.error = str(e)
+                task.completed_at = datetime.now().isoformat()
+                logger.error(f"[EXECUTE] 任务最终失败: {task.task_id}")
+                self._cleanup_if_no_graph_project(task)
+            raise
+
+        finally:
+            try:
+                importer.disconnect()
+            except Exception:
+                pass
+            try:
+                self.task_repo.save(task.to_dict())
+            except Exception as e:
+                logger.error(f"[EXECUTE] save_state_failed: {e}")
+    
+    def start(self):
+        """启动 worker"""
+        self._lazy_init()
+        
+        if self.running:
+            return
+        
+        # 确保有 loop
+        try:
+            self.loop = asyncio.get_event_loop()
+        except RuntimeError:
+            self.loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self.loop)
+        
+        # 初始化队列和执行器（如果还未初始化）
+        if not hasattr(self, 'project_queues') or not self.project_queues:
+            self.project_queues = {}
+        
+        if not hasattr(self, 'global_queue') or self.global_queue is None:
+            self.global_queue = asyncio.PriorityQueue()
+        
+        if not hasattr(self, 'executor') or self.executor is None:
+            self.executor = ThreadPoolExecutor(max_workers=self.max_workers)
+        
+        if not hasattr(self, 'running_tasks'):
+            self.running_tasks = {}
+        
+        self.running = True
+        self._shutdown_event = asyncio.Event()
+        
+        # 启动 worker
+        self.worker_task = self.loop.create_task(self._worker())
+        
+        logger.info(f"[START] worker started")
+    
+    def shutdown(self, wait: bool = True):
+        """关闭 worker"""
+        if not self.running:
+            return
+        
+        self.running = False
+        
+        if self.worker_task:
+            self.worker_task.cancel()
+            if wait:
+                try:
+                    self.loop.run_until_complete(self.worker_task)
+                except (asyncio.CancelledError, RuntimeError):
+                    pass
+        
+        if self.executor:
+            self.executor.shutdown(wait=wait)
+        
+        logger.info("[SHUTDOWN] worker stopped")
+
+    # ── 辅助方法（从 backup 移植）────────────────────────────────────────────
+
+    def _capture_project_snapshot(self, _connector_unused: Any, project_name: str) -> Dict[str, Any]:
+        """采集项目子图快照，通过 neomodel 查询（不依赖 connector）。"""
+        try:
+            from storage.neo4j.dao.project_neo_dao import ProjectNeoDao
+            return ProjectNeoDao().capture_project_snapshot(project_name)
+        except Exception as e:
+            return {
+                "project_name": project_name, "node_count": 0, "relationship_count": 0,
+                "project_node_count": 0, "node_count_by_label": {}, "relationship_count_by_type": {},
+                "error": str(e),
+            }
+
+    @staticmethod
+    def _delta(after: Dict[str, Any], before: Dict[str, Any], key: str) -> int:
+        try:
+            return int(after.get(key) or 0) - int(before.get(key) or 0)
+        except Exception:
+            return 0
+
+    @staticmethod
+    def _delta_count_map(after_map: Any, before_map: Any) -> Dict[str, int]:
+        a = after_map if isinstance(after_map, dict) else {}
+        b = before_map if isinstance(before_map, dict) else {}
+        out: Dict[str, int] = {}
+        for k in sorted(set(a.keys()) | set(b.keys())):
+            try:
+                d = int(a.get(k, 0) or 0) - int(b.get(k, 0) or 0)
+            except Exception:
+                d = 0
+            if d != 0:
+                out[str(k)] = d
+        return out
+
+    def _build_acceptance_report(self, *, task: "GitImportTask", import_success: bool,
+                                  snapshot_before: Optional[Dict[str, Any]],
+                                  snapshot_after: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        before = snapshot_before or {}
+        after = snapshot_after or {}
+        delta = {
+            "node_count": self._delta(after, before, "node_count"),
+            "relationship_count": self._delta(after, before, "relationship_count"),
+            "node_count_by_label": self._delta_count_map(after.get("node_count_by_label"), before.get("node_count_by_label")),
+            "relationship_count_by_type": self._delta_count_map(after.get("relationship_count_by_type"), before.get("relationship_count_by_type")),
+        }
+        report: Dict[str, Any] = {
+            "enabled": bool(task.acceptance_enabled), "status": "skipped",
+            "summary": "验收未执行", "rules": [], "delta": delta,
+            "max_drop_ratio": float(task.acceptance_max_drop_ratio),
+            "block_on_fail": bool(task.acceptance_block_on_fail),
+            "blocked_following_auto_tasks": False,
+        }
+        if not task.acceptance_enabled:
+            report["summary"] = "验收开关关闭，已跳过"; return report
+        if not import_success:
+            report["summary"] = "导入失败，验收跳过"; return report
+
+        rules: List[Dict[str, Any]] = []
+        def add_rule(rid: str, title: str, ok: bool, detail: str) -> None:
+            rules.append({"id": rid, "title": title, "status": "pass" if ok else "fail", "ok": bool(ok), "detail": detail})
+
+        add_rule("project-node-exists", "Project 节点存在", int(after.get("project_node_count") or 0) >= 1, f"after.project_node_count={int(after.get('project_node_count') or 0)}")
+        add_rule("subgraph-node-not-empty", "项目子图节点非空", int(after.get("node_count") or 0) > 0, f"after.node_count={int(after.get('node_count') or 0)}")
+        add_rule("subgraph-rel-not-empty", "项目子图关系非空", int(after.get("relationship_count") or 0) > 0, f"after.relationship_count={int(after.get('relationship_count') or 0)}")
+
+        max_drop = float(task.acceptance_max_drop_ratio)
+        if not bool(task.clear_database):
+            bn = int(before.get("node_count") or 0)
+            an = int(after.get("node_count") or 0)
+            if bn > 0:
+                dr = max(0.0, (bn - an) / bn)
+                add_rule("node-drop-ratio", "节点降幅阈值", dr <= max_drop, f"drop={dr:.2%}, threshold={max_drop:.2%}")
+            br = int(before.get("relationship_count") or 0)
+            ar = int(after.get("relationship_count") or 0)
+            if br > 0:
+                dr = max(0.0, (br - ar) / br)
+                add_rule("rel-drop-ratio", "关系降幅阈值", dr <= max_drop, f"drop={dr:.2%}, threshold={max_drop:.2%}")
+
+        passed = all(bool(r.get("ok")) for r in rules)
+        report["rules"] = rules
+        report["status"] = "passed" if passed else "failed"
+        report["summary"] = "验收通过" if passed else "验收失败：存在关键规则未通过"
+        if (not passed) and bool(task.acceptance_block_on_fail):
+            self.auto_submission_blocked = True
+            self.auto_submission_block_reason = f"任务 {task.task_id} 验收失败，已阻断后续 auto 任务"
+            report["blocked_following_auto_tasks"] = True
+        return report
+
+    def _persist_task_delta_detail(self, task_id: str, result: Dict[str, Any]) -> None:
+        if not task_id or not isinstance(result, dict):
+            return
+        try:
+            extra = result.get("extra")
+            if not isinstance(extra, dict):
+                return
+            detail = {k: extra.get(k) for k in (
+                "snapshot_before", "snapshot_after", "snapshot_delta", "acceptance",
+                "delta_detail", "task_type", "effective_mode", "fallback_reason",
+                "changed_files_list", "added_files_list", "deleted_files_list",
+            )}
+            self.task_repo.upsert_task_delta_detail(task_id, detail)  # type: ignore[attr-defined]
+        except Exception as e:
+            logger.warning(f"[ACCEPTANCE] 持久化任务 diff 明细失败 task={task_id}: {e}")
+
+    def _cleanup_if_no_graph_project(self, task: "GitImportTask") -> None:
+        import shutil
+        repo_name = (task.repo_name or task.project_name or "").strip()
+        project_name = (task.project_name or repo_name).strip()
+        if not repo_name:
+            return
+        try:
+            from storage.neo4j.dao.project_neo_dao import ProjectNeoDao
+            if ProjectNeoDao().project_exists(project_name):
+                return
+        except Exception as e:
+            logger.warning(f"[CLEANUP] 检查 Neo4j Project 节点失败，跳过清理: {e}")
+            return
+        cache_base = Path(self.cache_base_dir)
+        cache_root = cache_base.parent
+        targets = [cache_base / repo_name, cache_root / "metadata" / f"{repo_name}.json"]
+        merkle_dir = cache_root / "merkle_trees"
+        if merkle_dir.exists():
+            targets += list(merkle_dir.glob(f"{repo_name}_*.json"))
+        for target in [Path(t) for t in targets]:
+            try:
+                if target.is_dir():
+                    shutil.rmtree(target, ignore_errors=True)
+                elif target.is_file():
+                    target.unlink(missing_ok=True)
+            except Exception as e:
+                logger.warning(f"[CLEANUP] 删除 {target} 失败: {e}")
+
+    def get_all_tasks(self, status: Optional[TaskStatus] = None) -> List[Dict]:
+        """获取所有任务"""
+        tasks = list(self.tasks.values())
+        
+        if status:
+            tasks = [t for t in tasks if t.status == status]
+        
+        tasks = sorted(tasks, key=lambda t: t.created_at, reverse=True)
+        return [t.to_dict() for t in tasks]
+    
+    def get_queue_stats(self) -> Dict:
+        """获取统计信息"""
+        pending_count = sum(1 for t in self.tasks.values() if str(t.status).lower() in ['pending', 'TaskStatus.PENDING'])
+        running_count = sum(1 for t in self.tasks.values() if str(t.status).lower() in ['running', 'TaskStatus.RUNNING'])
+        
+        # 按项目的统计（如果队列已初始化）
+        project_stats = {}
+        if hasattr(self, 'project_queues') and self.project_queues:
+            for project_name, queue in self.project_queues.items():
+                try:
+                    project_stats[project_name] = {
+                        "queue_size": queue.qsize() if hasattr(queue, 'qsize') else 0,
+                        "running": project_name in (self.running_tasks if hasattr(self, 'running_tasks') else {}),
+                    }
+                except Exception:
+                    # 队列访问失败，跳过
+                    pass
+        
+        return {
+            "pending": pending_count,
+            "running": running_count,
+            "total_projects": len(self.project_queues) if hasattr(self, 'project_queues') else 0,
+            "active_projects": len(self.running_tasks) if hasattr(self, 'running_tasks') else 0,
+            "max_workers": self.max_workers,
+            "projects": project_stats,
+        }
+    
+    # ===== 以下方法需要从旧版本迁移 =====
+    
+    def _migrate_legacy_task_db_if_needed(self):
+        """
+        兼容迁移：历史版本任务队列使用 .cache/git_tasks.db。
+        新版本默认统一到 business.db；启动时自动做一次幂等 upsert 迁移。
+        """
+        legacy_db_path = Path(CACHE_ROOT_PATH / "git_tasks.db").resolve()
+        current_db_path = Path(self.task_db_sqlite_file).resolve()
+        
+        if current_db_path == legacy_db_path:
+            return
+        if not legacy_db_path.exists():
+            return
+        
+        legacy_conn: Optional[sqlite3.Connection] = None
+        try:
+            legacy_conn = sqlite3.connect(str(legacy_db_path))
+            legacy_conn.row_factory = sqlite3.Row
+            cur = legacy_conn.cursor()
+            
+            table_rows = cur.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'"
+            ).fetchall()
+            tables = {str(r["name"]) for r in table_rows}
+            
+            migrated_tasks = 0
+            migrated_delta_details = 0
+            
+            if "git_import_tasks" in tables:
+                src_rows = cur.execute(
+                    """
+                    SELECT task_id, status, priority, created_at, started_at, completed_at,
+                           retry_count, max_retries, task_json, updated_at
+                    FROM git_import_tasks
+                    """
+                ).fetchall()
+                
+                upsert_rows: List[Dict[str, Any]] = []
+                for r in src_rows:
+                    payload = r["task_json"]
+                    try:
+                        task_obj = json.loads(payload) if payload else {}
+                    except Exception:
+                        task_obj = {"_task_json": payload}
+                    
+                    upsert_rows.append({
+                        "task_id": r["task_id"],
+                        "status": r["status"],
+                        "priority": r["priority"],
+                        "created_at": r["created_at"] or datetime.now().isoformat(),
+                        "started_at": r["started_at"],
+                        "completed_at": r["completed_at"],
+                        "retry_count": int(r["retry_count"] or 0),
+                        "max_retries": int(r["max_retries"] or 3),
+                        "task_obj": task_obj,
+                        "updated_at": r["updated_at"] or datetime.now().isoformat(),
+                    })
+                
+                if upsert_rows:
+                    self.task_repo.upsert_many(upsert_rows)
+                    migrated_tasks = len(upsert_rows)
+            
+            if "import_task_delta_details" in tables:
+                detail_rows = cur.execute(
+                    "SELECT task_id, detail_json FROM import_task_delta_details"
+                ).fetchall()
+                
+                for r in detail_rows:
+                    try:
+                        detail = json.loads(r["detail_json"]) if r["detail_json"] else {}
+                    except Exception:
+                        detail = {}
+                    self.task_repo.upsert_task_delta_detail(str(r["task_id"]), detail)
+                    migrated_delta_details += 1
+            
+            if migrated_tasks > 0 or migrated_delta_details > 0:
+                logger.info(
+                    f"[MIGRATE] 旧任务库迁移完成 legacy={legacy_db_path} -> current={current_db_path} "
+                    f"(tasks={migrated_tasks}, delta_details={migrated_delta_details})"
+                )
+        
+        except Exception as e:
+            logger.warning(
+                f"[MIGRATE] 旧任务库迁移失败 legacy={legacy_db_path} -> current={current_db_path}: {e}"
+            )
+        finally:
+            if legacy_conn is not None:
+                legacy_conn.close()
+    
+    def _log_task_db_diagnostics(self, stage: str):
         """
         固定诊断日志：用于快速确认任务队列实际连接库与迁移状态。
         """
@@ -163,14 +903,20 @@ class TaskQueue:
                     f"[TASK_DB_DIAG] stage={stage} db_path={db_path} conn=none"
                 )
                 return
+
             cur = conn.cursor()
-            table_rows = cur.execute(
+            # 检查表是否存在
+            tables = set()
+            for r in cur.execute(
                 "SELECT name FROM sqlite_master WHERE type='table'"
-            ).fetchall()
-            table_names = sorted([str(r["name"]) for r in table_rows])
-            has_git_tasks = "git_import_tasks" in table_names
-            has_delta_details = "import_task_delta_details" in table_names
-            has_schema_migrations = "schema_migrations" in table_names
+            ).fetchall():
+                tables.add(r[0])
+
+            has_git_tasks = "git_import_tasks" in tables
+            has_delta_details = "import_task_delta_details" in tables
+            has_schema_migrations = "schema_migrations" in tables
+
+            # 读取已迁移的版本号
             versions: List[int] = []
             if has_schema_migrations:
                 rows = cur.execute(
@@ -178,11 +924,12 @@ class TaskQueue:
                 ).fetchall()
                 for r in rows:
                     try:
-                        versions.append(int(r["version"]))
+                        versions.append(int(r[0]))
                     except Exception:
                         continue
+
             logger.info(
-                "[TASK_DB_DIAG] "
+                f"[TASK_DB_DIAG] "
                 f"stage={stage} "
                 f"db_path={db_path} "
                 f"has_git_import_tasks={has_git_tasks} "
@@ -192,1011 +939,121 @@ class TaskQueue:
             )
         except Exception as e:
             logger.warning(f"[TASK_DB_DIAG] stage={stage} diag_failed: {e}")
-
-    def _migrate_legacy_task_db_if_needed(self) -> None:
-        """
-        兼容迁移：历史版本任务队列使用 .cache/git_tasks.db。
-        新版本默认统一到 business.db；启动时自动做一次幂等 upsert 迁移。
-        """
-        legacy_db_path = Path(CACHE_ROOT_PATH / "git_tasks.db").resolve()
-        current_db_path = Path(self.task_db_sqlite_file).resolve()
-        if current_db_path == legacy_db_path:
-            return
-        if not legacy_db_path.exists():
-            return
-
-        legacy_conn: sqlite3.Connection | None = None
-        try:
-            legacy_conn = sqlite3.connect(str(legacy_db_path))
-            legacy_conn.row_factory = sqlite3.Row
-            cur = legacy_conn.cursor()
-            table_rows = cur.execute(
-                "SELECT name FROM sqlite_master WHERE type='table'"
-            ).fetchall()
-            tables = {str(r["name"]) for r in table_rows}
-
-            migrated_tasks = 0
-            migrated_delta_details = 0
-
-            if "git_import_tasks" in tables:
-                src_rows = cur.execute(
-                    """
-                    SELECT task_id, status, priority, created_at, started_at, completed_at,
-                           retry_count, max_retries, task_json, updated_at
-                    FROM git_import_tasks
-                    """
-                ).fetchall()
-                upsert_rows: List[Dict[str, Any]] = []
-                for r in src_rows:
-                    payload = r["task_json"]
-                    try:
-                        task_obj = json.loads(payload) if payload else {}
-                    except Exception:
-                        task_obj = {"_task_json": payload}
-                    upsert_rows.append(
-                        {
-                            "task_id": r["task_id"],
-                            "status": r["status"],
-                            "priority": r["priority"],
-                            "created_at": r["created_at"] or datetime.now().isoformat(),
-                            "started_at": r["started_at"],
-                            "completed_at": r["completed_at"],
-                            "retry_count": int(r["retry_count"] or 0),
-                            "max_retries": int(r["max_retries"] or 3),
-                            "task_obj": task_obj,
-                            "updated_at": r["updated_at"] or datetime.now().isoformat(),
-                        }
-                    )
-                if upsert_rows:
-                    self.task_repo.upsert_many(upsert_rows)
-                    migrated_tasks = len(upsert_rows)
-
-            if "import_task_delta_details" in tables:
-                detail_rows = cur.execute(
-                    "SELECT task_id, detail_json FROM import_task_delta_details"
-                ).fetchall()
-                for r in detail_rows:
-                    try:
-                        detail = json.loads(r["detail_json"]) if r["detail_json"] else {}
-                    except Exception:
-                        detail = {}
-                    self.task_repo.upsert_task_delta_detail(str(r["task_id"]), detail)
-                    migrated_delta_details += 1
-
-            if migrated_tasks > 0 or migrated_delta_details > 0:
-                logger.info(
-                    f"[MIGRATE] 旧任务库迁移完成 legacy={legacy_db_path} -> current={current_db_path} "
-                    f"(tasks={migrated_tasks}, delta_details={migrated_delta_details})"
-                )
-        except Exception as e:
-            logger.warning(
-                f"[MIGRATE] 旧任务库迁移失败 legacy={legacy_db_path} -> current={current_db_path}: {e}"
-            )
-        finally:
-            if legacy_conn is not None:
-                legacy_conn.close()
-    
-    def submit_task(self,
-                   repo_url: str,
-                   branch: str = "main",
-                   repo_name: Optional[str] = None,
-                   java_source_dir: Optional[str] = None,
-                   project_name: Optional[str] = None,
-                   language: Optional[str] = None,
-                   languages: Optional[List[str]] = None,
-                   clear_database: bool = False,
-                   commit_id: Optional[str] = None,
-                   clone_timeout: Optional[int] = None,
-                   git_config: Optional[Dict[str, str]] = None,
-                   include_unchanged_total: bool = False,
-                   include_comment_nodes: bool = False,
-                   maven_scan_enabled: bool = True,
-                   force_maven: bool = False,
-                   auto_link_external: bool = True,
-                   app_version: str = "",
-                   task_type: str = "auto",
-                   acceptance_enabled: bool = True,
-                   acceptance_block_on_fail: bool = False,
-                   acceptance_max_drop_ratio: float = 0.3,
-                   priority: TaskPriority = TaskPriority.NORMAL) -> str:
-        
-        task_id = self._generate_task_id()
-        
-        normalized_task_type = str(task_type or "auto").strip().lower()
-        if normalized_task_type not in {"auto", "full", "incremental"}:
-            normalized_task_type = "auto"
-        if self.auto_submission_blocked and normalized_task_type == "auto":
-            raise RuntimeError(self.auto_submission_block_reason or "当前已阻断后续自动任务，请排查最近一次验收失败任务")
-
-        try:
-            normalized_drop_ratio = float(acceptance_max_drop_ratio)
-        except Exception:
-            normalized_drop_ratio = 0.3
-        normalized_drop_ratio = max(0.0, min(normalized_drop_ratio, 0.95))
-
-        task = GitImportTask(
-            task_id=task_id,
-            repo_url=repo_url,
-            branch=branch,
-            repo_name=repo_name,
-            java_source_dir=(java_source_dir or None),
-            project_name=project_name,
-            language=language,
-            languages=languages,
-            clear_database=clear_database,
-            commit_id=commit_id,
-            clone_timeout=clone_timeout,
-            git_config=git_config,
-            include_unchanged_total=include_unchanged_total,
-            include_comment_nodes=include_comment_nodes,
-            maven_scan_enabled=bool(maven_scan_enabled),
-            force_maven=bool(force_maven),
-            auto_link_external=bool(auto_link_external),
-            app_version=str(app_version or ""),
-            task_type=normalized_task_type,
-            acceptance_enabled=bool(acceptance_enabled),
-            acceptance_block_on_fail=bool(acceptance_block_on_fail),
-            acceptance_max_drop_ratio=normalized_drop_ratio,
-            priority=priority
-        )
-        
-        with self.tasks_lock:
-            self.tasks[task_id] = task
-            self.cancel_events[task_id] = Event()
-            self.task_queue.put((priority.value, task_id, task))
-        
-        logger.info(f"[SUBMIT] 任务已提 {task_id} ({repo_url})")
-        
-        # 保存任务
-        self._save_tasks()
-        
-        return task_id
-    
-    def start(self):
-        
-        if self.running:
-            logger.warning("任务队列已在运行")
-            return
-        
-        self.running = True
-        self.stop_event.clear()
-        
-        # 启动工作线程
-        for i in range(self.max_workers):
-            worker = threading.Thread(
-                target=self._worker_loop,
-                name=f"GitWorker-{i}",
-                daemon=True
-            )
-            worker.start()
-            self.workers.append(worker)
-        
-        logger.info(f"[START] 任务队列已启({self.max_workers} 个工作线")
-    
-    def stop(self, wait: bool = True):
-        
-        if not self.running:
-            logger.warning("任务队列未运行")
-            return
-        
-        logger.info("[STOP] 正在停止任务队列...")
-        self.running = False
-        self.stop_event.set()
-        
-        if wait:
-            for worker in self.workers:
-                worker.join(timeout=30)
-            logger.info("[STOP] 任务队列已停止")
-    
-    def get_task_status(self, task_id: str) -> Optional[Dict]:
-        """获取任务状态"""
-        with self.tasks_lock:
-            task = self.tasks.get(task_id)
-            if task:
-                return task.to_dict()
-        return None
-    
-    def get_all_tasks(self, status: Optional[TaskStatus] = None) -> List[Dict]:
-        """获取所有任务"""
-        with self.tasks_lock:
-            tasks = list(self.tasks.values())
-            if status:
-                tasks = [t for t in tasks if t.status == status]
-            return [t.to_dict() for t in tasks]
-    
-    def cancel_task(self, task_id: str) -> bool:
-        """
-        取消任务：
-        - PENDING：立即标记 CANCELLED，worker 取到时会跳过
-        - RUNNING：设置 cancel_event，任务会在可中断点尽快退出并标记 CANCELLED
-        - 内存中找不到时：直接在 SQLite 里标记为 failed（兜底）
-        """
-        with self.tasks_lock:
-            task = self.tasks.get(task_id)
-            if not task:
-                # 内存里没有，直接操作 SQLite 兜底，同时在内存里插入一条 failed 记录让前端感知
-                try:
-                    from datetime import datetime as _dt
-                    now = _dt.now().isoformat()
-                    self.task_repo.update_task_status(
-                        task_id,
-                        status="failed",
-                        error="cancelled by user (force)",
-                        completed_at=now,
-                    )
-                except Exception:
-                    pass
-                # 内存里补一条 failed 占位，避免前端刷新后从 SQLite 读到旧状态
-                try:
-                    placeholder = GitImportTask(
-                        task_id=task_id,
-                        repo_url="",
-                        status=TaskStatus.FAILED,
-                        error="cancelled by user (force)",
-                        completed_at=datetime.now().isoformat(),
-                    )
-                    self.tasks[task_id] = placeholder
-                except Exception:
-                    pass
-                return True
-
-            ev = self.cancel_events.get(task_id)
-            if ev is None:
-                ev = Event()
-                self.cancel_events[task_id] = ev
-            ev.set()
-
-            if task.status in (TaskStatus.PENDING, TaskStatus.RUNNING):
-                task.status = TaskStatus.CANCELLED
-                task.error = "cancelled by user"
-                if task.completed_at is None:
-                    task.completed_at = datetime.now().isoformat()
-                logger.info(f"[CANCEL] 任务已取消 {task_id}（原状态={task.status.value}）")
-                self._save_tasks()
-                return True
-        return False
-    
-    def get_queue_stats(self) -> Dict:
-        
-        with self.tasks_lock:
-            total = len(self.tasks)
-            pending = sum(1 for t in self.tasks.values() if t.status == TaskStatus.PENDING)
-            running = sum(1 for t in self.tasks.values() if t.status == TaskStatus.RUNNING)
-            success = sum(1 for t in self.tasks.values() if t.status == TaskStatus.SUCCESS)
-            failed = sum(1 for t in self.tasks.values() if t.status == TaskStatus.FAILED)
-            
-            return {
-                'total': total,
-                'pending': pending,
-                'running': running,
-                'success': success,
-                'failed': failed,
-                'queue_size': self.task_queue.qsize(),
-                'max_workers': self.max_workers,
-                'cache_base_dir': self.cache_base_dir,
-                'max_memory_mb': self.max_memory_mb,
-                'auto_submission_blocked': bool(self.auto_submission_blocked),
-                'auto_submission_block_reason': self.auto_submission_block_reason,
-            }
-
-    def clear_auto_submission_block(self, reason: Optional[str] = None) -> None:
-        """手动解除 auto 任务阻断。"""
-        with self.tasks_lock:
-            self.auto_submission_blocked = False
-            self.auto_submission_block_reason = ""
-        if reason:
-            logger.info(f"[ACCEPTANCE] 手动解除 auto 任务阻断: {reason}")
-        else:
-            logger.info("[ACCEPTANCE] 手动解除 auto 任务阻断")
-        self._save_tasks()
-
-    def _capture_project_snapshot(self, connector: Any, project_name: str) -> Dict[str, Any]:
-        project = (project_name or "").strip()
-        empty = {
-            "project_name": project,
-            "taken_at": datetime.now().isoformat(),
-            "node_count": 0,
-            "relationship_count": 0,
-            "java_object_count": 0,
-            "method_count": 0,
-            "external_definition_count": 0,
-            "project_node_count": 0,
-            "node_count_by_label": {},
-            "relationship_count_by_type": {},
-        }
-        if not project or connector is None:
-            return empty
-        try:
-            query = """
-            CALL () {
-              MATCH (n)
-              WHERE coalesce(n.belong_project, '') = $project_name
-              RETURN count(n) AS node_count
-            }
-            CALL () {
-              MATCH (n)-[r]-()
-              WHERE coalesce(n.belong_project, '') = $project_name
-              RETURN count(DISTINCT r) AS relationship_count
-            }
-            CALL () {
-              MATCH (n:JavaObject)
-              WHERE coalesce(n.belong_project, '') = $project_name
-              RETURN count(n) AS java_object_count
-            }
-            CALL () {
-              MATCH (n:JavaObject)
-              WHERE coalesce(n.belong_project, '') = $project_name
-                AND coalesce(n.from_type, '') = 'MethodDeclaration'
-              RETURN count(n) AS method_count
-            }
-            CALL () {
-              MATCH (n:JavaObject)
-              WHERE coalesce(n.belong_project, '') = $project_name
-                AND coalesce(n.from_type, '') = 'ExternalDefinition'
-              RETURN count(n) AS external_definition_count
-            }
-            CALL () {
-              MATCH (p:Project)
-              WHERE coalesce(p.name, '') = $project_name
-              RETURN count(p) AS project_node_count
-            }
-            CALL () {
-              MATCH (n)
-              WHERE coalesce(n.belong_project, '') = $project_name
-              WITH labels(n)[0] AS label, count(n) AS c
-              WHERE label IS NOT NULL
-              RETURN collect({key: label, value: c}) AS node_label_pairs
-            }
-            CALL () {
-              MATCH (n)-[r]-()
-              WHERE coalesce(n.belong_project, '') = $project_name
-              WITH type(r) AS rel_type, count(DISTINCT r) AS c
-              RETURN collect({key: rel_type, value: c}) AS rel_type_pairs
-            }
-            RETURN node_count, relationship_count, java_object_count, method_count, external_definition_count, project_node_count, node_label_pairs, rel_type_pairs
-            """
-            rows = connector.execute_query(query, {"project_name": project}) or []
-            row = rows[0] if rows else {}
-            out = dict(empty)
-            out["node_count"] = int(row.get("node_count") or 0)
-            out["relationship_count"] = int(row.get("relationship_count") or 0)
-            out["java_object_count"] = int(row.get("java_object_count") or 0)
-            out["method_count"] = int(row.get("method_count") or 0)
-            out["external_definition_count"] = int(row.get("external_definition_count") or 0)
-            out["project_node_count"] = int(row.get("project_node_count") or 0)
-            out["node_count_by_label"] = self._pairs_to_count_dict(row.get("node_label_pairs"))
-            out["relationship_count_by_type"] = self._pairs_to_count_dict(row.get("rel_type_pairs"))
-            return out
-        except Exception as e:
-            failed = dict(empty)
-            failed["error"] = str(e)
-            return failed
-
-    @staticmethod
-    def _delta(after: Dict[str, Any], before: Dict[str, Any], key: str) -> int:
-        try:
-            return int(after.get(key) or 0) - int(before.get(key) or 0)
-        except Exception:
-            return 0
-
-    @staticmethod
-    def _pairs_to_count_dict(pairs: Any) -> Dict[str, int]:
-        out: Dict[str, int] = {}
-        if not isinstance(pairs, list):
-            return out
-        for item in pairs:
-            if not isinstance(item, dict):
-                continue
-            key = str(item.get("key") or "").strip()
-            if not key:
-                continue
-            try:
-                out[key] = int(item.get("value") or 0)
-            except Exception:
-                out[key] = 0
-        return out
-
-    @staticmethod
-    def _delta_count_map(after_map: Any, before_map: Any) -> Dict[str, int]:
-        a = after_map if isinstance(after_map, dict) else {}
-        b = before_map if isinstance(before_map, dict) else {}
-        keys = set(a.keys()) | set(b.keys())
-        out: Dict[str, int] = {}
-        for k in sorted(keys):
-            try:
-                d = int(a.get(k, 0) or 0) - int(b.get(k, 0) or 0)
-            except Exception:
-                d = 0
-            if d != 0:
-                out[str(k)] = d
-        return out
-
-    def _build_acceptance_report(
-        self,
-        *,
-        task: GitImportTask,
-        import_success: bool,
-        snapshot_before: Optional[Dict[str, Any]],
-        snapshot_after: Optional[Dict[str, Any]],
-    ) -> Dict[str, Any]:
-        before = snapshot_before or {}
-        after = snapshot_after or {}
-        delta = {
-            "node_count": self._delta(after, before, "node_count"),
-            "relationship_count": self._delta(after, before, "relationship_count"),
-            "java_object_count": self._delta(after, before, "java_object_count"),
-            "method_count": self._delta(after, before, "method_count"),
-            "external_definition_count": self._delta(after, before, "external_definition_count"),
-            "project_node_count": self._delta(after, before, "project_node_count"),
-            "node_count_by_label": self._delta_count_map(
-                after.get("node_count_by_label"),
-                before.get("node_count_by_label"),
-            ),
-            "relationship_count_by_type": self._delta_count_map(
-                after.get("relationship_count_by_type"),
-                before.get("relationship_count_by_type"),
-            ),
-        }
-        report: Dict[str, Any] = {
-            "enabled": bool(task.acceptance_enabled),
-            "status": "skipped",
-            "summary": "验收未执行",
-            "rules": [],
-            "delta": delta,
-            "max_drop_ratio": float(task.acceptance_max_drop_ratio),
-            "block_on_fail": bool(task.acceptance_block_on_fail),
-            "blocked_following_auto_tasks": False,
-        }
-        if not task.acceptance_enabled:
-            report["summary"] = "验收开关关闭，已跳过"
-            return report
-        if not import_success:
-            report["summary"] = "导入失败，验收跳过"
-            return report
-
-        rules: List[Dict[str, Any]] = []
-
-        def add_rule(rule_id: str, title: str, ok: bool, detail: str) -> None:
-            rules.append(
-                {
-                    "id": rule_id,
-                    "title": title,
-                    "status": "pass" if ok else "fail",
-                    "ok": bool(ok),
-                    "detail": detail,
-                }
-            )
-
-        add_rule(
-            "project-node-exists",
-            "Project 节点存在",
-            int(after.get("project_node_count") or 0) >= 1,
-            f"after.project_node_count={int(after.get('project_node_count') or 0)}",
-        )
-        add_rule(
-            "subgraph-node-not-empty",
-            "项目子图节点非空",
-            int(after.get("node_count") or 0) > 0,
-            f"after.node_count={int(after.get('node_count') or 0)}",
-        )
-        add_rule(
-            "subgraph-rel-not-empty",
-            "项目子图关系非空",
-            int(after.get("relationship_count") or 0) > 0,
-            f"after.relationship_count={int(after.get('relationship_count') or 0)}",
-        )
-
-        max_drop_ratio = float(task.acceptance_max_drop_ratio)
-        if not bool(task.clear_database):
-            before_nodes = int(before.get("node_count") or 0)
-            after_nodes = int(after.get("node_count") or 0)
-            if before_nodes > 0:
-                drop_ratio = max(0.0, (before_nodes - after_nodes) / before_nodes)
-                add_rule(
-                    "node-drop-ratio",
-                    "节点降幅阈值",
-                    drop_ratio <= max_drop_ratio,
-                    f"drop={drop_ratio:.2%}, threshold={max_drop_ratio:.2%}",
-                )
-
-            before_rels = int(before.get("relationship_count") or 0)
-            after_rels = int(after.get("relationship_count") or 0)
-            if before_rels > 0:
-                drop_ratio = max(0.0, (before_rels - after_rels) / before_rels)
-                add_rule(
-                    "rel-drop-ratio",
-                    "关系降幅阈值",
-                    drop_ratio <= max_drop_ratio,
-                    f"drop={drop_ratio:.2%}, threshold={max_drop_ratio:.2%}",
-                )
-
-        passed = all(bool(r.get("ok")) for r in rules)
-        report["rules"] = rules
-        report["status"] = "passed" if passed else "failed"
-        report["summary"] = "验收通过" if passed else "验收失败：存在关键规则未通过"
-        if (not passed) and bool(task.acceptance_block_on_fail):
-            self.auto_submission_blocked = True
-            self.auto_submission_block_reason = (
-                f"任务 {task.task_id} 验收失败，已阻断后续 auto 任务；请先处理失败规则后再继续"
-            )
-            report["blocked_following_auto_tasks"] = True
-        return report
-
-    def _persist_task_delta_detail(self, task_id: str, result: Dict[str, Any]) -> None:
-        if not task_id or not isinstance(result, dict):
-            return
-        try:
-            extra = result.get("extra")
-            if not isinstance(extra, dict):
-                return
-            detail = {
-                "snapshot_before": extra.get("snapshot_before"),
-                "snapshot_after": extra.get("snapshot_after"),
-                "snapshot_delta": extra.get("snapshot_delta"),
-                "acceptance": extra.get("acceptance"),
-                "delta_detail": extra.get("delta_detail"),
-                "task_type": extra.get("task_type"),
-                "effective_mode": extra.get("effective_mode"),
-                "fallback_reason": extra.get("fallback_reason"),
-                "changed_files_list": extra.get("changed_files_list"),
-                "added_files_list": extra.get("added_files_list"),
-                "deleted_files_list": extra.get("deleted_files_list"),
-            }
-            self.task_repo.upsert_task_delta_detail(task_id, detail)  # type: ignore[attr-defined]
-        except Exception as e:
-            msg = str(e or "")
-            self._log_task_db_diagnostics(stage="persist-failed")
-            # 运行时补偿：若目标库缺少迁移表，触发一次 migrate 后重试。
-            # 仍基于 migration SQL，不在代码里硬编码建表。
-            if "import_task_delta_details" in msg and "缺少表" in msg:
-                try:
-                    db_path = getattr(getattr(self.task_repo, "db", None), "db_path", self.task_db_sqlite_file)
-                    logger.warning(
-                        f"[ACCEPTANCE] 持久化失败，检测到缺少表，尝试补执行迁移后重试 "
-                        f"task={task_id} db={db_path}"
-                    )
-                    self.task_repo.db.migrate()  # type: ignore[attr-defined]
-                    self._log_task_db_diagnostics(stage="after-migrate-retry")
-                    self.task_repo.upsert_task_delta_detail(task_id, detail)  # type: ignore[attr-defined]
-                    logger.info(
-                        f"[ACCEPTANCE] 持久化任务 diff 明细重试成功 task={task_id} db={db_path}"
-                    )
-                    return
-                except Exception as retry_e:
-                    logger.warning(
-                        f"[ACCEPTANCE] 持久化任务 diff 明细重试失败 task={task_id}: {retry_e}"
-                    )
-            logger.warning(f"[ACCEPTANCE] 持久化任务 diff 明细失败 task={task_id}: {e}")
-    
-    def _worker_loop(self):
-        """工作线程主循环"""
-
-        logger.info(f"[WORKER] {threading.current_thread().name} 已启动")
-        
-        while self.running and not self.stop_event.is_set():
-            try:
-                # 获取任务(超1 秒)
-                try:
-                    priority, task_id, task = self.task_queue.get(timeout=1)
-                except:
-                    continue
-                
-                # 检查任务是否被取消
-                with self.tasks_lock:
-                    if task.status == TaskStatus.CANCELLED:
-                        logger.info(f"[WORKER] 跳过已取消的任务: {task_id}")
-                        continue
-                
-                # 检查内
-                if not self._check_memory:
-                    logger.warning(f"[WORKER] 内存不足,任{task_id} 重新入队")
-                    self.task_queue.put((priority, task_id, task))
-                    time.sleep(5)  # 等待 5 秒后重试
-                    continue
-                
-                # 执行任务
-                self._execute_task(task)
-                
-            except Exception as e:
-                logger.error(f"[WORKER] 工作线程异常: {e}", exc_info=True)
-        
-        logger.info(f"[WORKER] {threading.current_thread().name} 已停止")
-    
-    def _execute_task(self, task: GitImportTask):
-        
-        logger.info(f"[EXECUTE] 开始执行任 {task.task_id}")
-        
-        try:
-            # 更新任务状
-            with self.tasks_lock:
-                task.status = TaskStatus.RUNNING
-                task.started_at = datetime.now().isoformat()
-            
-            # 创建导入器（Neo4j 配置读取优先级：环境变量 > .env.local > .env > 默认值）
-            # 线上/生产环境请务必通过环境变量或 secret 注入 Neo4j 凭据，避免硬编码。
-            importer = GitToNeo4jImporter(cache_base_dir=self.cache_base_dir)
-            
-            # 连接Neo4j
-            if not importer.connect():
-                raise Exception("无法连接Neo4j")
-            
-            try:
-                project_for_snapshot = (
-                    (task.project_name or task.repo_name or "")
-                    .strip()
-                )
-                snapshot_before: Optional[Dict[str, Any]] = None
-                snapshot_after: Optional[Dict[str, Any]] = None
-                # 防呆：无论是否开启“验收判定”，都采集快照，确保事后可追溯对比
-                snapshot_before = self._capture_project_snapshot(importer.connector, project_for_snapshot)
-                logger.info(
-                    f"[SNAPSHOT][BEFORE] project={project_for_snapshot} "
-                    f"nodes={snapshot_before.get('node_count', 0)} rels={snapshot_before.get('relationship_count', 0)}"
-                )
-
-                # 执行导入
-                cancel_event = None
-                with self.tasks_lock:
-                    cancel_event = self.cancel_events.get(task.task_id)
-                result = importer.import_from_git(
-                    repo_url=task.repo_url,
-                    branch=task.branch,
-                    repo_name=task.repo_name,
-                    java_source_dir=task.java_source_dir,
-                    project_name=task.project_name,
-                    language=task.language,
-                    languages=task.languages,
-                    clear_database=task.clear_database,
-                    include_unchanged_total=task.include_unchanged_total,
-                    include_comment_nodes=task.include_comment_nodes,
-                    clone_timeout=task.clone_timeout,
-                    git_config=task.git_config,
-                    commit_id=task.commit_id,
-                    maven_scan_enabled=bool(getattr(task, "maven_scan_enabled", True)),
-                    force_maven=bool(getattr(task, "force_maven", False)),
-                    auto_link_external=bool(getattr(task, "auto_link_external", True)),
-                    app_version=str(getattr(task, "app_version", "") or ""),
-                    task_type=str(getattr(task, "task_type", "auto") or "auto"),
-                    cancel_event=cancel_event,
-                )
-                snapshot_after = self._capture_project_snapshot(importer.connector, project_for_snapshot)
-                logger.info(
-                    f"[SNAPSHOT][AFTER] project={project_for_snapshot} "
-                    f"nodes={snapshot_after.get('node_count', 0)} rels={snapshot_after.get('relationship_count', 0)}"
-                )
-                acceptance = self._build_acceptance_report(
-                    task=task,
-                    import_success=bool(result.get("success")),
-                    snapshot_before=snapshot_before,
-                    snapshot_after=snapshot_after,
-                )
-                extra = result.get("extra")
-                if not isinstance(extra, dict):
-                    extra = {}
-                extra["snapshot_before"] = snapshot_before
-                extra["snapshot_after"] = snapshot_after
-                extra["snapshot_delta"] = acceptance.get("delta", {})
-                extra["acceptance"] = acceptance
-                result["extra"] = extra
-                logger.info(
-                    f"[ACCEPTANCE] task={task.task_id} status={acceptance.get('status')} "
-                    f"summary={acceptance.get('summary')}"
-                )
-                
-                # 更新任务状
-                with self.tasks_lock:
-                    # 若用户已取消，则不覆盖状态
-                    if task.status == TaskStatus.CANCELLED:
-                        task.completed_at = datetime.now().isoformat()
-                        logger.info(f"[EXECUTE] 任务已取消: {task.task_id}")
-                        return
-                    if result['success']:
-                        task.status = TaskStatus.SUCCESS
-                        task.result = result
-                        logger.info(f"[EXECUTE] 任务成功: {task.task_id}")
-                    else:
-                        task.status = TaskStatus.FAILED
-                        task.error = result.get('error', '未知错误')
-                        logger.error(f"[EXECUTE] 任务失败: {task.task_id} - {task.error}")
-                        self._cleanup_if_no_graph_project(task)
-                    
-                    task.completed_at = datetime.now().isoformat()
-                self._persist_task_delta_detail(task.task_id, result)
-            
-            finally:
-                importer.disconnect()
-        
-        except ImportCancelled as e:
-            logger.info(f"[EXECUTE] 任务取消: {task.task_id} - {e}")
-            with self.tasks_lock:
-                task.status = TaskStatus.CANCELLED
-                task.error = str(e)
-                task.completed_at = datetime.now().isoformat()
-                self._save_tasks()
-            return
-        except Exception as e:
-            logger.error(f"[EXECUTE] 任务异常: {task.task_id} - {e}", exc_info=True)
-            
-            # 兜底自愈：Windows 下偶发出现 clone/checkout 后 pom.xml 变成 0 字节，
-            # Maven 会报 "Non-readable POM ... input contained no data"。
-            # 此时重试若不清理缓存仓库，会重复失败；因此在进入重试前删除该 repo 目录，强制下次重克隆。
-            try:
-                msg = str(e) or ""
-                if ("Non-readable POM" in msg) and ("input contained no data" in msg):
-                    repo_name = (task.repo_name or task.project_name or "").strip()
-                    if repo_name:
-                        import shutil
-
-                        repo_dir = Path(self.cache_base_dir) / repo_name
-                        if repo_dir.exists():
-                            shutil.rmtree(repo_dir, ignore_errors=True)
-                            logger.warning(f"[CLEANUP] 检测到空 pom.xml，已删除损坏仓库缓存以便重试重克隆: {repo_dir}")
-            except Exception as _cleanup_err:
-                logger.warning(f"[CLEANUP] 尝试清理损坏仓库缓存失败，继续走重试逻辑: {_cleanup_err}")
-
-            # 重试逻辑
-            with self.tasks_lock:
-                if task.retry_count < task.max_retries:
-                    task.retry_count += 1
-                    task.status = TaskStatus.PENDING
-                    logger.info(f"[EXECUTE] 任务重试 ({task.retry_count}/{task.max_retries}): {task.task_id}")
-                    # 重新入队
-                    self.task_queue.put((task.priority.value, task.task_id, task))
-                else:
-                    task.status = TaskStatus.FAILED
-                    task.error = str(e)
-                    task.completed_at = datetime.now().isoformat()
-                    logger.error(f"[EXECUTE] 任务最终失 {task.task_id}")
-                    self._cleanup_if_no_graph_project(task)
-        
-        finally:
-            # 保存任务
-            self._save_tasks()
-
-    def _cleanup_if_no_graph_project(self, task):
-            """任务失败后：若 Neo4j 中不存在对应 Project 节点，则删除本地缓存（git_repos/xxx、merkle、metadata）。"""
-            import shutil
-
-            repo_name = (task.repo_name or task.project_name or "").strip()
-            project_name = (task.project_name or repo_name).strip()
-            if not repo_name:
-                return
-
-            # 1) 检查 Neo4j 是否有 Project 节点
-            has_project = False
-            try:
-                from core.env_loader import load_env_vars
-                load_env_vars({"NEO4J_URI", "NEO4J_USER", "NEO4J_PASSWORD", "NEO4J_DATABASE"})
-                uri = os.environ.get("NEO4J_URI", "")
-                user = os.environ.get("NEO4J_USER", "neo4j")
-                password = os.environ.get("NEO4J_PASSWORD", "")
-                database = os.environ.get("NEO4J_DATABASE", "neo4j")
-                if uri and password:
-                    from storage.neo4j.connector import Neo4jConnector
-                    conn = Neo4jConnector(uri=uri, username=user, password=password, database=database)
-                    if conn.connect():
-                        try:
-                            rows = conn.execute_query(
-                                "MATCH (p:Project) WHERE p.name = $name AND p.project_type = 'Application' RETURN p LIMIT 1",
-                                {"name": project_name},
-                            ) or []
-                            has_project = len(rows) > 0
-                        finally:
-                            conn.disconnect()
-            except Exception as e:
-                logger.warning(f"[CLEANUP] 检查 Neo4j Project 节点失败，跳过清理: {e}")
-                return
-
-            if has_project:
-                logger.info(f"[CLEANUP] Neo4j 中存在 Project({project_name})，保留本地缓存")
-                return
-
-            # 2) 删除本地缓存
-            cache_base = Path(self.cache_base_dir)
-            cache_root = cache_base.parent
-
-            targets = [
-                cache_base / repo_name,
-                cache_root / "metadata" / f"{repo_name}.json",
-            ]
-            merkle_dir = cache_root / "merkle_trees"
-            if merkle_dir.exists():
-                targets += list(merkle_dir.glob(f"{repo_name}_*.json"))
-
-            for target in targets:
-                target = Path(target)
-                try:
-                    if target.is_dir():
-                        shutil.rmtree(target, ignore_errors=True)
-                        logger.info(f"[CLEANUP] 已删除目录: {target}")
-                    elif target.is_file():
-                        target.unlink(missing_ok=True)
-                        logger.info(f"[CLEANUP] 已删除文件: {target}")
-                except Exception as e:
-                    logger.warning(f"[CLEANUP] 删除 {target} 失败: {e}")
-    
-    @property
-    def _check_memory(self) -> bool:
-        """检查内存是否充足"""
-        try:
-            import psutil
-            memory_mb = psutil.virtual_memory().used / (1024 * 1024)
-            
-            if memory_mb > self.max_memory_mb:
-                logger.warning(f"[MEMORY] 内存使用过高: {memory_mb:.2f}MB / {self.max_memory_mb}MB")
-                return False
-            
-            return True
-        except ImportError:
-            # 如果没有 psutil,默认返True
-            return True
-    
-    def _generate_task_id(self) -> str:
-        
-        import uuid
-        return f"task_{uuid.uuid4().hex[:8]}"
-    
-    def _save_tasks(self):
-        """保存任务（sqlite + 兼容 JSON 文件备份）"""
-        try:
-            now = datetime.now().isoformat()
-            with self.tasks_lock:
-                tasks = list(self.tasks.items())
-
-            # 1) 写 sqlite：业务持久化
-            rows = []
-            for task_id, task in tasks:
-                d = task.to_dict()
-                rows.append(
-                    {
-                        "task_id": task_id,
-                        "status": d["status"],
-                        "priority": d["priority"],
-                        "created_at": d.get("created_at") or now,
-                        "started_at": d.get("started_at"),
-                        "completed_at": d.get("completed_at"),
-                        "retry_count": int(d.get("retry_count", 0)),
-                        "max_retries": int(d.get("max_retries", 3)),
-                        "task_obj": d,
-                        "updated_at": now,
-                    }
-                )
-            if rows:
-                self.task_repo.upsert_many(rows)
-
-            # 2) 写 JSON 兼容备份：便于你随时回退/排查
-            tasks_data = {
-                "tasks": {k: v.to_dict() for k, v in self.tasks.items()},
-                "saved_at": now,
-            }
-            with open(self.task_db_file, "w", encoding="utf-8") as f:
-                json.dump(tasks_data, f, indent=2, ensure_ascii=False)
-        except Exception as e:
-            logger.error(f"[SAVE] 保存任务失败: {e}")
     
     def _load_tasks(self):
-        """从 sqlite/JSON 加载未完成任务"""
+        """
+        从 SQLite 加载 pending 和 running 状态的任务
+        - running 任务 → 标记为 failed（因为进程重启了）
+        - pending 任务 → 重新加入队列等待执行
+        """
         try:
-            pending_running = ["pending", "running"]
-
-            # 1) 优先：sqlite
-            task_dicts = self.task_repo.load_tasks(statuses=pending_running)
-            if task_dicts:
-                for td in task_dicts:
-                    # 兜底：如果 task_json 里没有显式 task_id，就跳过
-                    task_id = td.get("task_id")
-                    if not task_id:
+            # 查询所有 pending 和 running 任务
+            pending_tasks = self.task_repo.load_tasks(statuses=["pending"])
+            running_tasks = self.task_repo.load_tasks(statuses=["running"])
+            
+            logger.info(f"[LOAD_TASKS] found {len(pending_tasks)} pending, {len(running_tasks)} running tasks")
+            
+            # 处理 running 任务（进程重启了，这些任务实际上中断了）
+            for task_dict in running_tasks:
+                task_id = task_dict.get('task_id')
+                project_name = task_dict.get('project_name', '__global__')
+                
+                logger.warning(
+                    f"[LOAD_TASKS] task_id={task_id} project={project_name} "
+                    f"was running but interrupted by restart, marking as failed"
+                )
+                
+                # 标记为失败
+                task_dict['status'] = 'failed'
+                task_dict['error'] = 'Task interrupted by process restart'
+                task_dict['completed_at'] = datetime.now().isoformat()
+                
+                # 保存到 SQLite
+                self.task_repo.upsert_task(
+                    task_id=task_id,
+                    status='failed',
+                    priority=task_dict.get('priority', 'NORMAL'),
+                    created_at=task_dict.get('created_at'),
+                    started_at=task_dict.get('started_at'),
+                    completed_at=task_dict['completed_at'],
+                    retry_count=task_dict.get('retry_count', 0),
+                    max_retries=task_dict.get('max_retries', 3),
+                    task_obj=task_dict,
+                    updated_at=datetime.now().isoformat()
+                )
+            
+            # 处理 pending 任务（重新加入队列）
+            restored_count = 0
+            for task_dict in pending_tasks:
+                try:
+                    # 从字典创建任务对象
+                    task = GitImportTask.from_dict(task_dict)
+                    
+                    # 存储到内存
+                    self.tasks[task.task_id] = task
+                    self.cancel_events[task.task_id] = asyncio.Event()
+                    
+                    # 按项目名分发到对应队列
+                    project_name = task.project_name or "__global__"
+                    
+                    if project_name not in self.project_queues:
+                        self.project_queues[project_name] = asyncio.PriorityQueue()
+                    
+                    # 同步方法放入队列（此时 loop 可能还未运行）
+                    import threading
+                    result = [None]
+                    exception = [None]
+                    
+                    def put_in_thread():
+                        new_loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(new_loop)
+                        try:
+                            new_loop.run_until_complete(
+                                self.project_queues[project_name].put((task.priority.value, task))
+                            )
+                            result[0] = True
+                        except Exception as e:
+                            exception[0] = e
+                        finally:
+                            new_loop.close()
+                    
+                    thread = threading.Thread(target=put_in_thread)
+                    thread.start()
+                    thread.join()
+                    
+                    if exception[0]:
+                        logger.error(f"[LOAD_TASKS] failed to restore task_id={task.task_id}: {exception[0]}")
                         continue
-                    if td.get("status") not in pending_running:
-                        continue
-                    task = self._dict_to_task(td)
-                    self.tasks[task_id] = task
-                    # 重新入队 + 重建 cancel_event（运行时用）
-                    self.cancel_events[task_id] = Event()
-                    self.task_queue.put((task.priority.value, task_id, task))
-
-                logger.info(f"[LOAD] 从 sqlite 加载 {len(self.tasks)} 个任务")
-                return
-
-            # 2) 兼容：json
-            if os.path.isfile(self.task_db_file):
-                with open(self.task_db_file, "r", encoding="utf-8") as f:
-                    tasks_data = json.load(f)
-
-                for task_id, task_dict in tasks_data.get("tasks", {}).items():
-                    # 只加载未完成的任务
-                    if task_dict.get("status") in pending_running:
-                        task = self._dict_to_task(task_dict)
-                        self.tasks[task_id] = task
-                        # 重新入队
-                        self.cancel_events[task_id] = Event()
-                        self.task_queue.put((task.priority.value, task_id, task))
-
-                logger.info(f"[LOAD] 从 json 加载 {len(self.tasks)} 个任务")
+                    
+                    restored_count += 1
+                    logger.info(
+                        f"[LOAD_TASKS] restored task_id={task.task_id} project={project_name} "
+                        f"priority={task.priority.name} to queue"
+                    )
+                    
+                except Exception as e:
+                    logger.error(f"[LOAD_TASKS] failed to restore task: {e}")
+            
+            logger.info(f"[LOAD_TASKS] total restored {restored_count} pending tasks to queue")
+            
         except Exception as e:
-            logger.error(f"[LOAD] 加载任务失败: {e}")
-    
-    @staticmethod
-    def _dict_to_task(data: Dict) -> GitImportTask:
-        
-        data['status'] = TaskStatus(data['status'])
-        data['priority'] = TaskPriority(data['priority'])
-        return GitImportTask(**data)
+            logger.error(f"[LOAD_TASKS] error loading tasks: {e}")
 
-# 全局任务队列实例
-_global_task_queue: Optional[TaskQueue] = None
 
-def get_task_queue(max_workers: int = 2,
-                   cache_base_dir: str = str(CACHE_GIT_REPOS_PATH),
-                   task_db_file: str = str(CACHE_ROOT_PATH / "git_tasks.json"),
-                   task_db_sqlite_file: str = str(CACHE_BUSINESS_DB_PATH),
-                   max_memory_mb: int = 1024) -> TaskQueue:
-    
-    global _global_task_queue
-    
-    if _global_task_queue is None:
-        _global_task_queue = TaskQueue(
-            max_workers=max_workers,
-            cache_base_dir=cache_base_dir,
-            task_db_file=task_db_file,
-            task_db_sqlite_file=task_db_sqlite_file,
-            max_memory_mb=max_memory_mb
-        )
-    
-    return _global_task_queue
+# 全局单例
+_task_queue_instance: Optional[AsyncTaskQueue] = None
 
-def main():
-    print("=" * 70)
-    print("Git 导入任务队列 - 示例")
-    print("=" * 70)
-    
-    # 创建任务队列
-    queue = get_task_queue(
-        max_workers=2,
-        cache_base_dir=str(CACHE_GIT_REPOS_PATH),
-        max_memory_mb=1024
-    )
-    
-    # 启动队列
-    queue.start()
-    
-    try:
-        # 提交任务
-        task_id_1 = queue.submit_task(
-            repo_url="https://github.com/example/java-project.git",
-            branch="main",
-            priority=TaskPriority.HIGH
-        )
-        print(f"[SUBMIT] 任务 1: {task_id_1}")
-        
-        task_id_2 = queue.submit_task(
-            repo_url="https://github.com/example/another-project.git",
-            branch="dev",
-            priority=TaskPriority.NORMAL
-        )
-        print(f"[SUBMIT] 任务 2: {task_id_2}")
-        
-        # 监控任务
-        while True:
-            stats = queue.get_queue_stats()
-            print(f"\n[STATS] 队列状 {stats}")
-            
-            # 检查任务状
-            status_1 = queue.get_task_status(task_id_1)
-            status_2 = queue.get_task_status(task_id_2)
-            
-            print(f"[STATUS] 任务 1: {status_1['status']}")
-            print(f"[STATUS] 任务 2: {status_2['status']}")
-            
-            # 如果所有任务都完成,退
-            if stats['pending'] == 0 and stats['running'] == 0:
-                break
-            
-            time.sleep(5)
-    
-    finally:
-        # 停止队列
-        queue.stop()
 
-if __name__ == "__main__":
-    main()
+def get_task_queue(**kwargs) -> AsyncTaskQueue:
+    """
+    获取或创建任务队列单例
+    支持传入参数覆盖默认配置
+    """
+    global _task_queue_instance
+    if _task_queue_instance is None:
+        _task_queue_instance = AsyncTaskQueue(**kwargs)
+    return _task_queue_instance
+
+
+# 别名，保持 API 兼容
+TaskQueue = AsyncTaskQueue

@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from typing import Any, List
 
-from storage.neo4j.java_modules import (
-    CommentNodeGraphNode,
+from parser.common.symbol_table import SymbolIdGenerator
+from parser.languages.java.java_constants import (
     CommentStorageDecision,
     CommentType,
-    JavaGraphEdgeType,
-    JavaNeo4jNodeType,
     JavadocParseResult,
 )
+from storage.neo4j.graph_schema import JavaGraphEdgeType, JavaNeo4jNodeType
+from storage.neo4j.node_types import CommentNode
 
 
 class CommentStorageConfig:
@@ -122,8 +122,12 @@ class JavaCommentProcessingMixin:
         parent_belong_project: str,
     ) -> None:
         if not comments:
-            parent_node.simple_comment = ""
-            parent_node.has_detailed_comment = False
+            if isinstance(parent_node, dict):
+                parent_node["simple_comment"] = ""
+                parent_node["has_detailed_comment"] = False
+            else:
+                parent_node.simple_comment = ""
+                parent_node.has_detailed_comment = False
             return
 
         # 不创建 Comment 节点时，仅存于父节点 simple_comment
@@ -131,8 +135,12 @@ class JavaCommentProcessingMixin:
             all_text = "\n".join(
                 [c.raw_comment for c in comments if hasattr(c, "raw_comment")]
             )
-            parent_node.simple_comment = all_text
-            parent_node.has_detailed_comment = False
+            if isinstance(parent_node, dict):
+                parent_node["simple_comment"] = all_text
+                parent_node["has_detailed_comment"] = False
+            else:
+                parent_node.simple_comment = all_text
+                parent_node.has_detailed_comment = False
             return
 
         decision = self._decide_comment_storage_strategy(comments)
@@ -141,19 +149,29 @@ class JavaCommentProcessingMixin:
             all_text = "\n".join(
                 [c.raw_comment for c in comments if hasattr(c, "raw_comment")]
             )
-            parent_node.simple_comment = all_text
-            parent_node.has_detailed_comment = False
+            if isinstance(parent_node, dict):
+                parent_node["simple_comment"] = all_text
+                parent_node["has_detailed_comment"] = False
+            else:
+                parent_node.simple_comment = all_text
+                parent_node.has_detailed_comment = False
             return
 
         if decision == CommentStorageDecision.CREATE_JAVADOC_NODE:
-            parent_node.has_detailed_comment = True
+            if isinstance(parent_node, dict):
+                parent_node["has_detailed_comment"] = True
+            else:
+                parent_node.has_detailed_comment = True
             self._create_javadoc_nodes(
                 comments, parent_symbol_id, parent_node, parent_belong_project
             )
             return
 
         if decision == CommentStorageDecision.CREATE_LONG_COMMENT_NODE:
-            parent_node.has_detailed_comment = True
+            if isinstance(parent_node, dict):
+                parent_node["has_detailed_comment"] = True
+            else:
+                parent_node.has_detailed_comment = True
             self._create_long_comment_node(comments, parent_symbol_id, parent_belong_project)
 
     def _create_javadoc_nodes(
@@ -175,38 +193,35 @@ class JavaCommentProcessingMixin:
                 other_comments.append(comment)
 
         for idx, comment in enumerate(javadoc_comments):
-            comment_node = CommentNodeGraphNode()
-            comment_node.content = comment.raw_comment
-            comment_node.comment_type = CommentType.JAVADOC.value
-            comment_node.belong_project = parent_belong_project
-            comment_node.project_key = getattr(parent_belong_project, "project_key")
-            comment_node.char_count = len(comment.raw_comment)
-            comment_node.line_count = comment.raw_comment.count("\n") + 1
-
             javadoc_result = JavadocParser.parse(comment.raw_comment)
-            comment_node.javadoc_summary = javadoc_result.summary
-            comment_node.javadoc_params = javadoc_result.params
-            comment_node.javadoc_return = javadoc_result.return_desc
-            comment_node.javadoc_throws = javadoc_result.throws
-            comment_node.javadoc_author = javadoc_result.author
-            comment_node.javadoc_version = javadoc_result.version
-            comment_node.javadoc_since = javadoc_result.since
-            comment_node.javadoc_deprecated = javadoc_result.deprecated
-            comment_node.javadoc_see = javadoc_result.see
-
-            comment_node.start_line = comment.location.start_line
-            comment_node.end_line = comment.location.end_line
-            comment_node.start_column = comment.location.start_column
-            comment_node.end_column = comment.location.end_column
-
-            comment_node.symbol_id = f"{parent_symbol_id}@javadoc#{idx}"
-            comment_node.parent_symbol_id = parent_symbol_id
-            comment_node.name = f"javadoc_{idx}"
+            comment_node: CommentNode = {
+                "symbol_id": SymbolIdGenerator.for_javadoc_comment(parent_symbol_id, idx),
+                "parent_symbol_id": parent_symbol_id,
+                "content": comment.raw_comment,
+                "comment_type": CommentType.JAVADOC.value,
+                "belong_project": parent_belong_project,
+                "project_key": parent_node.get("project_key") if isinstance(parent_node, dict) else getattr(parent_node, "project_key", None),
+                "char_count": len(comment.raw_comment),
+                "line_count": comment.raw_comment.count("\n") + 1,
+                "javadoc_summary": javadoc_result.summary,
+                "javadoc_params": javadoc_result.params,
+                "javadoc_return": javadoc_result.return_desc,
+                "javadoc_throws": javadoc_result.throws,
+                "javadoc_author": javadoc_result.author,
+                "javadoc_version": javadoc_result.version,
+                "javadoc_since": javadoc_result.since,
+                "javadoc_deprecated": javadoc_result.deprecated,
+                "javadoc_see": javadoc_result.see,
+                "start_line": comment.location.start_line,
+                "end_line": comment.location.end_line,
+                "start_column": comment.location.start_column,
+                "end_column": comment.location.end_column,
+            }
 
             self.nodes_to_create[JavaNeo4jNodeType.Comment].append(comment_node)
-            self.created_nodes.add(comment_node.symbol_id)
+            self.created_nodes.add(comment_node["symbol_id"])
             self.relationships_to_create.append(
-                (parent_symbol_id, comment_node.symbol_id, JavaGraphEdgeType.HAS_COMMENT.value)
+                (parent_symbol_id, comment_node["symbol_id"], JavaGraphEdgeType.HAS_COMMENT.value)
             )
 
         if other_comments:
@@ -220,31 +235,28 @@ class JavaCommentProcessingMixin:
         parent_symbol_id: str,
         parent_belong_project: str,
     ) -> None:
-        comment_node = CommentNodeGraphNode()
         all_text = "\n---\n".join(
             [c.raw_comment for c in comments if hasattr(c, "raw_comment")]
         )
-        comment_node.content = all_text
-        comment_node.comment_type = CommentType.LONG_COMMENT.value
-        comment_node.belong_project = parent_belong_project
-        comment_node.project_key = getattr(parent_belong_project, "project_key")
-        comment_node.char_count = len(all_text)
-        comment_node.line_count = all_text.count("\n") + 1
-
         first_comment = comments[0]
         last_comment = comments[-1]
-        comment_node.start_line = first_comment.location.start_line
-        comment_node.end_line = last_comment.location.end_line
-        comment_node.start_column = first_comment.location.start_column
-        comment_node.end_column = last_comment.location.end_column
-
-        comment_node.symbol_id = f"{parent_symbol_id}@longcomment"
-        comment_node.parent_symbol_id = parent_symbol_id
-        comment_node.name = "long_comment"
+        comment_node: CommentNode = {
+            "symbol_id": SymbolIdGenerator.for_long_comment(parent_symbol_id),
+            "parent_symbol_id": parent_symbol_id,
+            "content": all_text,
+            "comment_type": CommentType.LONG_COMMENT.value,
+            "belong_project": parent_belong_project,
+            "char_count": len(all_text),
+            "line_count": all_text.count("\n") + 1,
+            "start_line": first_comment.location.start_line,
+            "end_line": last_comment.location.end_line,
+            "start_column": first_comment.location.start_column,
+            "end_column": last_comment.location.end_column,
+        }
 
         self.nodes_to_create[JavaNeo4jNodeType.Comment].append(comment_node)
-        self.created_nodes.add(comment_node.symbol_id)
+        self.created_nodes.add(comment_node["symbol_id"])
         self.relationships_to_create.append(
-            (parent_symbol_id, comment_node.symbol_id, JavaGraphEdgeType.HAS_COMMENT.value)
+            (parent_symbol_id, comment_node["symbol_id"], JavaGraphEdgeType.HAS_COMMENT.value)
         )
 

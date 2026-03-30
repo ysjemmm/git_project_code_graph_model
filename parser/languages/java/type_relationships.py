@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from storage.neo4j.java_modules import JavaGraphEdgeType, ObjectType
+from parser.languages.java.java_constants import ObjectType
+from storage.neo4j.graph_schema import JavaGraphEdgeType
 
 
 class JavaTypeRelationshipCollectionMixin:

@@ -299,7 +299,10 @@ class GitToNeo4jImporter:
                 cache_base_dir=self.cache_base_dir
             )
             
-            task_id = queue.submit_task(
+            # 使用 TaskSubmitContext 封装参数，使调用更清晰
+            from core.task_queue import TaskSubmitContext
+            
+            ctx = TaskSubmitContext(
                 repo_url=repo_url,
                 branch=branch,
                 repo_name=repo_name,
@@ -318,6 +321,8 @@ class GitToNeo4jImporter:
                 auto_link_external=bool(auto_link_external),
                 task_type=str(task_type or "auto"),
             )
+            
+            task_id = queue.submit_task(ctx)
             
             return {
                 'success': True,
@@ -413,6 +418,7 @@ class GitToNeo4jImporter:
                 git_config=git_config,
                 commit_id=commit_id,
                 maven_scan_enabled=bool(maven_scan_enabled),
+                version=str(app_version or ""),
             )
 
             _raise_if_cancelled(cancel_event)
@@ -546,7 +552,7 @@ class GitToNeo4jImporter:
                     logger.info("[INFO] 代码未变化但库中无该项目数据，执行一次全量导入以初始化图谱")
             
             # 第二步:获取仓库缓存目录
-            repo_cache_dir = self.git_analyzer.cache_manager.get_repo_cache_dir(repo_name)
+            repo_cache_dir = self.git_analyzer.cache_manager.get_repo_cache_dir(repo_name, str(app_version or ""))
             _raise_if_cancelled(cancel_event)
 
             # 约定：很多调用方会默认传 "src/main/java"（但对多模块仓库这会导致漏扫）。

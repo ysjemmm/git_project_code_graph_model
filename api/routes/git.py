@@ -4,7 +4,8 @@ Git 仓库、分支、提交列表接口。
 from __future__ import annotations
 
 import subprocess
-from typing import List, Optional
+import time
+from typing import Dict, List, Optional, Tuple
 
 from fastapi import APIRouter, Query
 
@@ -13,6 +14,10 @@ from api.config import GIT_REFS_CACHE_DIR
 from api.utils import run_git, run_git_global, repo_name_from_url, repo_dir_from_url
 
 router = APIRouter(prefix="/api", tags=["git"])
+
+# 内存缓存：{cache_key: (timestamp, data)}
+_branches_cache: Dict[str, Tuple[float, List[str]]] = {}
+_BRANCHES_TTL = 60  # 秒
 
 
 def _run_git_text(repo_dir, args: List[str]) -> tuple[int, str, str]:
@@ -151,9 +156,18 @@ def git_branches(
     repoUrl: str = Query(..., description="Git 仓库 URL"),
     q: Optional[str] = Query(None, description="模糊搜索关键字"),
     limit: int = Query(200, ge=1, le=2000),
+    refresh: bool = Query(False, description="强制刷新缓存"),
 ):
-    # 直接从远端列 heads，避免本地缓存仓库 fetch 不全导致“只看到少量分支”
-    # 输出格式：<sha>\trefs/heads/<branch>
+    cache_key = repoUrl
+    now = time.time()
+
+    # 命中缓存（无搜索词时才用缓存）
+    if not refresh and not q:
+        cached = _branches_cache.get(cache_key)
+        if cached and (now - cached[0]) < _BRANCHES_TTL:
+            return GitRefListResponse(items=cached[1][:int(limit)])
+
+    # 直接从远端列 heads
     lines = run_git_global(["ls-remote", "--heads", repoUrl]) or []
     branches: List[str] = []
     for ln in lines:
@@ -165,11 +179,11 @@ def git_branches(
             continue
         ref = parts[1]
         if ref.startswith("refs/heads/"):
-            b = ref[len("refs/heads/") :]
+            b = ref[len("refs/heads/"):]
             if b:
                 branches.append(b)
 
-    # 兜底：若远端不可达，则退回本地缓存已有引用（保持接口可用）
+    # 兜底：远端不可达时退回本地缓存
     if not branches:
         repo_dir = repo_dir_from_url(repoUrl)
         _ensure_full_remote_refspec(repo_dir)
@@ -180,18 +194,26 @@ def git_branches(
             if not ln or ln == "HEAD" or "->" in ln:
                 continue
             branches.append(ln)
-    seen = set()
-    items = []
+
+    # 去重
+    seen: set = set()
+    deduped: List[str] = []
     for b in branches:
-        if b in seen:
-            continue
-        seen.add(b)
-        items.append(b)
+        if b not in seen:
+            seen.add(b)
+            deduped.append(b)
+
+    # 写缓存（只缓存无搜索词的全量结果）
+    if not q:
+        _branches_cache[cache_key] = (now, deduped)
+
+    # 搜索过滤
     if q:
         qq = q.strip().lower()
         if qq:
-            items = [x for x in items if qq in x.lower()]
-    return GitRefListResponse(items=items[: int(limit)])
+            deduped = [x for x in deduped if qq in x.lower()]
+
+    return GitRefListResponse(items=deduped[:int(limit)])
 
 
 @router.get("/git-commits", response_model=GitRefListResponse)

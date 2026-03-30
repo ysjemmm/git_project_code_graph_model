@@ -2,11 +2,10 @@ from __future__ import annotations
 
 from typing import Dict, List
 
-from storage.neo4j.java_modules import (
+from parser.languages.java.java_constants import ObjectFromType
+from storage.neo4j.graph_schema import (
     JavaGraphEdgeType,
     JavaNeo4jNodeType,
-    JavaObjectNodeGraphNode,
-    ObjectFromType,
 )
 from storage.neo4j.queries import Neo4jQueries
 
@@ -29,11 +28,11 @@ class JavaExternalLinkPreparationMixin:
             current_internal = []
 
             for node in self.nodes_to_create.get(JavaNeo4jNodeType.JavaObject, []):
-                if isinstance(node, JavaObjectNodeGraphNode):
-                    if node.from_type == ObjectFromType.EXTERNAL_DEFINITION.value:
-                        current_external.append(node)
-                    elif node.from_type == ObjectFromType.INNER_DEFINITION.value:
-                        current_internal.append(node)
+                node_from_type = node.get("from_type") if isinstance(node, dict) else getattr(node, "from_type", None)
+                if node_from_type == ObjectFromType.EXTERNAL_DEFINITION.value:
+                    current_external.append(node)
+                elif node_from_type == ObjectFromType.INNER_DEFINITION.value:
+                    current_internal.append(node)
 
             if not current_external and not current_internal:
                 return
@@ -42,45 +41,43 @@ class JavaExternalLinkPreparationMixin:
             if current_external:
                 external_conditions = [
                     {
-                        "fqn": node.qualified_name,
-                        "project_key": (getattr(node, "project_key", None) or self.project_id),
-                        "project": node.belong_project,
+                        "fqn": node.get("qualified_name") if isinstance(node, dict) else node.qualified_name,
+                        "project_key": node.get("project_key") if isinstance(node, dict) else getattr(node, "project_key", self.project_id),
+                        "project": node.get("belong_project") if isinstance(node, dict) else node.belong_project,
                     }
                     for node in current_external
                 ]
                 internal_nodes_map = self._batch_find_internals_in_db(external_conditions)
                 for external_node in current_external:
-                    key = (external_node.qualified_name, external_node.belong_project)
+                    qn = external_node.get("qualified_name") if isinstance(external_node, dict) else external_node.qualified_name
+                    bp = external_node.get("belong_project") if isinstance(external_node, dict) else external_node.belong_project
+                    sid = external_node.get("symbol_id") if isinstance(external_node, dict) else external_node.symbol_id
+                    key = (qn, bp)
                     if key in internal_nodes_map:
                         self.relationships_to_create.append(
-                            (
-                                external_node.symbol_id,
-                                internal_nodes_map[key],
-                                JavaGraphEdgeType.LIB_LINK.value,
-                            )
+                            (sid, internal_nodes_map[key], JavaGraphEdgeType.LIB_LINK.value)
                         )
 
             # 场景 2: 新的内部定义 → 批量查找已有的外部定义
             if current_internal:
                 internal_conditions = [
                     {
-                        "fqn": node.qualified_name,
-                        "project_key": (getattr(node, "project_key", None) or self.project_id),
-                        "project": node.belong_project,
+                        "fqn": node.get("qualified_name") if isinstance(node, dict) else node.qualified_name,
+                        "project_key": node.get("project_key") if isinstance(node, dict) else getattr(node, "project_key", self.project_id),
+                        "project": node.get("belong_project") if isinstance(node, dict) else node.belong_project,
                     }
                     for node in current_internal
                 ]
                 external_nodes_map = self._batch_find_externals_in_db(internal_conditions)
                 for internal_node in current_internal:
-                    key = (internal_node.qualified_name, internal_node.belong_project)
+                    qn = internal_node.get("qualified_name") if isinstance(internal_node, dict) else internal_node.qualified_name
+                    bp = internal_node.get("belong_project") if isinstance(internal_node, dict) else internal_node.belong_project
+                    sid = internal_node.get("symbol_id") if isinstance(internal_node, dict) else internal_node.symbol_id
+                    key = (qn, bp)
                     if key in external_nodes_map:
                         for external_symbol_id in external_nodes_map[key]:
                             self.relationships_to_create.append(
-                                (
-                                    external_symbol_id,
-                                    internal_node.symbol_id,
-                                    JavaGraphEdgeType.LIB_LINK.value,
-                                )
+                                (external_symbol_id, sid, JavaGraphEdgeType.LIB_LINK.value)
                             )
 
         except Exception:

@@ -88,6 +88,19 @@ export type GraphProject = {
   branch?: string
   commit_hash?: string
   version?: string
+  project_key?: string
+  project_type?: string
+  last_update_time?: string
+  versions?: GraphProjectVersionItem[]
+}
+
+export type GraphProjectVersionItem = {
+  version?: string
+  project_key?: string
+  branch?: string
+  commit_hash?: string
+  node_count?: number
+  relationship_count?: number
 }
 
 export type GraphQueryResult = {
@@ -233,6 +246,21 @@ export async function listApplicationProjectsForGraph(refresh = false): Promise<
   url.searchParams.set('java_only', '1')
   if (refresh) url.searchParams.set('refresh', '1')
   return request(url.toString())
+}
+
+export async function listProjectsForImport(project_name?: string, page_size: number = 100): Promise<{ ok: boolean; items: CacheProjectItem[] }> {
+  const url = new URL('/api/project/list-for-import', window.location.origin)
+  if (project_name) url.searchParams.set('project_name', project_name)
+  url.searchParams.set('page_size', String(page_size))
+  
+  const response = await fetch(url.toString())
+  const data = await response.json()
+  
+  // 将 PageResponse 转换为前端期望的格式
+  return {
+    ok: data.success !== false,
+    items: Array.isArray(data.data) ? data.data : []
+  }
 }
 
 export type LinkedByItem = {
@@ -481,8 +509,26 @@ export async function createImportTask(payload: {
   return request('/api/import/tasks', json('POST', payload))
 }
 
-export async function listImportTasks(): Promise<{ ok: boolean; items: ImportTask[] }> {
-  return request('/api/import/tasks')
+export async function createTestImportTask(params: {
+  project_name: string
+  wait_seconds?: number
+}): Promise<{ ok: boolean; task_id?: string; message?: string }> {
+  const url = new URL('/api/import/tasks/test-schedule', window.location.origin)
+  url.searchParams.set('project_name', params.project_name)
+  if (params.wait_seconds) url.searchParams.set('wait_seconds', String(params.wait_seconds))
+  return request(url.toString(), json('POST', {}))
+}
+
+export async function listImportTasks(params?: { 
+  projectName?: string
+  page?: number
+  page_size?: number
+}): Promise<{ ok: boolean; items: ImportTask[]; total?: number }> {
+  const url = new URL('/api/import/tasks', window.location.origin)
+  if (params?.projectName) url.searchParams.set('project_name', params.projectName)
+  if (params?.page) url.searchParams.set('page', String(params.page))
+  if (params?.page_size) url.searchParams.set('page_size', String(params.page_size))
+  return request(url.toString())
 }
 
 export async function getImportTask(taskId: string): Promise<{ ok: boolean; item: ImportTask }> {
@@ -521,6 +567,22 @@ export async function listGraphProjects(includeCounts = false): Promise<{ ok: bo
   const url = new URL('/api/graph/projects', window.location.origin)
   if (includeCounts) url.searchParams.set('include_counts', 'true')
   return request(url.toString())
+}
+
+export async function listProjectsForOverview(params?: {
+  project_name?: string
+  page_size?: number
+  cursor?: string
+}): Promise<{ ok: boolean; data: GraphProject[]; total?: number; next_cursor?: string }> {
+  const url = new URL('/api/project/list-for-overview', window.location.origin)
+  if (params?.project_name) url.searchParams.set('project_name', params.project_name)
+  if (params?.page_size) url.searchParams.set('page_size', String(params.page_size))
+  if (params?.cursor) url.searchParams.set('cursor', params.cursor)
+  return request(url.toString())
+}
+
+export async function listProjectVersions(projectName: string): Promise<{ ok: boolean; items: { version: string; project_key: string; branch: string; commit_hash: string }[] }> {
+  return request(`/api/project/${encodeURIComponent(projectName)}/versions`)
 }
 
 export async function listGraphProjectVersions(projectName: string): Promise<{ ok: boolean; items: GraphProjectVersion[] }> {

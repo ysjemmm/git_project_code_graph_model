@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from fastapi import APIRouter, Body, Query
 
 from api.schemas import GraphProjectItem, GraphProjectListResponse
+from core.project_ids import parse_version_from_project_key
 from storage.neo4j.query_diagnostics import list_neo4j_operations, summarize_neo4j_operations
 
 router = APIRouter(prefix="/api", tags=["graph"])
@@ -157,153 +158,101 @@ def graph_projects(
     if cached and (now - cached[0]) <= _CACHE_TTL_SEC:
         return cached[1]
 
-    conn, err = _neo4j_connector()
-    if conn is None:
-        # 前端仍需要结构化返回
-        return GraphProjectListResponse(items=[GraphProjectItem(project_name="(error)", repo_url=err)])
-
     try:
-        # 默认只展示 active 版本，避免版本化后列表出现多份重复
-        active_where = "WHERE coalesce(p.is_active,false) = true OR p.is_active IS NULL"
+        from storage.neo4j.session_builder import get_project_neo_dao
+        rows: List[Dict[str, Any]] = get_project_neo_dao().list_projects(include_counts=include_counts)
+    except Exception as e:
+        return GraphProjectListResponse(items=[GraphProjectItem(project_name="(error)", repo_url=str(e))])
 
-        if include_counts:
-            # 说明：
-            # - 旧写法先全图聚合后再按 project_name 过滤，数据量大时会慢（collect + 二次过滤）。
-            # - 新写法先拿 active 项目，再按项目子查询计数，避免构造大型中间列表。
-            # 目前仍以 belong_project 作为聚合键（兼容旧数据不含 project_key 的情况）。
-            q = """
-            MATCH (p:Project)
-            WHERE p.name IS NOT NULL AND p.name <> "" AND p.project_type = "Application"
-            WITH p,
-                 p.name AS project_name,
-                 coalesce(p.symbol_id, '') AS project_key,
-                 coalesce(p.project_type, '') AS project_type,
-                 coalesce(p.branch, '') AS branch,
-                 coalesce(p.commit_hash, '') AS commit_hash
-            
-            RETURN project_name, project_key, project_type, branch, commit_hash,
-                   count { MATCH (n) WHERE n.belong_project = project_name } AS node_count,
-                   count { MATCH (n)-[r]-() WHERE n.belong_project = project_name } AS relationship_count
-            ORDER BY project_name
-            """
-            q = q.replace("__ACTIVE_WHERE__", active_where)
-            rows: List[Dict[str, Any]] = conn.execute_read_query(q) or []
-        else:
-            q = """
-            MATCH (p:Project)
-            WHERE (p.is_active = true OR p.is_active IS NULL) 
-              AND p.name IS NOT NULL 
-              AND p.name <> ""
-            RETURN
-              p.name AS project_name,
-              CASE WHEN p.symbol_id IS NOT NULL THEN p.symbol_id ELSE '' END AS project_key,
-              CASE WHEN p.project_type IS NOT NULL THEN p.project_type ELSE '' END AS project_type,
-              CASE WHEN p.branch IS NOT NULL THEN p.branch ELSE '' END AS branch,
-              CASE WHEN p.commit_hash IS NOT NULL THEN p.commit_hash ELSE '' END AS commit_hash
-            """
-            rows = conn.execute_read_query(q) or []
+    # 去重：同一 (project_name, project_type, project_key) 只保留一条
+    seen = set()
+    deduped = []
+    for r in rows:
+        k = (
+            (r.get("project_name") or "").strip(),
+            (r.get("project_type") or "").strip(),
+            (r.get("project_key") or "").strip(),
+        )
+        if k in seen:
+            continue
+        seen.add(k)
+        deduped.append(r)
+    rows = deduped
 
-        # 去重：同一 (project_name, project_type, project_key) 只保留一条
-        seen = set()
-        deduped = []
-        for r in rows:
-            k = (
-                (r.get("project_name") or "").strip(),
-                (r.get("project_type") or "").strip(),
-                (r.get("project_key") or "").strip(),
-            )
-            if k in seen:
-                continue
-            seen.add(k)
-            deduped.append(r)
-        rows = deduped
+    # 加载本地 Git 缓存 metadata（repo_url/last_update_time）
+    meta_map: Dict[str, Dict[str, Any]] = {}
+    try:
+        from storage.cache.git_cache import GitCacheManager
+        from tools.constants import CACHE_GIT_REPOS_PATH
 
-        # 加载本地 Git 缓存 metadata（repo_url/last_update_time）
-        meta_map: Dict[str, Dict[str, Any]] = {}
-        try:
-            from storage.cache.git_cache import GitCacheManager
-            from tools.constants import CACHE_GIT_REPOS_PATH
+        mgr = GitCacheManager(cache_base_dir=str(CACHE_GIT_REPOS_PATH))
+        def _load_meta(repo_name: str) -> Optional[Dict[str, Any]]:
+            if repo_name in meta_map:
+                return meta_map[repo_name]
+            md = mgr.load_metadata(repo_name)
+            if md:
+                meta_map[repo_name] = md
+            return md
+    except Exception:
+        _load_meta = lambda _: None  # type: ignore
 
-            mgr = GitCacheManager(cache_base_dir=str(CACHE_GIT_REPOS_PATH))
-            # metadata 文件按 repo_name.json 命名；这里不列目录，按 project_name 时再懒加载
-            def _load_meta(repo_name: str) -> Optional[Dict[str, Any]]:
-                if repo_name in meta_map:
-                    return meta_map[repo_name]
-                md = mgr.load_metadata(repo_name)
-                if md:
-                    meta_map[repo_name] = md
-                return md
+    items: List[GraphProjectItem] = []
+    for r in rows:
+        project_name = (r.get("project_name") or "").strip() or "(unknown)"
+        project_key = (r.get("project_key") or "").strip() or None
+        project_type = (r.get("project_type") or "").strip() or None
+        branch = (r.get("branch") or "").strip() or None
+        commit_hash = (r.get("commit_hash") or "").strip() or None
 
-        except Exception:
-            _load_meta = lambda _: None  # type: ignore
+        version = parse_version_from_project_key(project_key)
 
-        items: List[GraphProjectItem] = []
-        for r in rows:
-            project_name = (r.get("project_name") or "").strip() or "(unknown)"
-            project_key = (r.get("project_key") or "").strip() or None
-            project_type = (r.get("project_type") or "").strip() or None
-            branch = (r.get("branch") or "").strip() or None
-            commit_hash = (r.get("commit_hash") or "").strip() or None
+        md = _load_meta(project_name)
+        repo_url = (md or {}).get("repo_url") if md else None
+        last_update_time = (md or {}).get("last_update_time") if md else None
 
-            # 从 project_key 解析版本号：格式 project#{name}@{type}@{version}
-            version: Optional[str] = None
-            if project_key:
-                parts = project_key.split("@")
-                if len(parts) >= 3:
-                    version = "@".join(parts[2:]) or None
+        node_count = int(r.get("node_count") or 0) if include_counts else None
+        rel_count = int(r.get("relationship_count") or 0) if include_counts else None
 
-            md = _load_meta(project_name)
-            repo_url = (md or {}).get("repo_url") if md else None
-            last_update_time = (md or {}).get("last_update_time") if md else None
-
-            node_count = int(r.get("node_count") or 0) if include_counts else None
-            rel_count = int(r.get("relationship_count") or 0) if include_counts else None
-
-            items.append(
-                GraphProjectItem(
-                    project_name=project_name,
-                    project_key=project_key,
-                    project_type=project_type,
-                    branch=branch,
-                    commit_hash=commit_hash,
-                    repo_url=repo_url,
-                    last_update_time=last_update_time,
-                    node_count=node_count,
-                    relationship_count=rel_count,
-                    version=version,
-                )
-            )
-
-        def _ts(s: Optional[str]) -> Tuple[int, str]:
-            if not s:
-                return (0, "")
-            try:
-                # git_cache.py 用 datetime.now().isoformat()，这里按 ISO 解析
-                return (int(datetime.fromisoformat(s).timestamp()), s)
-            except Exception:
-                return (0, s)
-
-        def _type_rank(t: Optional[str]) -> int:
-            # Application > Lib，其它排后
-            if (t or "").lower() == "application":
-                return 0
-            if (t or "").lower() == "lib":
-                return 1
-            return 2
-
-        # 排序：添加时间（last_update_time）优先（新->旧），其次 Application > Lib
-        items.sort(
-            key=lambda x: (
-                -_ts(x.last_update_time)[0],
-                _type_rank(x.project_type),
-                x.project_name,
+        items.append(
+            GraphProjectItem(
+                project_name=project_name,
+                project_key=project_key,
+                project_type=project_type,
+                branch=branch,
+                commit_hash=commit_hash,
+                repo_url=repo_url,
+                last_update_time=last_update_time,
+                node_count=node_count,
+                relationship_count=rel_count,
+                version=version,
             )
         )
-        resp = GraphProjectListResponse(items=items)
-        _projects_cache[include_counts] = (now, resp)
-        return resp
-    finally:
-        conn.disconnect()
+
+    def _ts(s: Optional[str]) -> Tuple[int, str]:
+        if not s:
+            return (0, "")
+        try:
+            return (int(datetime.fromisoformat(s).timestamp()), s)
+        except Exception:
+            return (0, s)
+
+    def _type_rank(t: Optional[str]) -> int:
+        if (t or "").lower() == "application":
+            return 0
+        if (t or "").lower() == "lib":
+            return 1
+        return 2
+
+    items.sort(
+        key=lambda x: (
+            -_ts(x.last_update_time)[0],
+            _type_rank(x.project_type),
+            x.project_name,
+        )
+    )
+    resp = GraphProjectListResponse(items=items)
+    _projects_cache[include_counts] = (now, resp)
+    return resp
 
 
 @router.get("/graph/projects/{project_name}/versions")
@@ -312,38 +261,26 @@ def graph_project_versions(project_name: str) -> Dict[str, Any]:
     返回某个项目在图谱中所有已导入的版本列表。
     每个版本包含：version、project_key、branch、commit_hash。
     """
-    conn, err = _neo4j_connector()
-    if conn is None:
-        return {"ok": False, "message": err, "items": []}
     try:
-        q = """
-        MATCH (p:Project {name: $name, project_type: 'Application'})
-        RETURN
-          coalesce(p.version, '') AS version,
-          coalesce(p.symbol_id, '') AS project_key,
-          coalesce(p.branch, '') AS branch,
-          coalesce(p.commit_hash, '') AS commit_hash
-        ORDER BY p.version
-        """
-        rows = conn.execute_read_query(q, {"name": project_name}) or []
-        items = []
-        for r in rows:
-            version = (r.get("version") or "").strip()
-            project_key = (r.get("project_key") or "").strip()
-            # 兜底：从 project_key 解析 version
-            if not version and project_key:
-                parts = project_key.split("@")
-                if len(parts) >= 3:
-                    version = "@".join(parts[2:]).strip()
-            items.append({
-                "version": version,
-                "project_key": project_key,
-                "branch": (r.get("branch") or "").strip(),
-                "commit_hash": (r.get("commit_hash") or "").strip(),
-            })
-        return {"ok": True, "items": items}
-    finally:
-        conn.disconnect()
+        from storage.neo4j.session_builder import get_project_neo_dao
+        rows = get_project_neo_dao().list_project_versions(project_name)
+    except Exception as e:
+        return {"ok": False, "message": str(e), "items": []}
+
+    items = []
+    for r in rows:
+        version = (r.get("version") or "").strip()
+        project_key = (r.get("project_key") or "").strip()
+        # 兜底：从 project_key 解析 version
+        if not version and project_key:
+            version = parse_version_from_project_key(project_key)
+        items.append({
+            "version": version,
+            "project_key": project_key,
+            "branch": (r.get("branch") or "").strip(),
+            "commit_hash": (r.get("commit_hash") or "").strip(),
+        })
+    return {"ok": True, "items": items}
 
 
 @router.get("/graph/projects/{project_name}/second-party-deps")
@@ -359,28 +296,13 @@ def project_second_party_deps(project_name: str) -> Dict[str, Any]:
     import re as _re
     from tools.constants import CACHE_JAR_CLASSES_DB_PATH
 
-    conn, err = _neo4j_connector()
-    if err:
-        return {"ok": False, "message": err, "items": []}
-
     # 1. 从 Neo4j 取该项目引用的所有外部 jar（ExternalDefinition 节点）
     jar_names: List[str] = []
     try:
-        cypher = """
-        MATCH (p:Project {project_type: 'Application'})
-        WHERE p.name = $project_name
-        MATCH (p)-[:CONTAINS_LIB]->(ext:JavaObject)
-        WHERE ext.from_type = 'ExternalDefinition' AND ext.jar_name IS NOT NULL AND ext.jar_name <> ''
-        RETURN DISTINCT ext.jar_name AS jar_name
-        ORDER BY jar_name
-        """
-        with conn.driver.session(database=conn.database) as session:
-            result = session.run(cypher, {"project_name": project_name})
-            jar_names = [r["jar_name"] for r in result if r.get("jar_name")]
+        from storage.neo4j.session_builder import get_project_neo_dao
+        jar_names = get_project_neo_dao().get_external_jar_names(project_name)
     except Exception as e:
         return {"ok": False, "message": f"Neo4j 查询失败: {e}", "items": []}
-    finally:
-        conn.disconnect()
 
     if not jar_names:
         return {"ok": True, "items": []}

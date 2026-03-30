@@ -9,7 +9,7 @@
 """
 from typing import List, Dict, Optional
 from storage.neo4j.connector import Neo4jConnector
-from storage.neo4j.java_modules import JavaGraphEdgeType
+from storage.neo4j.graph_schema import JavaGraphEdgeType
 from storage.neo4j.queries import Neo4jQueries
 from parser.utils.logger import get_logger
 

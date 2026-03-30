@@ -273,9 +273,9 @@ def _git_repo_info(repo_dir: Path) -> Dict[str, Any]:
         "dirty": dirty,
     }
 
-
 @router.get("/cache/application-projects")
 def cache_application_projects(
+    project_name: Optional[str] = Query(None, description="项目名称过滤"),
     include_libs: bool = Query(False, description="是否包含 Lib 项目（默认只返回 Application）"),
     refresh: bool = Query(False, description="是否强制从本地缓存重新扫描并写入数据库（再返回）"),
     java_only: bool = Query(False, description="只返回后端 Java 应用（用于图谱导入场景）"),

@@ -3,9 +3,10 @@ API 请求/响应模型定义，统一放在此处便于维护与复用。
 """
 from __future__ import annotations
 
+from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, field_serializer, field_validator
 
 
 class HistoryMessage(BaseModel):
@@ -57,6 +58,15 @@ class UploadResponse(BaseModel):
     saved: List[UploadSavedItem] = []
 
 
+class GraphProjectVersionItem(BaseModel):
+    version: Optional[str] = None
+    project_key: Optional[str] = None
+    branch: Optional[str] = None
+    commit_hash: Optional[str] = None
+    node_count: Optional[int] = None
+    relationship_count: Optional[int] = None
+
+
 class GraphProjectItem(BaseModel):
     project_name: str
     project_key: Optional[str] = None
@@ -65,9 +75,21 @@ class GraphProjectItem(BaseModel):
     commit_hash: Optional[str] = None
     repo_url: Optional[str] = None
     last_update_time: Optional[str] = None
-    node_count: Optional[int] = None
-    relationship_count: Optional[int] = None
-    version: Optional[str] = None  # 图谱版本号，从 project_key 解析
+    version: Optional[str] = None  # 当前活跃版本号
+    versions: List[GraphProjectVersionItem] = []  # 所有已导入版本
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        populate_by_name=True,
+    )
+
+    @field_validator('last_update_time', mode='before')
+    @classmethod
+    def format_datetime_fields(cls, value):
+        """将 datetime 对象格式化为 YYYY-MM-DD HH:MM:SS"""
+        if isinstance(value, datetime):
+            return value.strftime('%Y-%m-%d %H:%M:%S')
+        return value
 
 
 class GraphProjectListResponse(BaseModel):
@@ -76,7 +98,7 @@ class GraphProjectListResponse(BaseModel):
 
 class CacheProjectItem(BaseModel):
     id: Optional[int] = None
-    repo_name: str
+    repo_name: Optional[int] = None
     project_name: Optional[str] = None
     project_key: Optional[str] = None
     project_type: Optional[str] = None
@@ -106,7 +128,20 @@ class CacheProjectItem(BaseModel):
 
     # 应用类型与语言
     app_type: Optional[str] = 'backend'   # 'frontend' | 'backend'
-    language: Optional[str] = 'java'      # 'java'|'python'|'go'|'other'|'vue'|'react'
+    language: Optional[str] = 'java'  # 'java'|'python'|'go'|'other'|'vue'|'react'
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        populate_by_name=True,
+    )
+
+    @field_validator('last_update_time', mode='before')
+    @classmethod
+    def format_datetime_fields(cls, value):
+        """将 datetime 对象格式化为 YYYY-MM-DD HH:MM:SS"""
+        if isinstance(value, datetime):
+            return value.strftime('%Y-%m-%d %H:%M:%S')
+        return value
 
 
 class CacheProjectListResponse(BaseModel):

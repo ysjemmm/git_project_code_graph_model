@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Optional
 from neo4j import GraphDatabase, Driver
 from neo4j.exceptions import ServiceUnavailable, SessionExpired, Neo4jError
 
-from storage.neo4j.java_modules import JavaGraphEdgeType
+from storage.neo4j.graph_schema import JavaGraphEdgeType
 from storage.neo4j.query_diagnostics import record_neo4j_operation
 
 logger = logging.getLogger(__name__)
@@ -243,81 +243,48 @@ class Neo4jConnector:
             logger.error("未连接到数据库")
             return []
 
-        def _run() -> List[Dict]:
-            with self.driver.session(database=self.database) as session:
-                def _tx_run(tx):
-                    result = tx.run(query, parameters or {})
-                    return [dict(record) for record in result]
-
-                return session.execute_write(_tx_run)
-
-        start = time.perf_counter()
+        # ========== 旧方法：使用 neo4j 库的 driver.session ==========
+        # def _run() -> List[Dict]:
+        #     with self.driver.session(database=self.database) as session:
+        #         def _tx_run(tx):
+        #             result = tx.run(query, parameters or {})
+        #             return [dict(record) for record in result]
+        #         return session.execute_write(_tx_run)
+        
+        # ========== 新方法：使用 neomodel 的 db 对象 ==========
+        from neomodel import db as neo4j_db
+        
         try:
-            rows = _run()
+            start = time.perf_counter()
+            results, _ = neo4j_db.cypher_query(query, parameters or {})
             elapsed_ms = (time.perf_counter() - start) * 1000
+            
+            # 记录性能指标
             record_neo4j_operation(
                 op_type="write",
                 query=query,
-                parameters=parameters,
+                parameters=parameters or {},
                 elapsed_ms=elapsed_ms,
                 ok=True,
-                row_count=len(rows),
+                row_count=len(results),
             )
-            return rows
-        except (ServiceUnavailable, SessionExpired, Neo4jError, OSError) as e:
-            logger.warning(f"写入失败（将重试一次）: {e}")
-            elapsed_ms = (time.perf_counter() - start) * 1000
-            record_neo4j_operation(
-                op_type="write",
-                query=query,
-                parameters=parameters,
-                elapsed_ms=elapsed_ms,
-                ok=False,
-                error=str(e),
-                row_count=0,
-            )
-            try:
-                self.connected = False
-                if not self.connect():
-                    return []
-                retry_start = time.perf_counter()
-                rows = _run()
-                retry_elapsed_ms = (time.perf_counter() - retry_start) * 1000
-                record_neo4j_operation(
-                    op_type="write-retry",
-                    query=query,
-                    parameters=parameters,
-                    elapsed_ms=retry_elapsed_ms,
-                    ok=True,
-                    row_count=len(rows),
-                )
-                return rows
-            except Exception as e2:
-                logger.error(f"写入重试失败: {e2}")
-                retry_elapsed_ms = (time.perf_counter() - start) * 1000
-                record_neo4j_operation(
-                    op_type="write-retry",
-                    query=query,
-                    parameters=parameters,
-                    elapsed_ms=retry_elapsed_ms,
-                    ok=False,
-                    error=str(e2),
-                    row_count=0,
-                )
-                return []
+            
+            # 转换为字典列表格式（保持与旧代码兼容）
+            return [dict(zip([str(key) for key in result.keys()], result)) 
+                   for result in results]
         except Exception as e:
-            logger.error(f"写入失败: {e}")
+            logger.error(f"neomodel 写入失败：{e}")
             elapsed_ms = (time.perf_counter() - start) * 1000
             record_neo4j_operation(
                 op_type="write",
                 query=query,
-                parameters=parameters,
+                parameters=parameters or {},
                 elapsed_ms=elapsed_ms,
                 ok=False,
                 error=str(e),
                 row_count=0,
             )
-            return []
+            raise
     
     def create_node(self, label: str, properties: Dict) -> bool:
         """创建节点（不推荐：优先使用批量 UNWIND/MERGE 写入）

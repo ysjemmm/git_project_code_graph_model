@@ -1,7 +1,7 @@
 ﻿
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from parser.languages.java.core.ast_node_types import LocationRange
 
@@ -295,7 +295,7 @@ class SymbolIdGenerator:
     @staticmethod
     def for_project(project_name: str, project_type: str = "Application", version: str = "") -> str:
         """生成项目ID
-        格式: project#{project_name}@{project_type}@{version}
+        格式: {project_name}@{project_type}@{version}
         
         参数:
             project_name: 项目名称
@@ -303,9 +303,9 @@ class SymbolIdGenerator:
             version: 版本号（可选）
         """
         if version:
-            return f"project#{project_name}@{project_type}@{version}"
+            return f"{project_name}@{project_type}@{version}"
         else:
-            return f"project#{project_name}@{project_type}"
+            return f"{project_name}@{project_type}"
 
     @staticmethod
     def for_file(parent_symbol_id: str, relative_path: str) -> str:
@@ -394,6 +394,27 @@ class SymbolIdGenerator:
         格式: {parent_symbol_id}@longcomment
         """
         return f"{parent_symbol_id}@longcomment"
+
+    @staticmethod
+    def for_code_block(parent_symbol_id: str, start_line: Any, start_column: Any, end_line: Any, end_column: Any) -> str:
+        """生成代码块符号ID
+        格式: {parent_symbol_id}<code_block>{start_line}:{start_column}:{end_line}:{end_column}
+        """
+        return f"{parent_symbol_id}<code_block>{start_line}:{start_column}:{end_line}:{end_column}"
+
+    @staticmethod
+    def for_external_class(jar_path: str, fqn: str) -> str:
+        """生成外部类（第三方 JAR）符号ID
+        格式: {jar_path}<path>{fqn}
+        """
+        return f"{jar_path}<path>{fqn}"
+
+    @staticmethod
+    def for_jdk_class(jar_path: str, fqn: str) -> str:
+        """生成 JDK 类符号ID
+        格式: {jar_path}<path>{fqn}，jar_path 为空时用 JDK 前缀
+        """
+        return f"{jar_path}<path>{fqn}" if jar_path else f"JDK<path>{fqn}"
     
     @staticmethod
     def for_import(file_path: str, import_name: str) -> str:

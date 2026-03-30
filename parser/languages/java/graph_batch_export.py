@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import asdict, is_dataclass
-from typing import Any
 
 from core.graph_ir import GraphBatch
 

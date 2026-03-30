@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 from typing import Any, Dict, List
 
+from neomodel import db as neo4j_db
+
 from core.import_context import ProjectImportContext
 from parser.utils.logger import get_logger
 
@@ -142,8 +144,8 @@ class Neo4jGraphStore(GraphStore):
                 for n in chunk:
                     if isinstance(n, dict) and "project_key" not in n:
                         n["project_key"] = ctx.project_key
-                result = self.connector.execute_write_query(query, {"nodes": chunk})
-                created_in_batch = int(result[0].get("created", 0)) if result else 0
+                result_raw, _ = neo4j_db.cypher_query(query, {"nodes": chunk})
+                created_in_batch = int(result_raw[0][0]) if result_raw else 0
                 created_nodes += created_in_batch
                 created_nodes_by_label[label] = created_nodes_by_label.get(label, 0) + created_in_batch
                 # 每 3 批或最后一批输出进度
@@ -192,8 +194,8 @@ class Neo4jGraphStore(GraphStore):
                 # 每批执行前打一条，便于确认确实按批执行（避免误以为“一整块一次执行”）
                 if num_batches > 1:
                     logger.info(f"  - {rel_type}: 执行第 {batch_num}/{num_batches} 批（本批 {len(chunk)} 条）")
-                result = self.connector.execute_write_query(query, {"relationships": chunk})
-                created_in_batch = int(result[0].get("created", 0)) if result else 0
+                result_raw, _ = neo4j_db.cypher_query(query, {"relationships": chunk})
+                created_in_batch = int(result_raw[0][0]) if result_raw else 0
                 created_relationships += created_in_batch
                 created_relationships_by_type[rel_type] = created_relationships_by_type.get(rel_type, 0) + created_in_batch
                 if num_batches > 1 and (batch_num % 3 == 0 or batch_num == num_batches):
